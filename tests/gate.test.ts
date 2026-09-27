@@ -1,0 +1,81 @@
+import { describe, it, expect } from 'vitest';
+import { validateTestReport } from '../scripts/gate-policy.ts';
+const expected = { 'packages/core/src/task.test.ts': 2 };
+function report() {
+  return {
+    success: true,
+    numTotalTests: 2,
+    numPassedTests: 2,
+    numFailedTests: 0,
+    numPendingTests: 0,
+    numTodoTests: 0,
+    testResults: [
+      {
+        name: 'C:/work/XVANT/packages/core/src/task.test.ts',
+        status: 'passed',
+        assertionResults: [{ status: 'passed' }, { status: 'passed' }],
+      },
+    ],
+  };
+}
+describe('offline gate policy', () => {
+  it('accepts a complete passing report', () =>
+    expect(validateTestReport(report(), expected)).toEqual({
+      total: 2,
+      suites: { 'packages/core/src/task.test.ts': 2 },
+    }));
+  it('normalizes Windows paths', () => {
+    const r = report();
+    r.testResults[0]!.name = r.testResults[0]!.name.replaceAll('/', '\\');
+    expect(validateTestReport(r, expected).total).toBe(2);
+  });
+  it.each(['pending', 'skipped', 'todo', 'failed'])(
+    'rejects %s tests',
+    (status) => {
+      const r = report();
+      r.testResults[0]!.assertionResults[0]!.status = status;
+      expect(() => validateTestReport(r, expected)).toThrow();
+    },
+  );
+  it('rejects a missing suite', () =>
+    expect(() =>
+      validateTestReport({ ...report(), testResults: [] }, expected),
+    ).toThrow());
+  it('rejects reduced discovery', () =>
+    expect(() =>
+      validateTestReport(report(), { 'packages/core/src/task.test.ts': 3 }),
+    ).toThrow());
+  it('rejects inconsistent total counts', () =>
+    expect(() =>
+      validateTestReport({ ...report(), numTotalTests: 3 }, expected),
+    ).toThrow());
+  it('rejects duplicate suite identities', () => {
+    const r = report();
+    r.testResults.push(r.testResults[0]!);
+    expect(() => validateTestReport(r, expected)).toThrow();
+  });
+  it('rejects malformed reports', () =>
+    expect(() => validateTestReport({}, expected)).toThrow());
+  it('rejects an unsuccessful run even with passed assertions', () =>
+    expect(() =>
+      validateTestReport({ ...report(), success: false }, expected),
+    ).toThrow());
+  it('rejects failed suites with no test failures', () => {
+    const r = report();
+    r.testResults[0]!.status = 'failed';
+    expect(() => validateTestReport(r, expected)).toThrow();
+  });
+  it('rejects unknown additional skipped suites', () => {
+    const r = report();
+    r.testResults.push({
+      name: 'extra.test.ts',
+      status: 'pending',
+      assertionResults: [],
+    });
+    expect(() => validateTestReport(r, expected)).toThrow();
+  });
+  it('rejects empty or invalid expected suite requirements', () => {
+    expect(() => validateTestReport(report(), {})).toThrow();
+    expect(() => validateTestReport(report(), { 'task.test.ts': 0 })).toThrow();
+  });
+});

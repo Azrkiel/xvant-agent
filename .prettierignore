@@ -1,0 +1,7 @@
+package-lock.json
+node_modules
+.tools
+.artifacts
+coverage
+docs/plans
+docs/evidence

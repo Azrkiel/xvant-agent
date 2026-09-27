@@ -1,0 +1,7 @@
+node_modules/
+.tools/
+.artifacts/
+coverage/
+dist/
+*.tsbuildinfo
+.env

@@ -1,0 +1,37 @@
+{
+  "name": "xvant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=24.21.0 <25"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage --reporter=default --reporter=json --outputFile=.artifacts/tests.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint packages apps scripts tests",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "gate": "node scripts/gate.mjs",
+    "demo": "node --experimental-strip-types apps/controller/src/demo.ts"
+  },
+  "dependencies": {
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.6",
+    "@vitest/coverage-v8": "5.0.1",
+    "eslint": "10.11.0",
+    "fast-check": "4.10.2",
+    "prettier": "3.9.9",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.1",
+    "vitest": "5.0.1"
+  },
+  "packageManager": "npm@12.0.2"
+}
