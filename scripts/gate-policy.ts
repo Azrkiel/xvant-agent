@@ -47,3 +47,28 @@ export function validateTestReport(
   }
   return { total, suites };
 }
+export function phaseSuites(phase: string): Record<string, number> {
+  if (phase !== '01' && phase !== '02')
+    throw new Error('Unsupported gate phase');
+  const baseline: Record<string, number> = {
+    'packages/contracts/src/contracts.test.ts': 15,
+    'packages/core/src/task.test.ts': 26,
+    'packages/core/src/graph.test.ts': 20,
+    'packages/adapters/src/simulated/simulated.test.ts': 10,
+    'apps/controller/src/controller.test.ts': 24,
+    'tests/gate.test.ts': 16,
+  };
+  return phase === '01'
+    ? baseline
+    : {
+        ...baseline,
+        'packages/storage/src/store.test.ts': 20,
+        'packages/storage/src/artifacts.test.ts': 20,
+        'packages/supervisor/src/index.test.ts': 11,
+        'packages/policy/src/index.test.ts': 2,
+        'apps/controller/src/durable.test.ts': 13,
+        'apps/controller/src/service.test.ts': 3,
+        'apps/controller/src/http/server.test.ts': 11,
+        'tests/faults/crash.test.ts': 7,
+      };
+}

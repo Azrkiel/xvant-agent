@@ -1,6 +1,6 @@
 # XVANT
 
-Original local agent harness. Phase 1 supplies an offline domain model, bounded task graphs, deterministic simulated workers, and an in-memory controller. It makes no model calls.
+Original local agent harness. Phase 2 adds durable SQLite state, supervised simulated workers, process checks, an authenticated loopback API, and verified snapshots. It makes no model calls.
 
 ## Run
 
@@ -10,7 +10,8 @@ Install Node **24.21.0** and npm **12.0.2**, then run from this directory:
 npm ci --ignore-scripts
 npm run demo
 npm run demo -- quota
-npm run gate -- --phase 01 --offline
+npm run demo:durable
+npm run gate -- --phase 02 --offline
 ```
 
 On this Windows workstation, an isolated Node binary is available. Use it for the current PowerShell session:
@@ -18,7 +19,7 @@ On this Windows workstation, an isolated Node binary is available. Use it for th
 ```powershell
 $env:PATH = "$PWD/.tools/node_modules/node-win-x64/bin;$PWD/.tools/node_modules/.bin;$env:PATH"
 node --version
-npm run gate -- --phase 01 --offline
+npm run gate -- --phase 02 --offline
 ```
 
 The local `.tools` directory is ignored and is not required on another machine. Use the pinned Node version there. If a managed Windows trust store is needed for package installation, set `NODE_USE_SYSTEM_CA=1`; certificate verification stays enabled.
@@ -46,11 +47,15 @@ flowchart LR
  G -->|Explicit acceptance| I[Accepted]
 ```
 
-## Boundaries
+## Phase 2 and boundaries
 
-The demo checks synthetic artifact hashes; it does not build or review real code. All runtime events are labeled simulated. Controller state is lost on exit. Real provider adapters, shared context, persistence, process supervision, a UI, and production tools belong to later phases. No subscription or API access has been qualified here.
+`npm run demo:durable` executes a simulated worker in a child process, runs a host-registered process check, reopens the database, accepts persisted evidence, and verifies a backup/restore. Its temporary fixture is removed afterward. No listener or worker remains running.
 
-A worktree is not a security sandbox. The in-memory controller and verifier callbacks are trusted code inside one process. Phase 2 will add durable state and execution boundaries; this phase is not a service intended for untrusted network clients.
+Programmatic service entry: `startService(localStateDirectory, trustedChecks)` in `apps/controller/src/service.ts`. It returns the loopback origin, one-use bootstrap token, and a close method. The host delivers that token privately; never put it in a URL or log it. There is no UI yet.
+
+Simulation hashes do not prove real code changes. Workspace IDs reserve logical resources; they do not isolate filesystem access. Restricted profiles fail closed: Windows taskkill/Linux process groups are not hostile-code containment. Unknown operations retain reservations until trusted reconciliation. Live providers, subscriptions, Linux runtime qualification, and real repository attestation remain unverified.
+
+Use local nonsynchronized storage. Snapshots restore into new directories only and preserve the controller lease TTL. Verify snapshots before recovering user data.
 
 ## Layout
 

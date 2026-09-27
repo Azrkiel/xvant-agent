@@ -18,7 +18,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "gate": "node scripts/gate.mjs",
-    "demo": "node --experimental-strip-types apps/controller/src/demo.ts"
+    "demo": "node --experimental-strip-types apps/controller/src/demo.ts",
+    "demo:durable": "node apps/controller/src/durable-demo.ts"
   },
   "dependencies": {
     "better-sqlite3": "13.0.3",

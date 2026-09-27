@@ -4,27 +4,22 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hostname, platform, release } from 'node:os';
-import { validateTestReport } from './gate-policy.ts';
+import { validateTestReport, phaseSuites } from './gate-policy.ts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 if (
   args.length !== 3 ||
   args[0] !== '--phase' ||
-  args[1] !== '01' ||
+  !['01', '02'].includes(args[1]) ||
   args[2] !== '--offline'
 ) {
-  console.error('Usage: npm run gate -- --phase 01 --offline');
+  console.error('Usage: npm run gate -- --phase 01|02 --offline');
   process.exit(2);
 }
-const expectedSuites = {
-  'packages/contracts/src/contracts.test.ts': 15,
-  'packages/core/src/task.test.ts': 26,
-  'packages/core/src/graph.test.ts': 20,
-  'packages/adapters/src/simulated/simulated.test.ts': 10,
-  'apps/controller/src/controller.test.ts': 24,
-  'tests/gate.test.ts': 15,
-};
+const phase = args[1];
+const gateId = 'G' + phase;
+const expectedSuites = phaseSuites(phase);
 const artifacts = resolve(root, '.artifacts');
 mkdirSync(artifacts, { recursive: true });
 mkdirSync(resolve(root, 'docs/evidence'), { recursive: true });
@@ -57,7 +52,7 @@ function snapshot() {
   return { sha256: hash(JSON.stringify(files)), files };
 }
 const report = {
-  gateId: 'G01',
+  gateId,
   status: 'failed',
   generatedAt: new Date().toISOString(),
   sourceRevision: git(['rev-parse', '--verify', 'HEAD']).stdout.trim() || null,
@@ -77,7 +72,9 @@ const report = {
   artifacts: [],
   limitations: [
     'This report qualifies only its recorded host and platform; other CI jobs need their own reports.',
-    'Simulation fixtures do not qualify provider protocols, subscription access, real coding ability, persistence, or process isolation.',
+    'Simulation fixtures do not qualify provider protocols, subscriptions, or real coding ability.',
+    'Process supervision is trusted-local only. No hostile-code, filesystem, network, or escaped-descendant containment is qualified.',
+    'Linux code and CI are configured but require their own observed run.',
   ],
   rollbackProcedure:
     'Keep the branch unmerged; no external service or data migration was changed.',
@@ -153,14 +150,25 @@ try {
     tests.observedCount = discovery.total;
     tests.suites = discovery.suites;
   }
-  check('runtime', ['apps/controller/src/demo.ts', 'success']);
+  check(
+    'runtime',
+    phase === '01'
+      ? ['apps/controller/src/demo.ts', 'success']
+      : ['apps/controller/src/durable-demo.ts'],
+  );
   const runtime = JSON.parse(
     readFileSync(resolve(artifacts, 'runtime.log'), 'utf8'),
   );
   if (
     runtime.simulated !== true ||
-    runtime.task.state !== 'ready_for_acceptance' ||
-    runtime.attempt.state !== 'succeeded'
+    (phase === '01'
+      ? runtime.task.state !== 'ready_for_acceptance' ||
+        runtime.attempt.state !== 'succeeded'
+      : runtime.task.state !== 'accepted' ||
+        runtime.restartVerified !== true ||
+        runtime.integrity !== 'ok' ||
+        runtime.restoreIntegrity !== 'ok' ||
+        runtime.artifactVerified !== true)
   )
     throw new Error('Demo failed to reach verified simulated readiness');
   for (const path of [
@@ -194,8 +202,8 @@ try {
   console.error(report.failure);
 }
 writeFileSync(
-  resolve(root, 'docs/evidence/G01.json'),
+  resolve(root, 'docs/evidence/' + gateId + '.json'),
   JSON.stringify(report, null, 2) + '\n',
 );
-console.log('G01: ' + report.status);
+console.log(gateId + ': ' + report.status);
 process.exitCode = report.status === 'passed' ? 0 : 1;

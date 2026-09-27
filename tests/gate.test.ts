@@ -79,3 +79,22 @@ describe('offline gate policy', () => {
     expect(() => validateTestReport(report(), { 'task.test.ts': 0 })).toThrow();
   });
 });
+import { phaseSuites } from '../scripts/gate-policy.ts';
+it('Phase 2 gate requires storage, process, auth, recovery and service suites', () => {
+  const suites = phaseSuites('02');
+  for (const file of [
+    'packages/storage/src/store.test.ts',
+    'packages/storage/src/artifacts.test.ts',
+    'packages/supervisor/src/index.test.ts',
+    'packages/policy/src/index.test.ts',
+    'apps/controller/src/durable.test.ts',
+    'apps/controller/src/service.test.ts',
+    'apps/controller/src/http/server.test.ts',
+    'tests/faults/crash.test.ts',
+  ])
+    expect(suites[file]).toBeGreaterThan(0);
+  expect(() => phaseSuites('03')).toThrow();
+  expect(
+    Object.values(phaseSuites('01')).reduce((a, b) => a + b, 0),
+  ).toBeGreaterThanOrEqual(110);
+});
