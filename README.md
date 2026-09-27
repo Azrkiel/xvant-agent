@@ -67,7 +67,6 @@ Use local nonsynchronized storage. Snapshots restore into new directories only a
 | `apps/controller`                 | In-memory orchestration and runnable demo           |
 | `scripts`                         | Offline gate and test-report validation             |
 | `tests`                           | Gate-policy tests                                   |
-| `docs/plans`                      | Phased implementation and release criteria          |
 | `docs/evidence`                   | Compatibility decisions and gate results            |
 
-Run `npm test`, `npm run typecheck`, `npm run lint`, or `npm run format:check` for individual checks. CI is configured for Windows and Linux; its configuration is not proof that remote jobs have run.
+Run `npm test`, `npm run typecheck`, `npm run lint`, or `npm run format:check` for individual checks. Run the gate on each host to qualify that host.
