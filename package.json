@@ -21,9 +21,11 @@
     "demo": "node --experimental-strip-types apps/controller/src/demo.ts"
   },
   "dependencies": {
+    "better-sqlite3": "13.0.3",
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "9.6.0",
     "@types/node": "24.13.6",
     "@vitest/coverage-v8": "5.0.1",
     "eslint": "10.11.0",
