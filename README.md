@@ -57,6 +57,14 @@ Simulation hashes do not prove real code changes. Workspace IDs reserve logical 
 
 Use local nonsynchronized storage. Snapshots restore into new directories only and preserve the controller lease TTL. Verify snapshots before recovering user data.
 
+## Phase 3 offline foundation
+
+`npm run probe -- --offline --runtime all` exercises ten synthetic provider
+identities. `npm run probe -- --inventory-only --runtime all` reads CLI versions
+without model calls. `npm run gate -- --phase 03 --offline` verifies the offline
+foundation and all earlier suites. Live providers remain disabled; this does not
+complete the live Phase 3 milestone. See [adapter boundaries](packages/adapters/README.md).
+
 ## Layout
 
 | Path                              | Responsibility                                      |

@@ -7,6 +7,8 @@ export default defineConfig({
       'tests/**/*.test.ts',
     ],
     testTimeout: 5000,
+    // Bound concurrent process-heavy suites; Windows startup otherwise exhausts deadlines.
+    maxWorkers: 2,
     coverage: {
       provider: 'v8',
       include: [
@@ -16,6 +18,7 @@ export default defineConfig({
         'apps/controller/src/service.ts',
         'apps/controller/src/http/**/*.ts',
         'scripts/gate-policy.ts',
+        'scripts/probe-policy.ts',
       ],
       exclude: ['**/*.test.ts'],
       reporter: ['text', 'json-summary'],

@@ -11,10 +11,12 @@ const args = process.argv.slice(2);
 if (
   args.length !== 3 ||
   args[0] !== '--phase' ||
-  !['01', '02'].includes(args[1]) ||
+  !['01', '02', '03'].includes(args[1]) ||
   args[2] !== '--offline'
 ) {
-  console.error('Usage: npm run gate -- --phase 01|02 --offline');
+  console.error(
+    'Usage: npm run gate -- --phase 01|02|03 --offline. Live gates remain unavailable.',
+  );
   process.exit(2);
 }
 const phase = args[1];
@@ -66,6 +68,10 @@ const report = {
   npmVersion: process.env.npm_config_user_agent ?? 'not invoked through npm',
   gitVersion: git(['--version']).stdout.trim(),
   classification: 'offline',
+  qualificationScope:
+    phase === '03'
+      ? 'offline-provider-transport-foundation'
+      : 'offline-simulation',
   runtimeKind: 'simulated',
   liveProvidersTested: [],
   checks: [],
@@ -180,6 +186,39 @@ try {
         path,
         sha256: hash(readFileSync(resolve(root, path))),
       });
+  }
+  if (phase === '03') {
+    check('provider-fixtures', [
+      'scripts/probe.mjs',
+      '--offline',
+      '--runtime',
+      'all',
+    ]);
+    const fixtures = JSON.parse(
+      readFileSync(resolve(artifacts, 'provider-fixtures.log'), 'utf8'),
+    );
+    if (
+      fixtures.classification !== 'offline' ||
+      fixtures.liveProvidersTested.length !== 0 ||
+      fixtures.results.length !== 10 ||
+      !fixtures.results.every(
+        (r) => r.liveEnabled === false && r.outcome === 'completed',
+      )
+    )
+      throw new Error('Provider fixture roster failed');
+    check('codex-transport', ['scripts/codex-fixture.mjs', 'success']);
+    const transport = JSON.parse(
+      readFileSync(resolve(artifacts, 'codex-transport.log'), 'utf8'),
+    );
+    if (
+      transport.classification !== 'offline' ||
+      transport.liveProvidersTested.length !== 0 ||
+      transport.state !== 'result_pending' ||
+      transport.outcome !== 'completed' ||
+      transport.persistedBeforeWrite !== true ||
+      transport.turnRequests !== 1
+    )
+      throw new Error('Codex offline transport failed');
   }
   const after = snapshot();
   if (after.sha256 !== before.sha256)
