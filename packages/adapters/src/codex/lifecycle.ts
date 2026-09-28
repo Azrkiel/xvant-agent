@@ -45,6 +45,9 @@ export class CodexLifecycle {
   get status(): Status {
     return this.state;
   }
+  get nativeRunId(): string | undefined {
+    return this.runId;
+  }
   initialize() {
     if (this.state !== 'new') fail('ILLEGAL_TRANSITION');
     const params = {

@@ -75,7 +75,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/adapters/src/providers/conformance.test.ts': 19,
               'packages/adapters/src/providers/protocol.test.ts': 8,
               'tests/probe.test.ts': 12,
-              'packages/adapters/src/codex/transport.test.ts': 18,
+              'packages/adapters/src/codex/transport.test.ts': 20,
               'packages/adapters/src/codex/profile.test.ts': 5,
               'packages/adapters/src/codex/lifecycle.test.ts': 9,
               'tests/codex-process.test.ts': 6,
@@ -87,6 +87,9 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/core/src/native-acceptance.test.ts': 8,
               'apps/controller/src/native-review.test.ts': 12,
               'tests/faults/native-acceptance.test.ts': 3,
+              'apps/controller/src/codex-offline.test.ts': 12,
+              'packages/supervisor/src/interactive.test.ts': 3,
+              'tests/faults/codex-controller.test.ts': 5,
             }
           : {}),
       };

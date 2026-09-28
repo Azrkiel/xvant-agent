@@ -214,5 +214,25 @@ offline scope. Simulator acceptance cannot consume these tasks or receipts. Fail
 cancelled, unknown or reconciled connections cannot enter this acceptance path.
 The controller API is host-only: actor identity/authorization must come from the
 host, never a provider message. No public HTTP route, live account authorization or
-paid fallback is enabled. Production Codex process ownership and lifecycle-to-review
-orchestration remain the next integration boundary.
+paid fallback is enabled. Production Codex process ownership remains unqualified.
+
+## Owned offline lifecycle through review
+
+`OfflineCodexController` launches only the fixed synthetic Codex peer through
+`WorkerSupervisor`. It reserves the offline connection, journals protocol traffic,
+declines permission requests, correlates the native turn, and waits for the owned
+process to close successfully. Complete EOF and no pending RPC writes/replies are
+required before recording a terminal outcome. Partial or malformed trailing output,
+disconnects, timeout and controller stop retain reservations without verification
+or automatic resend.
+
+After successful shutdown, the host verifier checks the registered workspace and
+commands, then prepares immutable evidence for explicit review. Provider completion
+cannot accept the task. Five actual-process crash cases cover reservation, confirmed
+shutdown, terminal commit, verification and review preparation; recovery never
+replays the turn. Interactive stdin and stdout remain bounded by the supervisor.
+
+This qualifies the Windows offline orchestration path only. It does not launch a
+live provider, create or resume a native thread, authenticate an account, or provide
+hostile-process containment. Live lifecycle integration and broader provider
+protocol coverage remain open.

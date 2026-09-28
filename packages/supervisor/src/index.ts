@@ -21,6 +21,7 @@ export interface ProcessRequest {
   maxOutputBytes: number;
   userApprovedTrustedLocal: boolean;
   signal?: AbortSignal;
+  interactive?: { onStdout: (bytes: Buffer) => void };
 }
 export interface ProcessResult {
   identity: RunIdentity;
@@ -48,6 +49,8 @@ export class WorkerSupervisor {
   start(request: ProcessRequest): {
     identity: RunIdentity;
     result: Promise<ProcessResult>;
+    write: (frame: string) => Promise<void>;
+    endInput: () => void;
   } {
     const decision = authorizeExecution({
       profile: 'trusted-local',
@@ -85,7 +88,7 @@ export class WorkerSupervisor {
       shell: false,
       windowsHide: true,
       detached: process.platform === 'linux',
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: [request.interactive ? 'pipe' : 'ignore', 'pipe', 'pipe'],
     });
     const budget = request.maxOutputBytes;
     const signal = request.signal;
@@ -107,7 +110,21 @@ export class WorkerSupervisor {
       used += size;
       if (size < chunk.length) truncated = true;
     };
-    child.stdout?.on('data', (chunk: Buffer) => capture(stdout, chunk));
+    const onStdout = request.interactive?.onStdout;
+    child.stdout?.on('data', (chunk: Buffer) => {
+      capture(stdout, chunk);
+      if (onStdout) {
+        if (truncated) {
+          stop('cancelled');
+          return;
+        }
+        try {
+          onStdout(chunk);
+        } catch {
+          stop('cancelled');
+        }
+      }
+    });
     child.stderr?.on('data', (chunk: Buffer) => capture(stderr, chunk));
     // Decode only complete UTF-8 prefixes; replacement characters can exceed the byte budget.
     const decode = (parts: Buffer[]) => {
@@ -132,6 +149,7 @@ export class WorkerSupervisor {
         this.#runs.delete(identity.nonce);
       child.stdout?.destroy();
       child.stderr?.destroy();
+      child.stdin?.destroy();
       resolveResult({
         identity,
         reason,
@@ -165,6 +183,7 @@ export class WorkerSupervisor {
       }, 7000);
     };
     const onAbort = () => stop('cancelled');
+    child.stdin?.on('error', () => stop('cancelled'));
     this.#runs.set(identity.nonce, { identity, stop });
     child.once('error', () => {
       reason = 'spawn_failed';
@@ -176,7 +195,32 @@ export class WorkerSupervisor {
     });
     deadline = setTimeout(() => stop('timeout'), request.timeoutMs);
     signal?.addEventListener('abort', onAbort, { once: true });
-    return { identity, result };
+    return {
+      identity,
+      result,
+      write: async (frame: string) => {
+        if (
+          settled ||
+          !child.stdin ||
+          !child.stdin.writable ||
+          child.stdin.writableEnded
+        )
+          throw new Error('CONNECTION_CLOSED');
+        if (
+          Buffer.byteLength(frame) > 65536 ||
+          child.stdin.writableLength > 65536
+        )
+          throw new Error('LIMIT_EXCEEDED');
+        await new Promise<void>((resolve, reject) =>
+          child.stdin!.write(frame, (error) =>
+            error ? reject(error) : resolve(),
+          ),
+        );
+      },
+      endInput: () => {
+        child.stdin?.end();
+      },
+    };
   }
 
   cancel(identity: RunIdentity): boolean {

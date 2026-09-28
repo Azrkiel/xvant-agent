@@ -37,6 +37,37 @@ describe('bounded JSON line transport', () => {
 });
 
 describe('RPC request lifecycle', () => {
+  it('seals clean EOF before final close and refuses later traffic', async () => {
+    const onClose = vi.fn();
+    const channel = new RpcChannel({
+      beforeWrite: async () => {},
+      write: async () => {},
+      onClose,
+    });
+    channel.endReceive();
+    channel.endReceive();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(() => channel.receive(Buffer.from('{}\n'))).toThrow(
+      'CONNECTION_CLOSED',
+    );
+    await expect(channel.notify('later', {})).rejects.toThrow(
+      'CONNECTION_CLOSED',
+    );
+    channel.close();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(() => channel.endReceive()).toThrow('CONNECTION_CLOSED');
+  });
+  it('poisons EOF with unacknowledged requests', async () => {
+    const channel = new RpcChannel({
+      beforeWrite: async () => {},
+      write: async () => {},
+    });
+    const pending = channel.request('turn/start', {});
+    const rejected = expect(pending).rejects.toThrow('OPERATION_UNKNOWN');
+    expect(() => channel.endReceive()).toThrow('OPERATION_UNKNOWN');
+    await rejected;
+    channel.close();
+  });
   it('fails closed if a receive barrier accidentally returns a promise', () => {
     const onMessage = vi.fn();
     const channel = new RpcChannel({

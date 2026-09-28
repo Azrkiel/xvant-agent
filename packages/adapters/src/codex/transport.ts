@@ -127,6 +127,7 @@ export class RpcChannel {
   private readonly uncertain = new Set<number>();
   private nextId = 1;
   private closed = false;
+  private inputEnded = false;
   constructor(options: ChannelOptions) {
     this.options = { ...options };
     this.decoder = new JsonLineDecoder(options.maxFrameBytes);
@@ -173,7 +174,7 @@ export class RpcChannel {
     params: unknown,
     kind: 'request' | 'notification' | 'response',
   ): Promise<unknown> {
-    if (this.closed) fail('CONNECTION_CLOSED');
+    if (this.closed || this.inputEnded) fail('CONNECTION_CLOSED');
     if (this.pending.size >= (this.options.maxPending ?? 16))
       fail('WORKER_BUSY');
     if (
@@ -238,7 +239,7 @@ export class RpcChannel {
     });
   }
   receive(chunk: Uint8Array): void {
-    if (this.closed) fail('CONNECTION_CLOSED');
+    if (this.closed || this.inputEnded) fail('CONNECTION_CLOSED');
     try {
       for (const frame of this.decoder.push(chunk)) {
         const message = messageSchema.parse(frame);
@@ -280,11 +281,24 @@ export class RpcChannel {
       throw new ReceiveStorageError();
     }
   }
+  /** Validate EOF before the host commits a terminal outcome. */
+  endReceive(): void {
+    if (this.closed) fail('CONNECTION_CLOSED');
+    if (this.inputEnded) return;
+    try {
+      this.decoder.end();
+      if (this.pending.size) fail('OPERATION_UNKNOWN');
+      this.inputEnded = true;
+    } catch (error) {
+      this.poison('OPERATION_UNKNOWN');
+      throw error;
+    }
+  }
   close(): void {
     if (this.closed) return;
     // Even clean EOF is an unknown outcome for every unacknowledged request.
     try {
-      this.decoder.end();
+      if (!this.inputEnded) this.decoder.end();
     } finally {
       this.poison('OPERATION_UNKNOWN');
     }

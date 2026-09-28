@@ -62,6 +62,8 @@ input.on('line', (line) => {
           },
         });
         complete();
+        if (scenario === 'late-malformed') process.stdout.write('{bad}\n');
+        if (scenario === 'late-partial') process.stdout.write('{');
       }
       break;
     case 'turn/interrupt':
