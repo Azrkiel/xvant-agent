@@ -76,3 +76,11 @@ export const nativeVerificationSchema = z
       context.addIssue({ code: 'custom', message: 'Receipt outcome mismatch' });
   });
 export type NativeVerification = z.infer<typeof nativeVerificationSchema>;
+export type NativeEvidence = z.infer<typeof nativeEvidenceSchema>;
+export const nativeAcceptanceSchema = z.strictObject({
+  connectionId: idSchema,
+  expectedVersion: z.number().int().nonnegative(),
+  reviewedEvidenceHash: hashSchema,
+  actorId: idSchema,
+  classification: z.literal('offline'),
+});

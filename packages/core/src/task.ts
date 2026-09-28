@@ -139,6 +139,7 @@ export function reviseTask(input: Task, work: unknown): Task {
   delete rest.attemptId;
   delete rest.treeHash;
   delete rest.artifactSetHash;
+  delete rest.nativeQualification;
   // An edit starts a new work revision; state-only changes never invalidate receipts.
   return {
     ...rest,

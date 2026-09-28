@@ -17,6 +17,12 @@ import type {
 import type { ArtifactStore } from './artifacts.ts';
 import { createTask, transitionTask } from '../../core/src/task.ts';
 import { ProviderJournal, providerMigration } from './providers.ts';
+import {
+  nativeAcceptanceSchema,
+  nativeEvidenceSchema,
+} from '../../contracts/src/native-evidence.ts';
+import { nativeAcceptanceTask } from '../../core/src/native-acceptance.ts';
+import { verifiedWorkspaceObjects } from './workspace.ts';
 
 export class StorageError extends Error {
   readonly code: string;
@@ -603,6 +609,8 @@ export class Store {
       () => {
         const task = this.getTask(id);
         this.#version(task, expectedVersion);
+        if (task.nativeQualification)
+          throw new StorageError('NATIVE_ACCEPTANCE_REQUIRED');
         const row = this.#db
           .prepare('SELECT body FROM evidence WHERE task_id=?')
           .get(id) as { body: string } | undefined;
@@ -613,6 +621,100 @@ export class Store {
         );
         this.#task(next);
         this.#event(id, 'task.accepted', next);
+        return next;
+      },
+    );
+  }
+  prepareNativeAcceptance(
+    key: string,
+    connectionId: string,
+    expectedVersion: number,
+    objects: ArtifactStore,
+  ) {
+    const original = this.providers.get(connectionId);
+    return this.#command(
+      this.getTask(original.taskId).projectId,
+      'native.prepare',
+      key,
+      { connectionId, expectedVersion },
+      () => {
+        const evidence = this.providers.acceptanceEvidence(connectionId);
+        const task = this.getTask(evidence.taskId);
+        this.#version(task, expectedVersion);
+        if (task.state !== 'needs_attention')
+          throw new StorageError('ILLEGAL_TRANSITION');
+        verifiedWorkspaceObjects(objects, evidence);
+        const verifying = transitionTask(task, 'verifying');
+        const next = nativeAcceptanceTask(
+          {
+            ...verifying,
+            treeHash: evidence.treeHash,
+            artifactSetHash: evidence.artifactSetHash,
+          },
+          'ready_for_acceptance',
+          evidence,
+        );
+        this.#task(next);
+        this.#db
+          .prepare('INSERT OR REPLACE INTO evidence VALUES(?,?)')
+          .run(task.id, json(evidence));
+        const review = {
+          taskId: task.id,
+          connectionId,
+          rowVersion: next.rowVersion,
+          runtimeKind: evidence.runtimeKind,
+          classification: evidence.classification,
+          treeHash: evidence.treeHash,
+          artifactSetHash: evidence.artifactSetHash,
+          evidenceHash: createHash('sha256')
+            .update(canonical(evidence))
+            .digest('hex'),
+        };
+        this.#event(task.id, 'native.ready_for_acceptance', review);
+        return review;
+      },
+    );
+  }
+  acceptNative(key: string, input: unknown, objects: ArtifactStore): Task {
+    const spec = nativeAcceptanceSchema.parse(input);
+    const original = this.providers.get(spec.connectionId);
+    return this.#command(
+      this.getTask(original.taskId).projectId,
+      'native.accept',
+      key,
+      spec,
+      () => {
+        const task = this.getTask(original.taskId);
+        this.#version(task, spec.expectedVersion);
+        const evidence = this.providers.acceptanceEvidence(spec.connectionId);
+        const row = this.#db
+          .prepare('SELECT body FROM evidence WHERE task_id=?')
+          .get(task.id) as { body: string } | undefined;
+        if (!row) throw new StorageError('EVIDENCE_REQUIRED');
+        const saved = nativeEvidenceSchema.parse(JSON.parse(row.body));
+        const evidenceHash = createHash('sha256')
+          .update(canonical(evidence))
+          .digest('hex');
+        if (
+          canonical(saved) !== canonical(evidence) ||
+          evidenceHash !== spec.reviewedEvidenceHash
+        )
+          throw new StorageError('STALE_EVIDENCE');
+        verifiedWorkspaceObjects(objects, evidence);
+        const next = nativeAcceptanceTask(task, 'accepted', evidence);
+        this.#task(next);
+        this.providers.markAccepted(spec.connectionId);
+        this.#event(task.id, 'native.accepted', {
+          actorId: spec.actorId,
+          classification: spec.classification,
+          runtimeKind: evidence.runtimeKind,
+          connectionId: spec.connectionId,
+          evidenceHash,
+          treeHash: evidence.treeHash,
+          artifactSetHash: evidence.artifactSetHash,
+          attemptId: evidence.attemptId,
+          workRevision: evidence.workRevision,
+        });
         return next;
       },
     );

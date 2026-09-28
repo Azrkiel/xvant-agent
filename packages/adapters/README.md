@@ -190,8 +190,29 @@ verification report commit together; snapshots preserve both. Interrupted
 verification recovers as unknown, retaining reservations.
 
 Successful verification records `verified`; failed checks record
-`verification_failed`. Both keep the task at `needs_attention`. Native receipts
-are deliberately separate from the simulator's acceptance contract: no HTTP
-acceptance or live qualification is added by this stage. Trusted host reconciliation
-is still required to release reservations. The next boundary is native acceptance
-policy and controller orchestration, with immutable artifacts available for review.
+`verification_failed`. Both keep the task at `needs_attention` until a separate
+host action. Native receipts remain separate from the simulator's acceptance
+contract. No HTTP acceptance route or live qualification is added by this stage.
+
+## Explicit offline native acceptance
+
+`NativeReviewController` prepares a review only from passed host verification of a
+completed native run. It exposes the exact evidence and the immutable artifact set
+for inspection, rechecking every referenced object's hash and manifest membership.
+Preparation moves the task to `ready_for_acceptance` and retains reservations.
+
+Acceptance requires an explicit actor ID, current task row version, the reviewed
+evidence digest and `classification: offline`. It checks the stored receipt bindings,
+required checks, native connection state and artifact integrity again. The decision,
+audit event, task state and reservation release commit in one idempotent transaction.
+Restarted controllers can complete a pending review without rerunning the provider;
+crashes cannot leave a partial acceptance or duplicate its audit event.
+
+The accepted object is the immutable reviewed artifact set, not the current mutable
+workspace. Task `nativeQualification` preserves the native runtime, connection and
+offline scope. Simulator acceptance cannot consume these tasks or receipts. Failed,
+cancelled, unknown or reconciled connections cannot enter this acceptance path.
+The controller API is host-only: actor identity/authorization must come from the
+host, never a provider message. No public HTTP route, live account authorization or
+paid fallback is enabled. Production Codex process ownership and lifecycle-to-review
+orchestration remain the next integration boundary.

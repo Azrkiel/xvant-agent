@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { Store } from '../../packages/storage/src/store.ts';
 import { ArtifactStore } from '../../packages/storage/src/artifacts.ts';
 import { NativeVerifier } from '../../apps/controller/src/native-verifier.ts';
+import { NativeReviewController } from '../../apps/controller/src/native-review.ts';
 const [root, point] = process.argv.slice(2);
 const workspace = join(root!, 'work');
 mkdirSync(workspace);
@@ -64,6 +65,22 @@ const result = await verifier.verify('connection', connection.token, {
   stopped: true,
 });
 if (point === 'after_verified') process.exit(71);
+if (point?.startsWith('native.') || point === 'after_accepted') {
+  const review = new NativeReviewController(store, objects);
+  const prepared = review.prepare(
+    'prepare',
+    'connection',
+    store.getTask('task').rowVersion,
+  );
+  review.accept('accept', {
+    connectionId: 'connection',
+    expectedVersion: prepared.rowVersion,
+    reviewedEvidenceHash: prepared.evidenceHash,
+    actorId: 'fixture_reviewer',
+    classification: 'offline',
+  });
+  if (point === 'after_accepted') process.exit(71);
+}
 verifier.stop();
 store.close();
 console.log(

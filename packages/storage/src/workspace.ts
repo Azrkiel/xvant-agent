@@ -12,12 +12,55 @@ import type { Stats } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, isAbsolute } from 'node:path';
 import { ArtifactStore, safePath } from './artifacts.ts';
+import { z } from 'zod';
+import { hashSchema } from '../../contracts/src/index.ts';
 
 export interface WorkspaceSnapshot {
   treeHash: string;
   artifactSetHash: string;
   workspaceRootHash: string;
   artifactHashes: string[];
+}
+/** Validate the complete immutable object set before review or acceptance. */
+export function verifiedWorkspaceObjects(
+  objects: ArtifactStore,
+  evidence: { treeHash: string; artifactSetHash: string },
+): string[] {
+  const set = z
+    .strictObject({
+      version: z.literal(1),
+      hashes: z.array(hashSchema).max(1025),
+    })
+    .parse(JSON.parse(objects.get(evidence.artifactSetHash).toString()));
+  const tree = z
+    .strictObject({
+      version: z.literal(1),
+      directories: z.array(z.string()).max(1024),
+      files: z
+        .array(
+          z.strictObject({
+            path: z.string(),
+            hash: hashSchema,
+            bytes: z
+              .number()
+              .int()
+              .nonnegative()
+              .max(16 * 1024 * 1024),
+            executable: z.boolean(),
+          }),
+        )
+        .max(1024),
+    })
+    .parse(JSON.parse(objects.get(evidence.treeHash).toString()));
+  const hashes = [
+    ...new Set([evidence.treeHash, ...tree.files.map((file) => file.hash)]),
+  ].sort();
+  if (JSON.stringify(hashes) !== JSON.stringify(set.hashes))
+    throw new Error('INVALID_EVIDENCE');
+  for (const file of tree.files)
+    if (objects.get(file.hash).length !== file.bytes)
+      throw new Error('INVALID_EVIDENCE');
+  return [...new Set([...hashes, evidence.artifactSetHash])];
 }
 function fail(code: string): never {
   throw new Error(code);

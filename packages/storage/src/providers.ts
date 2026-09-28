@@ -38,7 +38,8 @@ export interface ProviderConnection extends ProviderDispatch {
     | 'verifying'
     | 'verified'
     | 'verification_failed'
-    | 'reconciled';
+    | 'reconciled'
+    | 'accepted';
   verification?: NativeVerification;
   nativeRunId: string | null;
   outcome: 'completed' | 'cancelled' | 'failed' | null;
@@ -99,7 +100,7 @@ export class ProviderJournal {
       }[]
     )
       .map((row) => JSON.parse(row.body) as ProviderConnection)
-      .filter((value) => value.status !== 'reconciled');
+      .filter((value) => !['reconciled', 'accepted'].includes(value.status));
   }
   unresolved(taskId: string): boolean {
     return this.active().some((value) => value.taskId === taskId);
@@ -357,6 +358,50 @@ export class ProviderJournal {
       this.save(next);
       this.host.fault('provider.verify.before_commit');
       return next;
+    });
+  }
+  acceptanceEvidence(id: string, historical = false) {
+    const connection = this.get(id);
+    if (
+      !(
+        connection.status === 'verified' ||
+        (historical && connection.status === 'accepted')
+      ) ||
+      connection.outcome !== 'completed'
+    )
+      fail('EVIDENCE_REQUIRED');
+    const result = nativeVerificationSchema.parse(connection.verification);
+    if (result.status !== 'passed') fail('CHECK_FAILED');
+    const evidence = result.evidence;
+    const expected = {
+      taskId: connection.taskId,
+      attemptId: connection.attemptId,
+      workRevision: connection.workRevision,
+      generation: connection.generation,
+      connectionId: id,
+      workspaceId: connection.workspaceId,
+      hostId: connection.worker.hostId,
+      runtimeKind: connection.worker.runtimeKind,
+      classification: connection.classification,
+      nativeSessionId: connection.worker.nativeSessionId,
+      nativeRunId: connection.nativeRunId,
+    };
+    if (
+      (Object.keys(expected) as (keyof typeof expected)[]).some(
+        (key) => evidence[key] !== expected[key],
+      )
+    )
+      fail('STALE_EVIDENCE');
+    return evidence;
+  }
+  /** Called only inside Store's explicit acceptance transaction. */
+  markAccepted(id: string): void {
+    this.host.transaction(() => {
+      this.acceptanceEvidence(id);
+      this.save({ ...this.get(id), status: 'accepted' });
+      this.db
+        .prepare('DELETE FROM provider_reservations WHERE connection_id=?')
+        .run(id);
     });
   }
   finishVerification(

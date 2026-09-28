@@ -71,6 +71,13 @@ export const taskSchema = createTaskSchema.extend({
   attemptId: idSchema.optional(),
   treeHash: hashSchema.optional(),
   artifactSetHash: hashSchema.optional(),
+  nativeQualification: z
+    .strictObject({
+      connectionId: idSchema,
+      runtimeKind: z.enum(['codex', 'claude', 'opencode']),
+      classification: z.literal('offline'),
+    })
+    .optional(),
 });
 export type Task = z.infer<typeof taskSchema>;
 export const attemptStateSchema = z.enum([

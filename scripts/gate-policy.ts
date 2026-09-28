@@ -84,6 +84,9 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/storage/src/workspace.test.ts': 5,
               'apps/controller/src/native-verifier.test.ts': 21,
               'tests/faults/native-verification.test.ts': 4,
+              'packages/core/src/native-acceptance.test.ts': 8,
+              'apps/controller/src/native-review.test.ts': 12,
+              'tests/faults/native-acceptance.test.ts': 3,
             }
           : {}),
       };
