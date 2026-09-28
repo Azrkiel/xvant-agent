@@ -16,6 +16,7 @@ import type {
 } from '../../contracts/src/index.ts';
 import type { ArtifactStore } from './artifacts.ts';
 import { createTask, transitionTask } from '../../core/src/task.ts';
+import { ProviderJournal, providerMigration } from './providers.ts';
 
 export class StorageError extends Error {
   readonly code: string;
@@ -95,6 +96,7 @@ function canonical(value: unknown): string {
   return json(value);
 }
 export class Store {
+  readonly providers: ProviderJournal;
   readonly #db: Database.Database;
   readonly #owner: string;
   readonly #now: () => number;
@@ -116,6 +118,7 @@ export class Store {
       this.#db.pragma('synchronous=FULL');
       const migrations = [
         { version: 1, sql: migration },
+        { version: 2, sql: providerMigration },
         ...(options.migrations ?? []),
       ];
       if (this.schemaVersion() > migrations.at(-1)!.version)
@@ -155,6 +158,32 @@ export class Store {
       this.#db.close();
       throw error;
     }
+    this.providers = new ProviderJournal(this.#db, {
+      transaction: (fn) => this.#transaction(fn),
+      generation: this.#generation,
+      fault: this.#fault,
+      start: (spec) => {
+        const task = this.getTask(spec.taskId);
+        this.#version(task, spec.expectedVersion);
+        this.#task(
+          transitionTask({ ...task, attemptId: spec.attemptId }, 'running'),
+        );
+        this.#event(task.id, 'provider.reserved', {
+          connectionId: spec.connectionId,
+          attemptId: spec.attemptId,
+        });
+        return task.workRevision;
+      },
+      attention: (id) => {
+        const task = this.getTask(id);
+        if (task.state !== 'needs_attention') {
+          this.#task(transitionTask(task, 'needs_attention'));
+          this.#event(id, 'provider.needs_attention', {
+            attemptId: task.attemptId,
+          });
+        }
+      },
+    });
   }
   #owned(): void {
     const row = this.#db
@@ -296,6 +325,7 @@ export class Store {
           .prepare('SELECT body FROM operations WHERE task_id=?')
           .all(id) as { body: string }[];
         if (
+          this.providers.unresolved(id) ||
           unresolved.some((row) =>
             ['prepared', 'sending', 'running', 'unknown'].includes(
               (JSON.parse(row.body) as Operation).status,
@@ -328,6 +358,7 @@ export class Store {
         const task = this.getTask(spec.taskId);
         this.#version(task, spec.expectedVersion);
         if (
+          this.providers.hasAttempt(spec.attemptId) ||
           this.#db
             .prepare('SELECT id FROM operations WHERE id=?')
             .get(spec.attemptId)
@@ -340,6 +371,7 @@ export class Store {
         ];
         for (const resource of resources)
           if (
+            this.providers.occupied(resource) ||
             this.#db
               .prepare('SELECT resource FROM reservations WHERE resource=?')
               .get(resource)
@@ -487,7 +519,7 @@ export class Store {
       const rows = this.#db.prepare('SELECT body FROM operations').all() as {
         body: string;
       }[];
-      const affected: string[] = [];
+      const affected: string[] = this.providers.recover();
       for (const row of rows) {
         const op = JSON.parse(row.body) as Operation;
         if (

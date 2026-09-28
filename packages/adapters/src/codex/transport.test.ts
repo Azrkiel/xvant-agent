@@ -37,6 +37,19 @@ describe('bounded JSON line transport', () => {
 });
 
 describe('RPC request lifecycle', () => {
+  it('fails closed if a receive barrier accidentally returns a promise', () => {
+    const onMessage = vi.fn();
+    const channel = new RpcChannel({
+      beforeWrite: async () => {},
+      write: async () => {},
+      beforeReceive: async () => {},
+      onMessage,
+    });
+    expect(() =>
+      channel.receive(Buffer.from('{"method":"notification"}\n')),
+    ).toThrow('STORAGE_UNAVAILABLE');
+    expect(onMessage).not.toHaveBeenCalled();
+  });
   it('sends notifications and denial responses without fabricating request acknowledgements', async () => {
     const frames: unknown[] = [];
     const channel = new RpcChannel({

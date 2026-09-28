@@ -16,6 +16,9 @@ describe('Codex offline stdio process', () => {
       expect(report.liveProvidersTested).toEqual([]);
       expect(report.state).toBe('result_pending');
       expect(report.persistedBeforeWrite).toBe(true);
+      expect(report.durableState).toBe('result_pending');
+      expect(report.taskState).toBe('needs_attention');
+      expect(report.persistedInbound).toBeGreaterThan(2);
       if (scenario === 'approval') expect(report.denials).toBe(1);
       if (scenario === 'interrupt') expect(report.outcome).toBe('cancelled');
     },
@@ -34,6 +37,8 @@ describe('Codex offline stdio process', () => {
       expect(report.state).toBe('needs_attention');
       expect(report.turnRequests).toBe(1);
       expect(report.outcome).toBe('unknown');
+      expect(report.durableState).toBe('unknown');
+      expect(report.taskState).toBe('needs_attention');
     },
     15000,
   );

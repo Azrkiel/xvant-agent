@@ -105,8 +105,9 @@ and response deadlines. It persists an exact outgoing frame through a required
 host `beforeWrite` hook before invoking the supplied writer. Write failure,
 timeout, malformed input, unexpected response IDs, or disconnection closes the
 channel. Attempted, unacknowledged request IDs remain visible as uncertain; there
-is no reconnect or resend. Hook failure prevents sending. Response persistence
-and durable recovery are still the caller's responsibility.
+is no reconnect or resend. Hook failure prevents sending. The optional synchronous
+`beforeReceive` barrier commits before replies resolve or notifications reach a
+handler; failure closes the channel without delivering the message.
 
 The lifecycle validates initialization and the selected turn messages, fixes the
 thread ID, tracks the native turn, sets a read-only policy, and denies command/file
@@ -126,12 +127,41 @@ node scripts/codex-fixture.mjs timeout
 ```
 
 These commands launch only the checked-in synthetic Node peer through real pipes.
-They fsync a temporary intent journal before each write, verify failure outcomes,
-stop the owned peer, and remove their temporary files. An exit code of zero for a
+They use a temporary SQLite Store with WAL and FULL synchronous commits, verify
+failure outcomes, stop the owned peer, and remove their temporary files. An exit code of zero for a
 failure scenario means its expected unknown outcome was observed.
 
 This is an offline protocol slice, not a live Codex adapter. Thread creation/resume,
 full notification support, permission grants, native error classification, owned
-provider launch, authentication, billing, artifact attestation and durable Store
-integration remain unqualified. The Phase 2 controller continues using simulator
+provider launch, authentication, billing and artifact attestation remain
+unqualified. The Phase 2 controller continues using simulator
 evidence only. Claude and OpenCode still use the earlier synthetic subsets.
+
+## Durable offline provider journal
+
+`Store.providers` reserves a connection against the task's current row version,
+work revision, attempt, worker, workspace, native session and controller generation.
+Only managed offline records are admitted. Workspace and worker reservations
+conflict with simulated dispatch too; changing an endpoint alias cannot bypass
+native session ownership. Connection and attempt identities cannot be reused.
+
+`durableCodexChannel` commits the exact outbound frame before writing, checks the
+controller fence again immediately before the writer, and commits inbound routing
+metadata and a SHA-256 digest before delivering a reply or notification. Incoming
+text and error bodies are not retained. Outbound frames include prompt text, so
+the database and backups must be treated as private project data. The ledger is
+bounded to 4,096 entries per connection and 64 KiB per frame. It is an audit journal,
+not a message replay queue; response bodies cannot be reconstructed from digests.
+
+Lease takeover fences old callbacks. On restart, open connections become unknown,
+tasks require attention, and reservations remain held. A validated native terminal
+result also requires attention and retains reservations. Only trusted host
+reconciliation releases them; no HTTP or provider message exposes that authority.
+Native results never acquire simulated hashes, receipts or acceptance authority.
+
+Schema v2 migrates existing v1 databases transactionally. Verified snapshots support
+both versions, including the provider records and reservation constraints. Eight
+real-process crash tests cover reservation/intent commits, pipe writes, reply
+persistence and terminal results. These tests and the six synthetic Codex process
+scenarios qualify offline durability only. Native artifact attestation and host
+verification are the next integration boundary.

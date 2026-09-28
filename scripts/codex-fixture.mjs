@@ -1,18 +1,10 @@
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import {
-  mkdtempSync,
-  openSync,
-  writeSync,
-  fsyncSync,
-  closeSync,
-  unlinkSync,
-  rmdirSync,
-  readFileSync,
-} from 'node:fs';
+import { mkdtempSync, unlinkSync, rmdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { RpcChannel } from '../packages/adapters/src/codex/transport.ts';
+import { durableCodexChannel } from '../packages/adapters/src/codex/durable.ts';
+import { Store } from '../packages/storage/src/store.ts';
 import { CodexLifecycle } from '../packages/adapters/src/codex/lifecycle.ts';
 import {
   CODEX_VERSION,
@@ -34,8 +26,38 @@ if (
   process.exit(2);
 }
 const directory = mkdtempSync(join(tmpdir(), 'xvant-codex-fixture-'));
-const journalPath = join(directory, 'intents.jsonl');
-const journal = openSync(journalPath, 'a');
+const journalPath = join(directory, 'state.sqlite');
+const store = new Store(journalPath, { owner: 'fixture' });
+store.create('create', {
+  id: 'task',
+  projectId: 'fixture',
+  objective: 'Offline fixture',
+  requiredCheckIds: ['test'],
+  acceptanceCriteria: ['Pass'],
+});
+store.queue('queue', 'task', 0);
+const connection = store.providers.reserve({
+  connectionId: 'connection',
+  taskId: 'task',
+  attemptId: 'attempt',
+  workspaceId: 'workspace',
+  expectedVersion: 1,
+  classification: 'offline',
+  worker: {
+    id: 'worker',
+    alias: 'worker',
+    runtimeKind: 'codex',
+    hostId: 'host',
+    endpointId: 'fixture',
+    nativeSessionId: 'thread-1',
+    runtimeVersion: CODEX_VERSION,
+    adapterVersion: 'v1',
+    mode: 'managed',
+    quotaGroupId: 'fixture',
+  },
+});
+let durableState, taskState, persistedInbound;
+let nativeRunId;
 const life = new CodexLifecycle(CODEX_VERSION, 'thread-1');
 const child = spawn(
   process.execPath,
@@ -63,19 +85,12 @@ const fail = () => {
   life.disconnected();
   rejectTerminal(new Error('OPERATION_UNKNOWN'));
 };
-const channel = new RpcChannel({
+const channel = durableCodexChannel(store, connection, {
   timeoutMs: 1500,
-  beforeWrite: async (intent) => {
-    writeSync(journal, JSON.stringify(intent) + '\n');
-    fsyncSync(journal);
-  },
   write: (frame) =>
     new Promise((resolve, reject) => {
       // Assert the persistence hook completed before these exact bytes reached the pipe.
-      const intents = readFileSync(journalPath, 'utf8')
-        .trim()
-        .split('\n')
-        .map((line) => JSON.parse(line));
+      const intents = store.providers.entries(connection.connectionId);
       if (!intents.some((intent) => intent.frame === frame)) {
         reject(new Error('STORAGE_UNAVAILABLE'));
         return;
@@ -85,11 +100,24 @@ const channel = new RpcChannel({
     }),
   onMessage: (message) => {
     const action = life.message(message);
-    if (action.kind === 'deny') {
+    if (action.kind === 'started') {
+      nativeRunId = action.nativeRunId;
+      store.providers.bindRun(
+        connection.connectionId,
+        connection.token,
+        nativeRunId,
+      );
+    } else if (action.kind === 'deny') {
       denials++;
       void channel.respond(action.id, action.result).catch(fail);
     } else if (['completed', 'cancelled', 'failed'].includes(action.kind)) {
       outcome = action.kind;
+      store.providers.finish(
+        connection.connectionId,
+        connection.token,
+        nativeRunId,
+        action.kind,
+      );
       resolveTerminal();
     }
   },
@@ -152,8 +180,14 @@ try {
   }
   child.kill();
   await stopped;
-  closeSync(journal);
-  unlinkSync(journalPath);
+  durableState = store.providers.get(connection.connectionId).status;
+  taskState = store.getTask('task').state;
+  persistedInbound = store.providers
+    .entries(connection.connectionId)
+    .filter((entry) => entry.direction === 'in').length;
+  store.close();
+  for (const path of [journalPath, journalPath + '-wal', journalPath + '-shm'])
+    if (existsSync(path)) unlinkSync(path);
   rmdirSync(directory);
 }
 const report = {
@@ -164,6 +198,9 @@ const report = {
   denials,
   turnRequests,
   persistedBeforeWrite: true,
+  durableState,
+  taskState,
+  persistedInbound,
 };
 console.log(JSON.stringify(report));
 const expected = ['disconnect', 'malformed', 'timeout'].includes(scenario)

@@ -94,9 +94,12 @@ export interface WriteIntent {
   params: unknown;
   frame: string;
 }
-interface ChannelOptions {
+export interface ChannelOptions {
   /** Host must persist this exact intent before resolving. A rejection prevents the write. */
   beforeWrite: (intent: WriteIntent) => Promise<void>;
+  /** Synchronous durable barrier: commit before any callback or request resolution. */
+  beforeReceive?: (message: Record<string, unknown>) => void;
+  onClose?: () => void;
   write: (frame: string) => Promise<void>;
   onMessage?: (message: {
     id?: string | number | undefined;
@@ -114,6 +117,7 @@ interface Pending {
   reject: (error: Error) => void;
   timer: ReturnType<typeof setTimeout>;
 }
+class ReceiveStorageError extends Error {}
 
 /** Bounded host-driven channel. No process launch, credentials, or retry policy. */
 export class RpcChannel {
@@ -140,6 +144,7 @@ export class RpcChannel {
     return [...this.uncertain];
   }
   private poison(code: string): void {
+    if (this.closed) return;
     this.closed = true;
     for (const [id, pending] of this.pending) {
       if (pending.attempted) this.uncertain.add(id);
@@ -147,6 +152,11 @@ export class RpcChannel {
       pending.reject(new Error(code));
     }
     this.pending.clear();
+    try {
+      this.options.onClose?.();
+    } catch {
+      // A failed store is recovered under a new fence; never mask the channel failure.
+    }
   }
   async request(method: string, params: unknown): Promise<unknown> {
     return this.send(method, params, 'request');
@@ -233,6 +243,7 @@ export class RpcChannel {
       for (const frame of this.decoder.push(chunk)) {
         const message = messageSchema.parse(frame);
         if ('method' in message) {
+          this.persistReceived(message);
           this.options.onMessage?.(message);
           continue;
         }
@@ -242,15 +253,31 @@ export class RpcChannel {
             : undefined;
         if (!entry || !entry.attempted || !entry.expectsReply)
           fail('INVALID_EVENT');
+        this.persistReceived(message);
         clearTimeout(entry.timer);
         this.pending.delete(message.id as number);
         if ('error' in message)
           entry.reject(new Error('RPC_ERROR:' + message.error.code));
         else entry.resolve(message.result);
       }
+    } catch (error) {
+      const code =
+        error instanceof ReceiveStorageError
+          ? 'STORAGE_UNAVAILABLE'
+          : 'INVALID_EVENT';
+      this.poison(code);
+      fail(code);
+    }
+  }
+  private persistReceived(message: Record<string, unknown>): void {
+    try {
+      const result: unknown = this.options.beforeReceive?.(message);
+      if (result !== undefined) {
+        if (result instanceof Promise) void result.catch(() => {});
+        throw new ReceiveStorageError();
+      }
     } catch {
-      this.poison('INVALID_EVENT');
-      fail('INVALID_EVENT');
+      throw new ReceiveStorageError();
     }
   }
   close(): void {

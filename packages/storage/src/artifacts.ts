@@ -153,7 +153,7 @@ export class ArtifactStore {
 }
 const manifestSchema = z.strictObject({
   version: z.literal(1),
-  schemaVersion: z.literal(1),
+  schemaVersion: z.union([z.literal(1), z.literal(2)]),
   database: z.strictObject({
     file: z.literal('state.sqlite'),
     sha256: hashSchema,
@@ -173,6 +173,9 @@ const tables: Record<string, string[]> = {
   reservations: ['resource', 'operation_id'],
   evidence: ['task_id', 'body'],
   artifacts: ['hash', 'task_id', 'work_revision'],
+  provider_connections: ['id', 'task_id', 'body'],
+  provider_entries: ['sequence', 'connection_id', 'body'],
+  provider_reservations: ['resource', 'connection_id'],
 };
 const primaryKeys: Record<string, string[]> = {
   tasks: ['id'],
@@ -184,12 +187,16 @@ const primaryKeys: Record<string, string[]> = {
   reservations: ['resource'],
   evidence: ['task_id'],
   artifacts: ['hash', 'task_id', 'work_revision'],
+  provider_connections: ['id'],
+  provider_entries: ['sequence'],
+  provider_reservations: ['resource'],
 };
 const integerColumns = new Set([
   'events.sequence',
   'ownership.generation',
   'ownership.expires',
   'artifacts.work_revision',
+  'provider_entries.sequence',
 ]);
 const foreignKeys: Record<string, { from: string; table: string }[]> = {
   tasks: [],
@@ -201,6 +208,11 @@ const foreignKeys: Record<string, { from: string; table: string }[]> = {
   reservations: [{ from: 'operation_id', table: 'operations' }],
   evidence: [{ from: 'task_id', table: 'tasks' }],
   artifacts: [{ from: 'task_id', table: 'tasks' }],
+  provider_connections: [{ from: 'task_id', table: 'tasks' }],
+  provider_entries: [{ from: 'connection_id', table: 'provider_connections' }],
+  provider_reservations: [
+    { from: 'connection_id', table: 'provider_connections' },
+  ],
 };
 interface ColumnMetadata {
   name: string;
@@ -274,7 +286,7 @@ function validateTable(
   }>;
   const uniqueIndexes = indexes.filter((index) => index.unique === 1);
   if (
-    table === 'events'
+    table === 'events' || table === 'provider_entries'
       ? uniqueIndexes.length !== 0
       : uniqueIndexes.length !== 1 ||
         uniqueIndexes[0]?.origin !== 'pk' ||
@@ -282,23 +294,31 @@ function validateTable(
   )
     fail('SCHEMA_UNSUPPORTED');
 }
-function validateDatabase(path: string): string[] {
+function validateDatabase(path: string): {
+  references: string[];
+  schemaVersion: number;
+} {
   regularBytes(path);
   const db = new Database(path, { readonly: true, fileMustExist: true });
   try {
-    if (db.pragma('user_version', { simple: true }) !== 1)
-      fail('SCHEMA_UNSUPPORTED');
+    const schemaVersion = db.pragma('user_version', { simple: true }) as number;
+    if (schemaVersion !== 1 && schemaVersion !== 2) fail('SCHEMA_UNSUPPORTED');
     if (
       db.pragma('integrity_check', { simple: true }) !== 'ok' ||
       (db.pragma('foreign_key_check') as unknown[]).length !== 0
     )
       fail('DATABASE_CORRUPT');
-    for (const [table, columns] of Object.entries(tables))
+    for (const [table, columns] of Object.entries(tables)) {
+      if (schemaVersion === 1 && table.startsWith('provider_')) continue;
       validateTable(db, table, columns);
+    }
     const references = db
       .prepare('SELECT DISTINCT hash FROM artifacts')
       .all() as Array<{ hash: unknown }>;
-    return references.map(({ hash }) => hashSchema.parse(hash));
+    return {
+      references: references.map(({ hash }) => hashSchema.parse(hash)),
+      schemaVersion,
+    };
   } finally {
     db.close();
   }
@@ -341,7 +361,7 @@ export async function backupSnapshot(
   try {
     const databasePath = join(stage, 'state.sqlite');
     await store.backup(databasePath);
-    const references = validateDatabase(databasePath);
+    const { references, schemaVersion } = validateDatabase(databasePath);
     const dbBytes = regularBytes(databasePath);
     const fd = openSync(databasePath, 'r+');
     try {
@@ -359,7 +379,7 @@ export async function backupSnapshot(
     for (const hash of hashes) copy.put(artifacts.get(hash));
     const manifest = {
       version: 1,
-      schemaVersion: 1,
+      schemaVersion,
       database: { file: 'state.sqlite', sha256: digest(dbBytes) },
       artifacts: hashes,
     };
@@ -387,7 +407,8 @@ export async function restoreSnapshot(
     if (digest(bytes) !== manifest.database.sha256) fail('DATABASE_CORRUPT');
     const databasePath = join(stage, 'state.sqlite');
     durableWrite(databasePath, bytes);
-    const references = validateDatabase(databasePath);
+    const { references, schemaVersion } = validateDatabase(databasePath);
+    if (schemaVersion !== manifest.schemaVersion) fail('SCHEMA_UNSUPPORTED');
     const included = new Set(manifest.artifacts);
     if (references.some((hash) => !included.has(hash)))
       fail('ARTIFACT_MISSING');

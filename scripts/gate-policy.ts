@@ -75,10 +75,12 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/adapters/src/providers/conformance.test.ts': 19,
               'packages/adapters/src/providers/protocol.test.ts': 8,
               'tests/probe.test.ts': 12,
-              'packages/adapters/src/codex/transport.test.ts': 17,
+              'packages/adapters/src/codex/transport.test.ts': 18,
               'packages/adapters/src/codex/profile.test.ts': 5,
               'packages/adapters/src/codex/lifecycle.test.ts': 9,
               'tests/codex-process.test.ts': 6,
+              'packages/storage/src/providers.test.ts': 20,
+              'tests/faults/provider-crash.test.ts': 8,
             }
           : {}),
       };
