@@ -11,6 +11,8 @@ it.each([
   'provider.result.before_commit',
   'codex.before_review',
   'native.prepare.before_commit',
+  'provider.session.before_commit',
+  'codex.after_session',
 ])(
   'recovers controller death at %s without replay or acceptance',
   (point) => {
@@ -44,7 +46,32 @@ it.each([
         entries.filter(
           (entry) => entry.direction === 'out' && entry.method === 'turn/start',
         ),
-      ).toHaveLength(point === 'codex.after_reserve' ? 0 : 1);
+      ).toHaveLength(
+        [
+          'codex.after_reserve',
+          'provider.session.before_commit',
+          'codex.after_session',
+        ].includes(point)
+          ? 0
+          : 1,
+      );
+      if (
+        point === 'provider.session.before_commit' ||
+        point === 'codex.after_session'
+      ) {
+        const session =
+          point === 'provider.session.before_commit'
+            ? 'pending:connection'
+            : 'created-1';
+        expect(store.providers.get('connection').worker.nativeSessionId).toBe(
+          session,
+        );
+        expect(
+          store.providers.occupied(
+            'native:' + JSON.stringify(['codex', 'host', session]),
+          ),
+        ).toBe(true);
+      }
       expect(
         store.events(0).some((event) => event.kind === 'native.accepted'),
       ).toBe(false);

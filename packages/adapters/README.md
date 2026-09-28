@@ -85,7 +85,7 @@ Linux qualification and hostile-code containment remain open.
 ## Codex offline transport slice
 
 `src/codex` adds a bounded JSON-line RPC channel and a one-attempt lifecycle for
-Codex `0.158.0-alpha.2.1`. Thirteen schema roots were exported by the installed CLI,
+Codex `0.158.0-alpha.2.1`. Nineteen schema roots were exported by the installed CLI,
 with per-file SHA-256 provenance and shared definitions in `schema.json`. The pin
 preserves generated schema fields, including metadata and defaults. Runtime
 validation uses the already-pinned Zod JSON Schema converter; no dependency was added.
@@ -228,11 +228,37 @@ or automatic resend.
 
 After successful shutdown, the host verifier checks the registered workspace and
 commands, then prepares immutable evidence for explicit review. Provider completion
-cannot accept the task. Five actual-process crash cases cover reservation, confirmed
-shutdown, terminal commit, verification and review preparation; recovery never
+cannot accept the task. Seven actual-process crash cases cover reservation, session
+binding, confirmed shutdown, terminal commit, verification and review preparation; recovery never
 replays the turn. Interactive stdin and stdout remain bounded by the supervisor.
 
 This qualifies the Windows offline orchestration path only. It does not launch a
-live provider, create or resume a native thread, authenticate an account, or provide
-hostile-process containment. Live lifecycle integration and broader provider
-protocol coverage remain open.
+live provider, authenticate an account, or provide hostile-process containment.
+Live lifecycle integration and broader provider protocol coverage remain open.
+
+## Explicit offline thread setup and errors
+
+The owned controller defaults to one explicit `thread/resume` handshake; its third
+`run` argument can select `create` for `thread/start`. Both run against the fixed
+synthetic peer. A created session starts with a connection-specific provisional
+reservation. The host validates the reply, then binds the returned session ID and
+its native reservation in one fenced transaction before sending `turn/start`.
+Binding cannot steal another reservation, happen twice, or follow a turn dispatch.
+
+Replies must match the requested workspace, pinned CLI version, read-only sandbox,
+user-reviewed untrusted approval policy and idle thread state. Resume also checks
+the requested thread ID and excludes historical turns. Thread-start notifications
+are correlated even when they precede the reply or arrive after turn dispatch.
+The older transport-only lifecycle fixtures still support a host-supplied loaded
+thread; the owned controller always performs explicit setup.
+
+Thread RPC errors, malformed/mismatched replies, timeout and disconnect prevent
+turn dispatch. Correlated native `error` notifications stop the peer even when
+`willRetry` is true; XVANT neither retries nor treats the notification as successful
+completion. Failed turns never enter verification. Error bodies remain transient;
+the existing journal retains bounded envelope metadata and digests.
+
+Crashes before and after session binding preserve the provisional or final native
+reservation respectively. Recovery requires attention and never repeats thread
+creation, resume or turn dispatch. These are offline protocol tests, not live
+thread creation/resume qualification or imported-history support.

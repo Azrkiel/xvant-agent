@@ -108,6 +108,28 @@ it('refuses admission after stop', async () => {
   await expect(controller.run(spec)).rejects.toThrow('CONTROLLER_STOPPED');
   expect(store.getTask('task').state).toBe('queued');
 });
+it('does not dispatch a turn when stopped immediately after session setup', async () => {
+  controller.stop();
+  controller = new OfflineCodexController(
+    store,
+    objects,
+    { workspace: join(root, 'work') },
+    { test: { executable: process.execPath, args: ['-e', 'process.exit(0)'] } },
+    {
+      fault: (point) => {
+        if (point === 'codex.after_session') controller.stop();
+      },
+    },
+  );
+  expect((await controller.run(spec)).state).toBe('needs_attention');
+  expect(
+    store.providers
+      .entries('connection')
+      .filter(
+        (entry) => entry.direction === 'out' && entry.method === 'turn/start',
+      ),
+  ).toHaveLength(0);
+});
 it('rejects incomplete trailing output before persisting a successful outcome', async () => {
   const result = await controller.run(spec, 'late-partial');
   expect(result.state).toBe('needs_attention');
@@ -141,3 +163,67 @@ it('keeps connection identity separate from existing command identities', async 
   const result = await controller.run({ ...spec, connectionId: 'create' });
   expect(result.state).toBe('ready_for_acceptance');
 });
+it.each(['create', 'resume'] as const)(
+  'performs explicit %s before turn dispatch and binds evidence to the returned session',
+  async (mode) => {
+    const result = await controller.run(spec, 'success', mode);
+    expect(result.state).toBe('ready_for_acceptance');
+    const saved = store.providers.get('connection');
+    expect(saved.worker.nativeSessionId).toBe(
+      mode === 'create' ? 'created-1' : 'thread-1',
+    );
+    expect(saved.verification?.status).toBe('passed');
+    if (saved.verification?.status !== 'passed')
+      throw new Error('Expected passed verification');
+    expect(saved.verification.evidence.nativeSessionId).toBe(
+      saved.worker.nativeSessionId,
+    );
+    const requests = store.providers
+      .entries('connection')
+      .filter((entry) => entry.direction === 'out')
+      .map((entry) => entry.method);
+    expect(
+      requests.indexOf(mode === 'create' ? 'thread/start' : 'thread/resume'),
+    ).toBeGreaterThan(-1);
+    expect(
+      requests.indexOf(mode === 'create' ? 'thread/start' : 'thread/resume'),
+    ).toBeLessThan(requests.indexOf('turn/start'));
+  },
+);
+it.each([
+  'thread-rpc-error',
+  'thread-mismatch',
+  'thread-malformed',
+  'thread-disconnect',
+  'thread-timeout',
+])('never starts a turn or retries after %s', async (scenario) => {
+  const result = await controller.run(spec, scenario, 'resume');
+  expect(result.state).toBe('needs_attention');
+  expect(store.providers.get('connection').status).toBe('unknown');
+  const requests = store.providers
+    .entries('connection')
+    .filter((entry) => entry.direction === 'out');
+  expect(
+    requests.filter((entry) => entry.method === 'thread/resume'),
+  ).toHaveLength(1);
+  expect(
+    requests.filter((entry) => entry.method === 'turn/start'),
+  ).toHaveLength(0);
+  expect(store.providers.get('connection').verification).toBeUndefined();
+});
+it.each(['native-error', 'native-retry', 'turn-rpc-error', 'turn-failed'])(
+  'keeps %s away from verification and acceptance',
+  async (scenario) => {
+    const result = await controller.run(spec, scenario);
+    expect(result.state).toBe('needs_attention');
+    expect(store.providers.get('connection').verification).toBeUndefined();
+    expect(store.providers.occupied('workspace:workspace')).toBe(true);
+    expect(
+      store.providers
+        .entries('connection')
+        .filter(
+          (entry) => entry.direction === 'out' && entry.method === 'turn/start',
+        ),
+    ).toHaveLength(1);
+  },
+);

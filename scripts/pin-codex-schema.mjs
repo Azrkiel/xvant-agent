@@ -25,6 +25,12 @@ const files = [
   'CommandExecutionRequestApprovalResponse',
   'FileChangeRequestApprovalParams',
   'FileChangeRequestApprovalResponse',
+  'v2/ThreadStartParams',
+  'v2/ThreadStartResponse',
+  'v2/ThreadResumeParams',
+  'v2/ThreadResumeResponse',
+  'v2/ThreadStartedNotification',
+  'v2/ErrorNotification',
 ];
 const bundle = { runtimeVersion, sources: [], definitions: {}, schemas: {} };
 for (const file of files) {

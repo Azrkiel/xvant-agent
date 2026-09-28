@@ -25,6 +25,15 @@ const scenarioSchema = z.enum([
   'timeout',
   'late-malformed',
   'late-partial',
+  'thread-rpc-error',
+  'thread-mismatch',
+  'thread-malformed',
+  'thread-disconnect',
+  'thread-timeout',
+  'native-error',
+  'native-retry',
+  'turn-rpc-error',
+  'turn-failed',
 ]);
 /** Complete host orchestration using only a fixed synthetic peer. No live launcher. */
 export class OfflineCodexController {
@@ -66,13 +75,17 @@ export class OfflineCodexController {
   get activeCount(): number {
     return this.supervisor.activeCount;
   }
-  async run(input: ProviderDispatch, scenarioInput: string = 'success') {
+  async run(
+    input: ProviderDispatch,
+    scenarioInput: string = 'success',
+    modeInput: 'create' | 'resume' = 'resume',
+  ) {
     if (this.stopped) throw new Error('CONTROLLER_STOPPED');
     const scenario = scenarioSchema.parse(scenarioInput);
+    const mode = z.enum(['create', 'resume']).parse(modeInput);
     if (
       input.worker.runtimeKind !== 'codex' ||
-      input.worker.runtimeVersion !== CODEX_VERSION ||
-      input.worker.nativeSessionId !== 'thread-1'
+      input.worker.runtimeVersion !== CODEX_VERSION
     )
       throw new Error('VERSION_UNSUPPORTED');
     const root = this.workspaces[input.workspaceId];
@@ -83,7 +96,17 @@ export class OfflineCodexController {
       task.requiredCheckIds.some((check) => !Object.hasOwn(this.checks, check))
     )
       throw new Error('VERIFIER_UNAVAILABLE');
-    const connection = this.store.providers.reserve(input);
+    const connection = this.store.providers.reserve(
+      mode === 'create'
+        ? {
+            ...input,
+            worker: {
+              ...input.worker,
+              nativeSessionId: 'pending:' + input.connectionId,
+            },
+          }
+        : input,
+    );
     this.fault('codex.after_reserve');
     const heartbeat = setInterval(() => {
       try {
@@ -94,7 +117,7 @@ export class OfflineCodexController {
     }, this.store.heartbeatIntervalMs);
     heartbeat.unref();
     try {
-      return await this.execute(connection, scenario, root);
+      return await this.execute(connection, scenario, root, mode);
     } finally {
       clearInterval(heartbeat);
     }
@@ -103,10 +126,11 @@ export class OfflineCodexController {
     connection: ProviderConnection,
     scenario: string,
     root: string,
+    mode: 'create' | 'resume',
   ) {
     const life = new CodexLifecycle(
       CODEX_VERSION,
-      connection.worker.nativeSessionId,
+      mode === 'resume' ? connection.worker.nativeSessionId : undefined,
     );
     let run!: ReturnType<WorkerSupervisor['start']>;
     let ending = false,
@@ -131,7 +155,10 @@ export class OfflineCodexController {
     };
     const channel = durableCodexChannel(this.store, connection, {
       timeoutMs: this.timeout,
-      write: (frame) => run.write(frame),
+      write: (frame) => {
+        if (this.stopped) throw new Error('CONTROLLER_STOPPED');
+        return run.write(frame);
+      },
       onMessage: (message) => {
         const action = life.message(message);
         if (action.kind === 'started')
@@ -186,6 +213,17 @@ export class OfflineCodexController {
         await channel.request(init.method, init.params),
       );
       await channel.notify(initialized.method, initialized.params);
+      if (failed || this.stopped) throw new Error('OPERATION_UNKNOWN');
+      const thread = life.openThread(mode, root);
+      life.threadOpened(await channel.request(thread.method, thread.params));
+      if (mode === 'create')
+        this.store.providers.bindSession(
+          connection.connectionId,
+          connection.token,
+          life.nativeSessionId!,
+        );
+      this.fault('codex.after_session');
+      if (failed || this.stopped) throw new Error('OPERATION_UNKNOWN');
       const start = life.start(this.store.getTask(connection.taskId).objective);
       life.started(await channel.request(start.method, start.params));
       this.store.providers.bindRun(

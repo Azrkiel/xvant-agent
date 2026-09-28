@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isAbsolute, resolve } from 'node:path';
 import { nativeIdSchema } from '../../../contracts/src/providers.ts';
 import { CODEX_VERSION, validateNative } from './profile.ts';
 
@@ -6,6 +7,7 @@ type Status =
   | 'new'
   | 'initializing'
   | 'ready'
+  | 'opening_thread'
   | 'starting'
   | 'running'
   | 'interrupt_requested'
@@ -35,18 +37,98 @@ function fail(code: string): never {
 /** One host-owned, offline-tested attempt. No credentials, executable, automatic resume or acceptance. */
 export class CodexLifecycle {
   private state: Status = 'new';
-  private readonly threadId: string;
+  private threadId: string | undefined;
+  private opening: { mode: 'create' | 'resume'; cwd: string } | undefined;
+  private observedThreadId: string | undefined;
   private runId: string | undefined;
   private terminal = false;
-  constructor(version: string, threadId: string) {
+  constructor(version: string, threadId?: string) {
     if (version !== CODEX_VERSION) fail('VERSION_UNSUPPORTED');
-    this.threadId = nativeIdSchema.parse(threadId);
+    this.threadId =
+      threadId === undefined ? undefined : nativeIdSchema.parse(threadId);
   }
   get status(): Status {
     return this.state;
   }
   get nativeRunId(): string | undefined {
     return this.runId;
+  }
+  get nativeSessionId(): string | undefined {
+    return this.threadId;
+  }
+  openThread(mode: 'create' | 'resume', cwd: string) {
+    if (
+      this.state !== 'ready' ||
+      this.opening ||
+      !['create', 'resume'].includes(mode) ||
+      (mode === 'create' ? !!this.threadId : !this.threadId)
+    )
+      fail('ILLEGAL_TRANSITION');
+    if (!isAbsolute(cwd)) fail('INVALID_INPUT');
+    const params = {
+      cwd: resolve(cwd),
+      approvalPolicy: 'untrusted' as const,
+      approvalsReviewer: 'user' as const,
+      sandbox: 'read-only' as const,
+      ...(mode === 'resume'
+        ? { threadId: this.threadId!, excludeTurns: true }
+        : {}),
+    };
+    validateNative(
+      mode === 'create' ? 'ThreadStartParams' : 'ThreadResumeParams',
+      params,
+    );
+    this.opening = { mode, cwd: params.cwd };
+    this.state = 'opening_thread';
+    return {
+      method: mode === 'create' ? 'thread/start' : 'thread/resume',
+      params,
+    };
+  }
+  threadOpened(result: unknown): void {
+    try {
+      if (this.state !== 'opening_thread' || !this.opening)
+        fail('ILLEGAL_TRANSITION');
+      validateNative(
+        this.opening.mode === 'create'
+          ? 'ThreadStartResponse'
+          : 'ThreadResumeResponse',
+        result,
+      );
+      const value = result as {
+        cwd: string;
+        approvalPolicy: string;
+        approvalsReviewer: string;
+        sandbox: { type: string; networkAccess?: boolean };
+        thread: {
+          id: string;
+          cwd: string;
+          cliVersion: string;
+          status: { type: string };
+          turns: { status: string }[];
+        };
+      };
+      const id = nativeIdSchema.parse(value.thread.id);
+      if (
+        (this.threadId && id !== this.threadId) ||
+        (this.observedThreadId && id !== this.observedThreadId) ||
+        value.cwd !== this.opening.cwd ||
+        value.thread.cwd !== this.opening.cwd ||
+        value.approvalPolicy !== 'untrusted' ||
+        value.approvalsReviewer !== 'user' ||
+        value.sandbox.type !== 'readOnly' ||
+        value.sandbox.networkAccess === true ||
+        value.thread.cliVersion !== CODEX_VERSION ||
+        value.thread.status.type !== 'idle' ||
+        value.thread.turns.some((turn) => turn.status === 'inProgress')
+      )
+        fail('INVALID_EVENT');
+      this.threadId = id;
+      this.state = 'ready';
+    } catch {
+      this.state = 'needs_attention';
+      fail('INVALID_EVENT');
+    }
   }
   initialize() {
     if (this.state !== 'new') fail('ILLEGAL_TRANSITION');
@@ -69,7 +151,7 @@ export class CodexLifecycle {
     return { method: 'initialized', params: {} };
   }
   start(objective: string) {
-    if (this.state !== 'ready')
+    if (this.state !== 'ready' || !this.threadId)
       fail(
         this.state === 'new' || this.state === 'initializing'
           ? 'ILLEGAL_TRANSITION'
@@ -115,7 +197,33 @@ export class CodexLifecycle {
   message(input: unknown): Action {
     try {
       const message = envelope.parse(input);
+      if (message.method === 'thread/started') {
+        if (
+          message.id !== undefined ||
+          !this.opening ||
+          ![
+            'opening_thread',
+            'ready',
+            'starting',
+            'running',
+            'interrupt_requested',
+          ].includes(this.state)
+        )
+          fail('INVALID_EVENT');
+        validateNative('ThreadStartedNotification', message.params);
+        const id = nativeIdSchema.parse(
+          (message.params as { thread: { id: string } }).thread.id,
+        );
+        if (
+          (this.threadId && id !== this.threadId) ||
+          (this.observedThreadId && id !== this.observedThreadId)
+        )
+          fail('INVALID_EVENT');
+        this.observedThreadId = id;
+        return { kind: 'ignored' };
+      }
       const schemas: Record<string, string> = {
+        error: 'ErrorNotification',
         'turn/started': 'TurnStartedNotification',
         'turn/completed': 'TurnCompletedNotification',
         'item/agentMessage/delta': 'AgentMessageDeltaNotification',
@@ -156,6 +264,10 @@ export class CodexLifecycle {
       )
         this.runId = id;
       if (id !== this.runId) fail('INVALID_EVENT');
+      if (message.method === 'error') {
+        if (message.id !== undefined) fail('INVALID_EVENT');
+        fail('WORKER_FAILED');
+      }
       if (message.method.endsWith('/requestApproval')) {
         if (message.id === undefined) fail('INVALID_EVENT');
         const result = { decision: 'decline' as const };
@@ -185,7 +297,11 @@ export class CodexLifecycle {
       this.state = 'needs_attention';
       fail(
         error instanceof Error &&
-          ['CAPABILITY_UNSUPPORTED', 'LIMIT_EXCEEDED'].includes(error.message)
+          [
+            'CAPABILITY_UNSUPPORTED',
+            'LIMIT_EXCEEDED',
+            'WORKER_FAILED',
+          ].includes(error.message)
           ? error.message
           : 'INVALID_EVENT',
       );

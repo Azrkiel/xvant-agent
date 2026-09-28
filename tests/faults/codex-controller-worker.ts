@@ -33,26 +33,32 @@ const controller = new OfflineCodexController(
   { check: { executable: process.execPath, args: ['-e', 'process.exit(0)'] } },
   { fault },
 );
-await controller.run({
-  connectionId: 'connection',
-  taskId: 'task',
-  attemptId: 'attempt',
-  workspaceId: 'workspace',
-  expectedVersion: 1,
-  classification: 'offline',
-  worker: {
-    id: 'worker',
-    alias: 'worker',
-    runtimeKind: 'codex',
-    hostId: 'host',
-    endpointId: 'fixture',
-    nativeSessionId: 'thread-1',
-    runtimeVersion: CODEX_VERSION,
-    adapterVersion: 'v1',
-    mode: 'managed',
-    quotaGroupId: 'account',
+await controller.run(
+  {
+    connectionId: 'connection',
+    taskId: 'task',
+    attemptId: 'attempt',
+    workspaceId: 'workspace',
+    expectedVersion: 1,
+    classification: 'offline',
+    worker: {
+      id: 'worker',
+      alias: 'worker',
+      runtimeKind: 'codex',
+      hostId: 'host',
+      endpointId: 'fixture',
+      nativeSessionId: 'thread-1',
+      runtimeVersion: CODEX_VERSION,
+      adapterVersion: 'v1',
+      mode: 'managed',
+      quotaGroupId: 'account',
+    },
   },
-});
+  'success',
+  ['provider.session.before_commit', 'codex.after_session'].includes(point!)
+    ? 'create'
+    : 'resume',
+);
 controller.stop();
 store.close();
 process.exitCode = 72;

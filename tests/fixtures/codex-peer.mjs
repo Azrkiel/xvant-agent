@@ -1,12 +1,13 @@
 // Synthetic offline protocol peer. Never launch a model or execute a requested tool.
 import { createInterface } from 'node:readline';
 const scenario = process.argv[2];
+let threadId = 'thread-1';
 const send = (value) => process.stdout.write(JSON.stringify(value) + '\n');
 const turn = (status) => ({ id: 'turn-1', status, items: [] });
 const complete = (status = 'completed') =>
   send({
     method: 'turn/completed',
-    params: { threadId: 'thread-1', turn: turn(status) },
+    params: { threadId, turn: turn(status) },
   });
 const input = createInterface({ input: process.stdin });
 input.on('line', (line) => {
@@ -25,7 +26,68 @@ input.on('line', (line) => {
       break;
     case 'initialized':
       break;
+    case 'thread/start':
+    case 'thread/resume': {
+      if (scenario === 'thread-disconnect') {
+        process.exit(31);
+        break;
+      }
+      if (scenario === 'thread-timeout') break;
+      if (scenario === 'thread-rpc-error') {
+        send({
+          id: request.id,
+          error: { code: -32602, message: 'fixture error' },
+        });
+        break;
+      }
+      if (scenario === 'thread-malformed') {
+        send({ id: request.id, result: {} });
+        break;
+      }
+      threadId =
+        scenario === 'thread-mismatch'
+          ? 'other'
+          : request.method === 'thread/start'
+            ? 'created-1'
+            : request.params.threadId;
+      const thread = {
+        id: threadId,
+        cliVersion: '0.158.0-alpha.2.1',
+        createdAt: 1,
+        updatedAt: 1,
+        cwd: process.cwd(),
+        ephemeral: false,
+        modelProvider: 'fixture',
+        preview: '',
+        projectId: null,
+        sessionId: 'session-1',
+        source: 'appServer',
+        status: { type: 'idle' },
+        turns: [],
+      };
+      send({ method: 'thread/started', params: { thread } });
+      send({
+        id: request.id,
+        result: {
+          approvalPolicy: 'untrusted',
+          approvalsReviewer: 'user',
+          cwd: process.cwd(),
+          model: 'fixture',
+          modelProvider: 'fixture',
+          sandbox: { type: 'readOnly' },
+          thread,
+        },
+      });
+      break;
+    }
     case 'turn/start':
+      if (scenario === 'turn-rpc-error') {
+        send({
+          id: request.id,
+          error: { code: -32603, message: 'fixture error' },
+        });
+        break;
+      }
       if (scenario === 'disconnect') {
         process.exit(31);
         break;
@@ -37,15 +99,34 @@ input.on('line', (line) => {
       if (scenario === 'timeout') break;
       send({
         method: 'turn/started',
-        params: { threadId: 'thread-1', turn: turn('inProgress') },
+        params: { threadId, turn: turn('inProgress') },
       });
       send({ id: request.id, result: { turn: turn('inProgress') } });
+      if (scenario === 'native-error' || scenario === 'native-retry') {
+        send({
+          method: 'error',
+          params: {
+            threadId,
+            turnId: 'turn-1',
+            error: {
+              message: 'fixture error',
+              codexErrorInfo: 'usageLimitExceeded',
+            },
+            willRetry: scenario === 'native-retry',
+          },
+        });
+        break;
+      }
+      if (scenario === 'turn-failed') {
+        complete('failed');
+        break;
+      }
       if (scenario === 'approval') {
         send({
           id: 'permission-1',
           method: 'item/commandExecution/requestApproval',
           params: {
-            threadId: 'thread-1',
+            threadId,
             turnId: 'turn-1',
             itemId: 'item-1',
             startedAtMs: 1,
@@ -55,7 +136,7 @@ input.on('line', (line) => {
         send({
           method: 'item/agentMessage/delta',
           params: {
-            threadId: 'thread-1',
+            threadId,
             turnId: 'turn-1',
             itemId: 'item-1',
             delta: 'Offline 雪 fixture',

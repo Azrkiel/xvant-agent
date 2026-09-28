@@ -42,6 +42,7 @@ export interface ProviderConnection extends ProviderDispatch {
     | 'accepted';
   verification?: NativeVerification;
   nativeRunId: string | null;
+  sessionBound?: boolean;
   outcome: 'completed' | 'cancelled' | 'failed' | null;
   reconciliation: {
     outcome: 'stopped' | 'not_started';
@@ -259,6 +260,57 @@ export class ProviderJournal {
       ...(JSON.parse(row.body) as Omit<ProviderEntry, 'sequence'>),
       sequence: row.sequence,
     }));
+  }
+  /** Bind a validated creation reply once, before any turn can be sent. */
+  bindSession(id: string, token: string, nativeSessionId: string): void {
+    nativeIdSchema.parse(nativeSessionId);
+    this.host.transaction(() => {
+      this.assertWritable(id, token);
+      const connection = this.bound(id, token);
+      const outgoing = this.entries(id).filter(
+        (entry) => entry.direction === 'out',
+      );
+      if (
+        connection.sessionBound ||
+        connection.nativeRunId ||
+        outgoing.filter((entry) => entry.method === 'thread/start').length !==
+          1 ||
+        outgoing.some((entry) => entry.method === 'turn/start')
+      )
+        fail('CONFLICT');
+      const resource = (session: string) =>
+        'native:' +
+        JSON.stringify([
+          connection.worker.runtimeKind,
+          connection.worker.hostId,
+          session,
+        ]);
+      const previous = resource(connection.worker.nativeSessionId);
+      const next = resource(nativeSessionId);
+      if (next !== previous) {
+        if (
+          this.occupied(next) ||
+          this.db
+            .prepare('SELECT resource FROM reservations WHERE resource=?')
+            .get(next)
+        )
+          fail('LEASE_BUSY');
+        this.db
+          .prepare('INSERT INTO provider_reservations VALUES(?,?)')
+          .run(next, id);
+        this.db
+          .prepare(
+            'DELETE FROM provider_reservations WHERE resource=? AND connection_id=?',
+          )
+          .run(previous, id);
+      }
+      this.save({
+        ...connection,
+        worker: { ...connection.worker, nativeSessionId },
+        sessionBound: true,
+      });
+      this.host.fault('provider.session.before_commit');
+    });
   }
   bindRun(id: string, token: string, nativeRunId: string): void {
     nativeIdSchema.parse(nativeRunId);

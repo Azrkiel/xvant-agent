@@ -59,6 +59,116 @@ beforeEach(() => {
   store = open();
   queued();
 });
+function creating() {
+  const connection = store.providers.reserve(spec);
+  store.providers.recordIntent('connection', connection.token, {
+    id: 1,
+    method: 'thread/start',
+    frame: '{"id":1,"method":"thread/start","params":{}}\n',
+  });
+  return connection;
+}
+it('atomically binds a created session before a turn and retains it across recovery', () => {
+  const connection = creating();
+  store.providers.bindSession('connection', connection.token, 'created-1');
+  expect(store.providers.get('connection').worker.nativeSessionId).toBe(
+    'created-1',
+  );
+  expect(
+    store.providers.occupied(
+      'native:' + JSON.stringify(['codex', 'host', worker.nativeSessionId]),
+    ),
+  ).toBe(false);
+  expect(
+    store.providers.occupied(
+      'native:' + JSON.stringify(['codex', 'host', 'created-1']),
+    ),
+  ).toBe(true);
+  expect(() =>
+    store.providers.bindSession('connection', connection.token, 'other'),
+  ).toThrow('CONFLICT');
+  store.close();
+  now = 2000;
+  store = open();
+  store.recover();
+  expect(store.providers.get('connection')).toMatchObject({
+    status: 'unknown',
+    worker: { nativeSessionId: 'created-1' },
+  });
+  expect(
+    store.providers.occupied(
+      'native:' + JSON.stringify(['codex', 'host', 'created-1']),
+    ),
+  ).toBe(true);
+});
+it('rejects session rebinding without a creation intent, after turn dispatch or with a stale token', () => {
+  const connection = store.providers.reserve(spec);
+  expect(() =>
+    store.providers.bindSession('connection', connection.token, 'created-1'),
+  ).toThrow('CONFLICT');
+  store.providers.recordIntent('connection', connection.token, {
+    id: 1,
+    method: 'thread/start',
+    frame: '{"id":1,"method":"thread/start","params":{}}\n',
+  });
+  expect(() =>
+    store.providers.bindSession('connection', 'wrong', 'created-1'),
+  ).toThrow('STALE_FENCE');
+  store.providers.recordIntent('connection', connection.token, {
+    id: 2,
+    method: 'turn/start',
+    frame: '{"id":2,"method":"turn/start","params":{}}\n',
+  });
+  expect(() =>
+    store.providers.bindSession('connection', connection.token, 'created-1'),
+  ).toThrow('CONFLICT');
+});
+it('does not steal another connection session or lose the original reservation', () => {
+  const connection = creating();
+  queued('other');
+  store.providers.reserve({
+    ...spec,
+    connectionId: 'other',
+    taskId: 'other',
+    attemptId: 'other',
+    workspaceId: 'other',
+    worker: { ...worker, id: 'other', nativeSessionId: 'created-1' },
+  });
+  expect(() =>
+    store.providers.bindSession('connection', connection.token, 'created-1'),
+  ).toThrow('LEASE_BUSY');
+  expect(store.providers.get('connection').worker.nativeSessionId).toBe(
+    worker.nativeSessionId,
+  );
+  expect(
+    store.providers.occupied(
+      'native:' + JSON.stringify(['codex', 'host', worker.nativeSessionId]),
+    ),
+  ).toBe(true);
+});
+it('rolls back session binding with its reservation update', () => {
+  store.close();
+  store = open((point) => {
+    if (point === 'provider.session.before_commit') throw new Error('disk');
+  });
+  const connection = creating();
+  expect(() =>
+    store.providers.bindSession('connection', connection.token, 'created-1'),
+  ).toThrow('disk');
+  expect(store.providers.get('connection').worker.nativeSessionId).toBe(
+    worker.nativeSessionId,
+  );
+  expect(
+    store.providers.occupied(
+      'native:' + JSON.stringify(['codex', 'host', 'created-1']),
+    ),
+  ).toBe(false);
+  expect(
+    store.providers.occupied(
+      'native:' + JSON.stringify(['codex', 'host', worker.nativeSessionId]),
+    ),
+  ).toBe(true);
+});
 afterEach(() => {
   for (const value of stores.splice(0)) value.close();
   rmSync(root, { recursive: true, force: true });
