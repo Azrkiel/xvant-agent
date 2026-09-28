@@ -5,6 +5,59 @@ Claude, and OpenCode. It does not start live workers, attach to sessions, submit
 prompts, approve tools, read credentials, or enable paid fallback. The durable
 controller still executes only the Phase 2 simulator.
 
+## Claude and OpenCode stream profiles
+
+`src/providers/native-profiles.ts` and `native-stream.ts` add version-pinned,
+host-driven offline stream readers. Claude uses SDK `0.3.283`; OpenCode uses SDK
+`1.18.33` v2 event declarations. `native-pins.json` records package integrity,
+declaration-file SHA-256 and selected property/required-field inventories from the
+published [Claude SDK](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk/v/0.3.283)
+and [OpenCode SDK](https://www.npmjs.com/package/@opencode-ai/sdk/v/1.18.33).
+
+These are supported protocol projections, not complete SDK schemas. Result,
+correlation and permission fields are checked. Nested usage, arbitrary tool input,
+permission metadata and vendor error details remain opaque and confer no authority.
+Unknown control requests and unsupported event envelopes fail closed. Claude UUID
+fields are treated as bounded opaque IDs. Installed CLI/auth/subscription
+compatibility is not established by an SDK package pin.
+
+Reproduce pins without installing or executing either SDK:
+
+```sh
+npm pack @anthropic-ai/claude-agent-sdk@0.3.283 --ignore-scripts --pack-destination .artifacts
+npm pack @opencode-ai/sdk@1.18.33 --ignore-scripts --pack-destination .artifacts
+node scripts/pin-provider-types.mjs .artifacts
+```
+
+The pin script verifies each archive's fixed SHA-512 before reading declarations
+directly from it. It uses the repository's TypeScript parser and the host's `tar`;
+downloaded JavaScript is never imported. Dependencies and lockfiles stay unchanged.
+
+Claude NDJSON results must match the session and echoed host request ID. Queued,
+resumed, multi-request or deferred continuations are rejected. OpenCode SSE results
+must match both session IDs and the assistant's parent user-message ID. Idle alone
+and tool-call boundaries cannot establish completion. Vendor message IDs remain
+distinct from the host request ID. Failed results cannot become completed results.
+
+Readers bound the stream to 1 MiB, frames to 64 KiB, messages to 4,096 and permission
+requests to 64. SSE supports LF/CRLF framing, comments, multiline data and fragmented
+UTF-8; no reconnect or replay occurs. CR-only framing is unsupported. Permission
+actions contain denial only. The host must confirm every denial was written before
+`end()` can expose the result; malformed input, partial EOF, mismatches, cancellation
+and duplicate terminal messages invalidate the stream. Clean EOF is necessary but
+the host must also confirm owned process shutdown before verification.
+
+`scripts/native-fixture.mjs` launches only a fixed synthetic peer through the process
+supervisor. Eight scenarios per provider cover success, denial, wrong session,
+malformed/partial output, error, timeout and cancellation. OpenCode SSE travels over
+fixture pipes here; its permission action is an HTTP request descriptor, not a real
+HTTP call. G03 includes both process suites and direct denial runtime checks.
+
+Remaining work: durable journal integration, full SDK/HTTP session setup and
+interrupt handling, authenticated endpoint ownership, broader event schemas,
+artifact verification through these adapters, and live qualification. These readers
+do not launch a provider, access credentials, accept tasks or enable paid fallback.
+
 Run with the repository's pinned Node version:
 
 ```sh
@@ -262,3 +315,32 @@ Crashes before and after session binding preserve the provisional or final nativ
 reservation respectively. Recovery requires attention and never repeats thread
 creation, resume or turn dispatch. These are offline protocol tests, not live
 thread creation/resume qualification or imported-history support.
+
+## Durable offline Claude/OpenCode orchestration
+
+`OfflineNativeController` connects the pinned stream projections to the provider
+journal, owned subprocess supervisor, artifact verifier and explicit review path.
+It launches only `tests/fixtures/native-peer.mjs`. Each parsed envelope is persisted
+synchronously before interpretation; journal failures prevent denial delivery and
+result handling. Outbound fixture start and denial bytes are persisted before the
+owned write, with fresh ownership checks. Incoming bodies remain transient; the
+journal retains their bounded metadata and digest.
+
+The host attempt ID correlates Claude `user_message_uuid` or OpenCode `parentID`;
+the reserved session must also match. After all denials have been written, complete
+EOF and successful owned shutdown are required before recording completion. The
+shared evidence field `nativeRunId` holds the terminal Claude result UUID or
+OpenCode assistant message ID in this projection. These are message identities,
+not vendor turn IDs; `attemptId` separately binds the host invocation. Journal
+outbound numeric IDs identify host sends, not vendor JSON-RPC requests.
+
+Passed artifact verification prepares `ready_for_acceptance`, never acceptance.
+Errors, incomplete output, timeout, cancellation, persistence failure and fencing
+keep reservations and never trigger replay. Fourteen actual-process crash cases
+cover both providers from reservation through review preparation. G03 also runs
+both durable permission-denial scenarios through artifact verification and review.
+
+This remains Windows offline fixture evidence. OpenCode HTTP replies are descriptors
+sent over fixture pipes; there is no HTTP endpoint or live SDK launcher. Session
+setup, native interruption, broader event schemas, authenticated endpoint ownership,
+live account admission and Linux qualification remain open.

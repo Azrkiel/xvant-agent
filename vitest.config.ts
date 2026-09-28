@@ -18,6 +18,7 @@ export default defineConfig({
         'apps/controller/src/native-verifier.ts',
         'apps/controller/src/native-review.ts',
         'apps/controller/src/codex-offline.ts',
+        'apps/controller/src/native-offline.ts',
         'apps/controller/src/service.ts',
         'apps/controller/src/http/**/*.ts',
         'scripts/gate-policy.ts',

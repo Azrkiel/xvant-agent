@@ -1,0 +1,636 @@
+{
+  "claude": {
+    "package": "@anthropic-ai/claude-agent-sdk",
+    "version": "0.3.283",
+    "integrity": "sha512-KB+mqU5JLbH2sztlSQeCOu71bK6padYAha3uacBzxFSOVfuRTywYzvsC9P+qV6gXmPXcu98FaPqQv6vBF9j8hA==",
+    "file": "sdk.d.ts",
+    "sha256": "8d1444fff1b7955ef385a3338b2b6fb0418d108dca61c51781eb7c24f4084b3f",
+    "declarations": {
+      "ControlResponse": [
+        {
+          "name": "subtype",
+          "required": true
+        },
+        {
+          "name": "request_id",
+          "required": true
+        },
+        {
+          "name": "response",
+          "required": false
+        },
+        {
+          "name": "pending_permission_requests",
+          "required": false
+        },
+        {
+          "name": "pending_user_dialog_requests",
+          "required": false
+        }
+      ],
+      "SDKControlPermissionRequest": [
+        {
+          "name": "subtype",
+          "required": true
+        },
+        {
+          "name": "tool_name",
+          "required": true
+        },
+        {
+          "name": "mcp_server",
+          "required": false
+        },
+        {
+          "name": "input",
+          "required": true
+        },
+        {
+          "name": "permission_suggestions",
+          "required": false
+        },
+        {
+          "name": "blocked_path",
+          "required": false
+        },
+        {
+          "name": "decision_reason",
+          "required": false
+        },
+        {
+          "name": "decision_reason_type",
+          "required": false
+        },
+        {
+          "name": "classifier_approvable",
+          "required": false
+        },
+        {
+          "name": "suppress_always_allow_rule",
+          "required": false
+        },
+        {
+          "name": "default_to_no",
+          "required": false
+        },
+        {
+          "name": "matched_ask_rule",
+          "required": false
+        },
+        {
+          "name": "title",
+          "required": false
+        },
+        {
+          "name": "display_name",
+          "required": false
+        },
+        {
+          "name": "tool_use_id",
+          "required": true
+        },
+        {
+          "name": "agent_id",
+          "required": false
+        },
+        {
+          "name": "description",
+          "required": false
+        },
+        {
+          "name": "requires_user_interaction",
+          "required": false
+        }
+      ],
+      "SDKControlRequest": [
+        {
+          "name": "type",
+          "required": true
+        },
+        {
+          "name": "request_id",
+          "required": true
+        },
+        {
+          "name": "request",
+          "required": true
+        }
+      ],
+      "SDKControlResponse": [
+        {
+          "name": "type",
+          "required": true
+        },
+        {
+          "name": "response",
+          "required": true
+        }
+      ],
+      "SDKResultError": [
+        {
+          "name": "type",
+          "required": true
+        },
+        {
+          "name": "subtype",
+          "required": true
+        },
+        {
+          "name": "duration_ms",
+          "required": true
+        },
+        {
+          "name": "duration_api_ms",
+          "required": true
+        },
+        {
+          "name": "is_error",
+          "required": true
+        },
+        {
+          "name": "num_turns",
+          "required": true
+        },
+        {
+          "name": "stop_reason",
+          "required": true
+        },
+        {
+          "name": "total_cost_usd",
+          "required": true
+        },
+        {
+          "name": "usage",
+          "required": true
+        },
+        {
+          "name": "modelUsage",
+          "required": true
+        },
+        {
+          "name": "permission_denials",
+          "required": true
+        },
+        {
+          "name": "queued_turn_count",
+          "required": false
+        },
+        {
+          "name": "errors",
+          "required": true
+        },
+        {
+          "name": "startup_failure_reason",
+          "required": false
+        },
+        {
+          "name": "user_message_uuid",
+          "required": false
+        },
+        {
+          "name": "user_message_uuids",
+          "required": false
+        },
+        {
+          "name": "resume_reason",
+          "required": false
+        },
+        {
+          "name": "terminal_reason",
+          "required": false
+        },
+        {
+          "name": "result_index",
+          "required": false
+        },
+        {
+          "name": "fast_mode_state",
+          "required": false
+        },
+        {
+          "name": "fast_mode_disabled_reason",
+          "required": false
+        },
+        {
+          "name": "origin",
+          "required": false
+        },
+        {
+          "name": "uuid",
+          "required": true
+        },
+        {
+          "name": "session_id",
+          "required": true
+        }
+      ],
+      "SDKResultSuccess": [
+        {
+          "name": "type",
+          "required": true
+        },
+        {
+          "name": "subtype",
+          "required": true
+        },
+        {
+          "name": "duration_ms",
+          "required": true
+        },
+        {
+          "name": "duration_api_ms",
+          "required": true
+        },
+        {
+          "name": "ttft_ms",
+          "required": false
+        },
+        {
+          "name": "ttft_stream_ms",
+          "required": false
+        },
+        {
+          "name": "time_to_request_ms",
+          "required": false
+        },
+        {
+          "name": "user_message_uuid",
+          "required": false
+        },
+        {
+          "name": "user_message_uuids",
+          "required": false
+        },
+        {
+          "name": "resume_reason",
+          "required": false
+        },
+        {
+          "name": "local_command",
+          "required": false
+        },
+        {
+          "name": "request_sent_wall_ms",
+          "required": false
+        },
+        {
+          "name": "first_content_frame_ms",
+          "required": false
+        },
+        {
+          "name": "first_stream_post_ms",
+          "required": false
+        },
+        {
+          "name": "first_stream_post_ack_ms",
+          "required": false
+        },
+        {
+          "name": "first_stream_post_queue_wait_ms",
+          "required": false
+        },
+        {
+          "name": "first_stream_post_queued_behind",
+          "required": false
+        },
+        {
+          "name": "first_stream_post_wall_ms",
+          "required": false
+        },
+        {
+          "name": "first_text_post_ms",
+          "required": false
+        },
+        {
+          "name": "first_text_post_wall_ms",
+          "required": false
+        },
+        {
+          "name": "time_to_request_from_spawn_ms",
+          "required": false
+        },
+        {
+          "name": "warm_spare_claimed",
+          "required": false
+        },
+        {
+          "name": "time_origin_ms",
+          "required": false
+        },
+        {
+          "name": "is_error",
+          "required": true
+        },
+        {
+          "name": "api_error_status",
+          "required": false
+        },
+        {
+          "name": "num_turns",
+          "required": true
+        },
+        {
+          "name": "result",
+          "required": true
+        },
+        {
+          "name": "stop_reason",
+          "required": true
+        },
+        {
+          "name": "total_cost_usd",
+          "required": true
+        },
+        {
+          "name": "usage",
+          "required": true
+        },
+        {
+          "name": "modelUsage",
+          "required": true
+        },
+        {
+          "name": "permission_denials",
+          "required": true
+        },
+        {
+          "name": "queued_turn_count",
+          "required": false
+        },
+        {
+          "name": "structured_output",
+          "required": false
+        },
+        {
+          "name": "deferred_tool_use",
+          "required": false
+        },
+        {
+          "name": "terminal_reason",
+          "required": false
+        },
+        {
+          "name": "result_index",
+          "required": false
+        },
+        {
+          "name": "fast_mode_state",
+          "required": false
+        },
+        {
+          "name": "fast_mode_disabled_reason",
+          "required": false
+        },
+        {
+          "name": "origin",
+          "required": false
+        },
+        {
+          "name": "uuid",
+          "required": true
+        },
+        {
+          "name": "session_id",
+          "required": true
+        }
+      ],
+      "SDKUserMessage": [
+        {
+          "name": "type",
+          "required": true
+        },
+        {
+          "name": "message",
+          "required": true
+        },
+        {
+          "name": "parent_tool_use_id",
+          "required": true
+        },
+        {
+          "name": "isSynthetic",
+          "required": false
+        },
+        {
+          "name": "tool_use_result",
+          "required": false
+        },
+        {
+          "name": "priority",
+          "required": false
+        },
+        {
+          "name": "origin",
+          "required": false
+        },
+        {
+          "name": "shouldQuery",
+          "required": false
+        },
+        {
+          "name": "timestamp",
+          "required": false
+        },
+        {
+          "name": "client_composed",
+          "required": false
+        },
+        {
+          "name": "uuid",
+          "required": false
+        },
+        {
+          "name": "pasted_content",
+          "required": false
+        },
+        {
+          "name": "inline_pastes",
+          "required": false
+        },
+        {
+          "name": "session_id",
+          "required": false
+        },
+        {
+          "name": "subagent_type",
+          "required": false
+        },
+        {
+          "name": "task_description",
+          "required": false
+        }
+      ]
+    }
+  },
+  "opencode": {
+    "package": "@opencode-ai/sdk",
+    "version": "1.18.33",
+    "integrity": "sha512-Nyurky9+AA2tvZ6my8UtO5pxPoXxrNypqjeEqMshBGiR542glOy+KE1Y+3lwWU+Z6HC/hSmrdXNbX81+qiuTzg==",
+    "file": "dist/v2/gen/types.gen.d.ts",
+    "sha256": "bd6a30272af9a19b4cb63c3b5fc85e9e5a122d8078c3fc5fcbb92cec0802bcf4",
+    "declarations": {
+      "AssistantMessage": [
+        {
+          "name": "id",
+          "required": true
+        },
+        {
+          "name": "sessionID",
+          "required": true
+        },
+        {
+          "name": "role",
+          "required": true
+        },
+        {
+          "name": "time",
+          "required": true
+        },
+        {
+          "name": "error",
+          "required": false
+        },
+        {
+          "name": "parentID",
+          "required": true
+        },
+        {
+          "name": "modelID",
+          "required": true
+        },
+        {
+          "name": "providerID",
+          "required": true
+        },
+        {
+          "name": "mode",
+          "required": true
+        },
+        {
+          "name": "agent",
+          "required": true
+        },
+        {
+          "name": "path",
+          "required": true
+        },
+        {
+          "name": "summary",
+          "required": false
+        },
+        {
+          "name": "cost",
+          "required": true
+        },
+        {
+          "name": "tokens",
+          "required": true
+        },
+        {
+          "name": "structured",
+          "required": false
+        },
+        {
+          "name": "variant",
+          "required": false
+        },
+        {
+          "name": "finish",
+          "required": false
+        }
+      ],
+      "EventMessageUpdated": [
+        {
+          "name": "id",
+          "required": true
+        },
+        {
+          "name": "type",
+          "required": true
+        },
+        {
+          "name": "properties",
+          "required": true
+        }
+      ],
+      "EventSessionError": [
+        {
+          "name": "id",
+          "required": true
+        },
+        {
+          "name": "type",
+          "required": true
+        },
+        {
+          "name": "properties",
+          "required": true
+        }
+      ],
+      "EventPermissionAsked": [
+        {
+          "name": "id",
+          "required": true
+        },
+        {
+          "name": "type",
+          "required": true
+        },
+        {
+          "name": "properties",
+          "required": true
+        }
+      ],
+      "EventSessionIdle": [
+        {
+          "name": "id",
+          "required": true
+        },
+        {
+          "name": "type",
+          "required": true
+        },
+        {
+          "name": "properties",
+          "required": true
+        }
+      ],
+      "PermissionReplyData": [
+        {
+          "name": "body",
+          "required": false
+        },
+        {
+          "name": "path",
+          "required": true
+        },
+        {
+          "name": "query",
+          "required": false
+        },
+        {
+          "name": "url",
+          "required": true
+        }
+      ],
+      "SessionAbortData": [
+        {
+          "name": "body",
+          "required": false
+        },
+        {
+          "name": "path",
+          "required": true
+        },
+        {
+          "name": "query",
+          "required": false
+        },
+        {
+          "name": "url",
+          "required": true
+        }
+      ]
+    }
+  }
+}

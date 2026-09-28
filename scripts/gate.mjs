@@ -219,6 +219,44 @@ try {
       transport.turnRequests !== 1
     )
       throw new Error('Codex offline transport failed');
+    for (const kind of ['claude', 'opencode']) {
+      check(kind + '-native-stream', [
+        'scripts/native-fixture.mjs',
+        kind,
+        'permission',
+      ]);
+      const stream = JSON.parse(
+        readFileSync(resolve(artifacts, kind + '-native-stream.log'), 'utf8'),
+      );
+      if (
+        stream.classification !== 'offline' ||
+        stream.liveProvidersTested.length ||
+        stream.outcome !== 'completed' ||
+        stream.denials !== 1 ||
+        stream.activeCount !== 0
+      )
+        throw new Error('Native stream fixture failed');
+      check(kind + '-native-controller', [
+        'scripts/native-controller-fixture.mjs',
+        kind,
+      ]);
+      const controller = JSON.parse(
+        readFileSync(
+          resolve(artifacts, kind + '-native-controller.log'),
+          'utf8',
+        ),
+      );
+      if (
+        controller.classification !== 'offline' ||
+        controller.liveProvidersTested.length ||
+        controller.state !== 'ready_for_acceptance' ||
+        controller.verification !== 'passed' ||
+        controller.journalEntries !== 4 ||
+        controller.activeCount !== 0 ||
+        controller.accepted !== false
+      )
+        throw new Error('Native controller fixture failed');
+    }
   }
   const after = snapshot();
   if (after.sha256 !== before.sha256)
