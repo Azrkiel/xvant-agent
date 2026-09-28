@@ -37,7 +37,7 @@ function fail(code: string): never {
   throw new Error(code);
 }
 /** Reject links in every existing component, including junctions on Windows. */
-function safePath(path: string): string {
+export function safePath(path: string): string {
   const absolute = resolve(path);
   let current = parse(absolute).root;
   for (const part of absolute

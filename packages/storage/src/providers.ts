@@ -3,6 +3,11 @@ import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import { idSchema } from '../../contracts/src/index.ts';
 import {
+  nativeVerificationSchema,
+  type NativeVerification,
+} from '../../contracts/src/native-evidence.ts';
+import type { ArtifactStore } from './artifacts.ts';
+import {
   nativeIdSchema,
   providerWorkerSchema,
 } from '../../contracts/src/providers.ts';
@@ -26,7 +31,15 @@ export interface ProviderConnection extends ProviderDispatch {
   token: string;
   generation: number;
   workRevision: number;
-  status: 'open' | 'unknown' | 'result_pending' | 'reconciled';
+  status:
+    | 'open'
+    | 'unknown'
+    | 'result_pending'
+    | 'verifying'
+    | 'verified'
+    | 'verification_failed'
+    | 'reconciled';
+  verification?: NativeVerification;
   nativeRunId: string | null;
   outcome: 'completed' | 'cancelled' | 'failed' | null;
   reconciliation: {
@@ -49,6 +62,11 @@ interface Host {
   start: (spec: ProviderDispatch) => number;
   attention: (taskId: string) => void;
   fault: (point: string) => void;
+  task: (taskId: string) => {
+    attemptId?: string | undefined;
+    workRevision: number;
+    requiredCheckIds: string[];
+  };
 }
 function fail(code: string): never {
   throw new Error(code);
@@ -285,7 +303,7 @@ export class ProviderJournal {
       const affected: string[] = [];
       for (const connection of this.active()) {
         if (
-          connection.status !== 'open' ||
+          !['open', 'verifying'].includes(connection.status) ||
           connection.generation === this.host.generation
         )
           continue;
@@ -301,7 +319,14 @@ export class ProviderJournal {
     z.enum(['stopped', 'not_started']).parse(outcome);
     this.host.transaction(() => {
       const connection = this.get(id);
-      if (!['unknown', 'result_pending'].includes(connection.status))
+      if (
+        ![
+          'unknown',
+          'result_pending',
+          'verified',
+          'verification_failed',
+        ].includes(connection.status)
+      )
         fail('CONFLICT');
       this.save({
         ...connection,
@@ -311,6 +336,100 @@ export class ProviderJournal {
       this.db
         .prepare('DELETE FROM provider_reservations WHERE connection_id=?')
         .run(id);
+    });
+  }
+  beginVerification(id: string, token: string): ProviderConnection {
+    return this.host.transaction(() => {
+      const connection = this.bound(id, token);
+      if (
+        connection.status !== 'result_pending' ||
+        connection.outcome !== 'completed' ||
+        !connection.nativeRunId
+      )
+        fail('VERIFICATION_UNAVAILABLE');
+      const task = this.host.task(connection.taskId);
+      if (
+        task.attemptId !== connection.attemptId ||
+        task.workRevision !== connection.workRevision
+      )
+        fail('STALE_EVIDENCE');
+      const next = { ...connection, status: 'verifying' as const };
+      this.save(next);
+      this.host.fault('provider.verify.before_commit');
+      return next;
+    });
+  }
+  finishVerification(
+    id: string,
+    token: string,
+    input: unknown,
+    objects: ArtifactStore,
+  ): NativeVerification {
+    const verification = nativeVerificationSchema.parse(input);
+    return this.host.transaction(() => {
+      const connection = this.bound(id, token);
+      if (connection.status !== 'verifying') fail('VERIFICATION_UNAVAILABLE');
+      const task = this.host.task(connection.taskId);
+      if (
+        task.attemptId !== connection.attemptId ||
+        task.workRevision !== connection.workRevision
+      )
+        fail('STALE_EVIDENCE');
+      if (verification.status !== 'unknown') {
+        const evidence = verification.evidence;
+        const expected = {
+          taskId: connection.taskId,
+          attemptId: connection.attemptId,
+          workRevision: connection.workRevision,
+          connectionId: id,
+          workspaceId: connection.workspaceId,
+          generation: connection.generation,
+          hostId: connection.worker.hostId,
+          runtimeKind: connection.worker.runtimeKind,
+          classification: connection.classification,
+          nativeSessionId: connection.worker.nativeSessionId,
+          nativeRunId: connection.nativeRunId,
+        };
+        if (
+          (Object.keys(expected) as (keyof typeof expected)[]).some(
+            (key) => evidence[key] !== expected[key],
+          ) ||
+          evidence.receipts.length !== task.requiredCheckIds.length ||
+          evidence.receipts.some(
+            (receipt) => !task.requiredCheckIds.includes(receipt.checkId),
+          )
+        )
+          fail('STALE_EVIDENCE');
+        const manifest = z
+          .strictObject({
+            version: z.literal(1),
+            hashes: z.array(z.string().regex(/^[a-f0-9]{64}$/)).max(1025),
+          })
+          .parse(JSON.parse(objects.get(evidence.artifactSetHash).toString()));
+        if (!manifest.hashes.includes(evidence.treeHash))
+          fail('INVALID_EVIDENCE');
+        for (const hash of new Set([
+          ...manifest.hashes,
+          evidence.artifactSetHash,
+        ])) {
+          objects.get(hash);
+          this.db
+            .prepare('INSERT OR IGNORE INTO artifacts VALUES(?,?,?)')
+            .run(hash, connection.taskId, connection.workRevision);
+        }
+      }
+      this.save({
+        ...connection,
+        verification,
+        status:
+          verification.status === 'unknown'
+            ? 'unknown'
+            : verification.status === 'passed'
+              ? 'verified'
+              : 'verification_failed',
+      });
+      this.host.fault('provider.verified.before_commit');
+      return verification;
     });
   }
 }

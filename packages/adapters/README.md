@@ -164,4 +164,34 @@ both versions, including the provider records and reservation constraints. Eight
 real-process crash tests cover reservation/intent commits, pipe writes, reply
 persistence and terminal results. These tests and the six synthetic Codex process
 scenarios qualify offline durability only. Native artifact attestation and host
-verification are the next integration boundary.
+verification are implemented as a separate host-only offline stage below.
+
+## Native artifact verification
+
+`NativeVerifier` accepts host-registered workspace paths and check commands. A
+completed native outcome and host-confirmed provider shutdown are prerequisites.
+It captures the actual workspace into immutable content-addressed objects, runs
+each required check through the existing bounded process supervisor, and captures
+the workspace again after every check. Changed contents, unsafe paths, excessive
+output, failed shutdown or a lost controller lease cannot produce passing evidence.
+
+Snapshots include regular files, executable bits and empty directories, excluding
+only root `.git` metadata. Links and special files are rejected. Limits are 1,024
+entries, 16 MiB total file bytes and depth 32; larger workspaces fail closed. Store
+the database and artifact directory outside the captured workspace. Checks must
+leave the captured tree unchanged. This detects ordinary local changes; it is not
+an atomic filesystem snapshot or protection against hostile concurrent processes.
+
+Native receipts bind the task, attempt, work revision, connection, controller
+generation, workspace/root hash, host, provider, session/run, tree/artifact hashes
+and registered command hash. They explicitly say `offline` and never use simulated
+evidence labels. Check stdout/stderr is not retained. Artifact references and the
+verification report commit together; snapshots preserve both. Interrupted
+verification recovers as unknown, retaining reservations.
+
+Successful verification records `verified`; failed checks record
+`verification_failed`. Both keep the task at `needs_attention`. Native receipts
+are deliberately separate from the simulator's acceptance contract: no HTTP
+acceptance or live qualification is added by this stage. Trusted host reconciliation
+is still required to release reservations. The next boundary is native acceptance
+policy and controller orchestration, with immutable artifacts available for review.

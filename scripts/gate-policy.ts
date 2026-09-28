@@ -81,6 +81,9 @@ export function phaseSuites(phase: string): Record<string, number> {
               'tests/codex-process.test.ts': 6,
               'packages/storage/src/providers.test.ts': 20,
               'tests/faults/provider-crash.test.ts': 8,
+              'packages/storage/src/workspace.test.ts': 5,
+              'apps/controller/src/native-verifier.test.ts': 21,
+              'tests/faults/native-verification.test.ts': 4,
             }
           : {}),
       };

@@ -162,6 +162,7 @@ export class Store {
       transaction: (fn) => this.#transaction(fn),
       generation: this.#generation,
       fault: this.#fault,
+      task: (id) => this.getTask(id),
       start: (spec) => {
         const task = this.getTask(spec.taskId);
         this.#version(task, spec.expectedVersion);

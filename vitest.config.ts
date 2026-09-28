@@ -15,6 +15,7 @@ export default defineConfig({
         'packages/**/src/**/*.ts',
         'apps/controller/src/controller.ts',
         'apps/controller/src/durable.ts',
+        'apps/controller/src/native-verifier.ts',
         'apps/controller/src/service.ts',
         'apps/controller/src/http/**/*.ts',
         'scripts/gate-policy.ts',
