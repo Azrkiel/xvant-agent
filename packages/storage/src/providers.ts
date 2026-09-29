@@ -43,6 +43,8 @@ export interface ProviderConnection extends ProviderDispatch {
   verification?: NativeVerification;
   nativeRunId: string | null;
   sessionBound?: boolean;
+  /** Host-admitted native interrupt; never supplied by a provider message. */
+  interrupt?: { actorId: string; generation: number };
   outcome: 'completed' | 'cancelled' | 'failed' | null;
   reconciliation: {
     outcome: 'stopped' | 'not_started';
@@ -63,6 +65,7 @@ interface Host {
   generation: number;
   start: (spec: ProviderDispatch) => number;
   attention: (taskId: string) => void;
+  event: (taskId: string, kind: string, payload: unknown) => void;
   fault: (point: string) => void;
   task: (taskId: string) => {
     attemptId?: string | undefined;
@@ -326,6 +329,38 @@ export class ProviderJournal {
       this.host.fault('provider.session.before_commit');
     });
   }
+  /**
+   * Durable host admission for one native interrupt of a dispatched turn. The
+   * caller journals and writes the interrupt frame separately; acknowledgement,
+   * terminal output and owned shutdown remain required before `cancelled`.
+   */
+  requestInterrupt(id: string, token: string, actorId: string): void {
+    idSchema.parse(actorId);
+    this.host.transaction(() => {
+      this.assertWritable(id, token);
+      const connection = this.bound(id, token);
+      if (connection.interrupt) fail('CONFLICT');
+      if (
+        connection.nativeRunId ||
+        !this.entries(id).some(
+          (entry) =>
+            entry.direction === 'out' &&
+            (entry.method === 'turn/start' || entry.method === 'fixture/start'),
+        )
+      )
+        fail('NOT_INTERRUPTIBLE');
+      this.save({
+        ...connection,
+        interrupt: { actorId, generation: this.host.generation },
+      });
+      this.host.event(connection.taskId, 'provider.interrupt_requested', {
+        connectionId: id,
+        attemptId: connection.attemptId,
+        actorId,
+      });
+      this.host.fault('provider.interrupt.before_commit');
+    });
+  }
   bindRun(id: string, token: string, nativeRunId: string): void {
     nativeIdSchema.parse(nativeRunId);
     this.host.transaction(() => {
@@ -349,7 +384,12 @@ export class ProviderJournal {
     this.host.transaction(() => {
       this.assertWritable(id, token);
       const connection = this.bound(id, token);
-      if (!connection.nativeRunId || connection.nativeRunId !== nativeRunId)
+      if (
+        !connection.nativeRunId ||
+        connection.nativeRunId !== nativeRunId ||
+        // An admitted interrupt makes a later completion claim ambiguous.
+        (connection.interrupt && outcome === 'completed')
+      )
         fail('INVALID_EVENT');
       this.save({ ...connection, status: 'result_pending', outcome });
       // Native completion is not simulator evidence and cannot pass acceptance.

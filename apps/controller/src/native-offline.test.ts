@@ -1,4 +1,4 @@
-import { beforeEach, afterEach, expect, it } from 'vitest';
+import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -32,6 +32,21 @@ const spec = (kind: StreamKind) => ({
     quotaGroupId: 'account',
   },
 });
+const admit = () =>
+  vi.waitFor(() => controller.interrupt('connection', 'operator'), {
+    timeout: 1500,
+    interval: 5,
+  });
+/** Runs a holding peer and admits one host interrupt once the turn is running. */
+async function interrupted(
+  input: ReturnType<typeof spec>,
+  scenario = 'interrupt',
+  mode: 'resume' | 'create' = 'resume',
+) {
+  const pending = controller.run(input, scenario, mode);
+  const admission = await admit();
+  return { admission, task: await pending };
+}
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'xvant-native-controller-'));
   const workspace = join(root, 'work');
@@ -80,10 +95,18 @@ for (const kind of ['claude', 'opencode'] as const) {
   it.each(['interrupt', 'interrupt-result-first'])(
     `${kind}: confirms %s without verifying or accepting`,
     async (scenario) => {
-      expect((await controller.run(spec(kind), scenario)).state).toBe(
-        'needs_attention',
-      );
+      const { admission, task } = await interrupted(spec(kind), scenario);
+      expect(admission).toEqual({ status: 'requested' });
+      expect(task.state).toBe('needs_attention');
       expect(store.providers.get('connection').outcome).toBe('cancelled');
+      expect(store.providers.get('connection').interrupt).toMatchObject({
+        actorId: 'operator',
+      });
+      const methods = store.providers
+        .entries('connection')
+        .filter((entry) => entry.direction === 'out')
+        .map((entry) => entry.method);
+      expect(methods.slice(-2)).toEqual(['fixture/start', 'fixture/interrupt']);
       expect(store.providers.get('connection').verification).toBeUndefined();
       expect(store.providers.occupied('workspace:workspace')).toBe(true);
       expect(controller.activeCount).toBe(0);
@@ -99,9 +122,10 @@ for (const kind of ['claude', 'opencode'] as const) {
     'interrupt-partial',
     'interrupt-ack-only',
   ])(`${kind}: fails closed after %s`, async (scenario) => {
-    expect((await controller.run(spec(kind), scenario)).state).toBe(
-      'needs_attention',
-    );
+    const task = scenario.startsWith('setup')
+      ? await controller.run(spec(kind), scenario)
+      : (await interrupted(spec(kind), scenario)).task;
+    expect(task.state).toBe('needs_attention');
     expect(store.providers.get('connection').status).toBe('unknown');
     expect(store.providers.get('connection').outcome).toBeNull();
     expect(store.providers.get('connection').verification).toBeUndefined();
@@ -281,7 +305,10 @@ it('rejects invalid admission before reservation', async () => {
 it.each(['success', 'permission', 'interrupt'])(
   'creates and binds an OpenCode session before %s',
   async (scenario) => {
-    const result = await controller.run(spec('opencode'), scenario, 'create');
+    const result =
+      scenario === 'interrupt'
+        ? (await interrupted(spec('opencode'), scenario, 'create')).task
+        : await controller.run(spec('opencode'), scenario, 'create');
     expect(result.state).toBe(
       scenario === 'interrupt' ? 'needs_attention' : 'ready_for_acceptance',
     );
@@ -397,7 +424,10 @@ const claudeCreation = () => ({
 it.each(['success', 'permission', 'interrupt'])(
   'launches a reserved Claude creation UUID through %s',
   async (scenario) => {
-    const result = await controller.run(claudeCreation(), scenario, 'create');
+    const result =
+      scenario === 'interrupt'
+        ? (await interrupted(claudeCreation(), scenario, 'create')).task
+        : await controller.run(claudeCreation(), scenario, 'create');
     expect(result.state).toBe(
       scenario === 'interrupt' ? 'needs_attention' : 'ready_for_acceptance',
     );
@@ -513,4 +543,135 @@ it('fences a stale Claude owner between launch intent and process startup', asyn
   } finally {
     recovery?.close();
   }
+});
+for (const kind of ['claude', 'opencode'] as const) {
+  const interrupts = () =>
+    store.providers
+      .entries('connection')
+      .filter((entry) => entry.method === 'fixture/interrupt');
+  it(`${kind}: never interrupts a holding turn without host admission`, async () => {
+    expect((await controller.run(spec(kind), 'interrupt')).state).toBe(
+      'needs_attention',
+    );
+    expect(store.providers.get('connection')).toMatchObject({
+      status: 'unknown',
+      outcome: null,
+    });
+    expect(store.providers.get('connection').interrupt).toBeUndefined();
+    expect(interrupts()).toHaveLength(0);
+  });
+  it(`${kind}: makes repeated interrupt admission idempotent`, async () => {
+    const pending = controller.run(spec(kind), 'interrupt');
+    await admit();
+    expect(controller.interrupt('connection', 'someone-else')).toEqual({
+      status: 'already_requested',
+    });
+    expect((await pending).state).toBe('needs_attention');
+    expect(interrupts()).toHaveLength(1);
+    expect(
+      store
+        .events(0)
+        .filter((event) => event.kind === 'provider.interrupt_requested')
+        .map((event) => event.payload),
+    ).toEqual([
+      {
+        connectionId: 'connection',
+        attemptId: 'attempt-custom',
+        actorId: 'operator',
+      },
+    ]);
+  });
+  it(`${kind}: rejects interrupt before dispatch and after a terminal result`, async () => {
+    const errors: string[] = [];
+    fault = (point) => {
+      if (point !== 'native.after_setup' && point !== 'native.after_shutdown')
+        return;
+      try {
+        controller.interrupt('connection', 'operator');
+      } catch (error) {
+        errors.push((error as Error).message);
+      }
+    };
+    expect((await controller.run(spec(kind))).state).toBe(
+      'ready_for_acceptance',
+    );
+    expect(errors).toEqual(['NOT_INTERRUPTIBLE', 'NOT_INTERRUPTIBLE']);
+    expect(store.providers.get('connection').interrupt).toBeUndefined();
+    expect(interrupts()).toHaveLength(0);
+    expect(() => controller.interrupt('connection', 'operator')).toThrow(
+      'NOT_FOUND',
+    );
+  });
+  it(`${kind}: leaves admission retryable after a failed commit`, async () => {
+    let failures = 0;
+    fault = (point) => {
+      if (point === 'provider.interrupt.before_commit' && failures++ === 0)
+        throw new Error('DISK_FAILURE');
+    };
+    const pending = controller.run(spec(kind), 'interrupt');
+    await vi.waitFor(
+      () =>
+        expect(() => controller.interrupt('connection', 'operator')).toThrow(
+          'DISK_FAILURE',
+        ),
+      { timeout: 1500, interval: 5 },
+    );
+    expect(interrupts()).toHaveLength(0);
+    expect(store.providers.get('connection').interrupt).toBeUndefined();
+    expect(controller.interrupt('connection', 'operator')).toEqual({
+      status: 'requested',
+    });
+    expect((await pending).state).toBe('needs_attention');
+    expect(store.providers.get('connection').outcome).toBe('cancelled');
+    expect(interrupts()).toHaveLength(1);
+  });
+  it(`${kind}: fences interrupt admission after controller takeover`, async () => {
+    let recovery: Store | undefined;
+    const errors: string[] = [];
+    fault = (point) => {
+      if (point !== 'native.interruptible') return;
+      recovery = new Store(join(root, 'state.sqlite'), {
+        owner: 'recovery',
+        now: () => Date.now() + 120000,
+      });
+      for (const connectionId of ['connection', 'missing'])
+        try {
+          controller.interrupt(connectionId, 'operator');
+        } catch (error) {
+          errors.push((error as Error).message);
+        }
+      controller.stop();
+    };
+    try {
+      await controller.run(spec(kind), 'interrupt');
+      expect(errors).toEqual(['STALE_FENCE', 'NOT_FOUND']);
+      expect(() => controller.interrupt('connection', 'operator')).toThrow(
+        'CONTROLLER_STOPPED',
+      );
+      expect(recovery!.recover()).toEqual(['attempt-custom']);
+      expect(recovery!.providers.get('connection').interrupt).toBeUndefined();
+      expect(interrupts()).toHaveLength(0);
+      expect(controller.activeCount).toBe(0);
+    } finally {
+      recovery?.close();
+    }
+  });
+}
+it('rejects Claude interrupt admission without advertised receipt capabilities', async () => {
+  const pending = controller.run(spec('claude'), 'interrupt-unsupported');
+  await vi.waitFor(
+    () =>
+      expect(() => controller.interrupt('connection', 'operator')).toThrow(
+        'CAPABILITY_UNSUPPORTED',
+      ),
+    { timeout: 1500, interval: 5 },
+  );
+  controller.stop();
+  expect((await pending).state).toBe('needs_attention');
+  expect(store.providers.get('connection').interrupt).toBeUndefined();
+  expect(
+    store.providers
+      .entries('connection')
+      .filter((entry) => entry.method === 'fixture/interrupt'),
+  ).toHaveLength(0);
 });

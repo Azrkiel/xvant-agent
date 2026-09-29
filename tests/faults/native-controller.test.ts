@@ -9,6 +9,8 @@ for (const kind of ['claude', 'opencode']) {
   it.each([
     'native.after_reserve',
     'native.after_setup',
+    'provider.interrupt.before_commit',
+    'native.after_interrupt_request',
     'native.after_interrupt',
     'provider.send.before_commit',
     'provider.receive.before_commit',
@@ -61,6 +63,24 @@ for (const kind of ['claude', 'opencode']) {
           ].includes(point)
             ? 0
             : 1,
+        );
+        const admitted = [
+          'native.after_interrupt_request',
+          'native.after_interrupt',
+        ].includes(point);
+        expect(store.providers.get('connection').interrupt).toEqual(
+          admitted ? { actorId: 'operator', generation: 1 } : undefined,
+        );
+        expect(
+          store
+            .events(0)
+            .filter((event) => event.kind === 'provider.interrupt_requested'),
+        ).toHaveLength(admitted ? 1 : 0);
+        expect(
+          entries.filter((entry) => entry.method === 'fixture/interrupt'),
+        ).toHaveLength(point === 'native.after_interrupt' ? 1 : 0);
+        expect(store.providers.get('connection').outcome).toBe(
+          verified ? 'completed' : null,
         );
         if (point === 'provider.receive.before_commit')
           expect(entries).toHaveLength(kind === 'claude' ? 2 : 1);

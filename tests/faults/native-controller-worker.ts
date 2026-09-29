@@ -36,7 +36,12 @@ const controller = new OfflineNativeController(
   { check: { executable: process.execPath, args: ['-e', 'process.exit(0)'] } },
   { fault },
 );
-await controller.run(
+const interrupting = [
+  'provider.interrupt.before_commit',
+  'native.after_interrupt_request',
+  'native.after_interrupt',
+].includes(point!);
+const pending = controller.run(
   {
     connectionId: 'connection',
     taskId: 'task',
@@ -60,9 +65,20 @@ await controller.run(
       quotaGroupId: 'account',
     },
   },
-  point === 'native.after_interrupt' ? 'interrupt' : 'permission',
+  interrupting ? 'interrupt' : 'permission',
   modeInput,
 );
+// Poll like a host operator until the running turn admits the interrupt.
+while (interrupting) {
+  try {
+    controller.interrupt('connection', 'operator');
+    break;
+  } catch (error) {
+    if ((error as Error).message !== 'NOT_INTERRUPTIBLE') throw error;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+}
+await pending;
 controller.stop();
 store.close();
 process.exitCode = 72;

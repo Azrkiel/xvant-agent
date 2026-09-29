@@ -278,3 +278,31 @@ it('does not invent a Claude control creation request', () => {
       ),
   ).toThrow('MODE_UNSUPPORTED');
 });
+for (const kind of ['claude', 'opencode'] as const)
+  it(`${kind}: reports interrupt support only for a running turn`, () => {
+    const life = new NativeLifecycle(kind, 'session', 'attempt', '/work');
+    expect(life.interruptSupport).toBe('pending');
+    life.setup();
+    life.receive(setupReply(kind));
+    expect(life.interruptSupport).toBe('pending');
+    life.start();
+    expect(life.interruptSupport).toBe(kind === 'claude' ? 'pending' : 'ready');
+    if (kind === 'claude') life.receive(init);
+    expect(life.interruptSupport).toBe('ready');
+    life.interrupt();
+    expect(life.interruptSupport).toBe('closed');
+  });
+it('reports Claude interrupt as unsupported without receipt capabilities', () => {
+  const life = new NativeLifecycle('claude', 'session', 'attempt', '/work');
+  life.setup();
+  life.receive(setupReply('claude'));
+  life.start();
+  life.receive({ ...init, capabilities: ['interrupt_receipt_v1'] });
+  expect(life.interruptSupport).toBe('unsupported');
+  expect(() => life.interrupt()).toThrow('INVALID_EVENT');
+});
+it('closes interrupt support after an invalid event', () => {
+  const life = started('opencode');
+  expect(() => life.receive(interruptReply('opencode'))).toThrow();
+  expect(life.interruptSupport).toBe('closed');
+});

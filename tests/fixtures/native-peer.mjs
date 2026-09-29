@@ -253,7 +253,10 @@ createInterface({ input: process.stdin }).on('line', (line) => {
         output_style: 'default',
         skills: [],
         plugins: [],
-        capabilities: ['interrupt_receipt_v1', 'interrupt_cancel_queued_v1'],
+        capabilities:
+          scenario === 'interrupt-unsupported'
+            ? ['interrupt_receipt_v1']
+            : ['interrupt_receipt_v1', 'interrupt_cancel_queued_v1'],
       });
     if (interrupting) return;
     if (scenario === 'timeout' || scenario === 'cancel') return;

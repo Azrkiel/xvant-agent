@@ -251,6 +251,7 @@ try {
         controller.liveProvidersTested.length ||
         controller.state !== 'ready_for_acceptance' ||
         controller.verification !== 'passed' ||
+        controller.interruptAdmission !== null ||
         controller.journalEntries !== (kind === 'claude' ? 8 : 6) ||
         controller.activeCount !== 0 ||
         controller.accepted !== false
@@ -272,6 +273,8 @@ try {
         interruption.liveProvidersTested.length ||
         interruption.state !== 'needs_attention' ||
         interruption.outcome !== 'cancelled' ||
+        interruption.interruptAdmission !== 'requested' ||
+        interruption.interruptActor !== 'operator' ||
         interruption.verification !== undefined ||
         interruption.activeCount !== 0 ||
         interruption.accepted !== false
@@ -303,6 +306,7 @@ try {
               created.verification !== 'passed'
             : created.state !== 'needs_attention' ||
               created.outcome !== 'cancelled' ||
+              created.interruptAdmission !== 'requested' ||
               created.verification !== undefined)
         )
           throw new Error('Native session creation fixture failed');

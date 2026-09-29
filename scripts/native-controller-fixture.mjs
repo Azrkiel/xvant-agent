@@ -36,7 +36,7 @@ try {
       check: { executable: process.execPath, args: ['-e', 'process.exit(0)'] },
     },
   );
-  const task = await controller.run(
+  const pending = controller.run(
     {
       connectionId: 'connection',
       taskId: 'task',
@@ -63,6 +63,17 @@ try {
     scenario,
     mode,
   );
+  // A host operator polls admission until the running turn can be interrupted.
+  let admission;
+  for (let tries = 0; scenario === 'interrupt' && !admission; tries++) {
+    try {
+      admission = controller.interrupt('connection', 'operator').status;
+    } catch (error) {
+      if (error.message !== 'NOT_INTERRUPTIBLE' || tries >= 1000) throw error;
+      await new Promise((done) => setTimeout(done, 5));
+    }
+  }
+  const task = await pending;
   const connection = store.providers.get('connection');
   console.log(
     JSON.stringify({
@@ -72,6 +83,8 @@ try {
       state: task.state,
       verification: connection.verification?.status,
       outcome: connection.outcome,
+      interruptAdmission: admission ?? null,
+      interruptActor: connection.interrupt?.actorId ?? null,
       sessionBound: connection.sessionBound === true,
       nativeSessionId: connection.worker.nativeSessionId,
       journalEntries: store.providers.entries('connection').length,

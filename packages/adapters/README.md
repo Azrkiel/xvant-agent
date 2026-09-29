@@ -1,9 +1,11 @@
 # Offline provider foundation
 
-Phase 3 currently provides in-memory contracts and synthetic fixtures for Codex,
-Claude, and OpenCode. It does not start live workers, attach to sessions, submit
-prompts, approve tools, read credentials, or enable paid fallback. The durable
-controller still executes only the Phase 2 simulator.
+Phase 3 currently provides contracts, a durable provider journal and owned offline
+controllers for Codex, Claude, and OpenCode. Those controllers launch only fixed
+synthetic peers. Nothing here starts a live worker, attaches to a real session,
+submits a prompt to a model, approves tools, reads credentials, or enables paid
+fallback. The sections below were added in order; later sections supersede the
+"remaining work" notes of earlier ones.
 
 ## Claude and OpenCode stream profiles
 
@@ -53,10 +55,9 @@ malformed/partial output, error, timeout and cancellation. OpenCode SSE travels 
 fixture pipes here; its permission action is an HTTP request descriptor, not a real
 HTTP call. G03 includes both process suites and direct denial runtime checks.
 
-Remaining work: durable journal integration, full SDK/HTTP session setup and
-interrupt handling, authenticated endpoint ownership, broader event schemas,
-artifact verification through these adapters, and live qualification. These readers
-do not launch a provider, access credentials, accept tasks or enable paid fallback.
+These readers do not launch a provider, access credentials, accept tasks or enable
+paid fallback. Journal integration, session setup, interruption and artifact
+verification were added offline in later sections.
 
 Run with the repository's pinned Node version:
 
@@ -360,7 +361,7 @@ session ID, directory and unarchived timestamps. HTTP responses are explicitly
 marked fixture envelopes inside the test pipe; they are not native SSE events.
 No HTTP listener, client, reconnect or live session creation is supplied.
 
-The interrupt scenario journals Claude `interrupt` with `cancel_queued: true`,
+An admitted interrupt journals Claude `interrupt` with `cancel_queued: true`,
 requiring advertised receipt and queue-cancellation capabilities. Its correlated
 receipt must report no queued survivors and no unrelated cancelled requests.
 OpenCode uses a correlated `POST /session/{sessionID}/abort` descriptor with a true
@@ -429,3 +430,33 @@ Only the synthetic peer is launched. No Claude SDK is loaded, session history is
 read, authentication is inspected or provider session is created. Live launch,
 endpoint ownership, billing admission, public interrupt API and Linux qualification
 remain open.
+
+## Explicit offline native interrupt admission
+
+Interruption is a host call, not a scenario side effect. `interrupt(connectionId,
+actorId)` on `OfflineNativeController` admits one interrupt for a turn that this
+controller instance currently owns. Admission requires a dispatched, still-running
+turn: setup, pending dispatch, a received terminal result, a failed stream or an
+unknown connection return `NOT_INTERRUPTIBLE`. Claude additionally needs its init
+metadata; if init lacks the receipt and queue-cancellation capabilities, admission
+returns `CAPABILITY_UNSUPPORTED`. Other controllers' or finished connections return
+`NOT_FOUND`; a stopped controller returns `CONTROLLER_STOPPED`.
+
+`ProviderJournal.requestInterrupt` commits the actor, controller generation and a
+`provider.interrupt_requested` audit event in one fenced transaction. It rechecks
+that a start frame was journaled and no terminal run is bound. Only after that
+commit is the interrupt frame queued behind earlier sends, journaled and written.
+A failed commit sends nothing and can be retried; a repeated call returns
+`already_requested` without a second frame. Once admitted, the journal refuses a
+`completed` outcome, so an interrupted turn can never enter verification.
+
+Confirmation rules are unchanged: acknowledgement, terminal output, complete EOF,
+finished writes and owned shutdown yield `cancelled`; anything missing stays
+unknown. A holding peer that is never interrupted times out as unknown. Four new
+actual-process crash cases cover death inside and after admission; recovery keeps
+the admission record, never sends the interrupt or the turn again and retains
+reservations. G03 fixtures now poll admission like a host operator would.
+
+The actor ID is host-supplied and not authenticated here; no HTTP route exposes
+interruption. Codex still uses its scenario-driven interrupt path. Live interrupt
+APIs, endpoint authentication and Linux qualification remain open.

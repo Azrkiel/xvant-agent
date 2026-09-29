@@ -181,6 +181,7 @@ export class Store {
         });
         return task.workRevision;
       },
+      event: (taskId, kind, payload) => this.#event(taskId, kind, payload),
       attention: (id) => {
         const task = this.getTask(id);
         if (task.state !== 'needs_attention') {

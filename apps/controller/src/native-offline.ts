@@ -38,6 +38,7 @@ const scenarioSchema = z.enum([
   'interrupt-partial',
   'interrupt-result-first',
   'interrupt-ack-only',
+  'interrupt-unsupported',
   'create-malformed',
   'create-reused',
   'create-permission',
@@ -46,6 +47,9 @@ const scenarioSchema = z.enum([
   'launch-timeout',
 ]);
 type Checks = Record<string, { executable: string; args: readonly string[] }>;
+export interface InterruptAdmission {
+  status: 'requested' | 'already_requested';
+}
 /** Fixed synthetic peers only. OpenCode HTTP descriptors travel over fixture pipes. */
 export class OfflineNativeController {
   private readonly store: Store;
@@ -56,6 +60,10 @@ export class OfflineNativeController {
   private readonly review: NativeReviewController;
   private readonly timeout: number;
   private readonly fault: (point: string) => void;
+  private readonly interrupts = new Map<
+    string,
+    (actorId: string) => InterruptAdmission
+  >();
   private stopped = false;
   constructor(
     store: Store,
@@ -82,6 +90,18 @@ export class OfflineNativeController {
   }
   get activeCount(): number {
     return this.supervisor.activeCount;
+  }
+  /**
+   * Host-only admission of a native interrupt for a turn this controller owns.
+   * Admission commits before the frame is journaled and written. `cancelled`
+   * still requires a correlated acknowledgement, terminal output and owned
+   * shutdown; otherwise the run stays unknown. Never exposed to providers.
+   */
+  interrupt(connectionId: string, actorId: string): InterruptAdmission {
+    if (this.stopped) throw new Error('CONTROLLER_STOPPED');
+    const admit = this.interrupts.get(connectionId);
+    if (!admit) throw new Error('NOT_FOUND');
+    return admit(actorId);
   }
   async run(
     input: ProviderDispatch,
@@ -152,9 +172,9 @@ export class OfflineNativeController {
       root,
       kind === 'claude' ? 'resume' : mode,
     );
-    const wantsInterrupt = scenario.startsWith('interrupt');
     let dispatched = false,
-      interruptSent = false,
+      interruptRequested = false,
+      interruptible = false,
       interruptRecorded = false;
     let sessionBound = false;
     const stream = new NativeStream(
@@ -213,6 +233,26 @@ export class OfflineNativeController {
       if (!run) throw new Error('OPERATION_UNKNOWN');
       await run.write(persist(method, wire));
     };
+    const observeInterruptible = () => {
+      if (!interruptible && life.interruptSupport === 'ready') {
+        interruptible = true;
+        this.fault('native.interruptible');
+      }
+    };
+    this.interrupts.set(id, (actorId) => {
+      if (interruptRequested) return { status: 'already_requested' };
+      const support = life.interruptSupport;
+      if (support === 'unsupported') throw new Error('CAPABILITY_UNSUPPORTED');
+      if (failed || support !== 'ready' || stream.status !== 'running')
+        throw new Error('NOT_INTERRUPTIBLE');
+      this.store.providers.requestInterrupt(id, token, actorId);
+      interruptRequested = true;
+      this.fault('native.after_interrupt_request');
+      // Serialize behind earlier sends so journal order matches pipe order.
+      writes = writes.then(() => write('fixture/interrupt', life.interrupt()));
+      void writes.catch(fail);
+      return { status: 'requested' };
+    });
     try {
       this.fault('native.after_reserve');
       if (launch) {
@@ -252,6 +292,7 @@ export class OfflineNativeController {
                   stream.denialWritten(action.requestId);
                 });
               }
+              observeInterruptible();
               if (life.interrupted && !interruptRecorded) {
                 interruptRecorded = true;
                 this.fault('native.after_interrupt');
@@ -264,21 +305,12 @@ export class OfflineNativeController {
                     throw new Error('OPERATION_UNKNOWN');
                   life.start();
                   await write('fixture/start', { fixture: 'start' });
-                  if (wantsInterrupt && kind === 'opencode' && !interruptSent) {
-                    interruptSent = true;
-                    await write('fixture/interrupt', life.interrupt());
-                  }
+                  observeInterruptible();
                 });
-              }
-              if (wantsInterrupt && !interruptSent && life.canInterrupt) {
-                interruptSent = true;
-                writes = writes.then(() =>
-                  write('fixture/interrupt', life.interrupt()),
-                );
               }
               if (
                 stream.status === 'result_pending' &&
-                (!wantsInterrupt || life.interrupted)
+                (!interruptRequested || life.interrupted)
               )
                 writes = writes.then(() => {
                   run!.endInput();
@@ -308,7 +340,7 @@ export class OfflineNativeController {
       )
         throw new Error('OPERATION_UNKNOWN');
       const result = stream.end();
-      if (wantsInterrupt && !life.interrupted)
+      if (interruptRequested && !life.interrupted)
         throw new Error('OPERATION_UNKNOWN');
       this.fault('native.after_shutdown');
       if (this.stopped) throw new Error('CONTROLLER_STOPPED');
@@ -319,9 +351,9 @@ export class OfflineNativeController {
         id,
         token,
         result.nativeMessageId,
-        wantsInterrupt ? 'cancelled' : result.kind,
+        interruptRequested ? 'cancelled' : result.kind,
       );
-      if (result.kind === 'completed' && !wantsInterrupt) {
+      if (result.kind === 'completed' && !interruptRequested) {
         const verification = await this.verifier.verify(id, token, {
           stopped: true,
         });
@@ -338,6 +370,7 @@ export class OfflineNativeController {
     } catch {
       fail();
     } finally {
+      this.interrupts.delete(id);
       stream.cancel();
       if (run) {
         if (failed) this.supervisor.cancel(run.identity);

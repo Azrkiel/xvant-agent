@@ -129,6 +129,13 @@ export class NativeLifecycle {
       (this.kind === 'opencode' || (this.initialized && this.canCancelQueued))
     );
   }
+  /** Pending may become ready; unsupported and closed are final for this turn. */
+  get interruptSupport(): 'pending' | 'ready' | 'unsupported' | 'closed' {
+    if (['new', 'setup', 'ready'].includes(this.state)) return 'pending';
+    if (this.state !== 'running') return 'closed';
+    if (this.kind === 'opencode' || this.canInterrupt) return 'ready';
+    return this.initialized ? 'unsupported' : 'pending';
+  }
   private require(condition: boolean): void {
     if (!condition) {
       this.state = 'unknown';

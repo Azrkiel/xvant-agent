@@ -551,3 +551,127 @@ it.each(['completed', 'cancelled', 'failed'] as const)(
     expect(store.getTask('task').state).toBe('needs_attention');
   },
 );
+function dispatched(method = 'turn/start') {
+  const connection = store.providers.reserve(spec);
+  store.providers.recordIntent('connection', connection.token, {
+    id: 1,
+    method,
+    frame: '{"id":1,"method":"' + method + '","params":{}}\n',
+  });
+  return connection;
+}
+it('admits one durable interrupt request only after turn dispatch', () => {
+  const connection = store.providers.reserve(spec);
+  expect(() =>
+    store.providers.requestInterrupt(
+      'connection',
+      connection.token,
+      'operator',
+    ),
+  ).toThrow('NOT_INTERRUPTIBLE');
+  store.providers.recordIntent('connection', connection.token, {
+    id: 1,
+    method: 'fixture/start',
+    frame: '{"fixture":"start"}\n',
+  });
+  store.providers.requestInterrupt('connection', connection.token, 'operator');
+  expect(store.providers.get('connection').interrupt).toEqual({
+    actorId: 'operator',
+    generation: connection.generation,
+  });
+  expect(
+    store
+      .events(0)
+      .filter((event) => event.kind === 'provider.interrupt_requested')
+      .map((event) => event.payload),
+  ).toEqual([
+    { connectionId: 'connection', attemptId: 'attempt', actorId: 'operator' },
+  ]);
+  expect(() =>
+    store.providers.requestInterrupt('connection', connection.token, 'other'),
+  ).toThrow('CONFLICT');
+  store.close();
+  store = open();
+  expect(store.providers.get('connection').interrupt?.actorId).toBe('operator');
+});
+it('rejects interrupt admission after a terminal result or uncertainty', () => {
+  const connection = dispatched();
+  store.providers.bindRun('connection', connection.token, 'turn:1');
+  expect(() =>
+    store.providers.requestInterrupt(
+      'connection',
+      connection.token,
+      'operator',
+    ),
+  ).toThrow('NOT_INTERRUPTIBLE');
+  store.providers.unknown('connection', connection.token);
+  expect(() =>
+    store.providers.requestInterrupt(
+      'connection',
+      connection.token,
+      'operator',
+    ),
+  ).toThrow('UNRESOLVED_OPERATION');
+  expect(() =>
+    store.providers.requestInterrupt('connection', connection.token, ''),
+  ).toThrow();
+  expect(store.providers.get('connection').interrupt).toBeUndefined();
+});
+it('fences interrupt admission after controller takeover', () => {
+  const connection = dispatched();
+  now += 501;
+  const next = open();
+  expect(() =>
+    store.providers.requestInterrupt(
+      'connection',
+      connection.token,
+      'operator',
+    ),
+  ).toThrow('STALE_FENCE');
+  expect(() =>
+    next.providers.requestInterrupt('connection', connection.token, 'operator'),
+  ).toThrow('STALE_FENCE');
+  expect(next.providers.get('connection').interrupt).toBeUndefined();
+});
+it('rolls back interrupt admission with its audit event', () => {
+  store.close();
+  store = open((point) => {
+    if (point === 'provider.interrupt.before_commit')
+      throw new Error('DISK_FAILURE');
+  });
+  const connection = dispatched();
+  expect(() =>
+    store.providers.requestInterrupt(
+      'connection',
+      connection.token,
+      'operator',
+    ),
+  ).toThrow('DISK_FAILURE');
+  expect(store.providers.get('connection').interrupt).toBeUndefined();
+  expect(
+    store
+      .events(0)
+      .some((event) => event.kind === 'provider.interrupt_requested'),
+  ).toBe(false);
+});
+it('cannot record completion after an admitted interrupt', () => {
+  const connection = dispatched();
+  store.providers.requestInterrupt('connection', connection.token, 'operator');
+  store.providers.bindRun('connection', connection.token, 'turn:1');
+  expect(() =>
+    store.providers.finish(
+      'connection',
+      connection.token,
+      'turn:1',
+      'completed',
+    ),
+  ).toThrow('INVALID_EVENT');
+  store.providers.finish('connection', connection.token, 'turn:1', 'cancelled');
+  expect(store.providers.get('connection')).toMatchObject({
+    status: 'result_pending',
+    outcome: 'cancelled',
+  });
+  expect(() =>
+    store.providers.beginVerification('connection', connection.token),
+  ).toThrow('VERIFICATION_UNAVAILABLE');
+});
