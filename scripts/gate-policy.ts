@@ -64,7 +64,7 @@ export function phaseSuites(phase: string): Record<string, number> {
         ...baseline,
         'packages/storage/src/store.test.ts': 20,
         'packages/storage/src/artifacts.test.ts': 20,
-        'packages/supervisor/src/index.test.ts': 11,
+        'packages/supervisor/src/index.test.ts': 12,
         'packages/policy/src/index.test.ts': 2,
         'apps/controller/src/durable.test.ts': 13,
         'apps/controller/src/service.test.ts': 3,
@@ -80,7 +80,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/adapters/src/codex/lifecycle.test.ts': 9,
               'packages/adapters/src/codex/thread.test.ts': 15,
               'tests/codex-process.test.ts': 6,
-              'packages/storage/src/providers.test.ts': 38,
+              'packages/storage/src/providers.test.ts': 41,
               'tests/faults/provider-crash.test.ts': 8,
               'packages/storage/src/workspace.test.ts': 5,
               'apps/controller/src/native-verifier.test.ts': 21,
@@ -101,6 +101,9 @@ export function phaseSuites(phase: string): Record<string, number> {
               'tests/faults/native-session.test.ts': 4,
               'packages/adapters/src/providers/failures.test.ts': 18,
               'apps/controller/src/offline-roster.test.ts': 2,
+              'packages/adapters/src/opencode/endpoint.test.ts': 9,
+              'apps/controller/src/opencode-http.test.ts': 16,
+              'tests/faults/opencode-http.test.ts': 6,
             }
           : {}),
       };

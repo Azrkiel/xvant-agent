@@ -757,3 +757,82 @@ it('blocks on auth failures and fences failure records', () => {
   expect(() => store.providers.reserve(second())).toThrow('AUTH_REQUIRED');
   expect(() => store.providers.clearBlock('account', '')).toThrow();
 });
+const digest = 'a'.repeat(64);
+function serving() {
+  const connection = store.providers.reserve(native);
+  store.providers.recordIntent('connection', connection.token, {
+    id: 1,
+    method: 'opencode/serve',
+    frame: JSON.stringify({ credentialSha256: digest }) + '\n',
+  });
+  return connection;
+}
+const endpoint = {
+  origin: 'http://127.0.0.1:4096',
+  credentialSha256: digest,
+  version: '1.18.33',
+};
+it('binds one verified loopback endpoint before session traffic', () => {
+  const connection = serving();
+  store.providers.bindEndpoint('connection', connection.token, endpoint);
+  expect(store.providers.get('connection').endpoint).toEqual({
+    ...endpoint,
+    generation: connection.generation,
+  });
+  expect(() =>
+    store.providers.bindEndpoint('connection', connection.token, endpoint),
+  ).toThrow('CONFLICT');
+  expect(
+    store.events(0).filter((event) => event.kind === 'provider.endpoint_bound'),
+  ).toHaveLength(1);
+});
+it('rejects endpoint binding without its launch intent, after traffic or off loopback', () => {
+  const connection = serving();
+  expect(() =>
+    store.providers.bindEndpoint('connection', connection.token, {
+      ...endpoint,
+      credentialSha256: 'b'.repeat(64),
+    }),
+  ).toThrow('CONFLICT');
+  for (const origin of [
+    'http://0.0.0.0:4096',
+    'https://127.0.0.1:1',
+    'http://localhost:1',
+  ])
+    expect(() =>
+      store.providers.bindEndpoint('connection', connection.token, {
+        ...endpoint,
+        origin,
+      }),
+    ).toThrow();
+  store.providers.recordIntent('connection', connection.token, {
+    id: 2,
+    method: 'session/get',
+    frame: '{}\n',
+  });
+  expect(() =>
+    store.providers.bindEndpoint('connection', connection.token, endpoint),
+  ).toThrow('CONFLICT');
+  expect(store.providers.get('connection').endpoint).toBeUndefined();
+});
+it('treats an HTTP prompt as turn dispatch for interrupts and session binding', () => {
+  const connection = store.providers.reserve({
+    ...native,
+    worker: { ...native.worker, nativeSessionId: 'pending:connection' },
+  });
+  store.providers.recordIntent('connection', connection.token, {
+    id: 1,
+    method: 'session/create',
+    frame: '{}\n',
+  });
+  store.providers.recordIntent('connection', connection.token, {
+    id: 2,
+    method: 'session/prompt',
+    frame: '{}\n',
+  });
+  expect(() =>
+    store.providers.bindSession('connection', connection.token, 'created-1'),
+  ).toThrow('CONFLICT');
+  store.providers.requestInterrupt('connection', connection.token, 'operator');
+  expect(store.providers.get('connection').interrupt?.actorId).toBe('operator');
+});

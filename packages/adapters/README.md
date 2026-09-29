@@ -521,3 +521,48 @@ uses one OpenCode create; a second would be refused as a collision, which the
 controller tests cover. This is concurrency and routing evidence with synthetic
 peers only. The plan's live `--fixture roster` run with ten real sessions remains
 unverified.
+
+## Owned, authenticated OpenCode endpoint
+
+`OfflineOpenCodeHttpController` runs OpenCode over a real loopback HTTP endpoint
+instead of fixture pipes. It follows the pinned SDK's launch contract (`opencode
+serve --hostname=127.0.0.1 --port=0` and its `opencode server listening on <url>`
+line) and the [server docs](https://opencode.ai/docs/server/):
+`OPENCODE_SERVER_PASSWORD` enables HTTP basic auth with username `opencode`.
+Without it, the server is unprotected, so owning the endpoint matters.
+
+For each launch the host:
+
+1. Generates a 256-bit secret, kept only in memory and in the child's environment
+   (via the supervisor's new `env` overlay). The `opencode/serve` intent records
+   the arguments, the variable name and a SHA-256 digest; it is journaled before
+   launch.
+2. Accepts exactly one announcement line naming `http://127.0.0.1:<port>`.
+   Non-loopback, named hosts, HTTPS, paths or extra stdout fail closed.
+3. Proves ownership: an unauthenticated `GET /global/health` must return 401, and
+   the authenticated one must report the pinned version `1.18.33`.
+4. Commits `ProviderJournal.bindEndpoint` (origin, digest, version, generation),
+   allowed once and only right after the launch intent, before any session
+   traffic.
+5. Subscribes to `/event` before prompting, then uses real HTTP for
+   `GET /session/{id}` or `POST /session`, `POST /session/{id}/prompt_async`
+   (with the attempt ID as `messageID`, expecting 204),
+   `POST /permission/{id}/reply` (reject) and `POST /session/{id}/abort` (after
+   admission). Each request is journaled before sending and each reply after it
+   arrives; replies go through the same lifecycle validation as before.
+
+The client uses no redirects, keep-alive or proxies. It limits request and
+response bodies to 64 KiB, allows JSON bodies only, and refuses paths that could
+change origin. Once headers arrive, the event stream drops the socket idle
+timeout, because the owned process deadline bounds it. Completion still needs
+the terminal event, a clean SSE end, finished writes and a clean exit of the
+owned server (the fixture exits on stdin EOF). Six crash cases cover death
+before launch, inside and after endpoint binding, after setup, after interrupt
+admission, and before the terminal commit. Recovery never replays, no secret
+reaches the journal, and the orphaned server stops once its owner's pipe closes.
+
+Limits: the fixture server is synthetic and sends no `server.connected` or other
+unmodeled events. Whether a live server accepts a host-chosen `messageID` in
+this format is unverified. The secret is visible to same-user processes that can
+read another process's environment; this is trusted-local, not a sandbox. The
+pipe-based OpenCode path remains for existing fixtures.

@@ -47,6 +47,13 @@ export interface ProviderConnection extends ProviderDispatch {
   sessionBound?: boolean;
   /** Host-admitted native interrupt; never supplied by a provider message. */
   interrupt?: { actorId: string; generation: number };
+  /** Owned, authenticated endpoint; the credential itself is never stored. */
+  endpoint?: {
+    origin: string;
+    credentialSha256: string;
+    version: string;
+    generation: number;
+  };
   /** First normalized native failure; quota-group scope blocks new admission. */
   failure?: NativeFailure & {
     cleared?: { actorId: string; generation: number };
@@ -79,6 +86,8 @@ interface Host {
     requiredCheckIds: string[];
   };
 }
+/** Journal methods that dispatch a turn to the provider. */
+const DISPATCH = new Set(['turn/start', 'fixture/start', 'session/prompt']);
 function fail(code: string): never {
   throw new Error(code);
 }
@@ -272,6 +281,43 @@ export class ProviderJournal {
       sequence: row.sequence,
     }));
   }
+  /**
+   * Bind a verified, authenticated endpoint once, after its launch intent and
+   * before any session traffic. Stores the origin and a credential digest only.
+   */
+  bindEndpoint(id: string, token: string, input: unknown): void {
+    const endpoint = z
+      .strictObject({
+        origin: z.string().regex(/^http:\/\/127\.0\.0\.1:\d{1,5}$/),
+        credentialSha256: z.string().regex(/^[a-f0-9]{64}$/),
+        version: z.string().min(1).max(128),
+      })
+      .parse(input);
+    this.host.transaction(() => {
+      this.assertWritable(id, token);
+      const connection = this.bound(id, token);
+      const outgoing = this.entries(id).filter(
+        (entry) => entry.direction === 'out',
+      );
+      if (
+        connection.endpoint ||
+        outgoing.length !== 1 ||
+        outgoing[0]!.method !== 'opencode/serve' ||
+        !outgoing[0]!.frame?.includes(endpoint.credentialSha256)
+      )
+        fail('CONFLICT');
+      this.save({
+        ...connection,
+        endpoint: { ...endpoint, generation: this.host.generation },
+      });
+      this.host.event(connection.taskId, 'provider.endpoint_bound', {
+        connectionId: id,
+        origin: endpoint.origin,
+        version: endpoint.version,
+      });
+      this.host.fault('provider.endpoint.before_commit');
+    });
+  }
   /** Bind a validated creation reply once, before any turn can be sent. */
   bindSession(id: string, token: string, nativeSessionId: string): void {
     nativeIdSchema.parse(nativeSessionId);
@@ -297,10 +343,7 @@ export class ProviderJournal {
         connection.nativeRunId ||
         outgoing.filter((entry) => entry.method === creationMethod).length !==
           1 ||
-        outgoing.some(
-          (entry) =>
-            entry.method === 'turn/start' || entry.method === 'fixture/start',
-        )
+        outgoing.some((entry) => DISPATCH.has(entry.method ?? ''))
       )
         fail('CONFLICT');
       const resource = (session: string) =>
@@ -355,8 +398,7 @@ export class ProviderJournal {
         (codex ? !connection.nativeRunId : connection.nativeRunId) ||
         !this.entries(id).some(
           (entry) =>
-            entry.direction === 'out' &&
-            (entry.method === 'turn/start' || entry.method === 'fixture/start'),
+            entry.direction === 'out' && DISPATCH.has(entry.method ?? ''),
         )
       )
         fail('NOT_INTERRUPTIBLE');

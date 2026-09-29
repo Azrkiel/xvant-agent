@@ -219,6 +219,35 @@ try {
       roster.accepted !== false
     )
       throw new Error('Controller roster failed');
+    for (const scenario of ['permission', 'interrupt', 'no-auth']) {
+      const checkId = 'opencode-http-' + scenario;
+      check(checkId, ['scripts/opencode-http-fixture.mjs', scenario]);
+      const http = JSON.parse(
+        readFileSync(resolve(artifacts, checkId + '.log'), 'utf8'),
+      );
+      const common =
+        http.classification === 'offline' &&
+        http.liveProvidersTested.length === 0 &&
+        http.activeCount === 0 &&
+        http.accepted === false &&
+        http.methods[0] === 'opencode/serve';
+      const specific =
+        scenario === 'permission'
+          ? http.state === 'ready_for_acceptance' &&
+            http.verification === 'passed' &&
+            http.endpointBound &&
+            http.loopback &&
+            http.methods.includes('permission/reply')
+          : scenario === 'interrupt'
+            ? http.outcome === 'cancelled' &&
+              http.interruptAdmission === 'requested' &&
+              http.methods.at(-1) === 'session/abort'
+            : http.status === 'unknown' &&
+              !http.endpointBound &&
+              http.methods.length === 1;
+      if (!common || !specific)
+        throw new Error('OpenCode HTTP fixture failed: ' + scenario);
+    }
     check('codex-transport', ['scripts/codex-fixture.mjs', 'success']);
     const transport = JSON.parse(
       readFileSync(resolve(artifacts, 'codex-transport.log'), 'utf8'),

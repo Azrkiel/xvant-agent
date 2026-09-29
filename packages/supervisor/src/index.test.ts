@@ -166,3 +166,22 @@ it('retains ownership after uncertain shutdown so cancellation can be retried', 
   expect(supervisor.cancel(run.identity)).toBe(true);
   await expect.poll(() => supervisor.activeCount, { timeout: 2000 }).toBe(0);
 }, 10000);
+it('layers validated extra environment variables over the inherited environment', async () => {
+  const supervisor = new WorkerSupervisor();
+  const run = supervisor.start({
+    ...command(
+      "process.stdout.write(process.env.XVANT_FIXTURE_SECRET + ':' + (process.env.PATH ? 'path' : ''))",
+    ),
+    env: { XVANT_FIXTURE_SECRET: 'abc' },
+  });
+  expect((await run.result).stdout).toBe('abc:path');
+  for (const env of [
+    { 'bad-name': 'x' },
+    { OK: 'x'.repeat(4097) },
+    { OK: 'a\0b' },
+  ])
+    expect(() => supervisor.start({ ...command(''), env })).toThrow(
+      'INVALID_INPUT',
+    );
+  expect(supervisor.activeCount).toBe(0);
+});
