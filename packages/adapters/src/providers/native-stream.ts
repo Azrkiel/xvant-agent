@@ -72,7 +72,9 @@ export class NativeStream {
   private readonly handleControl:
     ((message: Record<string, unknown>) => boolean) | undefined;
   private readonly kind: StreamKind;
-  private readonly session: string;
+  private session: string;
+  private nativeMessages = 0;
+  private sessionBound = false;
   private readonly request: string;
   private readonly decoder: JsonLineDecoder | SseDecoder;
   private readonly beforeReceive:
@@ -108,6 +110,26 @@ export class NativeStream {
   get status() {
     return this.state;
   }
+  /** Host calls only after durable binding, before native invocation traffic. */
+  bindSession(session: string): void {
+    try {
+      nativeIdSchema.parse(session);
+      if (
+        this.closed ||
+        this.kind !== 'opencode' ||
+        this.sessionBound ||
+        this.nativeMessages ||
+        !this.session.startsWith('pending:') ||
+        session.startsWith('pending:')
+      )
+        fail('INVALID_EVENT');
+      this.session = session;
+      this.sessionBound = true;
+    } catch (error) {
+      this.cancel();
+      throw error;
+    }
+  }
   receive(chunk: Uint8Array): DenialAction[] {
     if (this.closed) fail('CONNECTION_CLOSED');
     try {
@@ -136,6 +158,7 @@ export class NativeStream {
           }
           if (handled) continue;
         }
+        this.nativeMessages++;
         const action =
           this.kind === 'claude'
             ? this.claude(message)

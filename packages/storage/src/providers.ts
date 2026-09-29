@@ -270,12 +270,26 @@ export class ProviderJournal {
       const outgoing = this.entries(id).filter(
         (entry) => entry.direction === 'out',
       );
+      const kind = connection.worker.runtimeKind;
+      const creationMethod =
+        kind === 'codex'
+          ? 'thread/start'
+          : kind === 'opencode'
+            ? 'session/create'
+            : undefined;
       if (
+        !creationMethod ||
+        (kind === 'opencode' &&
+          (connection.worker.nativeSessionId !== 'pending:' + id ||
+            nativeSessionId.startsWith('pending:'))) ||
         connection.sessionBound ||
         connection.nativeRunId ||
-        outgoing.filter((entry) => entry.method === 'thread/start').length !==
+        outgoing.filter((entry) => entry.method === creationMethod).length !==
           1 ||
-        outgoing.some((entry) => entry.method === 'turn/start')
+        outgoing.some(
+          (entry) =>
+            entry.method === 'turn/start' || entry.method === 'fixture/start',
+        )
       )
         fail('CONFLICT');
       const resource = (session: string) =>

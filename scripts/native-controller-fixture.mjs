@@ -8,6 +8,8 @@ import { versions } from '../packages/adapters/src/providers/native-profiles.ts'
 
 const kind = process.argv[2];
 const scenario = process.argv[3] ?? 'permission';
+const mode = process.argv[4] ?? 'resume';
+if (mode !== 'resume' && mode !== 'create') throw new Error('INVALID_INPUT');
 if (kind !== 'claude' && kind !== 'opencode') throw new Error('INVALID_INPUT');
 if (scenario !== 'permission' && scenario !== 'interrupt')
   throw new Error('INVALID_INPUT');
@@ -56,6 +58,7 @@ try {
       },
     },
     scenario,
+    mode,
   );
   const connection = store.providers.get('connection');
   console.log(
@@ -66,6 +69,8 @@ try {
       state: task.state,
       verification: connection.verification?.status,
       outcome: connection.outcome,
+      sessionBound: connection.sessionBound === true,
+      nativeSessionId: connection.worker.nativeSessionId,
       journalEntries: store.providers.entries('connection').length,
       activeCount: controller.activeCount,
       accepted: store

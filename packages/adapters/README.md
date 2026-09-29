@@ -375,3 +375,31 @@ API. `stop()` remains the emergency owned-process cancellation path. Eighteen
 actual-process crash cases now include setup and interrupt boundaries. G03 runs
 direct setup-to-review and interruption scenarios for each provider. Native session
 creation/resume launch, live transport/auth ownership and broader events remain open.
+
+## Offline OpenCode session creation
+
+The owned controller accepts `run(dispatch, scenario, 'create')` for OpenCode.
+Default `resume` keeps the existing lookup path. Creation first reserves a
+connection-specific provisional native identity (`pending:<connectionId>`), then
+journals a `POST /session` descriptor with a registered directory and a single
+deny-all permission rule. No prompt is dispatched yet.
+
+The reply must contain a valid, unarchived session in that directory, no parent or
+revert state, and exactly the requested deny-all permissions. The returned ID must
+not use the provisional namespace. In one fenced transaction, the journal swaps
+the provisional reservation for the returned session, records the binding, and
+rejects collisions with existing provider or simulator reservations. Binding is
+allowed once, after the matching provider creation intent and before invocation.
+Only after that commit does the stream adopt the new ID and permit dispatch.
+
+Completion evidence and interrupt paths use the returned session. Invalid replies,
+collisions, storage errors and crashes never recreate or replay work. Four new
+actual-process crash cases prove recovery retains the provisional or bound identity
+on the appropriate side of the transaction. G03 runs created-session denial and
+interruption scenarios directly. This is still a fixed-peer HTTP descriptor
+fixture; no remote session is created or deleted.
+
+Claude creation is rejected before reservation: its pinned SDK selects session IDs
+through launch options, not this HTTP/control creation path. Claude launch modeling,
+live transports, account admission, endpoint authentication and Linux qualification
+remain open.

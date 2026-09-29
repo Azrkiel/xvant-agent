@@ -2,7 +2,7 @@
 import { createInterface } from 'node:readline';
 const [kind, scenario, sessionInput = 'session-1', request = 'request-1'] =
   process.argv.slice(2);
-const session = scenario === 'wrong-session' ? 'other' : sessionInput;
+let session = scenario === 'wrong-session' ? 'other' : sessionInput;
 const interrupting = scenario.startsWith('interrupt');
 const send = (value) =>
   process.stdout.write(
@@ -84,6 +84,46 @@ createInterface({ input: process.stdin }).on('line', (line) => {
   if (
     !configured &&
     !started &&
+    kind === 'opencode' &&
+    message.method === 'POST' &&
+    message.path === '/session' &&
+    message.requestId === 'setup'
+  ) {
+    configured = true;
+    if (scenario === 'setup-timeout') return;
+    if (scenario === 'create-partial') {
+      process.stdout.write('data: {"fixture":');
+      return;
+    }
+    session = scenario === 'create-reused' ? sessionInput : 'created-1';
+    send({
+      fixture: 'http-response',
+      requestId: 'setup',
+      method: 'POST',
+      path: '/session',
+      status: scenario === 'setup-error' ? 400 : 200,
+      body: {
+        id: scenario === 'create-malformed' ? '' : session,
+        slug: 'fixture',
+        projectID: 'project',
+        directory: scenario === 'setup-mismatch' ? '/wrong' : process.cwd(),
+        title: 'fixture',
+        version: 'fixture',
+        permission: [
+          {
+            permission: '*',
+            pattern: '*',
+            action: scenario === 'create-permission' ? 'allow' : 'deny',
+          },
+        ],
+        time: { created: 1, updated: 1 },
+      },
+    });
+    return;
+  }
+  if (
+    !configured &&
+    !started &&
     (kind === 'claude'
       ? message.type === 'control_request' &&
         message.request?.subtype === 'initialize' &&
@@ -141,8 +181,7 @@ createInterface({ input: process.stdin }).on('line', (line) => {
         message.request.cancel_queued === true &&
         message.request_id === 'interrupt'
       : message.method === 'POST' &&
-        message.path ===
-          '/session/' + encodeURIComponent(sessionInput) + '/abort' &&
+        message.path === '/session/' + encodeURIComponent(session) + '/abort' &&
         message.requestId === 'interrupt')
   ) {
     if (scenario === 'interrupt-timeout') return;

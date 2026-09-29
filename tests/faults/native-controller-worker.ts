@@ -5,7 +5,9 @@ import { ArtifactStore } from '../../packages/storage/src/artifacts.ts';
 import { OfflineNativeController } from '../../apps/controller/src/native-offline.ts';
 import { versions } from '../../packages/adapters/src/providers/native-profiles.ts';
 
-const [root, point, kind] = process.argv.slice(2);
+const [root, point, kind, modeInput = 'resume'] = process.argv.slice(2);
+if (modeInput !== 'resume' && modeInput !== 'create')
+  throw new Error('INVALID_INPUT');
 if (kind !== 'claude' && kind !== 'opencode') throw new Error('INVALID_INPUT');
 const workspace = join(root!, 'work');
 mkdirSync(workspace);
@@ -56,6 +58,7 @@ await controller.run(
     },
   },
   point === 'native.after_interrupt' ? 'interrupt' : 'permission',
+  modeInput,
 );
 controller.stop();
 store.close();

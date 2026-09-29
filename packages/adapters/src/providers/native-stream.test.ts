@@ -40,6 +40,40 @@ it('rejects an asynchronous control handler', () => {
   ).toThrow('INVALID_PERSISTENCE_BARRIER');
   expect(stream.status).toBe('needs_attention');
 });
+it('binds a provisional stream once and uses the new session for results', () => {
+  const stream = new NativeStream(
+    'opencode',
+    versions.opencode,
+    'pending:connection',
+    'request-1',
+  );
+  stream.bindSession('session-1');
+  stream.receive(frame('opencode', result('opencode')));
+  expect(stream.end().sessionId).toBe('session-1');
+});
+it.each(['existing', 'twice', 'after-message', 'closed'])(
+  'rejects stream binding %s',
+  (mode) => {
+    const stream = new NativeStream(
+      'opencode',
+      versions.opencode,
+      mode === 'existing' ? 'existing' : 'pending:connection',
+      'request-1',
+    );
+    if (mode === 'twice') stream.bindSession('first');
+    if (mode === 'after-message')
+      stream.receive(
+        frame('opencode', {
+          id: 'idle',
+          type: 'session.idle',
+          properties: { sessionID: 'pending:connection' },
+        }),
+      );
+    if (mode === 'closed') stream.cancel();
+    expect(() => stream.bindSession('second')).toThrow('INVALID_EVENT');
+    expect(stream.status).toBe('needs_attention');
+  },
+);
 
 const session = 'session-1',
   request = 'request-1';

@@ -34,6 +34,10 @@ const scenarioSchema = z.enum([
   'interrupt-partial',
   'interrupt-result-first',
   'interrupt-ack-only',
+  'create-malformed',
+  'create-reused',
+  'create-permission',
+  'create-partial',
 ]);
 type Checks = Record<string, { executable: string; args: readonly string[] }>;
 /** Fixed synthetic peers only. OpenCode HTTP descriptors travel over fixture pipes. */
@@ -73,15 +77,22 @@ export class OfflineNativeController {
   get activeCount(): number {
     return this.supervisor.activeCount;
   }
-  async run(input: ProviderDispatch, scenarioInput = 'success') {
+  async run(
+    input: ProviderDispatch,
+    scenarioInput = 'success',
+    modeInput: 'resume' | 'create' = 'resume',
+  ) {
     if (this.stopped) throw new Error('CONTROLLER_STOPPED');
     const scenario = scenarioSchema.parse(scenarioInput);
+    const mode = z.enum(['resume', 'create']).parse(modeInput);
     const kind = input.worker.runtimeKind;
     if (
       (kind !== 'claude' && kind !== 'opencode') ||
       input.worker.runtimeVersion !== versions[kind]
     )
       throw new Error('VERSION_UNSUPPORTED');
+    if (mode === 'create' && kind !== 'opencode')
+      throw new Error('MODE_UNSUPPORTED');
     const root = this.workspaces[input.workspaceId];
     if (!Object.hasOwn(this.workspaces, input.workspaceId) || !root)
       throw new Error('WORKSPACE_UNAVAILABLE');
@@ -91,7 +102,17 @@ export class OfflineNativeController {
         .requiredCheckIds.some((id) => !Object.hasOwn(this.checks, id))
     )
       throw new Error('VERIFIER_UNAVAILABLE');
-    const connection = this.store.providers.reserve(input);
+    const connection = this.store.providers.reserve(
+      mode === 'create'
+        ? {
+            ...input,
+            worker: {
+              ...input.worker,
+              nativeSessionId: 'pending:' + input.connectionId,
+            },
+          }
+        : input,
+    );
     const heartbeat = setInterval(() => {
       try {
         this.store.heartbeat();
@@ -101,7 +122,7 @@ export class OfflineNativeController {
     }, this.store.heartbeatIntervalMs);
     heartbeat.unref();
     try {
-      return await this.execute(connection, kind, scenario, root);
+      return await this.execute(connection, kind, scenario, root, mode);
     } finally {
       clearInterval(heartbeat);
     }
@@ -111,6 +132,7 @@ export class OfflineNativeController {
     kind: StreamKind,
     scenario: string,
     root: string,
+    mode: 'resume' | 'create',
   ) {
     const id = connection.connectionId,
       token = connection.token;
@@ -119,11 +141,13 @@ export class OfflineNativeController {
       connection.worker.nativeSessionId,
       connection.attemptId,
       root,
+      mode,
     );
     const wantsInterrupt = scenario.startsWith('interrupt');
     let dispatched = false,
       interruptSent = false,
       interruptRecorded = false;
+    let sessionBound = false;
     const stream = new NativeStream(
       kind,
       connection.worker.runtimeVersion,
@@ -133,7 +157,16 @@ export class OfflineNativeController {
         beforeReceive: (message) => {
           this.store.providers.recordMessage(id, token, message);
         },
-        handleControl: (message) => life.receive(message),
+        handleControl: (message) => {
+          const handled = life.receive(message);
+          if (mode === 'create' && life.ready && !sessionBound) {
+            this.store.providers.bindSession(id, token, life.nativeSessionId);
+            stream.bindSession(life.nativeSessionId);
+            sessionBound = true;
+            this.fault('native.after_session');
+          }
+          return handled;
+        },
       },
     );
     let run: ReturnType<WorkerSupervisor['start']> | undefined;
@@ -230,7 +263,10 @@ export class OfflineNativeController {
           },
         },
       });
-      await write('fixture/setup', life.setup());
+      await write(
+        mode === 'create' ? 'session/create' : 'fixture/setup',
+        life.setup(),
+      );
       const stopped = await run.result;
       await writes;
       if (

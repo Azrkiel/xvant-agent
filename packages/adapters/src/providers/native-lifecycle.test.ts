@@ -201,3 +201,80 @@ it('encodes the selected OpenCode session in the request path', () => {
     query: { directory: '/work' },
   });
 });
+const createdReply = () => ({
+  fixture: 'http-response',
+  requestId: 'setup',
+  method: 'POST',
+  path: '/session',
+  status: 200,
+  body: {
+    id: 'created',
+    slug: 'fixture',
+    projectID: 'project',
+    directory: '/work',
+    title: 'fixture',
+    version: 'fixture',
+    permission: [{ permission: '*', pattern: '*', action: 'deny' }],
+    time: { created: 1, updated: 1 },
+  },
+});
+it('uses the created OpenCode session for subsequent aborts', () => {
+  const life = new NativeLifecycle(
+    'opencode',
+    'pending:connection',
+    'attempt',
+    '/work',
+    'create',
+  );
+  expect(life.setup()).toMatchObject({
+    method: 'POST',
+    path: '/session',
+    body: { permission: [{ permission: '*', pattern: '*', action: 'deny' }] },
+  });
+  life.receive(createdReply());
+  expect(life.nativeSessionId).toBe('created');
+  life.start();
+  expect(life.interrupt()).toMatchObject({ path: '/session/created/abort' });
+});
+it.each([
+  'parentID',
+  'revert',
+  'archived',
+  'permissions',
+  'pending-id',
+  'wrong-path',
+])('rejects unsafe created session %s', (field) => {
+  const life = new NativeLifecycle(
+    'opencode',
+    'pending:connection',
+    'attempt',
+    '/work',
+    'create',
+  );
+  life.setup();
+  const reply = JSON.parse(JSON.stringify(createdReply()));
+  if (field === 'archived') reply.body.time.archived = 2;
+  else if (field === 'permissions')
+    reply.body.permission.push({
+      permission: 'bash',
+      pattern: '*',
+      action: 'allow',
+    });
+  else if (field === 'pending-id') reply.body.id = 'pending:other';
+  else if (field === 'wrong-path') reply.path = '/session/other';
+  else reply.body[field] = 'other';
+  expect(() => life.receive(reply)).toThrow('INVALID_EVENT');
+  expect(life.ready).toBe(false);
+});
+it('does not invent a Claude control creation request', () => {
+  expect(
+    () =>
+      new NativeLifecycle(
+        'claude',
+        'pending:connection',
+        'attempt',
+        '/work',
+        'create',
+      ),
+  ).toThrow('MODE_UNSUPPORTED');
+});

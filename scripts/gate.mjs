@@ -277,6 +277,35 @@ try {
         interruption.accepted !== false
       )
         throw new Error('Native interrupt fixture failed');
+      if (kind === 'opencode') {
+        for (const scenario of ['permission', 'interrupt']) {
+          const checkId = 'opencode-create-' + scenario;
+          check(checkId, [
+            'scripts/native-controller-fixture.mjs',
+            kind,
+            scenario,
+            'create',
+          ]);
+          const created = JSON.parse(
+            readFileSync(resolve(artifacts, checkId + '.log'), 'utf8'),
+          );
+          if (
+            created.classification !== 'offline' ||
+            created.liveProvidersTested.length ||
+            created.sessionBound !== true ||
+            created.nativeSessionId !== 'created-1' ||
+            created.activeCount !== 0 ||
+            created.accepted !== false ||
+            (scenario === 'permission'
+              ? created.state !== 'ready_for_acceptance' ||
+                created.verification !== 'passed'
+              : created.state !== 'needs_attention' ||
+                created.outcome !== 'cancelled' ||
+                created.verification !== undefined)
+          )
+            throw new Error('OpenCode session creation fixture failed');
+        }
+      }
     }
   }
   const after = snapshot();

@@ -68,6 +68,61 @@ function creating() {
   });
   return connection;
 }
+it('binds only a provisional OpenCode creation reservation before dispatch', () => {
+  const connection = store.providers.reserve({
+    ...spec,
+    worker: {
+      ...worker,
+      runtimeKind: 'opencode',
+      nativeSessionId: 'pending:connection',
+    },
+  });
+  store.providers.recordIntent('connection', connection.token, {
+    id: 1,
+    method: 'session/create',
+    frame: '{"method":"POST","path":"/session"}\n',
+  });
+  store.providers.bindSession('connection', connection.token, 'created-1');
+  expect(store.providers.get('connection').worker.nativeSessionId).toBe(
+    'created-1',
+  );
+  expect(store.providers.get('connection').sessionBound).toBe(true);
+  expect(() =>
+    store.providers.bindSession('connection', connection.token, 'other'),
+  ).toThrow('CONFLICT');
+});
+it.each(['missing', 'wrong-provider', 'after-dispatch', 'not-provisional'])(
+  'rejects invalid OpenCode binding: %s',
+  (mode) => {
+    const connection = store.providers.reserve({
+      ...spec,
+      worker: {
+        ...worker,
+        runtimeKind: 'opencode',
+        nativeSessionId:
+          mode === 'not-provisional' ? 'existing' : 'pending:connection',
+      },
+    });
+    if (mode !== 'missing')
+      store.providers.recordIntent('connection', connection.token, {
+        id: 1,
+        method: mode === 'wrong-provider' ? 'thread/start' : 'session/create',
+        frame: '{}\n',
+      });
+    if (mode === 'after-dispatch')
+      store.providers.recordIntent('connection', connection.token, {
+        id: 2,
+        method: 'fixture/start',
+        frame: '{}\n',
+      });
+    expect(() =>
+      store.providers.bindSession('connection', connection.token, 'created-1'),
+    ).toThrow('CONFLICT');
+    expect(store.providers.get('connection').worker.nativeSessionId).toBe(
+      mode === 'not-provisional' ? 'existing' : 'pending:connection',
+    );
+  },
+);
 it('atomically binds a created session before a turn and retains it across recovery', () => {
   const connection = creating();
   store.providers.bindSession('connection', connection.token, 'created-1');

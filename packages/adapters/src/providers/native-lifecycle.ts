@@ -56,6 +56,17 @@ const session = z.object({
   directory: z.string(),
   title: z.string(),
   version: z.string(),
+  parentID: id.optional(),
+  revert: z.unknown().optional(),
+  permission: z
+    .array(
+      z.object({
+        permission: z.string(),
+        pattern: z.string(),
+        action: z.enum(['allow', 'ask', 'deny']),
+      }),
+    )
+    .optional(),
   time: z.object({
     created: z.number().finite().nonnegative(),
     updated: z.number().finite().nonnegative(),
@@ -74,7 +85,8 @@ function parse<T>(schema: z.ZodType<T>, value: unknown): T {
 /** Single existing-session offline projection; HTTP envelopes are fixture-only. */
 export class NativeLifecycle {
   private readonly kind: StreamKind;
-  private readonly session: string;
+  private session: string;
+  private readonly mode: 'resume' | 'create';
   private readonly request: string;
   private readonly root: string;
   private state:
@@ -92,7 +104,11 @@ export class NativeLifecycle {
     sessionId: string,
     requestId: string,
     root: string,
+    mode: 'resume' | 'create' = 'resume',
   ) {
+    if (mode === 'create' && kind !== 'opencode')
+      throw new Error('MODE_UNSUPPORTED');
+    this.mode = mode;
     this.kind = kind;
     this.session = id.parse(sessionId);
     this.request = id.parse(requestId);
@@ -100,6 +116,9 @@ export class NativeLifecycle {
   }
   get ready() {
     return this.state === 'ready';
+  }
+  get nativeSessionId() {
+    return this.session;
   }
   get interrupted() {
     return this.state === 'interrupted';
@@ -127,9 +146,21 @@ export class NativeLifecycle {
         }
       : {
           requestId: 'setup',
-          method: 'GET',
-          path: '/session/' + encodeURIComponent(this.session),
+          method: this.mode === 'create' ? 'POST' : 'GET',
+          path:
+            this.mode === 'create'
+              ? '/session'
+              : '/session/' + encodeURIComponent(this.session),
           query: { directory: this.root },
+          ...(this.mode === 'create'
+            ? {
+                body: {
+                  permission: [
+                    { permission: '*', pattern: '*', action: 'deny' },
+                  ],
+                },
+              }
+            : {}),
         };
   }
   start(): void {
@@ -183,16 +214,29 @@ export class NativeLifecycle {
         if (this.state === 'setup') {
           this.require(
             reply.requestId === 'setup' &&
-              reply.method === 'GET' &&
-              reply.path === path,
+              reply.method === (this.mode === 'create' ? 'POST' : 'GET') &&
+              reply.path === (this.mode === 'create' ? '/session' : path),
           );
           const value = parse(session, reply.body);
           this.require(
-            value.id === this.session &&
+            (this.mode === 'create'
+              ? !value.id.startsWith('pending:')
+              : value.id === this.session) &&
               value.directory === this.root &&
               value.time.archived === undefined &&
               value.time.updated >= value.time.created,
           );
+          if (this.mode === 'create') {
+            this.require(
+              value.parentID === undefined &&
+                value.revert === undefined &&
+                value.permission?.length === 1 &&
+                value.permission[0]?.permission === '*' &&
+                value.permission[0]?.pattern === '*' &&
+                value.permission[0]?.action === 'deny',
+            );
+            this.session = value.id;
+          }
           this.state = 'ready';
         } else {
           this.require(

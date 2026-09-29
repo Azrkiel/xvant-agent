@@ -715,6 +715,20 @@
     "file": "dist/v2/gen/types.gen.d.ts",
     "sha256": "bd6a30272af9a19b4cb63c3b5fc85e9e5a122d8078c3fc5fcbb92cec0802bcf4",
     "declarations": {
+      "PermissionRule": [
+        {
+          "name": "permission",
+          "required": true
+        },
+        {
+          "name": "pattern",
+          "required": true
+        },
+        {
+          "name": "action",
+          "required": true
+        }
+      ],
       "Session": [
         {
           "name": "id",
@@ -934,6 +948,30 @@
         },
         {
           "name": "url",
+          "required": true
+        }
+      ],
+      "SessionCreateData": [
+        {
+          "name": "body",
+          "required": false
+        },
+        {
+          "name": "path",
+          "required": false
+        },
+        {
+          "name": "query",
+          "required": false
+        },
+        {
+          "name": "url",
+          "required": true
+        }
+      ],
+      "SessionCreateResponses": [
+        {
+          "name": "200",
           "required": true
         }
       ],

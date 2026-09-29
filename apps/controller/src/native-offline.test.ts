@@ -275,3 +275,114 @@ it('rejects invalid admission before reservation', async () => {
     'CONTROLLER_STOPPED',
   );
 });
+it.each(['success', 'permission', 'interrupt'])(
+  'creates and binds an OpenCode session before %s',
+  async (scenario) => {
+    const result = await controller.run(spec('opencode'), scenario, 'create');
+    expect(result.state).toBe(
+      scenario === 'interrupt' ? 'needs_attention' : 'ready_for_acceptance',
+    );
+    const saved = store.providers.get('connection');
+    expect(saved.worker.nativeSessionId).toBe('created-1');
+    expect(saved.sessionBound).toBe(true);
+    if (scenario !== 'interrupt') {
+      expect(saved.verification?.status).toBe('passed');
+      if (saved.verification?.status !== 'passed')
+        throw new Error('Expected verification');
+      expect(saved.verification.evidence.nativeSessionId).toBe('created-1');
+    } else expect(saved.outcome).toBe('cancelled');
+    const outgoing = store.providers
+      .entries('connection')
+      .filter((entry) => entry.direction === 'out');
+    expect(outgoing[0]?.method).toBe('session/create');
+    expect(outgoing[1]?.method).toBe('fixture/start');
+    expect(
+      store.providers.occupied(
+        'native:' + JSON.stringify(['opencode', 'host', 'pending:connection']),
+      ),
+    ).toBe(false);
+    expect(
+      store.providers.occupied(
+        'native:' + JSON.stringify(['opencode', 'host', 'created-1']),
+      ),
+    ).toBe(true);
+    expect(controller.activeCount).toBe(0);
+  },
+);
+it.each([
+  'setup-error',
+  'setup-mismatch',
+  'setup-timeout',
+  'create-malformed',
+  'create-reused',
+  'create-permission',
+  'create-partial',
+])('does not dispatch after OpenCode creation %s', async (scenario) => {
+  expect(
+    (await controller.run(spec('opencode'), scenario, 'create')).state,
+  ).toBe('needs_attention');
+  expect(store.providers.get('connection').status).toBe('unknown');
+  expect(store.providers.get('connection').verification).toBeUndefined();
+  expect(
+    store.providers
+      .entries('connection')
+      .filter((entry) => entry.method === 'fixture/start'),
+  ).toHaveLength(0);
+  expect(controller.activeCount).toBe(0);
+});
+it('keeps the provisional reservation when a returned session belongs to another connection', async () => {
+  store.create('other-create', {
+    id: 'other',
+    projectId: 'project',
+    objective: 'Other',
+    requiredCheckIds: ['test'],
+    acceptanceCriteria: ['Pass'],
+  });
+  store.queue('other-queue', 'other', 0);
+  store.providers.reserve({
+    ...spec('opencode'),
+    connectionId: 'other',
+    taskId: 'other',
+    attemptId: 'other',
+    workspaceId: 'other',
+    worker: {
+      ...spec('opencode').worker,
+      id: 'other',
+      nativeSessionId: 'created-1',
+    },
+  });
+  expect(
+    (await controller.run(spec('opencode'), 'success', 'create')).state,
+  ).toBe('needs_attention');
+  expect(store.providers.get('connection').worker.nativeSessionId).toBe(
+    'pending:connection',
+  );
+  expect(store.providers.get('other').worker.nativeSessionId).toBe('created-1');
+  expect(
+    store.providers
+      .entries('connection')
+      .filter((entry) => entry.method === 'fixture/start'),
+  ).toHaveLength(0);
+});
+it('retains the newly bound session when stopped before dispatch', async () => {
+  fault = (point) => {
+    if (point === 'native.after_session') controller.stop();
+  };
+  expect(
+    (await controller.run(spec('opencode'), 'success', 'create')).state,
+  ).toBe('needs_attention');
+  expect(store.providers.get('connection').worker.nativeSessionId).toBe(
+    'created-1',
+  );
+  expect(
+    store.providers
+      .entries('connection')
+      .filter((entry) => entry.method === 'fixture/start'),
+  ).toHaveLength(0);
+});
+it('rejects unsupported Claude creation before reservation', async () => {
+  await expect(
+    controller.run(spec('claude'), 'success', 'create'),
+  ).rejects.toThrow('MODE_UNSUPPORTED');
+  expect(store.getTask('task').state).toBe('queued');
+});
