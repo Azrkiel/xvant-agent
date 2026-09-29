@@ -344,3 +344,34 @@ This remains Windows offline fixture evidence. OpenCode HTTP replies are descrip
 sent over fixture pipes; there is no HTTP endpoint or live SDK launcher. Session
 setup, native interruption, broader event schemas, authenticated endpoint ownership,
 live account admission and Linux qualification remain open.
+
+## Existing-session setup and offline native interruption
+
+The owned Claude/OpenCode controller now requires setup before sending its fixture
+invocation. Claude uses a correlated `initialize` control request and requires a
+well-formed success response with empty inherited permission/dialog lists. Its
+first turn metadata must match the reserved session, workspace, fixture CLI version
+2.1.283 and plan mode with no tools, MCP servers or plugins. This CLI fixture pin is
+separate from the SDK declaration version. Missing or contradictory setup fails
+closed. It does not authenticate or create a live Claude session.
+
+OpenCode uses a `GET /session/{sessionID}` descriptor and validates the returned
+session ID, directory and unarchived timestamps. HTTP responses are explicitly
+marked fixture envelopes inside the test pipe; they are not native SSE events.
+No HTTP listener, client, reconnect or live session creation is supplied.
+
+The interrupt scenario journals Claude `interrupt` with `cancel_queued: true`,
+requiring advertised receipt and queue-cancellation capabilities. Its correlated
+receipt must report no queued survivors and no unrelated cancelled requests.
+OpenCode uses a correlated `POST /session/{sessionID}/abort` descriptor with a true
+success response. For both, acknowledgement alone is insufficient: terminal output,
+complete EOF, finished writes and successful owned shutdown must also occur.
+Terminal output may precede the acknowledgement. Only then does the host record
+`cancelled`, retain reservations and skip verification/acceptance. Missing, failed,
+mismatched or partial replies remain unknown without replay.
+
+This qualifies the fixed-peer interruption scenario, not a public live interrupt
+API. `stop()` remains the emergency owned-process cancellation path. Eighteen
+actual-process crash cases now include setup and interrupt boundaries. G03 runs
+direct setup-to-review and interruption scenarios for each provider. Native session
+creation/resume launch, live transport/auth ownership and broader events remain open.

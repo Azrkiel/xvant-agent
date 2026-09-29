@@ -64,6 +64,66 @@ afterEach(() => {
   rmSync(root, { recursive: true, force: true });
 });
 for (const kind of ['claude', 'opencode'] as const) {
+  it(`${kind}: performs setup before fixture dispatch`, async () => {
+    expect((await controller.run(spec(kind))).state).toBe(
+      'ready_for_acceptance',
+    );
+    const outgoing = store.providers
+      .entries('connection')
+      .filter((entry) => entry.direction === 'out');
+    expect(outgoing.map((entry) => entry.method)).toEqual([
+      'fixture/setup',
+      'fixture/start',
+    ]);
+  });
+  it.each(['interrupt', 'interrupt-result-first'])(
+    `${kind}: confirms %s without verifying or accepting`,
+    async (scenario) => {
+      expect((await controller.run(spec(kind), scenario)).state).toBe(
+        'needs_attention',
+      );
+      expect(store.providers.get('connection').outcome).toBe('cancelled');
+      expect(store.providers.get('connection').verification).toBeUndefined();
+      expect(store.providers.occupied('workspace:workspace')).toBe(true);
+      expect(controller.activeCount).toBe(0);
+    },
+  );
+  it.each([
+    'setup-error',
+    'setup-mismatch',
+    'setup-timeout',
+    'interrupt-error',
+    'interrupt-mismatch',
+    'interrupt-timeout',
+    'interrupt-partial',
+    'interrupt-ack-only',
+  ])(`${kind}: fails closed after %s`, async (scenario) => {
+    expect((await controller.run(spec(kind), scenario)).state).toBe(
+      'needs_attention',
+    );
+    expect(store.providers.get('connection').status).toBe('unknown');
+    expect(store.providers.get('connection').outcome).toBeNull();
+    expect(store.providers.get('connection').verification).toBeUndefined();
+    expect(controller.activeCount).toBe(0);
+    const sent = store.providers
+      .entries('connection')
+      .filter((entry) => entry.direction === 'out');
+    expect(
+      sent.filter((entry) => entry.method === 'fixture/start'),
+    ).toHaveLength(scenario.startsWith('setup') ? 0 : 1);
+  });
+  it(`${kind}: does not dispatch after stop at the setup boundary`, async () => {
+    fault = (point) => {
+      if (point === 'native.after_setup') controller.stop();
+    };
+    expect((await controller.run(spec(kind))).state).toBe('needs_attention');
+    expect(
+      store.providers
+        .entries('connection')
+        .filter((entry) => entry.method === 'fixture/start'),
+    ).toHaveLength(0);
+    expect(controller.activeCount).toBe(0);
+  });
   it.each(['success', 'permission'])(
     `${kind}: journals %s through shutdown and review without acceptance`,
     async (scenario) => {
@@ -78,16 +138,18 @@ for (const kind of ['claude', 'opencode'] as const) {
       );
       const entries = store.providers.entries('connection');
       expect(entries.filter((entry) => entry.direction === 'out')).toHaveLength(
-        scenario === 'permission' ? 2 : 1,
+        scenario === 'permission' ? 3 : 2,
       );
       expect(entries.filter((entry) => entry.direction === 'in')).toHaveLength(
-        scenario === 'permission' ? 2 : 1,
+        (scenario === 'permission' ? 3 : 2) + (kind === 'claude' ? 1 : 0),
       );
-      expect(entries[0]?.method).toBe('fixture/start');
+      expect(entries[0]?.method).toBe('fixture/setup');
       if (scenario === 'permission') {
-        expect(entries[1]?.direction).toBe('in');
-        expect(entries[2]?.method).toBe('fixture/permission-denial');
-        expect(entries[2]?.frame).toContain(
+        const denial = entries.findIndex(
+          (entry) => entry.method === 'fixture/permission-denial',
+        );
+        expect(entries[denial - 1]?.direction).toBe('in');
+        expect(entries[denial]?.frame).toContain(
           kind === 'claude' ? 'deny' : 'reject',
         );
       }
@@ -133,7 +195,7 @@ for (const kind of ['claude', 'opencode'] as const) {
       expect(entries).toHaveLength(0);
     if (point === 'provider.receive.before_commit') {
       expect(entries).toHaveLength(1);
-      expect(entries[0]?.method).toBe('fixture/start');
+      expect(entries[0]?.method).toBe('fixture/setup');
     }
     expect(controller.activeCount).toBe(0);
   });

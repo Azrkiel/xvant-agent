@@ -251,11 +251,32 @@ try {
         controller.liveProvidersTested.length ||
         controller.state !== 'ready_for_acceptance' ||
         controller.verification !== 'passed' ||
-        controller.journalEntries !== 4 ||
+        controller.journalEntries !== (kind === 'claude' ? 7 : 6) ||
         controller.activeCount !== 0 ||
         controller.accepted !== false
       )
         throw new Error('Native controller fixture failed');
+      check(kind + '-native-interrupt', [
+        'scripts/native-controller-fixture.mjs',
+        kind,
+        'interrupt',
+      ]);
+      const interruption = JSON.parse(
+        readFileSync(
+          resolve(artifacts, kind + '-native-interrupt.log'),
+          'utf8',
+        ),
+      );
+      if (
+        interruption.classification !== 'offline' ||
+        interruption.liveProvidersTested.length ||
+        interruption.state !== 'needs_attention' ||
+        interruption.outcome !== 'cancelled' ||
+        interruption.verification !== undefined ||
+        interruption.activeCount !== 0 ||
+        interruption.accepted !== false
+      )
+        throw new Error('Native interrupt fixture failed');
     }
   }
   const after = snapshot();

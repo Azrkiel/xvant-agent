@@ -8,6 +8,7 @@ import type {
 import { ArtifactStore } from '../../../packages/storage/src/artifacts.ts';
 import { WorkerSupervisor } from '../../../packages/supervisor/src/index.ts';
 import { NativeStream } from '../../../packages/adapters/src/providers/native-stream.ts';
+import { NativeLifecycle } from '../../../packages/adapters/src/providers/native-lifecycle.ts';
 import {
   versions,
   type StreamKind,
@@ -23,6 +24,16 @@ const scenarioSchema = z.enum([
   'partial',
   'error',
   'timeout',
+  'setup-error',
+  'setup-mismatch',
+  'setup-timeout',
+  'interrupt',
+  'interrupt-error',
+  'interrupt-mismatch',
+  'interrupt-timeout',
+  'interrupt-partial',
+  'interrupt-result-first',
+  'interrupt-ack-only',
 ]);
 type Checks = Record<string, { executable: string; args: readonly string[] }>;
 /** Fixed synthetic peers only. OpenCode HTTP descriptors travel over fixture pipes. */
@@ -103,6 +114,16 @@ export class OfflineNativeController {
   ) {
     const id = connection.connectionId,
       token = connection.token;
+    const life = new NativeLifecycle(
+      kind,
+      connection.worker.nativeSessionId,
+      connection.attemptId,
+      root,
+    );
+    const wantsInterrupt = scenario.startsWith('interrupt');
+    let dispatched = false,
+      interruptSent = false,
+      interruptRecorded = false;
     const stream = new NativeStream(
       kind,
       connection.worker.runtimeVersion,
@@ -112,6 +133,7 @@ export class OfflineNativeController {
         beforeReceive: (message) => {
           this.store.providers.recordMessage(id, token, message);
         },
+        handleControl: (message) => life.receive(message),
       },
     );
     let run: ReturnType<WorkerSupervisor['start']> | undefined;
@@ -170,7 +192,34 @@ export class OfflineNativeController {
                   stream.denialWritten(action.requestId);
                 });
               }
-              if (stream.status === 'result_pending')
+              if (life.interrupted && !interruptRecorded) {
+                interruptRecorded = true;
+                this.fault('native.after_interrupt');
+              }
+              if (life.ready && !dispatched) {
+                dispatched = true;
+                writes = writes.then(async () => {
+                  this.fault('native.after_setup');
+                  if (failed || this.stopped)
+                    throw new Error('OPERATION_UNKNOWN');
+                  life.start();
+                  await write('fixture/start', { fixture: 'start' });
+                  if (wantsInterrupt && kind === 'opencode' && !interruptSent) {
+                    interruptSent = true;
+                    await write('fixture/interrupt', life.interrupt());
+                  }
+                });
+              }
+              if (wantsInterrupt && !interruptSent && life.canInterrupt) {
+                interruptSent = true;
+                writes = writes.then(() =>
+                  write('fixture/interrupt', life.interrupt()),
+                );
+              }
+              if (
+                stream.status === 'result_pending' &&
+                (!wantsInterrupt || life.interrupted)
+              )
                 writes = writes.then(() => {
                   run!.endInput();
                 });
@@ -181,7 +230,7 @@ export class OfflineNativeController {
           },
         },
       });
-      await write('fixture/start', { fixture: 'start' });
+      await write('fixture/setup', life.setup());
       const stopped = await run.result;
       await writes;
       if (
@@ -193,6 +242,8 @@ export class OfflineNativeController {
       )
         throw new Error('OPERATION_UNKNOWN');
       const result = stream.end();
+      if (wantsInterrupt && !life.interrupted)
+        throw new Error('OPERATION_UNKNOWN');
       this.fault('native.after_shutdown');
       if (this.stopped) throw new Error('CONTROLLER_STOPPED');
       // These SDK streams expose terminal message identity, not a Codex-style turn ID.
@@ -202,9 +253,9 @@ export class OfflineNativeController {
         id,
         token,
         result.nativeMessageId,
-        result.kind,
+        wantsInterrupt ? 'cancelled' : result.kind,
       );
-      if (result.kind === 'completed') {
+      if (result.kind === 'completed' && !wantsInterrupt) {
         const verification = await this.verifier.verify(id, token, {
           stopped: true,
         });

@@ -55,7 +55,7 @@ await controller.run(
       quotaGroupId: 'account',
     },
   },
-  'permission',
+  point === 'native.after_interrupt' ? 'interrupt' : 'permission',
 );
 controller.stop();
 store.close();

@@ -2,6 +2,45 @@ import { expect, it } from 'vitest';
 import { NativeStream, SseDecoder } from './native-stream.ts';
 import { versions, validateMessage, pins } from './native-profiles.ts';
 
+it('does not deliver controls when the receive journal fails', () => {
+  let delivered = false;
+  const stream = new NativeStream(
+    'claude',
+    versions.claude,
+    'session',
+    'request',
+    {
+      beforeReceive: () => {
+        throw new Error('DISK_FAILURE');
+      },
+      handleControl: () => {
+        delivered = true;
+        return true;
+      },
+    },
+  );
+  expect(() =>
+    stream.receive(Buffer.from('{"type":"control_response"}\n')),
+  ).toThrow('DISK_FAILURE');
+  expect(delivered).toBe(false);
+});
+it('rejects an asynchronous control handler', () => {
+  const stream = new NativeStream(
+    'claude',
+    versions.claude,
+    'session',
+    'request',
+    {
+      handleControl: (() =>
+        Promise.reject(new Error('ASYNC_HANDLER'))) as unknown as () => boolean,
+    },
+  );
+  expect(() =>
+    stream.receive(Buffer.from('{"type":"control_response"}\n')),
+  ).toThrow('INVALID_PERSISTENCE_BARRIER');
+  expect(stream.status).toBe('needs_attention');
+});
+
 const session = 'session-1',
   request = 'request-1';
 function result(kind: 'claude' | 'opencode') {

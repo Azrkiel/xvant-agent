@@ -7,7 +7,10 @@ import { OfflineNativeController } from '../apps/controller/src/native-offline.t
 import { versions } from '../packages/adapters/src/providers/native-profiles.ts';
 
 const kind = process.argv[2];
+const scenario = process.argv[3] ?? 'permission';
 if (kind !== 'claude' && kind !== 'opencode') throw new Error('INVALID_INPUT');
+if (scenario !== 'permission' && scenario !== 'interrupt')
+  throw new Error('INVALID_INPUT');
 const root = mkdtempSync(join(tmpdir(), 'xvant-native-controller-demo-'));
 let store, controller;
 try {
@@ -52,7 +55,7 @@ try {
         quotaGroupId: 'account',
       },
     },
-    'permission',
+    scenario,
   );
   const connection = store.providers.get('connection');
   console.log(
@@ -62,6 +65,7 @@ try {
       kind,
       state: task.state,
       verification: connection.verification?.status,
+      outcome: connection.outcome,
       journalEntries: store.providers.entries('connection').length,
       activeCount: controller.activeCount,
       accepted: store
@@ -69,7 +73,12 @@ try {
         .some((event) => event.kind === 'native.accepted'),
     }),
   );
-  if (task.state !== 'ready_for_acceptance') process.exitCode = 1;
+  if (
+    scenario === 'permission'
+      ? task.state !== 'ready_for_acceptance'
+      : task.state !== 'needs_attention' || connection.outcome !== 'cancelled'
+  )
+    process.exitCode = 1;
 } finally {
   controller?.stop();
   store?.close();

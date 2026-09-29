@@ -69,6 +69,8 @@ export interface DenialAction {
 }
 /** Host-owned, single-invocation offline projection. Results never grant acceptance. */
 export class NativeStream {
+  private readonly handleControl:
+    ((message: Record<string, unknown>) => boolean) | undefined;
   private readonly kind: StreamKind;
   private readonly session: string;
   private readonly request: string;
@@ -89,12 +91,14 @@ export class NativeStream {
     request: string,
     options: {
       beforeReceive?: (message: Record<string, unknown>) => void;
+      handleControl?: (message: Record<string, unknown>) => boolean;
     } = {},
   ) {
     this.kind = kind;
     this.session = session;
     this.request = request;
     this.beforeReceive = options.beforeReceive;
+    this.handleControl = options.handleControl;
     if (!Object.hasOwn(versions, kind) || versions[kind] !== version)
       fail('VERSION_UNSUPPORTED');
     nativeIdSchema.parse(session);
@@ -121,6 +125,16 @@ export class NativeStream {
         if (barrier !== undefined) {
           void Promise.resolve(barrier).catch(() => {});
           fail('INVALID_PERSISTENCE_BARRIER');
+        }
+        if (this.handleControl) {
+          const handled: unknown = this.handleControl(
+            message as Record<string, unknown>,
+          );
+          if (typeof handled !== 'boolean') {
+            void Promise.resolve(handled).catch(() => {});
+            fail('INVALID_PERSISTENCE_BARRIER');
+          }
+          if (handled) continue;
         }
         const action =
           this.kind === 'claude'

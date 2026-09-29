@@ -91,10 +91,11 @@ export function phaseSuites(phase: string): Record<string, number> {
               'apps/controller/src/codex-offline.test.ts': 24,
               'packages/supervisor/src/interactive.test.ts': 3,
               'tests/faults/codex-controller.test.ts': 7,
-              'packages/adapters/src/providers/native-stream.test.ts': 27,
+              'packages/adapters/src/providers/native-stream.test.ts': 29,
+              'packages/adapters/src/providers/native-lifecycle.test.ts': 22,
               'tests/native-process.test.ts': 2,
-              'apps/controller/src/native-offline.test.ts': 29,
-              'tests/faults/native-controller.test.ts': 14,
+              'apps/controller/src/native-offline.test.ts': 53,
+              'tests/faults/native-controller.test.ts': 18,
             }
           : {}),
       };

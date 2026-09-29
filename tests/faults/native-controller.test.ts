@@ -8,6 +8,8 @@ import { Store } from '../../packages/storage/src/store.ts';
 for (const kind of ['claude', 'opencode']) {
   it.each([
     'native.after_reserve',
+    'native.after_setup',
+    'native.after_interrupt',
     'provider.send.before_commit',
     'provider.receive.before_commit',
     'native.after_shutdown',
@@ -51,9 +53,12 @@ for (const kind of ['claude', 'opencode']) {
               entry.direction === 'out' && entry.method === 'fixture/start',
           ),
         ).toHaveLength(
-          ['native.after_reserve', 'provider.send.before_commit'].includes(
-            point,
-          )
+          [
+            'native.after_reserve',
+            'provider.send.before_commit',
+            'provider.receive.before_commit',
+            'native.after_setup',
+          ].includes(point)
             ? 0
             : 1,
         );

@@ -26,6 +26,11 @@ const specs = {
       'SDKControlResponse',
       'ControlResponse',
       'SDKUserMessage',
+      'SDKControlInitializeRequest',
+      'SDKControlInitializeResponse',
+      'SDKSystemMessage',
+      'SDKControlInterruptRequest',
+      'SDKControlInterruptResponse',
     ],
   },
   opencode: {
@@ -44,6 +49,10 @@ const specs = {
       'EventPermissionAsked',
       'PermissionReplyData',
       'SessionAbortData',
+      'SessionAbortResponses',
+      'SessionGetData',
+      'SessionGetResponses',
+      'Session',
     ],
   },
 };

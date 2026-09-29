@@ -28,6 +28,154 @@
           "required": false
         }
       ],
+      "SDKControlInitializeRequest": [
+        {
+          "name": "subtype",
+          "required": true
+        },
+        {
+          "name": "hooks",
+          "required": false
+        },
+        {
+          "name": "sdkMcpServers",
+          "required": false
+        },
+        {
+          "name": "sdkMcpServerConfigs",
+          "required": false
+        },
+        {
+          "name": "sdkMcpServerManifests",
+          "required": false
+        },
+        {
+          "name": "jsonSchema",
+          "required": false
+        },
+        {
+          "name": "systemPrompt",
+          "required": false
+        },
+        {
+          "name": "appendSystemPrompt",
+          "required": false
+        },
+        {
+          "name": "systemPromptSnapshot",
+          "required": false
+        },
+        {
+          "name": "planModeInstructions",
+          "required": false
+        },
+        {
+          "name": "toolAliases",
+          "required": false
+        },
+        {
+          "name": "excludeDynamicSections",
+          "required": false
+        },
+        {
+          "name": "agents",
+          "required": false
+        },
+        {
+          "name": "title",
+          "required": false
+        },
+        {
+          "name": "skills",
+          "required": false
+        },
+        {
+          "name": "promptSuggestions",
+          "required": false
+        },
+        {
+          "name": "agentProgressSummaries",
+          "required": false
+        },
+        {
+          "name": "forwardSubagentText",
+          "required": false
+        },
+        {
+          "name": "supportedDialogKinds",
+          "required": false
+        },
+        {
+          "name": "perTaskStopAffordance",
+          "required": false
+        },
+        {
+          "name": "plugins",
+          "required": false
+        }
+      ],
+      "SDKControlInitializeResponse": [
+        {
+          "name": "commands",
+          "required": true
+        },
+        {
+          "name": "agents",
+          "required": true
+        },
+        {
+          "name": "output_style",
+          "required": true
+        },
+        {
+          "name": "available_output_styles",
+          "required": true
+        },
+        {
+          "name": "models",
+          "required": true
+        },
+        {
+          "name": "account",
+          "required": true
+        },
+        {
+          "name": "hooks_applied",
+          "required": false
+        },
+        {
+          "name": "plugins_applied",
+          "required": false
+        },
+        {
+          "name": "fast_mode_state",
+          "required": false
+        },
+        {
+          "name": "fast_mode_disabled_reason",
+          "required": false
+        }
+      ],
+      "SDKControlInterruptRequest": [
+        {
+          "name": "subtype",
+          "required": true
+        },
+        {
+          "name": "cancel_queued",
+          "required": false
+        }
+      ],
+      "SDKControlInterruptResponse": [
+        {
+          "name": "still_queued",
+          "required": true
+        },
+        {
+          "name": "cancelled",
+          "required": false
+        }
+      ],
       "SDKControlPermissionRequest": [
         {
           "name": "subtype",
@@ -394,6 +542,104 @@
           "required": true
         }
       ],
+      "SDKSystemMessage": [
+        {
+          "name": "type",
+          "required": true
+        },
+        {
+          "name": "subtype",
+          "required": true
+        },
+        {
+          "name": "agents",
+          "required": false
+        },
+        {
+          "name": "apiKeySource",
+          "required": true
+        },
+        {
+          "name": "betas",
+          "required": false
+        },
+        {
+          "name": "claude_code_version",
+          "required": true
+        },
+        {
+          "name": "cwd",
+          "required": true
+        },
+        {
+          "name": "tools",
+          "required": true
+        },
+        {
+          "name": "mcp_servers",
+          "required": true
+        },
+        {
+          "name": "model",
+          "required": true
+        },
+        {
+          "name": "permissionMode",
+          "required": true
+        },
+        {
+          "name": "slash_commands",
+          "required": true
+        },
+        {
+          "name": "terminal_slash_commands",
+          "required": false
+        },
+        {
+          "name": "output_style",
+          "required": true
+        },
+        {
+          "name": "skills",
+          "required": true
+        },
+        {
+          "name": "plugins",
+          "required": true
+        },
+        {
+          "name": "plugin_errors",
+          "required": false
+        },
+        {
+          "name": "fast_mode_state",
+          "required": false
+        },
+        {
+          "name": "fast_mode_disabled_reason",
+          "required": false
+        },
+        {
+          "name": "effort",
+          "required": false
+        },
+        {
+          "name": "view_mode",
+          "required": false
+        },
+        {
+          "name": "capabilities",
+          "required": false
+        },
+        {
+          "name": "uuid",
+          "required": true
+        },
+        {
+          "name": "session_id",
+          "required": true
+        }
+      ],
       "SDKUserMessage": [
         {
           "name": "type",
@@ -469,6 +715,84 @@
     "file": "dist/v2/gen/types.gen.d.ts",
     "sha256": "bd6a30272af9a19b4cb63c3b5fc85e9e5a122d8078c3fc5fcbb92cec0802bcf4",
     "declarations": {
+      "Session": [
+        {
+          "name": "id",
+          "required": true
+        },
+        {
+          "name": "slug",
+          "required": true
+        },
+        {
+          "name": "projectID",
+          "required": true
+        },
+        {
+          "name": "workspaceID",
+          "required": false
+        },
+        {
+          "name": "directory",
+          "required": true
+        },
+        {
+          "name": "path",
+          "required": false
+        },
+        {
+          "name": "parentID",
+          "required": false
+        },
+        {
+          "name": "summary",
+          "required": false
+        },
+        {
+          "name": "cost",
+          "required": false
+        },
+        {
+          "name": "tokens",
+          "required": false
+        },
+        {
+          "name": "share",
+          "required": false
+        },
+        {
+          "name": "title",
+          "required": true
+        },
+        {
+          "name": "agent",
+          "required": false
+        },
+        {
+          "name": "model",
+          "required": false
+        },
+        {
+          "name": "version",
+          "required": true
+        },
+        {
+          "name": "metadata",
+          "required": false
+        },
+        {
+          "name": "time",
+          "required": true
+        },
+        {
+          "name": "permission",
+          "required": false
+        },
+        {
+          "name": "revert",
+          "required": false
+        }
+      ],
       "AssistantMessage": [
         {
           "name": "id",
@@ -613,6 +937,30 @@
           "required": true
         }
       ],
+      "SessionGetData": [
+        {
+          "name": "body",
+          "required": false
+        },
+        {
+          "name": "path",
+          "required": true
+        },
+        {
+          "name": "query",
+          "required": false
+        },
+        {
+          "name": "url",
+          "required": true
+        }
+      ],
+      "SessionGetResponses": [
+        {
+          "name": "200",
+          "required": true
+        }
+      ],
       "SessionAbortData": [
         {
           "name": "body",
@@ -628,6 +976,12 @@
         },
         {
           "name": "url",
+          "required": true
+        }
+      ],
+      "SessionAbortResponses": [
+        {
+          "name": "200",
           "required": true
         }
       ]
