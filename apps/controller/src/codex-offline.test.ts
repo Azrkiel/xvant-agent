@@ -1,4 +1,4 @@
-import { beforeEach, afterEach, expect, it } from 'vitest';
+import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -86,7 +86,7 @@ it.each(['success', 'approval'])(
     );
   },
 );
-it.each(['interrupt', 'disconnect', 'malformed', 'timeout', 'late-malformed'])(
+it.each(['disconnect', 'malformed', 'timeout', 'late-malformed'])(
   'retains reservations after %s without verifying or resending',
   async (scenario) => {
     const result = await controller.run(spec, scenario);
@@ -227,3 +227,130 @@ it.each(['native-error', 'native-retry', 'turn-rpc-error', 'turn-failed'])(
     ).toHaveLength(1);
   },
 );
+const withFault = (fault: (point: string) => void) => {
+  controller.stop();
+  controller = new OfflineCodexController(
+    store,
+    objects,
+    { workspace: join(root, 'work') },
+    { test: { executable: process.execPath, args: ['-e', 'process.exit(0)'] } },
+    { timeoutMs: 2000, fault },
+  );
+};
+const outgoing = (method: string) =>
+  store.providers
+    .entries('connection')
+    .filter((entry) => entry.direction === 'out' && entry.method === method);
+async function interrupted(scenario = 'interrupt') {
+  const pending = controller.run(spec, scenario);
+  const admission = await vi.waitFor(
+    () => controller.interrupt('connection', 'operator'),
+    { timeout: 1500, interval: 5 },
+  );
+  return { admission, task: await pending };
+}
+it('interrupts a running turn only after durable host admission', async () => {
+  const { admission, task } = await interrupted();
+  expect(admission).toEqual({ status: 'requested' });
+  expect(task.state).toBe('needs_attention');
+  const saved = store.providers.get('connection');
+  expect(saved).toMatchObject({
+    status: 'result_pending',
+    outcome: 'cancelled',
+    interrupt: { actorId: 'operator' },
+  });
+  expect(saved.verification).toBeUndefined();
+  const methods = store.providers
+    .entries('connection')
+    .filter((entry) => entry.direction === 'out')
+    .map((entry) => entry.method);
+  expect(methods.slice(-2)).toEqual(['turn/start', 'turn/interrupt']);
+  expect(
+    store.events(0).filter((e) => e.kind === 'provider.interrupt_requested'),
+  ).toHaveLength(1);
+  expect(store.providers.occupied('workspace:workspace')).toBe(true);
+  expect(controller.activeCount).toBe(0);
+});
+it('makes repeated Codex interrupt admission idempotent', async () => {
+  const pending = controller.run(spec, 'interrupt');
+  await vi.waitFor(() => controller.interrupt('connection', 'operator'), {
+    timeout: 1500,
+    interval: 5,
+  });
+  expect(controller.interrupt('connection', 'other')).toEqual({
+    status: 'already_requested',
+  });
+  await pending;
+  expect(outgoing('turn/interrupt')).toHaveLength(1);
+});
+it('never sends turn/interrupt for a holding turn without admission', async () => {
+  expect((await controller.run(spec, 'interrupt')).state).toBe(
+    'needs_attention',
+  );
+  expect(store.providers.get('connection').status).toBe('unknown');
+  expect(store.providers.get('connection').interrupt).toBeUndefined();
+  expect(outgoing('turn/interrupt')).toHaveLength(0);
+});
+it.each(['interrupt-error', 'interrupt-ignored'])(
+  'keeps an admitted interrupt unknown after %s',
+  async (scenario) => {
+    const { task } = await interrupted(scenario);
+    expect(task.state).toBe('needs_attention');
+    expect(store.providers.get('connection')).toMatchObject({
+      status: 'unknown',
+      outcome: null,
+    });
+    expect(store.providers.get('connection').verification).toBeUndefined();
+    expect(outgoing('turn/interrupt')).toHaveLength(1);
+    expect(controller.activeCount).toBe(0);
+  },
+);
+it('rejects Codex interrupt before dispatch and after the terminal turn', async () => {
+  const errors: string[] = [];
+  withFault((point) => {
+    if (point !== 'codex.after_session' && point !== 'codex.after_shutdown')
+      return;
+    try {
+      controller.interrupt('connection', 'operator');
+    } catch (error) {
+      errors.push((error as Error).message);
+    }
+  });
+  expect((await controller.run(spec)).state).toBe('ready_for_acceptance');
+  expect(errors).toEqual(['NOT_INTERRUPTIBLE', 'NOT_INTERRUPTIBLE']);
+  expect(outgoing('turn/interrupt')).toHaveLength(0);
+  expect(() => controller.interrupt('connection', 'operator')).toThrow(
+    'NOT_FOUND',
+  );
+  controller.stop();
+  expect(() => controller.interrupt('connection', 'operator')).toThrow(
+    'CONTROLLER_STOPPED',
+  );
+});
+it('fences Codex interrupt admission after controller takeover', async () => {
+  let recovery: Store | undefined;
+  const errors: string[] = [];
+  withFault((point) => {
+    if (point !== 'codex.interruptible') return;
+    recovery = new Store(join(root, 'state.sqlite'), {
+      owner: 'recovery',
+      now: () => Date.now() + 120000,
+    });
+    try {
+      controller.interrupt('connection', 'operator');
+    } catch (error) {
+      errors.push((error as Error).message);
+    }
+    controller.stop();
+  });
+  try {
+    await controller.run(spec, 'interrupt');
+    expect(errors).toEqual(['STALE_FENCE']);
+    expect(recovery!.recover()).toEqual(['attempt']);
+    expect(recovery!.providers.get('connection').interrupt).toBeUndefined();
+    expect(outgoing('turn/interrupt')).toHaveLength(0);
+    expect(controller.activeCount).toBe(0);
+  } finally {
+    recovery?.close();
+  }
+});

@@ -340,8 +340,11 @@ export class ProviderJournal {
       this.assertWritable(id, token);
       const connection = this.bound(id, token);
       if (connection.interrupt) fail('CONFLICT');
+      // Codex binds its turn at dispatch and needs it to interrupt; Claude and
+      // OpenCode bind a terminal message identity only once a result arrives.
+      const codex = connection.worker.runtimeKind === 'codex';
       if (
-        connection.nativeRunId ||
+        (codex ? !connection.nativeRunId : connection.nativeRunId) ||
         !this.entries(id).some(
           (entry) =>
             entry.direction === 'out' &&

@@ -132,7 +132,7 @@ input.on('line', (line) => {
             startedAtMs: 1,
           },
         });
-      } else if (scenario !== 'interrupt') {
+      } else if (!scenario.startsWith('interrupt')) {
         send({
           method: 'item/agentMessage/delta',
           params: {
@@ -148,8 +148,15 @@ input.on('line', (line) => {
       }
       break;
     case 'turn/interrupt':
+      if (scenario === 'interrupt-error') {
+        send({
+          id: request.id,
+          error: { code: -32603, message: 'fixture error' },
+        });
+        break;
+      }
       send({ id: request.id, result: {} });
-      complete('interrupted');
+      complete(scenario === 'interrupt-ignored' ? 'completed' : 'interrupted');
       break;
     default:
       if (

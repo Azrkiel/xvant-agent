@@ -101,3 +101,7 @@ export const usageSampleSchema = z.discriminatedUnion('kind', [
     tokens: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
   }),
 ]);
+/** Result of host-only interrupt admission; never produced by a provider message. */
+export interface InterruptAdmission {
+  status: 'requested' | 'already_requested';
+}

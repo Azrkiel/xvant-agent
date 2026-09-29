@@ -457,6 +457,15 @@ actual-process crash cases cover death inside and after admission; recovery keep
 the admission record, never sends the interrupt or the turn again and retains
 reservations. G03 fixtures now poll admission like a host operator would.
 
+`OfflineCodexController.interrupt` follows the same admission contract. Codex
+binds its native turn ID at dispatch, so the journal requires a bound turn for
+Codex and an unbound terminal identity for Claude/OpenCode. Admission requires
+lifecycle state `running`; the `turn/interrupt` request goes through the durable
+channel. `cancelled` needs a valid reply, an `interrupted` terminal turn, EOF and
+owned shutdown. An RPC error, or a turn that reports `completed` after admission,
+stays unknown. Two further crash cases cover Codex death inside and after
+admission.
+
 The actor ID is host-supplied and not authenticated here; no HTTP route exposes
-interruption. Codex still uses its scenario-driven interrupt path. Live interrupt
-APIs, endpoint authentication and Linux qualification remain open.
+interruption. Live interrupt APIs, endpoint authentication and Linux qualification
+remain open.

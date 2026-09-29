@@ -17,6 +17,7 @@ import {
   versions,
   type StreamKind,
 } from '../../../packages/adapters/src/providers/native-profiles.ts';
+import type { InterruptAdmission } from '../../../packages/contracts/src/providers.ts';
 import { NativeVerifier } from './native-verifier.ts';
 import { NativeReviewController } from './native-review.ts';
 
@@ -47,9 +48,6 @@ const scenarioSchema = z.enum([
   'launch-timeout',
 ]);
 type Checks = Record<string, { executable: string; args: readonly string[] }>;
-export interface InterruptAdmission {
-  status: 'requested' | 'already_requested';
-}
 /** Fixed synthetic peers only. OpenCode HTTP descriptors travel over fixture pipes. */
 export class OfflineNativeController {
   private readonly store: Store;

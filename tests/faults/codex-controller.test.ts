@@ -13,6 +13,8 @@ it.each([
   'native.prepare.before_commit',
   'provider.session.before_commit',
   'codex.after_session',
+  'provider.interrupt.before_commit',
+  'codex.after_interrupt_request',
 ])(
   'recovers controller death at %s without replay or acceptance',
   (point) => {
@@ -72,6 +74,13 @@ it.each([
           ),
         ).toBe(true);
       }
+      const admitted = point === 'codex.after_interrupt_request';
+      expect(store.providers.get('connection').interrupt).toEqual(
+        admitted ? { actorId: 'operator', generation: 1 } : undefined,
+      );
+      expect(
+        entries.filter((entry) => entry.method === 'turn/interrupt'),
+      ).toHaveLength(0);
       expect(
         store.events(0).some((event) => event.kind === 'native.accepted'),
       ).toBe(false);

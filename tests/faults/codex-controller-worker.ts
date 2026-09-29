@@ -33,7 +33,11 @@ const controller = new OfflineCodexController(
   { check: { executable: process.execPath, args: ['-e', 'process.exit(0)'] } },
   { fault },
 );
-await controller.run(
+const interrupting = [
+  'provider.interrupt.before_commit',
+  'codex.after_interrupt_request',
+].includes(point!);
+const pending = controller.run(
   {
     connectionId: 'connection',
     taskId: 'task',
@@ -54,11 +58,22 @@ await controller.run(
       quotaGroupId: 'account',
     },
   },
-  'success',
+  interrupting ? 'interrupt' : 'success',
   ['provider.session.before_commit', 'codex.after_session'].includes(point!)
     ? 'create'
     : 'resume',
 );
+// Poll like a host operator until the running turn admits the interrupt.
+while (interrupting) {
+  try {
+    controller.interrupt('connection', 'operator');
+    break;
+  } catch (error) {
+    if ((error as Error).message !== 'NOT_INTERRUPTIBLE') throw error;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+}
+await pending;
 controller.stop();
 store.close();
 process.exitCode = 72;

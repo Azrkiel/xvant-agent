@@ -13,6 +13,7 @@ import {
   CODEX_VERSION,
   validateNative,
 } from '../../../packages/adapters/src/codex/profile.ts';
+import type { InterruptAdmission } from '../../../packages/contracts/src/providers.ts';
 import { NativeVerifier } from './native-verifier.ts';
 import { NativeReviewController } from './native-review.ts';
 
@@ -20,6 +21,8 @@ const scenarioSchema = z.enum([
   'success',
   'approval',
   'interrupt',
+  'interrupt-error',
+  'interrupt-ignored',
   'disconnect',
   'malformed',
   'timeout',
@@ -48,6 +51,10 @@ export class OfflineCodexController {
   private readonly review: NativeReviewController;
   private readonly timeout: number;
   private readonly fault: (point: string) => void;
+  private readonly interrupts = new Map<
+    string,
+    (actorId: string) => InterruptAdmission
+  >();
   private stopped = false;
   constructor(
     store: Store,
@@ -74,6 +81,18 @@ export class OfflineCodexController {
   }
   get activeCount(): number {
     return this.supervisor.activeCount;
+  }
+  /**
+   * Host-only admission of `turn/interrupt` for a running turn this controller
+   * owns. Admission commits before the request is journaled and written.
+   * `cancelled` also requires the reply, an interrupted terminal turn and owned
+   * shutdown; anything else stays unknown. Never exposed to providers.
+   */
+  interrupt(connectionId: string, actorId: string): InterruptAdmission {
+    if (this.stopped) throw new Error('CONTROLLER_STOPPED');
+    const admit = this.interrupts.get(connectionId);
+    if (!admit) throw new Error('NOT_FOUND');
+    return admit(actorId);
   }
   async run(
     input: ProviderDispatch,
@@ -153,6 +172,28 @@ export class OfflineCodexController {
       }
       if (run) this.supervisor.cancel(run.identity);
     };
+    let interruptRequested = false;
+    let interruptReply: Promise<void> | undefined;
+    this.interrupts.set(connection.connectionId, (actorId) => {
+      if (interruptRequested) return { status: 'already_requested' };
+      if (failed || life.status !== 'running')
+        throw new Error('NOT_INTERRUPTIBLE');
+      this.store.providers.requestInterrupt(
+        connection.connectionId,
+        connection.token,
+        actorId,
+      );
+      interruptRequested = true;
+      this.fault('codex.after_interrupt_request');
+      const interrupt = life.interrupt();
+      interruptReply = channel
+        .request(interrupt.method, interrupt.params)
+        .then((reply) => {
+          validateNative('TurnInterruptResponse', reply);
+        });
+      void interruptReply.catch(fail);
+      return { status: 'requested' };
+    });
     const channel = durableCodexChannel(this.store, connection, {
       timeoutMs: this.timeout,
       write: (frame) => {
@@ -231,14 +272,14 @@ export class OfflineCodexController {
         connection.token,
         life.nativeRunId!,
       );
-      if (scenario === 'interrupt') {
-        const interrupt = life.interrupt();
-        validateNative(
-          'TurnInterruptResponse',
-          await channel.request(interrupt.method, interrupt.params),
-        );
-      }
+      if (life.status === 'running') this.fault('codex.interruptible');
       await terminal;
+      if (interruptRequested) {
+        if (!interruptReply) throw new Error('OPERATION_UNKNOWN');
+        await interruptReply;
+        // A completed turn after an admitted interrupt is ambiguous, not success.
+        if (outcome !== 'cancelled') throw new Error('OPERATION_UNKNOWN');
+      }
       if (failed || this.stopped) throw new Error('OPERATION_UNKNOWN');
       ending = true;
       run.endInput();
@@ -278,6 +319,7 @@ export class OfflineCodexController {
     } catch {
       fail();
     } finally {
+      this.interrupts.delete(connection.connectionId);
       ending = true;
       try {
         channel.close();
