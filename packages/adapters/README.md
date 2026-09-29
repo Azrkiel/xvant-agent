@@ -501,3 +501,23 @@ clear the block. Crash cases show that a failure committed before the terminal
 result survives restart, and that a crash inside the failure transaction leaves
 no partial block. These classifications come from synthetic fixtures; real
 provider error traffic has not been observed.
+
+## Offline 2/3/5 roster through the owned controllers
+
+`apps/controller/src/offline-roster.ts` runs the target registry concurrently:
+2 Codex, 3 Claude and 5 OpenCode named workers. They share one Store and one
+controller instance per protocol family. Each worker has its own task, workspace
+and native session, and each runtime has its own account group. Scenarios are
+mixed: success, approval/permission denial, create and resume, two host
+interrupts targeted by connection ID, an account-scoped quota error and an
+attempt-scoped error. `rosterFailures` checks that every denial, interrupt,
+failure and block lands only on its own connection, that the quota block stays
+inside its account group, that no owned process survives, and that nothing is
+accepted. G03 runs it as `controller-roster`.
+
+Native sessions are unique per runtime and host, matching how reservations are
+keyed. The fixed peers mint one created-session ID per runtime, so this roster
+uses one OpenCode create; a second would be refused as a collision, which the
+controller tests cover. This is concurrency and routing evidence with synthetic
+peers only. The plan's live `--fixture roster` run with ten real sessions remains
+unverified.

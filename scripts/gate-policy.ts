@@ -100,6 +100,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'tests/faults/native-controller.test.ts': 26,
               'tests/faults/native-session.test.ts': 4,
               'packages/adapters/src/providers/failures.test.ts': 18,
+              'apps/controller/src/offline-roster.test.ts': 2,
             }
           : {}),
       };

@@ -206,6 +206,19 @@ try {
       )
     )
       throw new Error('Provider fixture roster failed');
+    check('controller-roster', ['scripts/roster-fixture.mjs']);
+    const roster = JSON.parse(
+      readFileSync(resolve(artifacts, 'controller-roster.log'), 'utf8'),
+    );
+    if (
+      roster.classification !== 'offline' ||
+      roster.liveProvidersTested.length !== 0 ||
+      roster.workers !== 10 ||
+      roster.problems.length !== 0 ||
+      roster.activeCount !== 0 ||
+      roster.accepted !== false
+    )
+      throw new Error('Controller roster failed');
     check('codex-transport', ['scripts/codex-fixture.mjs', 'success']);
     const transport = JSON.parse(
       readFileSync(resolve(artifacts, 'codex-transport.log'), 'utf8'),
