@@ -748,6 +748,23 @@
           "required": false
         }
       ]
+    },
+    "unions": {
+      "SDKAssistantMessageError": [
+        "account_on_hold",
+        "authentication_failed",
+        "billing_error",
+        "cloud_credential_error",
+        "invalid_request",
+        "max_output_tokens",
+        "model_not_found",
+        "oauth_org_not_allowed",
+        "overloaded",
+        "rate_limit",
+        "server_error",
+        "unknown",
+        "verification_required"
+      ]
     }
   },
   "opencode": {
@@ -1064,6 +1081,18 @@
           "name": "200",
           "required": true
         }
+      ]
+    },
+    "unions": {
+      "AssistantMessage.error": [
+        "APIError",
+        "ContentFilterError",
+        "ContextOverflowError",
+        "MessageAbortedError",
+        "MessageOutputLengthError",
+        "ProviderAuthError",
+        "StructuredOutputError",
+        "UnknownError"
       ]
     }
   }

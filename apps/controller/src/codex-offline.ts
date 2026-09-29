@@ -37,6 +37,7 @@ const scenarioSchema = z.enum([
   'native-retry',
   'turn-rpc-error',
   'turn-failed',
+  'auth-failed',
 ]);
 /** Complete host orchestration using only a fixed synthetic peer. No live launcher. */
 export class OfflineCodexController {
@@ -161,8 +162,23 @@ export class OfflineCodexController {
       rejectTerminal = reject;
     });
     void terminal.catch(() => {});
+    let interruptRequested = false;
+    let interruptReply: Promise<void> | undefined;
+    const classify = () => {
+      if (life.failure && !interruptRequested)
+        this.store.providers.recordFailure(
+          connection.connectionId,
+          connection.token,
+          life.failure,
+        );
+    };
     const fail = () => {
       failed = true;
+      try {
+        classify();
+      } catch {
+        /* Classification is advisory; uncertainty is recorded durably. */
+      }
       life.disconnected();
       rejectTerminal(new Error('OPERATION_UNKNOWN'));
       try {
@@ -172,8 +188,6 @@ export class OfflineCodexController {
       }
       if (run) this.supervisor.cancel(run.identity);
     };
-    let interruptRequested = false;
-    let interruptReply: Promise<void> | undefined;
     this.interrupts.set(connection.connectionId, (actorId) => {
       if (interruptRequested) return { status: 'already_requested' };
       if (failed || life.status !== 'running')
@@ -294,6 +308,7 @@ export class OfflineCodexController {
         throw new Error('OPERATION_UNKNOWN');
       channel.endReceive();
       this.fault('codex.after_shutdown');
+      if (outcome === 'failed') classify();
       this.store.providers.finish(
         connection.connectionId,
         connection.token,

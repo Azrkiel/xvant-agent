@@ -27,14 +27,45 @@ const send = (value) =>
       ? JSON.stringify(value) + '\n'
       : 'data: ' + JSON.stringify(value) + '\r\n\r\n',
   );
+// Account/model failures use pinned vendor error codes; message text is noise.
+const nativeError = {
+  'auth-error':
+    kind === 'claude'
+      ? 'authentication_failed'
+      : { name: 'ProviderAuthError', data: { providerID: 'x', message: 'x' } },
+  'quota-error':
+    kind === 'claude'
+      ? 'rate_limit'
+      : {
+          name: 'APIError',
+          data: { message: 'x', statusCode: 429, isRetryable: true },
+        },
+  'model-error':
+    kind === 'claude'
+      ? 'model_not_found'
+      : {
+          name: 'APIError',
+          data: { message: 'x', statusCode: 404, isRetryable: false },
+        },
+}[scenario];
 const complete = () => {
+  if (kind === 'claude' && nativeError)
+    send({
+      type: 'assistant',
+      message: {},
+      parent_tool_use_id: null,
+      error: nativeError,
+      uuid: 'assistant-error',
+      session_id: session,
+      user_message_uuid: request,
+    });
   if (kind === 'claude')
     send({
       type: 'result',
       subtype: 'success',
       duration_ms: 1,
       duration_api_ms: 1,
-      is_error: scenario === 'error' || interrupting,
+      is_error: scenario === 'error' || interrupting || !!nativeError,
       num_turns: 1,
       stop_reason: 'end_turn',
       total_cost_usd: 0,
@@ -80,6 +111,7 @@ const complete = () => {
             cache: { read: 0, write: 0 },
           },
           finish: 'stop',
+          ...(nativeError ? { error: nativeError } : {}),
           ...(interrupting
             ? {
                 error: {

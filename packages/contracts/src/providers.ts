@@ -105,3 +105,14 @@ export const usageSampleSchema = z.discriminatedUnion('kind', [
 export interface InterruptAdmission {
   status: 'requested' | 'already_requested';
 }
+/**
+ * Normalized native failure. `native` is a bounded vendor code label, never
+ * message text. Quota-group scope blocks admission for that account group
+ * until a trusted host clears it.
+ */
+export const nativeFailureSchema = z.strictObject({
+  code: providerFailureSchema,
+  scope: z.enum(['attempt', 'quota_group']),
+  native: z.string().regex(/^[A-Za-z0-9_.:-]{1,64}$/),
+});
+export type NativeFailure = z.infer<typeof nativeFailureSchema>;

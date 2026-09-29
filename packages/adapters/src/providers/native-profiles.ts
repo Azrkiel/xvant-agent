@@ -15,6 +15,7 @@ export const pins = JSON.parse(
     version: string;
     sha256: string;
     declarations: Record<string, { name: string; required: boolean }[]>;
+    unions: Record<string, string[]>;
   }
 >;
 for (const kind of ['claude', 'opencode'] as const)

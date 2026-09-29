@@ -11,7 +11,7 @@ const scenario = process.argv[3] ?? 'permission';
 const mode = process.argv[4] ?? 'resume';
 if (mode !== 'resume' && mode !== 'create') throw new Error('INVALID_INPUT');
 if (kind !== 'claude' && kind !== 'opencode') throw new Error('INVALID_INPUT');
-if (scenario !== 'permission' && scenario !== 'interrupt')
+if (!['permission', 'interrupt', 'quota-error'].includes(scenario))
   throw new Error('INVALID_INPUT');
 const root = mkdtempSync(join(tmpdir(), 'xvant-native-controller-demo-'));
 let store, controller;
@@ -85,6 +85,8 @@ try {
       outcome: connection.outcome,
       interruptAdmission: admission ?? null,
       interruptActor: connection.interrupt?.actorId ?? null,
+      failure: connection.failure ?? null,
+      blocked: store.providers.blocked('account')?.code ?? null,
       sessionBound: connection.sessionBound === true,
       nativeSessionId: connection.worker.nativeSessionId,
       journalEntries: store.providers.entries('connection').length,
@@ -97,7 +99,10 @@ try {
   if (
     scenario === 'permission'
       ? task.state !== 'ready_for_acceptance'
-      : task.state !== 'needs_attention' || connection.outcome !== 'cancelled'
+      : scenario === 'quota-error'
+        ? connection.outcome !== 'failed' ||
+          store.providers.blocked('account')?.code !== 'QUOTA_BLOCKED'
+        : task.state !== 'needs_attention' || connection.outcome !== 'cancelled'
   )
     process.exitCode = 1;
 } finally {

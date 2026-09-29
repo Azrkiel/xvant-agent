@@ -1,5 +1,9 @@
 import { JsonLineDecoder } from '../codex/transport.ts';
-import { nativeIdSchema } from '../../../contracts/src/providers.ts';
+import {
+  nativeIdSchema,
+  type NativeFailure,
+} from '../../../contracts/src/providers.ts';
+import { classifyClaude, classifyOpenCode } from './failures.ts';
 import {
   versions,
   claudeSchema,
@@ -57,8 +61,14 @@ export class SseDecoder {
     if (this.buffer.length) fail('OPERATION_UNKNOWN');
   }
 }
+const label = (prefix: string, value: unknown) =>
+  typeof value === 'string' && /^[A-Za-z0-9_.-]{1,48}$/.test(value)
+    ? prefix + value
+    : 'none';
 export interface StreamResult {
   kind: 'completed' | 'failed';
+  /** Present only for failed results. Derived from pinned vendor codes. */
+  failure?: NativeFailure;
   sessionId: string;
   requestId: string;
   nativeMessageId: string;
@@ -85,6 +95,7 @@ export class NativeStream {
   private readonly permissions = new Set<string>();
   private readonly pendingDenials = new Set<string>();
   private result: StreamResult | undefined;
+  private nativeFailure: NativeFailure | undefined;
   private state: 'running' | 'result_pending' | 'needs_attention' = 'running';
   constructor(
     kind: StreamKind,
@@ -109,6 +120,14 @@ export class NativeStream {
   }
   get status() {
     return this.state;
+  }
+  /** First classified native failure, retained even after the stream fails. */
+  get failure(): NativeFailure | undefined {
+    return this.nativeFailure;
+  }
+  private note(failure: NativeFailure): NativeFailure {
+    this.nativeFailure ??= failure;
+    return this.nativeFailure;
   }
   /** Host calls only after durable binding, before native invocation traffic. */
   bindSession(session: string): void {
@@ -185,13 +204,18 @@ export class NativeStream {
       fail('INVALID_EVENT');
     }
   }
-  private finish(kind: StreamResult['kind'], nativeMessageId: string) {
+  private finish(
+    kind: StreamResult['kind'],
+    nativeMessageId: string,
+    failure?: NativeFailure,
+  ) {
     if (this.result) fail('INVALID_EVENT');
     this.result = {
       kind,
       nativeMessageId,
       sessionId: this.session,
       requestId: this.request,
+      ...(kind === 'failed' ? { failure: this.note(failure!) } : {}),
     };
     this.state = 'result_pending';
   }
@@ -217,6 +241,10 @@ export class NativeStream {
       };
     }
     if (message.session_id !== this.session) fail('INVALID_EVENT');
+    // Synthetic API-error assistant messages carry SDKAssistantMessageError.
+    const error = (input as { error?: unknown }).error;
+    if (message.type === 'assistant' && error !== undefined)
+      this.note(classifyClaude(error));
     if (message.type !== 'result') return;
     if (
       message.user_message_uuid !== this.request ||
@@ -227,13 +255,21 @@ export class NativeStream {
       message.deferred_tool_use !== undefined
     )
       fail('INVALID_EVENT');
-    this.finish(
+    const completed =
       message.subtype === 'success' &&
-        !message.is_error &&
-        ['end_turn', 'stop_sequence'].includes(message.stop_reason ?? '')
-        ? 'completed'
-        : 'failed',
+      !message.is_error &&
+      ['end_turn', 'stop_sequence'].includes(message.stop_reason ?? '');
+    this.finish(
+      completed ? 'completed' : 'failed',
       message.uuid,
+      completed
+        ? undefined
+        : classifyClaude(
+            undefined,
+            message.subtype === 'success'
+              ? label('stop:', message.stop_reason)
+              : message.subtype,
+          ),
     );
   }
   private opencode(input: unknown): DenialAction | undefined {
@@ -241,7 +277,10 @@ export class NativeStream {
     if (!parsed.success) fail('INVALID_EVENT');
     const message = parsed.data;
     if (message.properties.sessionID !== this.session) fail('INVALID_EVENT');
-    if (message.type === 'session.error') fail('WORKER_FAILED');
+    if (message.type === 'session.error') {
+      this.note(classifyOpenCode(message.properties.error));
+      fail('WORKER_FAILED');
+    }
     if (message.type === 'session.idle') return;
     if (message.type === 'permission.asked') {
       this.permission(message.properties.id);
@@ -262,13 +301,18 @@ export class NativeStream {
       fail('INVALID_EVENT');
     if (this.result) fail('INVALID_EVENT');
     if (info.error !== undefined) {
-      this.finish('failed', info.id);
+      this.finish('failed', info.id, classifyOpenCode(info.error));
       return;
     }
     if (info.time.completed !== undefined) {
       if (info.time.completed < info.time.created) fail('INVALID_EVENT');
       if (info.finish === 'stop') this.finish('completed', info.id);
-      else if (info.finish !== 'tool-calls') this.finish('failed', info.id);
+      else if (info.finish !== 'tool-calls')
+        this.finish('failed', info.id, {
+          code: 'WORKER_FAILED',
+          scope: 'attempt',
+          native: label('finish:', info.finish),
+        });
     }
   }
   end(): StreamResult {

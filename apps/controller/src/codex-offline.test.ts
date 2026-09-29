@@ -354,3 +354,33 @@ it('fences Codex interrupt admission after controller takeover', async () => {
     recovery?.close();
   }
 });
+it.each([
+  ['native-error', 'unknown', null, 'QUOTA_BLOCKED', 'usageLimitExceeded'],
+  ['auth-failed', 'result_pending', 'failed', 'AUTH_REQUIRED', 'unauthorized'],
+] as const)(
+  'classifies Codex %s and blocks the account group',
+  async (scenario, status, outcome, code, native) => {
+    expect((await controller.run(spec, scenario)).state).toBe(
+      'needs_attention',
+    );
+    expect(store.providers.get('connection')).toMatchObject({
+      status,
+      outcome,
+      failure: { code, scope: 'quota_group', native },
+    });
+    expect(store.providers.blocked('account')?.code).toBe(code);
+  },
+);
+it('keeps an unlabeled failed Codex turn attempt-scoped', async () => {
+  await controller.run(spec, 'turn-failed');
+  expect(store.providers.get('connection').failure).toEqual({
+    code: 'WORKER_FAILED',
+    scope: 'attempt',
+    native: 'none',
+  });
+  expect(store.providers.blocked('account')).toBeUndefined();
+});
+it('records no failure for a confirmed Codex interrupt', async () => {
+  await interrupted();
+  expect(store.providers.get('connection').failure).toBeUndefined();
+});

@@ -5,7 +5,8 @@ import { ArtifactStore } from '../../packages/storage/src/artifacts.ts';
 import { OfflineNativeController } from '../../apps/controller/src/native-offline.ts';
 import { versions } from '../../packages/adapters/src/providers/native-profiles.ts';
 
-const [root, point, kind, modeInput = 'resume'] = process.argv.slice(2);
+const [root, point, kind, modeInput = 'resume', scenario] =
+  process.argv.slice(2);
 if (modeInput !== 'resume' && modeInput !== 'create')
   throw new Error('INVALID_INPUT');
 if (kind !== 'claude' && kind !== 'opencode') throw new Error('INVALID_INPUT');
@@ -65,7 +66,7 @@ const pending = controller.run(
       quotaGroupId: 'account',
     },
   },
-  interrupting ? 'interrupt' : 'permission',
+  scenario ?? (interrupting ? 'interrupt' : 'permission'),
   modeInput,
 );
 // Poll like a host operator until the running turn admits the interrupt.

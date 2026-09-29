@@ -469,3 +469,35 @@ admission.
 The actor ID is host-supplied and not authenticated here; no HTTP route exposes
 interruption. Live interrupt APIs, endpoint authentication and Linux qualification
 remain open.
+
+## Native failure normalization and account admission blocks
+
+`src/providers/failures.ts` maps pinned vendor error codes onto the contract's
+failure codes. It never reads message text. Codex uses `CodexErrorInfo` from the
+pinned app-server schema. Claude uses `SDKAssistantMessageError`, falling back to
+the result subtype or stop reason. OpenCode uses the `AssistantMessage.error`
+union names and `APIError` status codes. `native-pins.json` now also records
+these literal unions from the same integrity-checked SDK archives.
+
+| Signal                                                                                        | Code                | Scope         |
+| --------------------------------------------------------------------------------------------- | ------------------- | ------------- |
+| Codex `unauthorized`; Claude auth/account codes; OpenCode `ProviderAuthError`; HTTP 401/403   | `AUTH_REQUIRED`     | account group |
+| Codex `usageLimitExceeded`/`rateLimitExceeded`; Claude `rate_limit`/`billing_error`; HTTP 429 | `QUOTA_BLOCKED`     | account group |
+| Claude `model_not_found`                                                                      | `MODEL_UNAVAILABLE` | attempt       |
+| Everything else, including unpinned codes (`unrecognized`)                                    | `WORKER_FAILED`     | attempt       |
+
+The controllers record the first classified failure through
+`ProviderJournal.recordFailure` before the terminal outcome or uncertainty is
+committed. That applies to failed results, Codex `error` notifications and
+OpenCode `session.error`, but not to an abort after an admitted interrupt. The
+journal keeps only the code, scope and a bounded native label, plus audit events.
+
+An uncleared account-group failure makes `reserve()` fail with that code for any
+worker in the same `quotaGroupId`, across runtimes and restarts. Admission
+therefore stops instead of retrying or rotating accounts. Only the host-only
+`clearBlock(quotaGroupId, actorId)` lifts it, after the account is repaired; no
+provider message or HTTP route can do so. Reconciling the failed attempt does not
+clear the block. Crash cases show that a failure committed before the terminal
+result survives restart, and that a crash inside the failure transaction leaves
+no partial block. These classifications come from synthetic fixtures; real
+provider error traffic has not been observed.

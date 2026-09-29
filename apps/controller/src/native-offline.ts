@@ -17,7 +17,10 @@ import {
   versions,
   type StreamKind,
 } from '../../../packages/adapters/src/providers/native-profiles.ts';
-import type { InterruptAdmission } from '../../../packages/contracts/src/providers.ts';
+import type {
+  InterruptAdmission,
+  NativeFailure,
+} from '../../../packages/contracts/src/providers.ts';
 import { NativeVerifier } from './native-verifier.ts';
 import { NativeReviewController } from './native-review.ts';
 
@@ -46,6 +49,9 @@ const scenarioSchema = z.enum([
   'create-partial',
   'launch-error',
   'launch-timeout',
+  'auth-error',
+  'quota-error',
+  'model-error',
 ]);
 type Checks = Record<string, { executable: string; args: readonly string[] }>;
 /** Fixed synthetic peers only. OpenCode HTTP descriptors travel over fixture pipes. */
@@ -205,9 +211,19 @@ export class OfflineNativeController {
     let writes = Promise.resolve(),
       failed = false,
       sequence = 0;
+    const classify = (failure: NativeFailure | undefined) => {
+      // An admitted interrupt explains abort errors; never block an account on it.
+      if (failure && !interruptRequested)
+        this.store.providers.recordFailure(id, token, failure);
+    };
     const fail = () => {
       failed = true;
       stream.cancel();
+      try {
+        classify(stream.failure);
+      } catch {
+        /* Classification is advisory; uncertainty is recorded below. */
+      }
       try {
         this.store.providers.unknown(id, token);
       } catch {
@@ -345,6 +361,7 @@ export class OfflineNativeController {
       // These SDK streams expose terminal message identity, not a Codex-style turn ID.
       // The shared evidence slot binds that message; attemptId separately binds the host request.
       this.store.providers.bindRun(id, token, result.nativeMessageId);
+      classify(result.failure);
       this.store.providers.finish(
         id,
         token,

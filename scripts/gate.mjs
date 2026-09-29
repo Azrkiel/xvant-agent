@@ -280,6 +280,27 @@ try {
         interruption.accepted !== false
       )
         throw new Error('Native interrupt fixture failed');
+      check(kind + '-native-quota', [
+        'scripts/native-controller-fixture.mjs',
+        kind,
+        'quota-error',
+      ]);
+      const quota = JSON.parse(
+        readFileSync(resolve(artifacts, kind + '-native-quota.log'), 'utf8'),
+      );
+      if (
+        quota.classification !== 'offline' ||
+        quota.liveProvidersTested.length ||
+        quota.state !== 'needs_attention' ||
+        quota.outcome !== 'failed' ||
+        quota.failure?.code !== 'QUOTA_BLOCKED' ||
+        quota.failure?.scope !== 'quota_group' ||
+        quota.blocked !== 'QUOTA_BLOCKED' ||
+        quota.verification !== undefined ||
+        quota.activeCount !== 0 ||
+        quota.accepted !== false
+      )
+        throw new Error('Native quota fixture failed');
       for (const scenario of ['permission', 'interrupt']) {
         const checkId = kind + '-create-' + scenario;
         check(checkId, [

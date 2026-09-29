@@ -1,7 +1,11 @@
 import { z } from 'zod';
 import { isAbsolute, resolve } from 'node:path';
-import { nativeIdSchema } from '../../../contracts/src/providers.ts';
+import {
+  nativeIdSchema,
+  type NativeFailure,
+} from '../../../contracts/src/providers.ts';
 import { CODEX_VERSION, validateNative } from './profile.ts';
+import { classifyCodex } from '../providers/failures.ts';
 
 type Status =
   | 'new'
@@ -18,7 +22,7 @@ type Action =
   | { kind: 'started'; nativeRunId: string }
   | { kind: 'output'; text: string }
   | { kind: 'completed' | 'cancelled' }
-  | { kind: 'failed'; code: 'WORKER_FAILED' }
+  | { kind: 'failed'; code: 'WORKER_FAILED'; failure: NativeFailure }
   | { kind: 'deny'; id: string | number; result: { decision: 'decline' } };
 const envelope = z.object({
   method: z.string().max(128),
@@ -42,6 +46,7 @@ export class CodexLifecycle {
   private observedThreadId: string | undefined;
   private runId: string | undefined;
   private terminal = false;
+  private nativeFailure: NativeFailure | undefined;
   constructor(version: string, threadId?: string) {
     if (version !== CODEX_VERSION) fail('VERSION_UNSUPPORTED');
     this.threadId =
@@ -55,6 +60,10 @@ export class CodexLifecycle {
   }
   get nativeSessionId(): string | undefined {
     return this.threadId;
+  }
+  /** First classified native error, from pinned `CodexErrorInfo` only. */
+  get failure(): NativeFailure | undefined {
+    return this.nativeFailure;
   }
   openThread(mode: 'create' | 'resume', cwd: string) {
     if (
@@ -252,7 +261,12 @@ export class CodexLifecycle {
       const params = message.params as {
         threadId: string;
         turnId?: string;
-        turn?: { id: string; status: string };
+        turn?: {
+          id: string;
+          status: string;
+          error?: { codexErrorInfo?: unknown } | null;
+        };
+        error?: { codexErrorInfo?: unknown };
         delta?: string;
       };
       if (params.threadId !== this.threadId) fail('INVALID_EVENT');
@@ -266,6 +280,7 @@ export class CodexLifecycle {
       if (id !== this.runId) fail('INVALID_EVENT');
       if (message.method === 'error') {
         if (message.id !== undefined) fail('INVALID_EVENT');
+        this.nativeFailure ??= classifyCodex(params.error?.codexErrorInfo);
         fail('WORKER_FAILED');
       }
       if (message.method.endsWith('/requestApproval')) {
@@ -287,12 +302,19 @@ export class CodexLifecycle {
         fail('INVALID_EVENT');
       this.terminal = true;
       if (this.state !== 'needs_attention') this.state = 'result_pending';
-      return params.turn!.status === 'failed'
-        ? { kind: 'failed', code: 'WORKER_FAILED' }
-        : {
-            kind:
-              params.turn!.status === 'interrupted' ? 'cancelled' : 'completed',
-          };
+      if (params.turn!.status === 'failed') {
+        this.nativeFailure ??= classifyCodex(
+          params.turn!.error?.codexErrorInfo,
+        );
+        return {
+          kind: 'failed',
+          code: 'WORKER_FAILED',
+          failure: this.nativeFailure,
+        };
+      }
+      return {
+        kind: params.turn!.status === 'interrupted' ? 'cancelled' : 'completed',
+      };
     } catch (error) {
       this.state = 'needs_attention';
       fail(

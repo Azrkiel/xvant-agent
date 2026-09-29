@@ -667,3 +667,93 @@ it('cannot record completion after an admitted interrupt', () => {
     store.providers.beginVerification('connection', connection.token),
   ).toThrow('VERIFICATION_UNAVAILABLE');
 });
+const quota = {
+  code: 'QUOTA_BLOCKED' as const,
+  scope: 'quota_group' as const,
+  native: 'usageLimitExceeded',
+};
+function second(id = 'other', quotaGroupId = 'account') {
+  queued(id);
+  return {
+    ...spec,
+    connectionId: id,
+    taskId: id,
+    attemptId: id,
+    workspaceId: id,
+    worker: { ...worker, id, nativeSessionId: id, quotaGroupId },
+  };
+}
+it('blocks admission for an account group after a quota failure until a trusted clear', () => {
+  const connection = dispatched();
+  store.providers.recordFailure('connection', connection.token, quota);
+  expect(store.providers.get('connection').failure).toEqual(quota);
+  expect(store.providers.blocked('account')).toEqual({
+    code: 'QUOTA_BLOCKED',
+    connectionId: 'connection',
+    native: 'usageLimitExceeded',
+  });
+  const next = second();
+  expect(() => store.providers.reserve(next)).toThrow('QUOTA_BLOCKED');
+  expect(store.getTask('other').state).toBe('queued');
+  store.providers.reserve(second('third', 'separate'));
+  store.close();
+  store = open();
+  expect(() => store.providers.reserve(next)).toThrow('QUOTA_BLOCKED');
+  expect(store.providers.clearBlock('account', 'operator')).toBe(1);
+  expect(store.providers.blocked('account')).toBeUndefined();
+  expect(store.providers.get('connection').failure).toEqual({
+    ...quota,
+    cleared: {
+      actorId: 'operator',
+      generation:
+        store.providers.get('connection').failure!.cleared!.generation,
+    },
+  });
+  expect(store.providers.reserve(next).status).toBe('open');
+  expect(
+    store
+      .events(0)
+      .map((event) => event.kind)
+      .filter((kind) => kind.startsWith('provider.quota')),
+  ).toEqual(['provider.quota_group_blocked', 'provider.quota_group_cleared']);
+  expect(() => store.providers.clearBlock('account', 'operator')).toThrow(
+    'NOT_FOUND',
+  );
+});
+it('records attempt-scoped failures without blocking the account group', () => {
+  const connection = dispatched();
+  store.providers.recordFailure('connection', connection.token, {
+    code: 'MODEL_UNAVAILABLE',
+    scope: 'attempt',
+    native: 'model_not_found',
+  });
+  store.providers.recordFailure('connection', connection.token, quota);
+  expect(store.providers.get('connection').failure?.code).toBe(
+    'MODEL_UNAVAILABLE',
+  );
+  expect(store.providers.blocked('account')).toBeUndefined();
+  expect(
+    store
+      .events(0)
+      .filter((event) => event.kind === 'provider.failure_recorded'),
+  ).toHaveLength(1);
+});
+it('blocks on auth failures and fences failure records', () => {
+  const connection = dispatched();
+  expect(() =>
+    store.providers.recordFailure('connection', connection.token, {
+      ...quota,
+      native: 'has spaces',
+    }),
+  ).toThrow();
+  expect(() =>
+    store.providers.recordFailure('connection', 'x'.repeat(64), quota),
+  ).toThrow('STALE_FENCE');
+  store.providers.recordFailure('connection', connection.token, {
+    code: 'AUTH_REQUIRED',
+    scope: 'quota_group',
+    native: 'unauthorized',
+  });
+  expect(() => store.providers.reserve(second())).toThrow('AUTH_REQUIRED');
+  expect(() => store.providers.clearBlock('account', '')).toThrow();
+});

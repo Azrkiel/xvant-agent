@@ -3,7 +3,14 @@ import { createInterface } from 'node:readline';
 const scenario = process.argv[2];
 let threadId = 'thread-1';
 const send = (value) => process.stdout.write(JSON.stringify(value) + '\n');
-const turn = (status) => ({ id: 'turn-1', status, items: [] });
+const turn = (status) => ({
+  id: 'turn-1',
+  status,
+  items: [],
+  ...(status === 'failed' && scenario === 'auth-failed'
+    ? { error: { message: 'x', codexErrorInfo: 'unauthorized' } }
+    : {}),
+});
 const complete = (status = 'completed') =>
   send({
     method: 'turn/completed',
@@ -117,7 +124,7 @@ input.on('line', (line) => {
         });
         break;
       }
-      if (scenario === 'turn-failed') {
+      if (scenario === 'turn-failed' || scenario === 'auth-failed') {
         complete('failed');
         break;
       }

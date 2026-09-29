@@ -8,8 +8,10 @@ import {
 } from '../../contracts/src/native-evidence.ts';
 import type { ArtifactStore } from './artifacts.ts';
 import {
+  nativeFailureSchema,
   nativeIdSchema,
   providerWorkerSchema,
+  type NativeFailure,
 } from '../../contracts/src/providers.ts';
 
 export const providerMigration = `
@@ -45,6 +47,10 @@ export interface ProviderConnection extends ProviderDispatch {
   sessionBound?: boolean;
   /** Host-admitted native interrupt; never supplied by a provider message. */
   interrupt?: { actorId: string; generation: number };
+  /** First normalized native failure; quota-group scope blocks new admission. */
+  failure?: NativeFailure & {
+    cleared?: { actorId: string; generation: number };
+  };
   outcome: 'completed' | 'cancelled' | 'failed' | null;
   reconciliation: {
     outcome: 'stopped' | 'not_started';
@@ -135,6 +141,8 @@ export class ProviderJournal {
       )
         fail('DUPLICATE_IDENTITY');
       if (this.unresolved(spec.taskId)) fail('UNRESOLVED_OPERATION');
+      const block = this.blocked(spec.worker.quotaGroupId);
+      if (block) fail(block.code);
       const resources = [
         'workspace:' + spec.workspaceId,
         'worker:' + spec.worker.id,
@@ -362,6 +370,91 @@ export class ProviderJournal {
         actorId,
       });
       this.host.fault('provider.interrupt.before_commit');
+    });
+  }
+  /** Account-group admission block from an uncleared native auth/quota failure. */
+  blocked(
+    quotaGroupId: string,
+  ):
+    | { code: NativeFailure['code']; connectionId: string; native: string }
+    | undefined {
+    const row = this.db
+      .prepare(
+        `SELECT body FROM provider_connections
+         WHERE json_extract(body,'$.worker.quotaGroupId')=?
+           AND json_extract(body,'$.failure.scope')='quota_group'
+           AND json_extract(body,'$.failure.cleared') IS NULL
+         ORDER BY rowid LIMIT 1`,
+      )
+      .get(idSchema.parse(quotaGroupId)) as { body: string } | undefined;
+    if (!row) return undefined;
+    const connection = JSON.parse(row.body) as ProviderConnection;
+    return {
+      code: connection.failure!.code,
+      connectionId: connection.connectionId,
+      native: connection.failure!.native,
+    };
+  }
+  /**
+   * Persist the first normalized failure for an open connection. Classification
+   * is host-derived from pinned vendor codes; it never changes task authority.
+   */
+  recordFailure(id: string, token: string, input: unknown): void {
+    const failure = nativeFailureSchema.parse(input);
+    this.host.transaction(() => {
+      const connection = this.bound(id, token);
+      // Uncertain runs may still carry a valid classification (e.g. a channel
+      // closed on the native error itself); terminal records stay immutable.
+      if (!['open', 'unknown'].includes(connection.status))
+        fail('UNRESOLVED_OPERATION');
+      if (connection.failure) return;
+      this.save({ ...connection, failure });
+      this.host.event(connection.taskId, 'provider.failure_recorded', {
+        connectionId: id,
+        ...failure,
+      });
+      if (failure.scope === 'quota_group')
+        this.host.event(connection.taskId, 'provider.quota_group_blocked', {
+          quotaGroupId: connection.worker.quotaGroupId,
+          connectionId: id,
+          code: failure.code,
+        });
+      this.host.fault('provider.failure.before_commit');
+    });
+  }
+  /** Trusted host action after the account is repaired; never a provider message. */
+  clearBlock(quotaGroupId: string, actorId: string): number {
+    idSchema.parse(quotaGroupId);
+    idSchema.parse(actorId);
+    return this.host.transaction(() => {
+      const blocking = (
+        this.db.prepare('SELECT body FROM provider_connections').all() as {
+          body: string;
+        }[]
+      )
+        .map((row) => JSON.parse(row.body) as ProviderConnection)
+        .filter(
+          (value) =>
+            value.worker.quotaGroupId === quotaGroupId &&
+            value.failure?.scope === 'quota_group' &&
+            !value.failure.cleared,
+        );
+      if (!blocking.length) fail('NOT_FOUND');
+      for (const connection of blocking) {
+        this.save({
+          ...connection,
+          failure: {
+            ...connection.failure!,
+            cleared: { actorId, generation: this.host.generation },
+          },
+        });
+        this.host.event(connection.taskId, 'provider.quota_group_cleared', {
+          quotaGroupId,
+          connectionId: connection.connectionId,
+          actorId,
+        });
+      }
+      return blocking.length;
     });
   }
   bindRun(id: string, token: string, nativeRunId: string): void {

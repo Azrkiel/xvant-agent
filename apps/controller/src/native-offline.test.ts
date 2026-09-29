@@ -675,3 +675,83 @@ it('rejects Claude interrupt admission without advertised receipt capabilities',
       .filter((entry) => entry.method === 'fixture/interrupt'),
   ).toHaveLength(0);
 });
+const second = (kind: StreamKind) => {
+  store.create('second-create', {
+    id: 'second',
+    projectId: 'project',
+    objective: 'Read fixture',
+    requiredCheckIds: ['test'],
+    acceptanceCriteria: ['Pass'],
+  });
+  store.queue('second-queue', 'second', 0);
+  return {
+    ...spec(kind),
+    connectionId: 'second',
+    taskId: 'second',
+    attemptId: 'second',
+    worker: { ...spec(kind).worker, nativeSessionId: 'second-session' },
+  };
+};
+for (const kind of ['claude', 'opencode'] as const) {
+  it.each([
+    ['auth-error', 'AUTH_REQUIRED'],
+    ['quota-error', 'QUOTA_BLOCKED'],
+  ] as const)(
+    `${kind}: records %s and blocks the account group until cleared`,
+    async (scenario, code) => {
+      expect((await controller.run(spec(kind), scenario)).state).toBe(
+        'needs_attention',
+      );
+      const saved = store.providers.get('connection');
+      expect(saved).toMatchObject({
+        status: 'result_pending',
+        outcome: 'failed',
+        failure: { code, scope: 'quota_group' },
+      });
+      expect(saved.verification).toBeUndefined();
+      expect(store.providers.blocked('account')?.code).toBe(code);
+      store.providers.reconcile('connection', 'stopped');
+      const next = second(kind);
+      await expect(controller.run(next)).rejects.toThrow(code);
+      expect(store.getTask('second').state).toBe('queued');
+      expect(controller.activeCount).toBe(0);
+      store.providers.clearBlock('account', 'operator');
+      expect((await controller.run(next)).state).toBe('ready_for_acceptance');
+    },
+  );
+  it(`${kind}: keeps model and worker failures attempt-scoped`, async () => {
+    expect((await controller.run(spec(kind), 'model-error')).state).toBe(
+      'needs_attention',
+    );
+    expect(store.providers.get('connection').failure).toEqual(
+      kind === 'claude'
+        ? {
+            code: 'MODEL_UNAVAILABLE',
+            scope: 'attempt',
+            native: 'model_not_found',
+          }
+        : { code: 'WORKER_FAILED', scope: 'attempt', native: 'APIError:404' },
+    );
+    expect(store.providers.blocked('account')).toBeUndefined();
+  });
+  it(`${kind}: classifies an error result without leaking message text`, async () => {
+    await controller.run(spec(kind), 'error');
+    const failure = store.providers.get('connection').failure;
+    expect(failure).toEqual(
+      kind === 'claude'
+        ? { code: 'WORKER_FAILED', scope: 'attempt', native: 'stop:end_turn' }
+        : { code: 'WORKER_FAILED', scope: 'attempt', native: 'UnknownError' },
+    );
+    expect(
+      JSON.stringify(
+        store.events(0).filter((event) => event.kind.startsWith('provider.')),
+      ),
+    ).not.toContain('fixture');
+  });
+  it(`${kind}: never records an abort error after an admitted interrupt`, async () => {
+    await interrupted(spec(kind));
+    expect(store.providers.get('connection').outcome).toBe('cancelled');
+    expect(store.providers.get('connection').failure).toBeUndefined();
+    expect(store.providers.blocked('account')).toBeUndefined();
+  });
+}

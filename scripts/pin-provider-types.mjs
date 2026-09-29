@@ -33,6 +33,8 @@ const specs = {
       'SDKControlInterruptResponse',
       'Options',
     ],
+    // String-literal unions: vendor error codes used for failure normalization.
+    unions: { SDKAssistantMessageError: { alias: 'SDKAssistantMessageError' } },
     selected: {
       Options: [
         'cwd',
@@ -72,8 +74,63 @@ const specs = {
       'PermissionRule',
       'Session',
     ],
+    // Discriminated error union names referenced by AssistantMessage.error.
+    unions: {
+      'AssistantMessage.error': {
+        parent: 'AssistantMessage',
+        member: 'error',
+        discriminant: 'name',
+      },
+    },
   },
 };
+function literal(type) {
+  if (!ts.isLiteralTypeNode(type) || !ts.isStringLiteral(type.literal))
+    throw new Error('UNSUPPORTED_DECLARATION');
+  return type.literal.text;
+}
+function pinUnions(source, spec) {
+  const aliases = new Map(
+    source.statements
+      .filter(ts.isTypeAliasDeclaration)
+      .map((node) => [node.name.text, node.type]),
+  );
+  const members = (type) => {
+    if (!ts.isUnionTypeNode(type)) throw new Error('UNSUPPORTED_DECLARATION');
+    return type.types;
+  };
+  const unions = {};
+  for (const [key, union] of Object.entries(spec.unions ?? {})) {
+    let values;
+    if (union.alias) {
+      const type = aliases.get(union.alias);
+      if (!type) throw new Error('MISSING_DECLARATION');
+      values = members(type).map(literal);
+    } else {
+      const parent = aliases.get(union.parent);
+      const member = parent?.members?.find(
+        (item) =>
+          ts.isPropertySignature(item) &&
+          item.name.getText(source) === union.member,
+      );
+      if (!member?.type) throw new Error('MISSING_DECLARATION');
+      values = members(member.type).map((reference) => {
+        if (!ts.isTypeReferenceNode(reference))
+          throw new Error('UNSUPPORTED_DECLARATION');
+        const target = aliases.get(reference.typeName.getText(source));
+        const discriminant = target?.members?.find(
+          (item) =>
+            ts.isPropertySignature(item) &&
+            item.name.getText(source) === union.discriminant,
+        );
+        if (!discriminant?.type) throw new Error('MISSING_DECLARATION');
+        return literal(discriminant.type);
+      });
+    }
+    unions[key] = [...new Set(values)].sort();
+  }
+  return unions;
+}
 const pins = {};
 for (const [kind, spec] of Object.entries(specs)) {
   const archive = readFileSync(resolve(directory, spec.archive));
@@ -134,6 +191,7 @@ for (const [kind, spec] of Object.entries(specs)) {
     file: spec.file,
     sha256: createHash('sha256').update(bytes).digest('hex'),
     declarations,
+    unions: pinUnions(source, spec),
   };
 }
 writeFileSync(

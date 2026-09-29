@@ -99,3 +99,47 @@ for (const kind of ['claude', 'opencode']) {
     15000,
   );
 }
+for (const kind of ['claude', 'opencode'])
+  it.each(['provider.failure.before_commit', 'provider.result.before_commit'])(
+    `${kind}: keeps a committed quota block across death at %s`,
+    (point) => {
+      const root = mkdtempSync(join(tmpdir(), 'xvant-native-failure-crash-'));
+      let store: Store | undefined;
+      try {
+        const child = spawnSync(
+          process.execPath,
+          [
+            'tests/faults/native-controller-worker.ts',
+            root,
+            point,
+            kind,
+            'resume',
+            'quota-error',
+          ],
+          { encoding: 'utf8', timeout: 10000, windowsHide: true },
+        );
+        expect(child.status, child.stderr).toBe(71);
+        store = new Store(join(root, 'state.sqlite'), {
+          owner: 'recovery',
+          now: () => 3000,
+        });
+        expect(store.integrity()).toBe('ok');
+        expect(store.recover()).toEqual(['attempt']);
+        const committed = point === 'provider.result.before_commit';
+        expect(store.providers.get('connection')).toMatchObject({
+          status: 'unknown',
+          outcome: null,
+        });
+        expect(store.providers.get('connection').failure?.code).toBe(
+          committed ? 'QUOTA_BLOCKED' : undefined,
+        );
+        expect(store.providers.blocked('account')?.code).toBe(
+          committed ? 'QUOTA_BLOCKED' : undefined,
+        );
+      } finally {
+        store?.close();
+        rmSync(root, { recursive: true, force: true });
+      }
+    },
+    15000,
+  );
