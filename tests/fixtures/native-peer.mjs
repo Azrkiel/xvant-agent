@@ -1,7 +1,24 @@
 // Fixed offline data peer. Never launches a provider or executes requested tools.
 import { createInterface } from 'node:readline';
-const [kind, scenario, sessionInput = 'session-1', request = 'request-1'] =
-  process.argv.slice(2);
+import { validateClaudeLaunch } from '../../packages/adapters/src/providers/claude-launch.ts';
+const [
+  kind,
+  scenario,
+  sessionInput = 'session-1',
+  request = 'request-1',
+  launchJson,
+] = process.argv.slice(2);
+if (launchJson !== undefined) {
+  if (kind !== 'claude') throw new Error('INVALID_INPUT');
+  const launch = validateClaudeLaunch(JSON.parse(launchJson));
+  if (
+    ('sessionId' in launch ? launch.sessionId : launch.resume) !==
+      sessionInput ||
+    launch.cwd !== process.cwd()
+  )
+    throw new Error('INVALID_INPUT');
+}
+if (scenario === 'launch-error') process.exit(42);
 let session = scenario === 'wrong-session' ? 'other' : sessionInput;
 const interrupting = scenario.startsWith('interrupt');
 const send = (value) =>
@@ -81,6 +98,7 @@ let started = false;
 let configured = false;
 createInterface({ input: process.stdin }).on('line', (line) => {
   const message = JSON.parse(line);
+  if (scenario === 'launch-timeout') return;
   if (
     !configured &&
     !started &&

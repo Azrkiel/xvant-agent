@@ -94,7 +94,9 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/adapters/src/providers/native-stream.test.ts': 34,
               'packages/adapters/src/providers/native-lifecycle.test.ts': 30,
               'tests/native-process.test.ts': 2,
-              'apps/controller/src/native-offline.test.ts': 66,
+              'apps/controller/src/native-offline.test.ts': 76,
+              'packages/adapters/src/providers/claude-launch.test.ts': 16,
+              'tests/faults/claude-launch.test.ts': 8,
               'tests/faults/native-controller.test.ts': 18,
               'tests/faults/native-session.test.ts': 4,
             }

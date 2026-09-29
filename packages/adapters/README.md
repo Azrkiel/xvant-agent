@@ -399,7 +399,33 @@ on the appropriate side of the transaction. G03 runs created-session denial and
 interruption scenarios directly. This is still a fixed-peer HTTP descriptor
 fixture; no remote session is created or deleted.
 
-Claude creation is rejected before reservation: its pinned SDK selects session IDs
-through launch options, not this HTTP/control creation path. Claude launch modeling,
-live transports, account admission, endpoint authentication and Linux qualification
+Claude creation uses a separate launch-options path, described below. Live transports,
+account admission, endpoint authentication and Linux qualification remain open.
+
+## Offline Claude creation and resume launch options
+
+The controller models the pinned SDK's two distinct launch choices. `create` requires
+a host-selected UUID in the worker's nativeSessionId and produces `sessionId` options.
+Default `resume` produces an explicit `resume` option for that exact session, never
+an implicit latest-session request. Both use the registered absolute directory and
+plan mode, with empty tools, MCP servers, plugins and setting sources. Mixed IDs,
+continue/fork options, extra fields and broader permissions fail validation before
+reservation. The selected Options fields are pinned to the SDK declaration archive.
+
+Unlike OpenCode creation, Claude's final identity is known before launch. The host
+reserves it directly, rejecting collisions before creating a connection or intent.
+It then commits a `fixture/claude-launch` descriptor to the journal and rechecks its
+ownership immediately before starting the fixed peer. This descriptor records host
+launch configuration, not a native protocol message. The peer validates the same
+options; initialization and first-turn metadata must still match the reserved ID
+and directory. No provisional reservation swap or invented create RPC is involved.
+
+Storage failure, stop or lease takeover before startup prevents the launch. Eight
+actual-process crash cases cover create/resume on both sides of intent persistence
+and startup; recovery keeps the exact session reservation and never relaunches.
+G03 now exercises created-session review and interruption for both providers.
+
+Only the synthetic peer is launched. No Claude SDK is loaded, session history is
+read, authentication is inspected or provider session is created. Live launch,
+endpoint ownership, billing admission, public interrupt API and Linux qualification
 remain open.

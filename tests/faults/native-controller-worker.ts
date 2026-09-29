@@ -50,7 +50,10 @@ await controller.run(
       runtimeKind: kind,
       hostId: 'host',
       endpointId: 'fixture',
-      nativeSessionId: 'session-1',
+      nativeSessionId:
+        kind === 'claude' && modeInput === 'create'
+          ? '6306ed11-5ca4-4c61-a177-5b64eddf5d5b'
+          : 'session-1',
       runtimeVersion: versions[kind],
       adapterVersion: 'v1',
       mode: 'managed',

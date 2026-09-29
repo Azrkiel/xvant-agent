@@ -31,7 +31,22 @@ const specs = {
       'SDKSystemMessage',
       'SDKControlInterruptRequest',
       'SDKControlInterruptResponse',
+      'Options',
     ],
+    selected: {
+      Options: [
+        'cwd',
+        'sessionId',
+        'resume',
+        'continue',
+        'forkSession',
+        'permissionMode',
+        'tools',
+        'mcpServers',
+        'plugins',
+        'settingSources',
+      ],
+    },
   },
   opencode: {
     package: '@opencode-ai/sdk',
@@ -94,10 +109,21 @@ for (const [kind, spec] of Object.entries(specs)) {
       throw new Error('UNSUPPORTED_DECLARATION');
     declarations[node.name.text] = node.type.members
       .filter(ts.isPropertySignature)
+      .filter(
+        (member) =>
+          !spec.selected?.[node.name.text] ||
+          spec.selected[node.name.text].includes(member.name.getText(source)),
+      )
       .map((member) => ({
         name: member.name.getText(source),
         required: !member.questionToken,
       }));
+    if (
+      spec.selected?.[node.name.text] &&
+      declarations[node.name.text].length !==
+        spec.selected[node.name.text].length
+    )
+      throw new Error('MISSING_SELECTED_FIELD');
   }
   if (Object.keys(declarations).length !== spec.roots.length)
     throw new Error('MISSING_DECLARATION');

@@ -251,7 +251,7 @@ try {
         controller.liveProvidersTested.length ||
         controller.state !== 'ready_for_acceptance' ||
         controller.verification !== 'passed' ||
-        controller.journalEntries !== (kind === 'claude' ? 7 : 6) ||
+        controller.journalEntries !== (kind === 'claude' ? 8 : 6) ||
         controller.activeCount !== 0 ||
         controller.accepted !== false
       )
@@ -277,34 +277,35 @@ try {
         interruption.accepted !== false
       )
         throw new Error('Native interrupt fixture failed');
-      if (kind === 'opencode') {
-        for (const scenario of ['permission', 'interrupt']) {
-          const checkId = 'opencode-create-' + scenario;
-          check(checkId, [
-            'scripts/native-controller-fixture.mjs',
-            kind,
-            scenario,
-            'create',
-          ]);
-          const created = JSON.parse(
-            readFileSync(resolve(artifacts, checkId + '.log'), 'utf8'),
-          );
-          if (
-            created.classification !== 'offline' ||
-            created.liveProvidersTested.length ||
-            created.sessionBound !== true ||
-            created.nativeSessionId !== 'created-1' ||
-            created.activeCount !== 0 ||
-            created.accepted !== false ||
-            (scenario === 'permission'
-              ? created.state !== 'ready_for_acceptance' ||
-                created.verification !== 'passed'
-              : created.state !== 'needs_attention' ||
-                created.outcome !== 'cancelled' ||
-                created.verification !== undefined)
-          )
-            throw new Error('OpenCode session creation fixture failed');
-        }
+      for (const scenario of ['permission', 'interrupt']) {
+        const checkId = kind + '-create-' + scenario;
+        check(checkId, [
+          'scripts/native-controller-fixture.mjs',
+          kind,
+          scenario,
+          'create',
+        ]);
+        const created = JSON.parse(
+          readFileSync(resolve(artifacts, checkId + '.log'), 'utf8'),
+        );
+        if (
+          created.classification !== 'offline' ||
+          created.liveProvidersTested.length ||
+          created.sessionBound !== (kind === 'opencode') ||
+          created.nativeSessionId !==
+            (kind === 'opencode'
+              ? 'created-1'
+              : '6306ed11-5ca4-4c61-a177-5b64eddf5d5b') ||
+          created.activeCount !== 0 ||
+          created.accepted !== false ||
+          (scenario === 'permission'
+            ? created.state !== 'ready_for_acceptance' ||
+              created.verification !== 'passed'
+            : created.state !== 'needs_attention' ||
+              created.outcome !== 'cancelled' ||
+              created.verification !== undefined)
+        )
+          throw new Error('Native session creation fixture failed');
       }
     }
   }

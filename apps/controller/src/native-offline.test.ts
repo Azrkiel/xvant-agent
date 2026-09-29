@@ -72,6 +72,7 @@ for (const kind of ['claude', 'opencode'] as const) {
       .entries('connection')
       .filter((entry) => entry.direction === 'out');
     expect(outgoing.map((entry) => entry.method)).toEqual([
+      ...(kind === 'claude' ? ['fixture/claude-launch'] : []),
       'fixture/setup',
       'fixture/start',
     ]);
@@ -138,12 +139,14 @@ for (const kind of ['claude', 'opencode'] as const) {
       );
       const entries = store.providers.entries('connection');
       expect(entries.filter((entry) => entry.direction === 'out')).toHaveLength(
-        scenario === 'permission' ? 3 : 2,
+        (scenario === 'permission' ? 3 : 2) + (kind === 'claude' ? 1 : 0),
       );
       expect(entries.filter((entry) => entry.direction === 'in')).toHaveLength(
         (scenario === 'permission' ? 3 : 2) + (kind === 'claude' ? 1 : 0),
       );
-      expect(entries[0]?.method).toBe('fixture/setup');
+      expect(entries[0]?.method).toBe(
+        kind === 'claude' ? 'fixture/claude-launch' : 'fixture/setup',
+      );
       if (scenario === 'permission') {
         const denial = entries.findIndex(
           (entry) => entry.method === 'fixture/permission-denial',
@@ -194,8 +197,8 @@ for (const kind of ['claude', 'opencode'] as const) {
     if (point === 'provider.send.before_commit')
       expect(entries).toHaveLength(0);
     if (point === 'provider.receive.before_commit') {
-      expect(entries).toHaveLength(1);
-      expect(entries[0]?.method).toBe('fixture/setup');
+      expect(entries).toHaveLength(kind === 'claude' ? 2 : 1);
+      expect(entries.at(-1)?.method).toBe('fixture/setup');
     }
     expect(controller.activeCount).toBe(0);
   });
@@ -380,9 +383,134 @@ it('retains the newly bound session when stopped before dispatch', async () => {
       .filter((entry) => entry.method === 'fixture/start'),
   ).toHaveLength(0);
 });
-it('rejects unsupported Claude creation before reservation', async () => {
+it('rejects an invalid Claude creation UUID before reservation', async () => {
   await expect(
     controller.run(spec('claude'), 'success', 'create'),
-  ).rejects.toThrow('MODE_UNSUPPORTED');
+  ).rejects.toThrow('INVALID_INPUT');
   expect(store.getTask('task').state).toBe('queued');
+});
+const claudeSession = '6306ed11-5ca4-4c61-a177-5b64eddf5d5b';
+const claudeCreation = () => ({
+  ...spec('claude'),
+  worker: { ...spec('claude').worker, nativeSessionId: claudeSession },
+});
+it.each(['success', 'permission', 'interrupt'])(
+  'launches a reserved Claude creation UUID through %s',
+  async (scenario) => {
+    const result = await controller.run(claudeCreation(), scenario, 'create');
+    expect(result.state).toBe(
+      scenario === 'interrupt' ? 'needs_attention' : 'ready_for_acceptance',
+    );
+    const saved = store.providers.get('connection');
+    expect(saved.worker.nativeSessionId).toBe(claudeSession);
+    expect(
+      store.providers.occupied(
+        'native:' + JSON.stringify(['claude', 'host', claudeSession]),
+      ),
+    ).toBe(true);
+    expect(saved.sessionBound).toBeUndefined();
+    const first = store.providers.entries('connection')[0];
+    expect(first?.method).toBe('fixture/claude-launch');
+    const descriptor = JSON.parse(first!.frame!);
+    expect(descriptor.options.sessionId).toBe(claudeSession);
+    expect(descriptor.options).not.toHaveProperty('resume');
+    if (scenario !== 'interrupt') {
+      expect(saved.verification?.status).toBe('passed');
+      if (saved.verification?.status !== 'passed')
+        throw new Error('Expected verification');
+      expect(saved.verification.evidence.nativeSessionId).toBe(claudeSession);
+    } else expect(saved.outcome).toBe('cancelled');
+    expect(controller.activeCount).toBe(0);
+  },
+);
+it('persists explicit Claude resume options instead of an implicit latest session', async () => {
+  await controller.run(spec('claude'));
+  const first = store.providers.entries('connection')[0];
+  expect(first?.method).toBe('fixture/claude-launch');
+  const launch = JSON.parse(first!.frame!).options;
+  expect(launch.resume).toBe('custom-session');
+  expect(launch).not.toHaveProperty('sessionId');
+  expect(launch).not.toHaveProperty('continue');
+});
+it.each(['launch-error', 'launch-timeout', 'wrong-session'])(
+  'retains Claude UUID after %s without verification',
+  async (scenario) => {
+    expect(
+      (await controller.run(claudeCreation(), scenario, 'create')).state,
+    ).toBe('needs_attention');
+    expect(store.providers.get('connection').status).toBe('unknown');
+    expect(store.providers.get('connection').verification).toBeUndefined();
+    expect(
+      store.providers.occupied(
+        'native:' + JSON.stringify(['claude', 'host', claudeSession]),
+      ),
+    ).toBe(true);
+    expect(controller.activeCount).toBe(0);
+  },
+);
+it('refuses a Claude UUID collision before persisting launch intent', async () => {
+  store.create('other-create', {
+    id: 'other',
+    projectId: 'project',
+    objective: 'Other',
+    requiredCheckIds: ['test'],
+    acceptanceCriteria: ['Pass'],
+  });
+  store.queue('other-queue', 'other', 0);
+  store.providers.reserve({
+    ...claudeCreation(),
+    taskId: 'other',
+    connectionId: 'other',
+    attemptId: 'other',
+    workspaceId: 'other',
+    worker: { ...claudeCreation().worker, id: 'other' },
+  });
+  await expect(
+    controller.run(claudeCreation(), 'success', 'create'),
+  ).rejects.toThrow('LEASE_BUSY');
+  expect(store.getTask('task').state).toBe('queued');
+  expect(() => store.providers.get('connection')).toThrow('NOT_FOUND');
+  expect(controller.activeCount).toBe(0);
+});
+it('never starts a Claude peer when stopped after launch intent persistence', async () => {
+  let launched = false;
+  fault = (point) => {
+    if (point === 'native.before_launch') controller.stop();
+    if (point === 'native.after_launch') launched = true;
+  };
+  expect(
+    (await controller.run(claudeCreation(), 'success', 'create')).state,
+  ).toBe('needs_attention');
+  expect(
+    store.providers.entries('connection').map((entry) => entry.method),
+  ).toEqual(['fixture/claude-launch']);
+  expect(controller.activeCount).toBe(0);
+  expect(launched).toBe(false);
+});
+it('fences a stale Claude owner between launch intent and process startup', async () => {
+  let recovery: Store | undefined;
+  let launched = false;
+  fault = (point) => {
+    if (point === 'native.before_launch') {
+      recovery = new Store(join(root, 'state.sqlite'), {
+        owner: 'recovery',
+        now: () => Date.now() + 120000,
+      });
+      recovery.recover();
+    }
+    if (point === 'native.after_launch') launched = true;
+  };
+  try {
+    expect(
+      (await controller.run(claudeCreation(), 'success', 'create')).state,
+    ).toBe('needs_attention');
+    expect(store.providers.get('connection').status).toBe('unknown');
+    expect(
+      store.providers.entries('connection').map((entry) => entry.method),
+    ).toEqual(['fixture/claude-launch']);
+    expect(launched).toBe(false);
+    expect(controller.activeCount).toBe(0);
+  } finally {
+    recovery?.close();
+  }
 });

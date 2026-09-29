@@ -63,7 +63,7 @@ for (const kind of ['claude', 'opencode']) {
             : 1,
         );
         if (point === 'provider.receive.before_commit')
-          expect(entries).toHaveLength(1);
+          expect(entries).toHaveLength(kind === 'claude' ? 2 : 1);
         expect(
           store.events(0).some((event) => event.kind === 'native.accepted'),
         ).toBe(false);

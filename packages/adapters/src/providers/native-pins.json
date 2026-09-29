@@ -28,6 +28,48 @@
           "required": false
         }
       ],
+      "Options": [
+        {
+          "name": "continue",
+          "required": false
+        },
+        {
+          "name": "cwd",
+          "required": false
+        },
+        {
+          "name": "tools",
+          "required": false
+        },
+        {
+          "name": "forkSession",
+          "required": false
+        },
+        {
+          "name": "mcpServers",
+          "required": false
+        },
+        {
+          "name": "permissionMode",
+          "required": false
+        },
+        {
+          "name": "plugins",
+          "required": false
+        },
+        {
+          "name": "resume",
+          "required": false
+        },
+        {
+          "name": "sessionId",
+          "required": false
+        },
+        {
+          "name": "settingSources",
+          "required": false
+        }
+      ],
       "SDKControlInitializeRequest": [
         {
           "name": "subtype",

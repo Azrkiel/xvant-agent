@@ -10,6 +10,10 @@ import { WorkerSupervisor } from '../../../packages/supervisor/src/index.ts';
 import { NativeStream } from '../../../packages/adapters/src/providers/native-stream.ts';
 import { NativeLifecycle } from '../../../packages/adapters/src/providers/native-lifecycle.ts';
 import {
+  buildClaudeLaunch,
+  type ClaudeLaunchOptions,
+} from '../../../packages/adapters/src/providers/claude-launch.ts';
+import {
   versions,
   type StreamKind,
 } from '../../../packages/adapters/src/providers/native-profiles.ts';
@@ -38,6 +42,8 @@ const scenarioSchema = z.enum([
   'create-reused',
   'create-permission',
   'create-partial',
+  'launch-error',
+  'launch-timeout',
 ]);
 type Checks = Record<string, { executable: string; args: readonly string[] }>;
 /** Fixed synthetic peers only. OpenCode HTTP descriptors travel over fixture pipes. */
@@ -91,11 +97,13 @@ export class OfflineNativeController {
       input.worker.runtimeVersion !== versions[kind]
     )
       throw new Error('VERSION_UNSUPPORTED');
-    if (mode === 'create' && kind !== 'opencode')
-      throw new Error('MODE_UNSUPPORTED');
     const root = this.workspaces[input.workspaceId];
     if (!Object.hasOwn(this.workspaces, input.workspaceId) || !root)
       throw new Error('WORKSPACE_UNAVAILABLE');
+    const launch =
+      kind === 'claude'
+        ? buildClaudeLaunch(mode, input.worker.nativeSessionId, root)
+        : undefined;
     if (
       this.store
         .getTask(input.taskId)
@@ -103,7 +111,7 @@ export class OfflineNativeController {
     )
       throw new Error('VERIFIER_UNAVAILABLE');
     const connection = this.store.providers.reserve(
-      mode === 'create'
+      mode === 'create' && kind === 'opencode'
         ? {
             ...input,
             worker: {
@@ -122,7 +130,7 @@ export class OfflineNativeController {
     }, this.store.heartbeatIntervalMs);
     heartbeat.unref();
     try {
-      return await this.execute(connection, kind, scenario, root, mode);
+      return await this.execute(connection, kind, scenario, root, mode, launch);
     } finally {
       clearInterval(heartbeat);
     }
@@ -133,6 +141,7 @@ export class OfflineNativeController {
     scenario: string,
     root: string,
     mode: 'resume' | 'create',
+    launch: ClaudeLaunchOptions | undefined,
   ) {
     const id = connection.connectionId,
       token = connection.token;
@@ -141,7 +150,7 @@ export class OfflineNativeController {
       connection.worker.nativeSessionId,
       connection.attemptId,
       root,
-      mode,
+      kind === 'claude' ? 'resume' : mode,
     );
     const wantsInterrupt = scenario.startsWith('interrupt');
     let dispatched = false,
@@ -159,7 +168,12 @@ export class OfflineNativeController {
         },
         handleControl: (message) => {
           const handled = life.receive(message);
-          if (mode === 'create' && life.ready && !sessionBound) {
+          if (
+            mode === 'create' &&
+            kind === 'opencode' &&
+            life.ready &&
+            !sessionBound
+          ) {
             this.store.providers.bindSession(id, token, life.nativeSessionId);
             stream.bindSession(life.nativeSessionId);
             sessionBound = true;
@@ -183,8 +197,8 @@ export class OfflineNativeController {
       }
       if (run) this.supervisor.cancel(run.identity);
     };
-    const write = async (method: string, wire: unknown) => {
-      if (failed || this.stopped || !run) throw new Error('OPERATION_UNKNOWN');
+    const persist = (method: string, wire: unknown) => {
+      if (failed || this.stopped) throw new Error('OPERATION_UNKNOWN');
       const frame = JSON.stringify(wire) + '\n';
       // Journal IDs label host sends, not vendor JSON-RPC IDs.
       this.store.providers.recordIntent(id, token, {
@@ -193,11 +207,23 @@ export class OfflineNativeController {
         frame,
       });
       this.store.providers.assertWritable(id, token);
-      await run.write(frame);
+      return frame;
+    };
+    const write = async (method: string, wire: unknown) => {
+      if (!run) throw new Error('OPERATION_UNKNOWN');
+      await run.write(persist(method, wire));
     };
     try {
       this.fault('native.after_reserve');
+      if (launch) {
+        persist('fixture/claude-launch', {
+          fixture: 'claude-launch',
+          options: launch,
+        });
+        this.fault('native.before_launch');
+      }
       if (this.stopped) throw new Error('CONTROLLER_STOPPED');
+      this.store.providers.assertWritable(id, token);
       run = this.supervisor.start({
         executable: process.execPath,
         args: [
@@ -208,6 +234,7 @@ export class OfflineNativeController {
           scenario,
           connection.worker.nativeSessionId,
           connection.attemptId,
+          ...(launch ? [JSON.stringify(launch)] : []),
         ],
         cwd: root,
         workerId: connection.worker.id,
@@ -263,8 +290,11 @@ export class OfflineNativeController {
           },
         },
       });
+      if (launch) this.fault('native.after_launch');
       await write(
-        mode === 'create' ? 'session/create' : 'fixture/setup',
+        mode === 'create' && kind === 'opencode'
+          ? 'session/create'
+          : 'fixture/setup',
         life.setup(),
       );
       const stopped = await run.result;
