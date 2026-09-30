@@ -109,6 +109,12 @@ export async function runLiveParallel(
       roles: ['worker', 'reviewer'],
     },
     {
+      alias: 'claude-2',
+      runtimeKind: 'claude',
+      quotaGroupId: 'claude-subscription',
+      roles: ['reviewer'],
+    },
+    {
       alias: 'opencode-1',
       runtimeKind: 'opencode',
       quotaGroupId: 'opencode-free',

@@ -202,8 +202,10 @@ if (command === 'runtimes') {
         ': ' +
         (state.review.approve ? 'approved' : 'changes requested') +
         (state.review.independent
-          ? ''
-          : ' (not independent: same runtime as the work)'),
+          ? state.review.sameRuntime
+            ? ' (independent worker, same runtime as some of the work)'
+            : ' (independent)'
+          : ' (not independent: the reviewer also implemented)'),
       ...state.review.findings.map((f) => '\n    - ' + f),
     );
   if (state.integration)

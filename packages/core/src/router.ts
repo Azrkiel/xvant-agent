@@ -83,6 +83,8 @@ export function routeNode(
   const score = (w: RoutableWorker) => {
     let s = 0;
     if (node.dependsOn.some((d) => w.completed.includes(d))) s += 4;
+    // A reviewer who wrote none of the work comes first; another runtime next.
+    if (node.role === 'reviewer' && !w.completed.length) s += 16;
     if (
       node.role === 'reviewer' &&
       !context.implementerRuntimes?.includes(w.runtimeKind)
@@ -101,10 +103,12 @@ export function routeNode(
   const reasons = ['Idle and eligible for role ' + node.role];
   if (node.dependsOn.some((d) => chosen.completed.includes(d)))
     reasons.push('Continues its own dependency work');
+  if (node.role === 'reviewer' && !chosen.completed.length)
+    reasons.push('Wrote none of the reviewed work');
   if (
     node.role === 'reviewer' &&
     !context.implementerRuntimes?.includes(chosen.runtimeKind)
   )
-    reasons.push('Independent runtime for review');
+    reasons.push('Different runtime from the implementers');
   return { alias: chosen.alias, reasons, excluded };
 }

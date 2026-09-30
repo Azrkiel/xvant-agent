@@ -193,3 +193,19 @@ describe('reviewer independence', () => {
     ).toBe('opencode-1');
   });
 });
+
+describe('review routing', () => {
+  it('prefers a reviewer who implemented nothing, even on a used runtime', () => {
+    const decision = routeNode(
+      task({ role: 'reviewer' }),
+      [
+        worker('codex-1', { completed: ['api'] }),
+        worker('claude-1', { completed: ['web'] }),
+        worker('claude-2'),
+      ],
+      { implementerRuntimes: ['codex', 'claude'] },
+    );
+    expect(decision.alias).toBe('claude-2');
+    expect(decision.reasons).toContain('Wrote none of the reviewed work');
+  });
+});

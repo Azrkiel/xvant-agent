@@ -110,8 +110,10 @@ export interface RootState {
     alias: string;
     approve: boolean;
     findings: string[];
-    /** Whether the reviewer's runtime wrote none of the reviewed work. */
+    /** Whether the reviewer implemented none of the reviewed work. */
     independent: boolean;
+    /** Whether an implementer used the reviewer's runtime (a weaker check). */
+    sameRuntime: boolean;
   } | null;
   reason?: string;
 }
@@ -600,7 +602,8 @@ export class Orchestrator {
           state.review = {
             alias: reviewer.alias,
             ...verdict,
-            independent: !implementers.has(reviewerRuntime),
+            independent: !(completed.get(reviewer.alias) ?? []).length,
+            sameRuntime: implementers.has(reviewerRuntime),
           };
           save('graph.reviewed', state.review);
         } else
@@ -609,6 +612,7 @@ export class Orchestrator {
             approve: false,
             findings: ['No reviewer available'],
             independent: false,
+            sameRuntime: false,
           };
       }
       state.phase = 'ready';
