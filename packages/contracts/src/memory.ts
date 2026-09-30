@@ -70,3 +70,28 @@ export const memorySearchSchema = z.strictObject({
   limit: z.number().int().min(1).max(200).optional(),
 });
 export type MemorySearch = z.input<typeof memorySearchSchema>;
+/** Portable export entry: no status, task binding or supersession from the source project. */
+export const memoryBundleEntrySchema = z.strictObject({
+  id: idSchema,
+  namespace: memoryNamespaceSchema,
+  kind: memoryProposalSchema.shape.kind,
+  content: memoryProposalSchema.shape.content,
+  contentHash: hashSchema,
+  confidence: memoryProposalSchema.shape.confidence,
+  anchors: memoryProposalSchema.shape.anchors,
+  provenance: z.strictObject({
+    source: z.enum(['user', 'controller', 'worker', 'import']),
+    actorId: idSchema,
+    revision: revisionSchema.optional(),
+  }),
+});
+export type MemoryBundleEntry = z.infer<typeof memoryBundleEntrySchema>;
+export const memoryBundleSchema = z.strictObject({
+  version: z.literal(1),
+  format: z.literal('xvant-memory'),
+  projectId: idSchema,
+  exportedAt: z.number().int().nonnegative(),
+  records: z.array(memoryBundleEntrySchema).max(10000),
+  bundleHash: hashSchema,
+});
+export type MemoryBundle = z.infer<typeof memoryBundleSchema>;
