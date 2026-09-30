@@ -77,7 +77,8 @@ describe('handoff', () => {
     expect(() =>
       createHandoff(task, input({ attemptId: 'attempt-1' }), 1),
     ).toThrow('STALE_EVIDENCE');
-    const { attemptId: _unused, ...idle } = task;
+    const idle: Task = { ...task };
+    delete idle.attemptId;
     expect(() => createHandoff(idle, input(), 1)).toThrow('STALE_EVIDENCE');
   });
   it.each([
