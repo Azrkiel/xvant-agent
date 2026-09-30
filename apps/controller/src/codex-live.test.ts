@@ -116,8 +116,8 @@ it('edits its worktree, binds identities and prepares patch evidence for review'
   expect(result.tokens).toBe(1234);
   expect(result.auth).toEqual({ mode: 'chatgpt', plan: 'plus' });
   const saved = store.providers.get('connection');
-  expect(saved.worker.nativeSessionId).toBe(
-    '01a0f355-2260-71d2-bd32-9fd8718d9045',
+  expect(saved.worker.nativeSessionId).toMatch(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
   );
   expect(saved.nativeRunId).toBe('01a0f355-24f5-7903-b322-6915d609062d');
   const evidence = store.providers.acceptanceEvidence('connection');

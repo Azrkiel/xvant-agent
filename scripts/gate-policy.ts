@@ -105,7 +105,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/adapters/src/opencode/endpoint.test.ts': 9,
               'apps/controller/src/opencode-http.test.ts': 16,
               'tests/faults/opencode-http.test.ts': 6,
-              'apps/controller/src/opencode-live.test.ts': 20,
+              'apps/controller/src/opencode-live.test.ts': 21,
               'packages/adapters/src/opencode/cli-stream.test.ts': 21,
               'tests/faults/opencode-live.test.ts': 12,
               'packages/contracts/src/live.test.ts': 9,
@@ -113,6 +113,8 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/adapters/src/live/live-streams.test.ts': 11,
               'apps/controller/src/codex-live.test.ts': 6,
               'apps/controller/src/claude-live.test.ts': 7,
+              'packages/adapters/src/live/discover.test.ts': 3,
+              'apps/controller/src/live-roster.test.ts': 2,
             }
           : {}),
         ...(phase === '04' || phase === '05'
@@ -125,6 +127,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/context/src/inspect.test.ts': 2,
               'packages/context/src/transfer.test.ts': 6,
               'apps/controller/src/handoff-fixture.test.ts': 3,
+              'packages/context/src/render.test.ts': 3,
             }
           : {}),
         ...(phase === '05'

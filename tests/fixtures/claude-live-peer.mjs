@@ -3,13 +3,15 @@
 // working directory and never calls a model.
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { followInstruction } from './fake-edit.mjs';
 
 const [scenario, ...args] = process.argv.slice(2);
 if (args.includes('--version')) {
   process.stdout.write('2.1.285 (Claude Code)\n');
   process.exit(0);
 }
-const flag = (name) => args[args.indexOf(name) + 1];
+const flag = (name) =>
+  args.includes(name) ? args[args.indexOf(name) + 1] : undefined;
 const session =
   scenario === 'wrong-session'
     ? '00000000-0000-4000-8000-000000000000'
@@ -32,7 +34,8 @@ process.stdin.on('end', () => {
     claude_code_version: '2.1.285',
     uuid: 'init-1',
   });
-  if (scenario === 'hang') {
+  const followed = followInstruction(prompt);
+  if (scenario === 'hang' || followed === 'hang') {
     setInterval(() => {}, 1000);
     return;
   }
@@ -62,7 +65,8 @@ process.stdin.on('end', () => {
     },
     session_id: session,
   });
-  writeFileSync(join(process.cwd(), 'hello.txt'), 'hi from claude\n');
+  if (followed === 'unmatched')
+    writeFileSync(join(process.cwd(), 'hello.txt'), 'hi from claude\n');
   send({
     type: 'assistant',
     message: { content: [{ type: 'text', text: 'DONE' }] },

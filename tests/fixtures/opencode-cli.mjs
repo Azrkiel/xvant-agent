@@ -52,7 +52,19 @@ if (scenario === 'auth') {
   );
   process.exit(1);
 }
-if (scenario === 'tools' || scenario === 'billed') {
+const prompt = args.includes('--') ? args[args.indexOf('--') + 1] : '';
+const { followInstruction } = await import('./fake-edit.mjs');
+const followed = scenario === 'tools' ? followInstruction(prompt) : 'unmatched';
+if (scenario === 'tools-hang' || followed === 'hang') {
+  console.log(
+    JSON.stringify({
+      ...base,
+      type: 'step_start',
+      part: { id: 'p1', sessionID, messageID: 'msg_1', type: 'step-start' },
+    }),
+  );
+  setInterval(() => {}, 1000);
+} else if (scenario === 'tools' || scenario === 'billed') {
   // Shaped after a live 2.0.19 tool run: a tool step, then a text step.
   const { writeFileSync } = await import('node:fs');
   if (
@@ -66,7 +78,8 @@ if (scenario === 'tools' || scenario === 'billed') {
     type: 'step_start',
     part: part('msg_1', { id: 'p1', type: 'step-start', snapshot: 'a' }),
   });
-  writeFileSync('hello.txt', 'hi from opencode\n');
+  if (followed === 'unmatched')
+    writeFileSync('hello.txt', 'hi from opencode\n');
   emit({
     type: 'tool_use',
     part: part('msg_1', {

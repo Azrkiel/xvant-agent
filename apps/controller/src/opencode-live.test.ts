@@ -322,3 +322,23 @@ it('refuses workspace writes without acknowledged native bypass', async () => {
   ).rejects.toThrow();
   expect(() => store.providers.get('connection')).toThrow('NOT_FOUND');
 });
+
+it('cancels a workspace-write run by stopping the process that owns its turn', async () => {
+  const c = writer('tools-hang');
+  const running = c.runLive(writeSpec);
+  let admitted;
+  for (let i = 0; i < 200 && !admitted; i++) {
+    await new Promise((r) => setTimeout(r, 25));
+    try {
+      admitted = c.interrupt('connection', 'operator');
+    } catch {
+      /* not launched yet */
+    }
+  }
+  expect(admitted).toEqual({ status: 'requested' });
+  await running;
+  const saved = store.providers.get('connection');
+  expect(saved.outcome).toBe('cancelled');
+  expect(saved.interrupt?.actorId).toBe('operator');
+  expect(saved.verification).toBeUndefined();
+});

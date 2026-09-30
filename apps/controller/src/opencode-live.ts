@@ -356,6 +356,24 @@ export class LiveOpenCodeController {
         this.interrupts.delete(id);
         this.options.fault?.('live.after_shutdown');
         if (
+          write &&
+          interrupted &&
+          !failed &&
+          !this.stopped &&
+          stopped.reason === 'cancelled'
+        ) {
+          // `run` owns its turn in-process; once it is gone the turn cannot continue.
+          const runId = 'interrupted:' + input.attemptId;
+          this.store.providers.bindRun(id, token, runId);
+          this.store.providers.finish(id, token, runId, 'cancelled');
+          return {
+            task: this.store.getTask(input.taskId),
+            finalText: '',
+            tokens: null,
+            auth: { mode: 'opencode-free', plan: input.liveApproval.model },
+          };
+        }
+        if (
           failed ||
           interrupted ||
           this.stopped ||

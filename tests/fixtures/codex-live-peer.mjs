@@ -5,13 +5,15 @@
 import { createInterface } from 'node:readline';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { followInstruction } from './fake-edit.mjs';
 
 const scenario = process.argv[2] ?? 'write';
 if (process.argv.includes('--version')) {
   process.stdout.write('codex-cli 0.158.0-alpha.2.1\n');
   process.exit(0);
 }
-let threadId = '01a0f355-2260-71d2-bd32-9fd8718d9045';
+// Each process mints its own thread, like the real app-server.
+let threadId = (await import('node:crypto')).randomUUID();
 const turnId = '01a0f355-24f5-7903-b322-6915d609062d';
 const now = () => Date.now();
 const send = (value) => process.stdout.write(JSON.stringify(value) + '\n');
@@ -113,7 +115,8 @@ input.on('line', (line) => {
     case 'turn/start':
       note('turn/started', { threadId, turn: turn('inProgress') });
       send({ id: request.id, result: { turn: turn('inProgress') } });
-      if (scenario === 'hang') break;
+      const followed = followInstruction(request.params.input?.[0]?.text ?? '');
+      if (scenario === 'hang' || followed === 'hang') break;
       if (scenario === 'fail') {
         note('turn/completed', { threadId, turn: turn('failed') });
         break;
@@ -132,7 +135,8 @@ input.on('line', (line) => {
         turnId,
         startedAtMs: 1,
       });
-      writeFileSync(join(process.cwd(), 'hello.txt'), 'hi from codex\n');
+      if (followed === 'unmatched')
+        writeFileSync(join(process.cwd(), 'hello.txt'), 'hi from codex\n');
       note('item/commandExecution/outputDelta', {
         threadId,
         turnId,
