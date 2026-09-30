@@ -35,6 +35,8 @@ export interface LiveCodexOptions {
   checkTimeoutMs?: number;
   /** Workspaces that are Git worktrees, with their base commits. */
   gitBases?: Record<string, string>;
+  /** XVANT's task-scoped MCP bridge; the token reaches Codex only by environment. */
+  mcp?: { url: string; token: string; tools: readonly string[] };
   onEvent?: (event: LiveEvent) => void;
   fault?: (point: string) => void;
 }
@@ -318,7 +320,21 @@ export class LiveCodexController {
     try {
       run = this.supervisor.start({
         executable: this.options.executable,
-        args: [...this.options.prefixArgs, 'app-server'],
+        // The worker sees XVANT's bridge or no MCP servers at all, never the user's.
+        args: [
+          ...this.options.prefixArgs,
+          'app-server',
+          '-c',
+          'mcp_servers=' +
+            (this.options.mcp
+              ? '{xvant={url=' +
+                JSON.stringify(this.options.mcp.url) +
+                ',bearer_token_env_var="XVANT_MCP_TOKEN"}}'
+              : '{}'),
+        ],
+        ...(this.options.mcp
+          ? { env: { XVANT_MCP_TOKEN: this.options.mcp.token } }
+          : {}),
         cwd: root,
         workerId: connection.worker.id,
         attemptId: connection.attemptId,

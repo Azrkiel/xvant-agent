@@ -37,7 +37,8 @@ export const RUNTIME_TOOL_PROFILES: readonly RuntimeToolProfile[] = [
         restriction: 'untested',
       },
     ],
-    mcpClient: 'untested',
+    // Live G05 (2026-09-30): a real client called file.read through the bridge.
+    mcpClient: 'tested-live',
   },
   {
     runtime: 'claude',
@@ -59,7 +60,8 @@ export const RUNTIME_TOOL_PROFILES: readonly RuntimeToolProfile[] = [
         restriction: 'untested',
       },
     ],
-    mcpClient: 'untested',
+    // Live G05 (2026-09-30): a real client called file.read through the bridge.
+    mcpClient: 'tested-live',
   },
   {
     runtime: 'opencode',
@@ -80,7 +82,8 @@ export const RUNTIME_TOOL_PROFILES: readonly RuntimeToolProfile[] = [
         restriction: 'untested',
       },
     ],
-    mcpClient: 'untested',
+    // Live G05 (2026-09-30): a real client called file.read through the bridge.
+    mcpClient: 'tested-live',
   },
   { runtime: 'native-local', nativeTools: [], mcpClient: 'not-needed' },
   { runtime: 'simulated', nativeTools: [], mcpClient: 'not-needed' },

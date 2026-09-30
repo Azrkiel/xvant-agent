@@ -54,13 +54,23 @@ describe('compatibility matrix', () => {
       row('implement-change', 'native-local', 'trusted-local').status,
     ).toBe('supported');
   });
-  it('reports external runtimes as unverified with explicit bypass risks under trusted-local', () => {
+  it('supports external runtimes under trusted-local only with acknowledged bypass risks', () => {
+    // Their MCP clients reached XVANT's bridge in the live G05 gate.
     const external = row('implement-change', 'opencode', 'trusted-local');
     expect(external).toMatchObject({
-      status: 'unverified',
+      status: 'supported',
       requiresAcknowledgement: true,
     });
     expect(external.risks.join('\n')).toMatch(/bypasses XVANT approvals/);
-    expect(external.reasons.join('\n')).toMatch(/MCP/);
+  });
+  it('keeps a runtime unverified while its MCP client is untested', () => {
+    const [untested] = compatibilityMatrix({
+      catalog: loadSkillCatalog(skillsDir),
+      tools,
+      profiles: ['trusted-local'],
+      runtimes: [{ runtime: 'codex', nativeTools: [], mcpClient: 'untested' }],
+    }).filter((entry) => entry.skill === 'implement-change');
+    expect(untested!.status).toBe('unverified');
+    expect(untested!.reasons.join('\n')).toMatch(/MCP/);
   });
 });

@@ -115,6 +115,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'apps/controller/src/claude-live.test.ts': 7,
               'packages/adapters/src/live/discover.test.ts': 3,
               'apps/controller/src/live-roster.test.ts': 2,
+              'apps/controller/src/live-gates.test.ts': 3,
             }
           : {}),
         ...(phase === '04' || phase === '05'
@@ -142,7 +143,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/skills/src/catalog.test.ts': 12,
               'packages/skills/src/hooks.test.ts': 4,
               'packages/skills/src/bundled.test.ts': 13,
-              'packages/skills/src/compatibility.test.ts': 4,
+              'packages/skills/src/compatibility.test.ts': 5,
               'packages/policy/src/runtimes.test.ts': 9,
               'apps/controller/src/tools-fixture.test.ts': 1,
             }

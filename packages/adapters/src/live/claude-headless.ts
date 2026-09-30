@@ -21,6 +21,8 @@ export function claudeArgs(turn: {
   sessionId: string;
   model: string;
   profile: ClaudeProfile;
+  /** XVANT's MCP bridge: a config file holding its URL and token, and the tool names. */
+  mcp?: { configPath: string; tools: readonly string[] };
 }): string[] {
   if (!LIVE_ROUTES.claude.session.test(turn.sessionId))
     throw new Error('SESSION_MISMATCH');
@@ -35,9 +37,16 @@ export function claudeArgs(turn: {
     turn.sessionId,
     '--permission-mode',
     turn.profile === 'workspace-write' ? 'acceptEdits' : 'default',
-    '--allowedTools=' + TOOLS[turn.profile],
+    '--allowedTools=' +
+      [
+        TOOLS[turn.profile],
+        ...(turn.mcp?.tools ?? []).map(
+          (tool) => 'mcp__xvant__' + tool.replaceAll('.', '_'),
+        ),
+      ].join(','),
     '--disallowedTools=WebFetch,WebSearch',
     '--strict-mcp-config',
+    ...(turn.mcp ? ['--mcp-config', turn.mcp.configPath] : []),
     '--setting-sources=project,local',
     ...(turn.model === 'default' ? [] : ['--model', turn.model]),
   ];

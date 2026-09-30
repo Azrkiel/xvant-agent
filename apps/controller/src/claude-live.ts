@@ -1,4 +1,7 @@
-import { isAbsolute } from 'node:path';
+import { randomBytes } from 'node:crypto';
+import { rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { isAbsolute, join } from 'node:path';
 import { Store } from '../../../packages/storage/src/store.ts';
 import type { ProviderDispatch } from '../../../packages/storage/src/providers.ts';
 import {
@@ -24,6 +27,8 @@ export interface LiveClaudeOptions {
   timeoutMs?: number;
   checkTimeoutMs?: number;
   gitBases?: Record<string, string>;
+  /** XVANT's task-scoped MCP bridge. The token stays out of the journal. */
+  mcp?: { url: string; token: string; tools: readonly string[] };
   onEvent?: (event: LiveEvent) => void;
   fault?: (point: string) => void;
 }
@@ -128,6 +133,10 @@ export class LiveClaudeController {
     const profile =
       approval.profile === 'workspace-write' ? 'workspace-write' : 'text';
     const session = input.worker.nativeSessionId;
+    const mcp = this.options.mcp;
+    const mcpConfig = mcp
+      ? join(tmpdir(), 'xvant-mcp-' + randomBytes(12).toString('hex') + '.json')
+      : undefined;
     const args = [
       ...this.options.prefixArgs,
       ...claudeArgs({
@@ -135,6 +144,9 @@ export class LiveClaudeController {
         sessionId: session,
         model: approval.model,
         profile,
+        ...(mcp && mcpConfig
+          ? { mcp: { configPath: mcpConfig, tools: mcp.tools } }
+          : {}),
       }),
     ];
     const unsetEnv = claudeUnsetEnv();
@@ -170,6 +182,21 @@ export class LiveClaudeController {
       }
     };
     try {
+      // The bridge token lives only in this private file, never in the journal.
+      if (mcp && mcpConfig)
+        writeFileSync(
+          mcpConfig,
+          JSON.stringify({
+            mcpServers: {
+              xvant: {
+                type: 'http',
+                url: mcp.url,
+                headers: { Authorization: 'Bearer ' + mcp.token },
+              },
+            },
+          }),
+          { flag: 'wx', mode: 0o600 },
+        );
       this.store.providers.recordIntent(id, token, {
         id: 1,
         method: 'claude/headless-run',
@@ -267,6 +294,7 @@ export class LiveClaudeController {
     } finally {
       this.interrupts.delete(id);
       if (run) await run.result;
+      if (mcpConfig) rmSync(mcpConfig, { force: true });
       clearInterval(heartbeat);
     }
     return this.outcome(input.taskId, result);

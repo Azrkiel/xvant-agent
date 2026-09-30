@@ -5,7 +5,11 @@
 import { createInterface } from 'node:readline';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { followInstruction } from './fake-edit.mjs';
+import { followInstruction, followMcpInstruction } from './fake-edit.mjs';
+// The bridge Codex would load from -c mcp_servers={xvant={url=...}}.
+const mcpUrl = /url="([^"]+)"/.exec(process.argv.join(' '))?.[1];
+const mcp = process.argv[2] !== 'no-mcp' &&
+  mcpUrl && { url: mcpUrl, token: process.env.XVANT_MCP_TOKEN };
 
 const scenario = process.argv[2] ?? 'write';
 if (process.argv.includes('--version')) {
@@ -42,7 +46,7 @@ const answer = {
 };
 const input = createInterface({ input: process.stdin });
 input.on('close', () => process.exit(0));
-input.on('line', (line) => {
+input.on('line', async (line) => {
   const request = JSON.parse(line);
   switch (request.method) {
     case 'initialize':
@@ -115,7 +119,10 @@ input.on('line', (line) => {
     case 'turn/start':
       note('turn/started', { threadId, turn: turn('inProgress') });
       send({ id: request.id, result: { turn: turn('inProgress') } });
-      const followed = followInstruction(request.params.input?.[0]?.text ?? '');
+      const text = request.params.input?.[0]?.text ?? '';
+      const followed = (await followMcpInstruction(text, mcp))
+        ? 'edited'
+        : followInstruction(text);
       if (scenario === 'hang' || followed === 'hang') break;
       if (scenario === 'fail') {
         note('turn/completed', { threadId, turn: turn('failed') });

@@ -3,7 +3,8 @@
 // working directory and never calls a model.
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { followInstruction } from './fake-edit.mjs';
+import { readFileSync } from 'node:fs';
+import { followInstruction, followMcpInstruction } from './fake-edit.mjs';
 
 const [scenario, ...args] = process.argv.slice(2);
 if (args.includes('--version')) {
@@ -19,7 +20,7 @@ const session =
 const send = (value) => process.stdout.write(JSON.stringify(value) + '\n');
 let prompt = '';
 process.stdin.on('data', (d) => (prompt += d));
-process.stdin.on('end', () => {
+process.stdin.on('end', async () => {
   if (!prompt.trim()) process.exit(1);
   send({
     type: 'system',
@@ -34,7 +35,18 @@ process.stdin.on('end', () => {
     claude_code_version: '2.1.285',
     uuid: 'init-1',
   });
-  const followed = followInstruction(prompt);
+  const config = args.includes('--mcp-config')
+    ? JSON.parse(readFileSync(flag('--mcp-config'), 'utf8')).mcpServers.xvant
+    : undefined;
+  const followed = (await followMcpInstruction(
+    prompt,
+    config && {
+      url: config.url,
+      token: config.headers.Authorization.slice('Bearer '.length),
+    },
+  ))
+    ? 'edited'
+    : followInstruction(prompt);
   if (scenario === 'hang' || followed === 'hang') {
     setInterval(() => {}, 1000);
     return;

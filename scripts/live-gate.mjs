@@ -10,12 +10,12 @@ import { discoverRuntime } from '../packages/adapters/src/live/discover.ts';
 const args = process.argv.slice(2);
 const value = (name) =>
   args.includes(name) ? args[args.indexOf(name) + 1] : undefined;
-const FIXTURES = { '03': ['roster'] };
+const FIXTURES = { '03': ['roster'], '04': ['handoff'], '05': ['mcp'] };
 const phase = value('--phase');
 const fixture = value('--fixture');
 if (!args.includes('--approve-live') || !FIXTURES[phase]?.includes(fixture)) {
   console.error(
-    'Usage: node scripts/live-gate.mjs --phase 03 --fixture roster --approve-live [--concurrency N]. Uses real subscription and free-model sessions.',
+    'Usage: node scripts/live-gate.mjs --phase 03|04|05 --fixture roster|handoff|mcp --approve-live [--concurrency N]. Uses real subscription and free-model sessions.',
   );
   process.exit(2);
 }
@@ -65,30 +65,48 @@ try {
       'Runtime not qualified: ' +
         missing.map(([k, f]) => k + '=' + f.status).join(', '),
     );
-  const { runLiveRoster } =
-    await import('../apps/controller/src/live-roster.ts');
   const started = Date.now();
-  const roster = await runLiveRoster(state, {
-    runtimes,
-    concurrency,
-    resume: true,
-    interrupt: true,
-    onEvent: (alias, event) => {
-      if (event.kind !== 'text')
-        console.log(
-          alias.padEnd(11),
-          event.kind.padEnd(8),
-          event.text.slice(0, 80),
-        );
-    },
-  });
+  const onEvent = (alias, event) => {
+    if (event.kind !== 'text')
+      console.log(
+        alias.padEnd(11),
+        event.kind.padEnd(8),
+        event.text.slice(0, 80),
+      );
+  };
+  let result;
+  if (fixture === 'roster') {
+    const { runLiveRoster } =
+      await import('../apps/controller/src/live-roster.ts');
+    result = await runLiveRoster(state, {
+      runtimes,
+      concurrency,
+      resume: true,
+      interrupt: true,
+      onEvent,
+    });
+    report.roster = result;
+  } else if (fixture === 'handoff') {
+    const { runLiveHandoff } =
+      await import('../apps/controller/src/live-handoff.ts');
+    result = await runLiveHandoff(state, {
+      runtimes,
+      from: 'codex',
+      to: 'claude',
+      onEvent,
+    });
+    report.handoff = result;
+  } else {
+    const { runLiveMcp } = await import('../apps/controller/src/live-mcp.ts');
+    result = await runLiveMcp(state, { runtimes, onEvent });
+    report.mcp = result;
+  }
   report.elapsedMs = Date.now() - started;
-  report.roster = roster;
-  report.problems = roster.problems;
+  report.problems = [...result.problems];
   if (sourceHash(root) !== report.sourceHash)
     report.problems.push('Source changed during the live gate');
   report.status =
-    report.problems.length === 0 && roster.activeCount === 0
+    report.problems.length === 0 && (result.activeCount ?? 0) === 0
       ? 'passed'
       : 'failed';
 } catch (error) {

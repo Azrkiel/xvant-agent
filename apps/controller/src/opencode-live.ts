@@ -27,13 +27,32 @@ interface Options {
   checkTimeoutMs?: number;
   /** Git worktree workspaces and their base commits (workspace-write). */
   gitBases?: Record<string, string>;
+  /** XVANT's task-scoped MCP bridge; the token stays in the child's environment. */
+  mcp?: { url: string; token: string; tools: readonly string[] };
   onEvent?: (event: LiveEvent) => void;
   fault?: (point: string) => void;
 }
-/** Tool permissions for workspace-write runs: edit and shell in the worktree, no web. */
-const WRITE_CONFIG = JSON.stringify({
-  permission: { edit: 'allow', bash: 'allow', webfetch: 'deny' },
-});
+/**
+ * Config for workspace-write runs: edit and shell in the worktree, no web,
+ * and XVANT's bridge as the only added MCP server.
+ */
+function writeConfig(mcp?: Options['mcp']): string {
+  return JSON.stringify({
+    permission: { edit: 'allow', bash: 'allow', webfetch: 'deny' },
+    ...(mcp
+      ? {
+          mcp: {
+            xvant: {
+              type: 'remote',
+              url: mcp.url,
+              enabled: true,
+              headers: { Authorization: 'Bearer ' + mcp.token },
+            },
+          },
+        }
+      : {}),
+  });
+}
 /**
  * Trusted-local, explicitly approved OpenCode CLI execution on free models.
  * 	ext answers into a host-written result file; workspace-write lets the
@@ -317,7 +336,13 @@ export class LiveOpenCodeController {
           timeoutMs: this.options.timeoutMs!,
           maxOutputBytes: 1048576,
           userApprovedTrustedLocal: true,
-          ...(write ? { env: { OPENCODE_CONFIG_CONTENT: WRITE_CONFIG } } : {}),
+          ...(write
+            ? {
+                env: {
+                  OPENCODE_CONFIG_CONTENT: writeConfig(this.options.mcp),
+                },
+              }
+            : {}),
           interactive: {
             retainStdout: !write,
             onStdout: (bytes) => {

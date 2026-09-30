@@ -53,8 +53,22 @@ if (scenario === 'auth') {
   process.exit(1);
 }
 const prompt = args.includes('--') ? args[args.indexOf('--') + 1] : '';
-const { followInstruction } = await import('./fake-edit.mjs');
-const followed = scenario === 'tools' ? followInstruction(prompt) : 'unmatched';
+const { followInstruction, followMcpInstruction } =
+  await import('./fake-edit.mjs');
+const bridge = JSON.parse(process.env.OPENCODE_CONFIG_CONTENT ?? '{}').mcp
+  ?.xvant;
+const followed =
+  scenario !== 'tools'
+    ? 'unmatched'
+    : (await followMcpInstruction(
+          prompt,
+          bridge && {
+            url: bridge.url,
+            token: bridge.headers.Authorization.slice('Bearer '.length),
+          },
+        ))
+      ? 'edited'
+      : followInstruction(prompt);
 if (scenario === 'tools-hang' || followed === 'hang') {
   console.log(
     JSON.stringify({
