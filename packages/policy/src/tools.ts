@@ -22,6 +22,15 @@ const PROFILES: Record<string, readonly string[]> = {
   'trusted-local': ['read', 'workspace-write', 'process'],
 };
 const APPROVAL_EFFECTS = new Set(['process', 'network', 'external-write']);
+/** Whether a profile admits an effect class, independent of any catalog or approval. */
+export function profileAllows(
+  profile: string,
+  effect: string,
+): 'allowed' | 'denied' | 'unsupported' {
+  if (!Object.hasOwn(PROFILES, profile)) return 'unsupported';
+  if (effect === 'network' || effect === 'external-write') return 'unsupported';
+  return PROFILES[profile]!.includes(effect) ? 'allowed' : 'denied';
+}
 
 /**
  * Decide one tool action from host-owned scope only: the task catalog, the
