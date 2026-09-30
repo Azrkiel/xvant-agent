@@ -8,7 +8,10 @@ import {
   ArtifactStore,
   safePath,
 } from '../../../packages/storage/src/artifacts.ts';
-import { WorkerSupervisor } from '../../../packages/supervisor/src/index.ts';
+import {
+  WorkerSupervisor,
+  writeChunked,
+} from '../../../packages/supervisor/src/index.ts';
 import { durableCodexChannel } from '../../../packages/adapters/src/codex/durable.ts';
 import { CodexLifecycle } from '../../../packages/adapters/src/codex/lifecycle.ts';
 import {
@@ -116,6 +119,8 @@ export class LiveCodexController {
   async run(
     input: ProviderDispatch,
     mode: 'create' | 'resume',
+    /** Host-built prompt (e.g. a rendered context packet); defaults to the task objective. */
+    prompt?: string,
   ): Promise<LiveRunResult> {
     input = structuredClone(input);
     if (this.stopped) throw new Error('CONTROLLER_STOPPED');
@@ -157,7 +162,12 @@ export class LiveCodexController {
     }, this.store.heartbeatIntervalMs);
     heartbeat.unref();
     try {
-      return await this.execute(connection, root, mode, task.objective);
+      return await this.execute(
+        connection,
+        root,
+        mode,
+        prompt ?? task.objective,
+      );
     } finally {
       clearInterval(heartbeat);
     }
@@ -264,7 +274,7 @@ export class LiveCodexController {
         typeof message.method !== 'string' || !TELEMETRY.test(message.method),
       write: (frame) => {
         if (this.stopped) throw new Error('CONTROLLER_STOPPED');
-        return run.write(frame);
+        return writeChunked((piece) => run.write(piece), frame);
       },
       onMessage: (message) => {
         const params = (message.params ?? {}) as Record<string, unknown>;

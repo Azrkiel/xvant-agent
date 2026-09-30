@@ -95,7 +95,7 @@ describe('memory records', () => {
       decidedBy: 'owner',
       rowVersion: 1,
     });
-    expect(store.schemaVersion()).toBe(3);
+    expect(store.schemaVersion()).toBe(4);
   });
   it('treats an identical re-proposal as idempotent and a changed one as a conflict', () => {
     const first = store.memory.propose(proposal('m1', 'Fact'));

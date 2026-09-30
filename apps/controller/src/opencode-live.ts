@@ -119,6 +119,8 @@ export class LiveOpenCodeController {
   async runLive(
     input: ProviderDispatch,
     resumeFromConnectionId?: string,
+    /** Host-built prompt; defaults to the task objective. Passed on the command line. */
+    prompt?: string,
   ): Promise<LiveRunResult> {
     input = structuredClone(input);
     if (this.stopped) throw new Error('CONTROLLER_STOPPED');
@@ -145,6 +147,9 @@ export class LiveOpenCodeController {
       throw new Error('WORKSPACE_UNAVAILABLE');
     safePath(root);
     const task = this.store.getTask(input.taskId);
+    const text = prompt ?? task.objective;
+    // Windows limits a command line to 32,767 characters.
+    if (!text.trim() || text.length > 24000) throw new Error('LIMIT_EXCEEDED');
     if (task.requiredCheckIds.some((id) => !Object.hasOwn(this.checks, id)))
       throw new Error('VERIFIER_UNAVAILABLE');
     const write = input.liveApproval.profile === 'workspace-write';
@@ -308,7 +313,7 @@ export class LiveOpenCodeController {
           '--title',
           'XVANT ' + input.taskId,
           '--',
-          task.objective,
+          text,
         ];
         this.store.providers.recordIntent(id, token, {
           id: resumeFromConnectionId ? 1 : 2,

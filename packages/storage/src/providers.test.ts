@@ -423,11 +423,11 @@ it('migrates an existing v1 database without losing its tasks', () => {
   store.close();
   const db = new Database(join(root, 'state.sqlite'));
   db.exec(
-    'DROP TABLE memory_text; DROP TABLE memory_records; DROP TABLE provider_entries; DROP TABLE provider_reservations; DROP TABLE provider_connections; PRAGMA user_version=1',
+    'DROP TABLE work_events; DROP TABLE work_graphs; DROP TABLE memory_text; DROP TABLE memory_records; DROP TABLE provider_entries; DROP TABLE provider_reservations; DROP TABLE provider_connections; PRAGMA user_version=1',
   );
   db.close();
   store = open();
-  expect(store.schemaVersion()).toBe(3);
+  expect(store.schemaVersion()).toBe(4);
   expect(store.getTask('task').state).toBe('queued');
   expect(store.providers.reserve(spec).workRevision).toBe(0);
 });
@@ -511,7 +511,7 @@ it('restores a legacy v1 snapshot then migrates it on open', async () => {
   store.close();
   const db = new Database(join(root, 'state.sqlite'));
   db.exec(
-    'DROP TABLE memory_text; DROP TABLE memory_records; DROP TABLE provider_entries; DROP TABLE provider_reservations; DROP TABLE provider_connections; PRAGMA user_version=1',
+    'DROP TABLE work_events; DROP TABLE work_graphs; DROP TABLE memory_text; DROP TABLE memory_records; DROP TABLE provider_entries; DROP TABLE provider_reservations; DROP TABLE provider_connections; PRAGMA user_version=1',
   );
   try {
     await backupSnapshot(
@@ -532,7 +532,7 @@ it('restores a legacy v1 snapshot then migrates it on open', async () => {
     now: () => 2000,
   });
   stores.push(restored);
-  expect(restored.schemaVersion()).toBe(3);
+  expect(restored.schemaVersion()).toBe(4);
   expect(restored.getTask('task').state).toBe('queued');
 });
 it.each(['completed', 'cancelled', 'failed'] as const)(

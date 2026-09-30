@@ -18,6 +18,7 @@ import type { ArtifactStore } from './artifacts.ts';
 import { createTask, transitionTask } from '../../core/src/task.ts';
 import { ProviderJournal, providerMigration } from './providers.ts';
 import { MemoryRecords, memoryMigration } from './memory.ts';
+import { WorkGraphs, workGraphMigration } from './work-graphs.ts';
 import {
   nativeAcceptanceSchema,
   nativeEvidenceSchema,
@@ -105,6 +106,7 @@ function canonical(value: unknown): string {
 export class Store {
   readonly providers: ProviderJournal;
   readonly memory: MemoryRecords;
+  readonly graphs: WorkGraphs;
   readonly #db: Database.Database;
   readonly #owner: string;
   readonly #now: () => number;
@@ -128,6 +130,7 @@ export class Store {
         { version: 1, sql: migration },
         { version: 2, sql: providerMigration },
         { version: 3, sql: memoryMigration },
+        { version: 4, sql: workGraphMigration },
         ...(options.migrations ?? []),
       ];
       if (this.schemaVersion() > migrations.at(-1)!.version)
@@ -167,6 +170,9 @@ export class Store {
       this.#db.close();
       throw error;
     }
+    this.graphs = new WorkGraphs(this.#db, {
+      transaction: (fn) => this.#transaction(fn),
+    });
     this.memory = new MemoryRecords(this.#db, {
       transaction: (fn) => this.#transaction(fn),
       now: () => this.#now(),

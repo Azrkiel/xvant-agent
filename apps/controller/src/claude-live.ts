@@ -8,7 +8,10 @@ import {
   ArtifactStore,
   safePath,
 } from '../../../packages/storage/src/artifacts.ts';
-import { WorkerSupervisor } from '../../../packages/supervisor/src/index.ts';
+import {
+  WorkerSupervisor,
+  writeChunked,
+} from '../../../packages/supervisor/src/index.ts';
 import {
   ClaudeHeadlessStream,
   claudeArgs,
@@ -110,6 +113,8 @@ export class LiveClaudeController {
   async run(
     input: ProviderDispatch,
     mode: 'create' | 'resume',
+    /** Host-built prompt (e.g. a rendered context packet); defaults to the task objective. */
+    prompt?: string,
   ): Promise<LiveRunResult> {
     input = structuredClone(input);
     if (this.stopped) throw new Error('CONTROLLER_STOPPED');
@@ -128,6 +133,9 @@ export class LiveClaudeController {
       throw new Error('WORKSPACE_UNAVAILABLE');
     safePath(root);
     const task = this.store.getTask(input.taskId);
+    const text = prompt ?? task.objective;
+    if (!text.trim() || text.length > 1_000_000)
+      throw new Error('INVALID_INPUT');
     if (task.requiredCheckIds.some((id) => !Object.hasOwn(this.checks, id)))
       throw new Error('VERIFIER_UNAVAILABLE');
     const profile =
@@ -200,7 +208,7 @@ export class LiveClaudeController {
       this.store.providers.recordIntent(id, token, {
         id: 1,
         method: 'claude/headless-run',
-        frame: JSON.stringify({ args, mode, prompt: task.objective }),
+        frame: JSON.stringify({ args, mode, prompt: text }),
       });
       this.options.fault?.('claude-live.after_intent');
       this.store.providers.assertWritable(id, token);
@@ -246,7 +254,7 @@ export class LiveClaudeController {
           },
         },
       });
-      await run.write(task.objective);
+      await writeChunked((frame) => run!.write(frame), text);
       run.endInput();
       this.interrupts.set(id, (actorId) => {
         if (interrupted) return { status: 'already_requested' };

@@ -48,7 +48,7 @@ export function validateTestReport(
   return { total, suites };
 }
 export function phaseSuites(phase: string): Record<string, number> {
-  if (!['01', '02', '03', '04', '05'].includes(phase))
+  if (!['01', '02', '03', '04', '05', '06'].includes(phase))
     throw new Error('Unsupported gate phase');
   const baseline: Record<string, number> = {
     'packages/contracts/src/contracts.test.ts': 15,
@@ -71,7 +71,7 @@ export function phaseSuites(phase: string): Record<string, number> {
         'apps/controller/src/service.test.ts': 3,
         'apps/controller/src/http/server.test.ts': 11,
         'tests/faults/crash.test.ts': 7,
-        ...(['03', '04', '05'].includes(phase)
+        ...(Number(phase) >= 3
           ? {
               'packages/adapters/src/providers/conformance.test.ts': 19,
               'packages/adapters/src/providers/protocol.test.ts': 8,
@@ -118,7 +118,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'apps/controller/src/live-gates.test.ts': 3,
             }
           : {}),
-        ...(phase === '04' || phase === '05'
+        ...(Number(phase) >= 4
           ? {
               'packages/context/src/packet.test.ts': 21,
               'packages/context/src/retrieval.test.ts': 12,
@@ -131,7 +131,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/context/src/render.test.ts': 3,
             }
           : {}),
-        ...(phase === '05'
+        ...(Number(phase) >= 5
           ? {
               'packages/tools/src/registry.test.ts': 10,
               'packages/tools/src/files.test.ts': 18,
@@ -146,6 +146,14 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/skills/src/compatibility.test.ts': 5,
               'packages/policy/src/runtimes.test.ts': 9,
               'apps/controller/src/tools-fixture.test.ts': 1,
+            }
+          : {}),
+        ...(Number(phase) >= 6
+          ? {
+              'packages/core/src/scheduler.test.ts': 9,
+              'packages/storage/src/integration.test.ts': 4,
+              'apps/controller/src/orchestrator.test.ts': 6,
+              'apps/controller/src/turn-runner.test.ts': 2,
             }
           : {}),
       };

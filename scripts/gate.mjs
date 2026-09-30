@@ -12,11 +12,11 @@ const args = process.argv.slice(2);
 if (
   args.length !== 3 ||
   args[0] !== '--phase' ||
-  !['01', '02', '03', '04', '05'].includes(args[1]) ||
+  !['01', '02', '03', '04', '05', '06'].includes(args[1]) ||
   args[2] !== '--offline'
 ) {
   console.error(
-    'Usage: npm run gate -- --phase 01|02|03|04|05 --offline. Live gates remain unavailable.',
+    'Usage: npm run gate -- --phase 01|02|03|04|05|06 --offline. Live gates run through scripts/live-gate.mjs.',
   );
   process.exit(2);
 }
@@ -70,13 +70,15 @@ const report = {
   gitVersion: git(['--version']).stdout.trim(),
   classification: 'offline',
   qualificationScope:
-    phase === '05'
-      ? 'offline-tools-skills'
-      : phase === '04'
-        ? 'offline-context-handoff'
-        : phase === '03'
-          ? 'offline-provider-transport-foundation'
-          : 'offline-simulation',
+    phase === '06'
+      ? 'offline-orchestration'
+      : phase === '05'
+        ? 'offline-tools-skills'
+        : phase === '04'
+          ? 'offline-context-handoff'
+          : phase === '03'
+            ? 'offline-provider-transport-foundation'
+            : 'offline-simulation',
   runtimeKind: 'simulated',
   liveProvidersTested: [],
   checks: [],
@@ -193,7 +195,7 @@ try {
         sha256: hash(readFileSync(resolve(root, path))),
       });
   }
-  if (['03', '04', '05'].includes(phase)) {
+  if (Number(phase) >= 3) {
     check('provider-fixtures', [
       'scripts/probe.mjs',
       '--offline',
@@ -382,7 +384,7 @@ try {
       }
     }
   }
-  if (phase === '04' || phase === '05') {
+  if (Number(phase) >= 4) {
     check('handoff-fixture', ['scripts/handoff-fixture.mjs']);
     const handoff = JSON.parse(
       readFileSync(resolve(artifacts, 'handoff-fixture.log'), 'utf8'),
@@ -398,7 +400,7 @@ try {
     )
       throw new Error('Handoff fixture failed');
   }
-  if (phase === '05') {
+  if (Number(phase) >= 5) {
     check('tools-fixture', ['scripts/tools-fixture.mjs']);
     const tools = JSON.parse(
       readFileSync(resolve(artifacts, 'tools-fixture.log'), 'utf8'),
@@ -440,6 +442,23 @@ try {
       )
     )
       throw new Error('Browser fixture failed');
+  }
+  if (Number(phase) >= 6) {
+    check('orchestration-fixture', ['scripts/orchestration-fixture.mjs']);
+    const run = JSON.parse(
+      readFileSync(resolve(artifacts, 'orchestration-fixture.log'), 'utf8'),
+    );
+    if (
+      run.classification !== 'offline' ||
+      run.liveProvidersTested.length !== 0 ||
+      run.phase !== 'ready' ||
+      !run.combined ||
+      !run.userCheckoutUntouched ||
+      !run.dependencyOrder ||
+      !run.checks.every((status) => status === 'passed') ||
+      Object.values(run.nodes).some((node) => node.status !== 'integrated')
+    )
+      throw new Error('Orchestration fixture failed');
   }
   const after = snapshot();
   if (after.sha256 !== before.sha256)

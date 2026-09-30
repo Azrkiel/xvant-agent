@@ -153,7 +153,12 @@ export class ArtifactStore {
 }
 const manifestSchema = z.strictObject({
   version: z.literal(1),
-  schemaVersion: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  schemaVersion: z.union([
+    z.literal(1),
+    z.literal(2),
+    z.literal(3),
+    z.literal(4),
+  ]),
   database: z.strictObject({
     file: z.literal('state.sqlite'),
     sha256: hashSchema,
@@ -184,6 +189,8 @@ const tables: Record<string, string[]> = {
     'proposal_hash',
     'body',
   ],
+  work_graphs: ['id', 'project_id', 'body'],
+  work_events: ['sequence', 'graph_id', 'kind', 'payload'],
 };
 const primaryKeys: Record<string, string[]> = {
   tasks: ['id'],
@@ -199,6 +206,8 @@ const primaryKeys: Record<string, string[]> = {
   provider_entries: ['sequence'],
   provider_reservations: ['resource'],
   memory_records: ['project_id', 'id'],
+  work_graphs: ['id'],
+  work_events: ['sequence'],
 };
 const integerColumns = new Set([
   'events.sequence',
@@ -206,6 +215,7 @@ const integerColumns = new Set([
   'ownership.expires',
   'artifacts.work_revision',
   'provider_entries.sequence',
+  'work_events.sequence',
 ]);
 const foreignKeys: Record<string, { from: string; table: string }[]> = {
   tasks: [],
@@ -223,6 +233,8 @@ const foreignKeys: Record<string, { from: string; table: string }[]> = {
     { from: 'connection_id', table: 'provider_connections' },
   ],
   memory_records: [],
+  work_graphs: [],
+  work_events: [{ from: 'graph_id', table: 'work_graphs' }],
 };
 interface ColumnMetadata {
   name: string;
@@ -296,7 +308,9 @@ function validateTable(
   }>;
   const uniqueIndexes = indexes.filter((index) => index.unique === 1);
   if (
-    table === 'events' || table === 'provider_entries'
+    table === 'events' ||
+    table === 'provider_entries' ||
+    table === 'work_events'
       ? uniqueIndexes.length !== 0
       : uniqueIndexes.length !== 1 ||
         uniqueIndexes[0]?.origin !== 'pk' ||
@@ -312,7 +326,7 @@ function validateDatabase(path: string): {
   const db = new Database(path, { readonly: true, fileMustExist: true });
   try {
     const schemaVersion = db.pragma('user_version', { simple: true }) as number;
-    if (![1, 2, 3].includes(schemaVersion)) fail('SCHEMA_UNSUPPORTED');
+    if (![1, 2, 3, 4].includes(schemaVersion)) fail('SCHEMA_UNSUPPORTED');
     if (
       db.pragma('integrity_check', { simple: true }) !== 'ok' ||
       (db.pragma('foreign_key_check') as unknown[]).length !== 0
@@ -321,6 +335,7 @@ function validateDatabase(path: string): {
     for (const [table, columns] of Object.entries(tables)) {
       if (schemaVersion === 1 && table.startsWith('provider_')) continue;
       if (schemaVersion < 3 && table.startsWith('memory_')) continue;
+      if (schemaVersion < 4 && table.startsWith('work_')) continue;
       validateTable(db, table, columns);
     }
     if (schemaVersion >= 3) {
