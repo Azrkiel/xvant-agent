@@ -153,7 +153,7 @@ export class ArtifactStore {
 }
 const manifestSchema = z.strictObject({
   version: z.literal(1),
-  schemaVersion: z.union([z.literal(1), z.literal(2)]),
+  schemaVersion: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   database: z.strictObject({
     file: z.literal('state.sqlite'),
     sha256: hashSchema,
@@ -176,6 +176,14 @@ const tables: Record<string, string[]> = {
   provider_connections: ['id', 'task_id', 'body'],
   provider_entries: ['sequence', 'connection_id', 'body'],
   provider_reservations: ['resource', 'connection_id'],
+  memory_records: [
+    'project_id',
+    'id',
+    'namespace',
+    'status',
+    'proposal_hash',
+    'body',
+  ],
 };
 const primaryKeys: Record<string, string[]> = {
   tasks: ['id'],
@@ -190,6 +198,7 @@ const primaryKeys: Record<string, string[]> = {
   provider_connections: ['id'],
   provider_entries: ['sequence'],
   provider_reservations: ['resource'],
+  memory_records: ['project_id', 'id'],
 };
 const integerColumns = new Set([
   'events.sequence',
@@ -213,6 +222,7 @@ const foreignKeys: Record<string, { from: string; table: string }[]> = {
   provider_reservations: [
     { from: 'connection_id', table: 'provider_connections' },
   ],
+  memory_records: [],
 };
 interface ColumnMetadata {
   name: string;
@@ -302,7 +312,7 @@ function validateDatabase(path: string): {
   const db = new Database(path, { readonly: true, fileMustExist: true });
   try {
     const schemaVersion = db.pragma('user_version', { simple: true }) as number;
-    if (schemaVersion !== 1 && schemaVersion !== 2) fail('SCHEMA_UNSUPPORTED');
+    if (![1, 2, 3].includes(schemaVersion)) fail('SCHEMA_UNSUPPORTED');
     if (
       db.pragma('integrity_check', { simple: true }) !== 'ok' ||
       (db.pragma('foreign_key_check') as unknown[]).length !== 0
@@ -310,7 +320,15 @@ function validateDatabase(path: string): {
       fail('DATABASE_CORRUPT');
     for (const [table, columns] of Object.entries(tables)) {
       if (schemaVersion === 1 && table.startsWith('provider_')) continue;
+      if (schemaVersion < 3 && table.startsWith('memory_')) continue;
       validateTable(db, table, columns);
+    }
+    if (schemaVersion >= 3) {
+      const text = db
+        .prepare("SELECT sql FROM sqlite_schema WHERE name='memory_text'")
+        .get() as { sql: string } | undefined;
+      if (text?.sql !== 'CREATE VIRTUAL TABLE memory_text USING fts5(content)')
+        fail('SCHEMA_UNSUPPORTED');
     }
     const references = db
       .prepare('SELECT DISTINCT hash FROM artifacts')
