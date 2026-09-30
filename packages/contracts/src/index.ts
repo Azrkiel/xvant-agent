@@ -13,7 +13,15 @@ export type ErrorCode =
   | 'NOT_FOUND'
   | 'WORKER_BUSY'
   | 'INVALID_EVENT'
-  | 'VERIFICATION_FAILED';
+  | 'VERIFICATION_FAILED'
+  | 'CONFLICT'
+  | 'PATH_DENIED'
+  | 'POLICY_DENIED'
+  | 'APPROVAL_REQUIRED'
+  | 'STALE_APPROVAL'
+  | 'CAPABILITY_UNSUPPORTED'
+  | 'TIMEOUT'
+  | 'TOOL_FAILED';
 export class DomainError extends Error {
   readonly code: ErrorCode;
   constructor(code: ErrorCode, message: string) {
