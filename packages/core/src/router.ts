@@ -88,6 +88,9 @@ export function routeNode(
       !context.implementerRuntimes?.includes(w.runtimeKind)
     )
       s += 8;
+    // Keep reviewers free of implementation when a plain worker can take it,
+    // so an independent review stays possible.
+    if (node.role === 'worker' && w.roles.includes('reviewer')) s -= 1;
     s -= w.completed.length * 0.01;
     return s;
   };

@@ -32,7 +32,7 @@ const open = () => {
 };
 const POOL = {
   codex: [
-    ['codex-1', ['planner', 'worker']],
+    ['codex-1', ['planner', 'worker', 'reviewer']],
     ['codex-2', ['worker']],
   ],
   claude: [
@@ -200,7 +200,10 @@ if (command === 'runtimes') {
       '  review by ' +
         state.review.alias +
         ': ' +
-        (state.review.approve ? 'approved' : 'changes requested'),
+        (state.review.approve ? 'approved' : 'changes requested') +
+        (state.review.independent
+          ? ''
+          : ' (not independent: same runtime as the work)'),
       ...state.review.findings.map((f) => '\n    - ' + f),
     );
   if (state.integration)

@@ -141,7 +141,12 @@ it('orchestrates nodes on all three runtimes through their live controllers', as
     expect(task.state).toBe('accepted');
   }
   // The fake reviewer answers without a verdict: approval is not assumed.
-  expect(state.review).toMatchObject({ alias: 'claude-1', approve: false });
+  // claude-1 also built node b, so its review is recorded as not independent.
+  expect(state.review).toMatchObject({
+    alias: 'claude-1',
+    approve: false,
+    independent: false,
+  });
 });
 
 it('writes large prompts as bounded UTF-8 pieces', async () => {

@@ -100,7 +100,7 @@ export async function runLiveParallel(
       alias: 'codex-1',
       runtimeKind: 'codex',
       quotaGroupId: 'codex-subscription',
-      roles: ['planner', 'worker'],
+      roles: ['planner', 'worker', 'reviewer'],
     },
     {
       alias: 'claude-1',
@@ -136,7 +136,7 @@ export async function runLiveParallel(
       repository: repo,
       baseRevision: 'main',
       objective:
-        "Add two functions and document them. In server/greet.mjs add and export farewell(name) returning 'Goodbye, <name>!'. In web/format.mjs add and export shout(text) returning text uppercased followed by '!'. Then list both new functions in the API section of README.md. Keep the existing functions unchanged.",
+        "Add two functions and document them. In server/greet.mjs add and export farewell(name) returning 'Goodbye, <name>!'. In web/format.mjs add and export shout(text) returning text uppercased followed by '!'. Then list both new functions in the API section of README.md. Keep the existing functions unchanged. Treat the server change, the web change and the README update as three separate tasks for different workers; the README task comes after the other two.",
       acceptanceCriteria: [
         "farewell('Ada') returns 'Goodbye, Ada!'",
         "shout('hi there') returns 'HI THERE!'",
@@ -192,9 +192,7 @@ export async function runLiveParallel(
     if (
       !state.review ||
       state.review.alias === 'none' ||
-      (runtimesUsed.length === 1 &&
-        workers.find((w) => w.alias === state.review!.alias)!.runtimeKind ===
-          runtimesUsed[0])
+      !state.review.independent
     )
       problems.push('No independent review');
     if (!report.userCheckoutUntouched) problems.push('User checkout changed');

@@ -106,7 +106,13 @@ export interface RootState {
     head: string;
   } | null;
   checks: { id: string; status: 'passed' | 'failed'; head: string }[];
-  review: { alias: string; approve: boolean; findings: string[] } | null;
+  review: {
+    alias: string;
+    approve: boolean;
+    findings: string[];
+    /** Whether the reviewer's runtime wrote none of the reviewed work. */
+    independent: boolean;
+  } | null;
   reason?: string;
 }
 const tail = (text: string, max = 3000) =>
@@ -588,13 +594,21 @@ export class Orchestrator {
           } catch {
             /* keep the non-verdict default */
           }
-          state.review = { alias: reviewer.alias, ...verdict };
+          const reviewerRuntime = this.#workers.find(
+            (w) => w.alias === reviewer.alias,
+          )!.runtimeKind;
+          state.review = {
+            alias: reviewer.alias,
+            ...verdict,
+            independent: !implementers.has(reviewerRuntime),
+          };
           save('graph.reviewed', state.review);
         } else
           state.review = {
             alias: 'none',
             approve: false,
             findings: ['No reviewer available'],
+            independent: false,
           };
       }
       state.phase = 'ready';

@@ -182,3 +182,14 @@ describe('routing', () => {
     ).toBe('claude-1');
   });
 });
+
+describe('reviewer independence', () => {
+  it('gives implementation to plain workers so a reviewer stays independent', () => {
+    expect(
+      routeNode(task(), [
+        worker('claude-1', { roles: ['worker', 'reviewer'] }),
+        worker('opencode-1', { roles: ['worker'] }),
+      ]).alias,
+    ).toBe('opencode-1');
+  });
+});

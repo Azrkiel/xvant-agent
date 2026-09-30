@@ -188,7 +188,7 @@ it('plans, runs parallel nodes, integrates, verifies and reviews independently',
   expect(state.checks).toEqual([
     { id: 'all', status: 'passed', head: state.integration!.head },
   ]);
-  expect(state.review).toMatchObject({ approve: true });
+  expect(state.review).toMatchObject({ approve: true, independent: true });
   const implementers = Object.values(state.nodes).map(
     (n) => n.attempts[0]!.alias,
   );
