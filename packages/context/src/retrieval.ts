@@ -17,6 +17,7 @@ import { DomainError } from '../../contracts/src/index.ts';
 import { relativePathSchema } from '../../contracts/src/context.ts';
 import type { ContextItem } from '../../contracts/src/context.ts';
 import { safePath } from '../../storage/src/artifacts.ts';
+import { containsSecret, secretPath } from './secrets.ts';
 
 export interface RepositoryFile {
   path: string;
@@ -57,41 +58,6 @@ const optionsSchema = z.strictObject({
 /** Listing bound applied before per-file limits; beyond it retrieval refuses. */
 const MAX_LISTED = 100_000;
 const SKIPPED_DIRECTORIES = new Set(['.git', '.hg', '.svn', 'node_modules']);
-const SECRET_SEGMENTS = new Set(['.ssh', '.aws', '.gnupg']);
-const SECRET_NAMES = new Set([
-  '.npmrc',
-  '.pypirc',
-  '.netrc',
-  '.git-credentials',
-  '.htpasswd',
-  'credentials.json',
-  'secrets.json',
-  'terraform.tfstate',
-]);
-/** Name-based exclusion runs before any read, so these files never enter memory. */
-function secretPath(path: string): boolean {
-  const segments = path.toLowerCase().split('/');
-  const name = segments.at(-1)!;
-  return (
-    segments.some((segment) => SECRET_SEGMENTS.has(segment)) ||
-    SECRET_NAMES.has(name) ||
-    (/^\.env(?:\.|$)/.test(name) &&
-      !/\.(?:example|sample|template)$/.test(name)) ||
-    /\.(?:pem|key|p12|pfx|jks|keystore|gpg|asc)$/.test(name) ||
-    /^id_(?:rsa|dsa|ecdsa|ed25519)/.test(name)
-  );
-}
-/** Defense in depth: known credential shapes. Absence does not prove a file is secret-free. */
-const SECRET_CONTENT = [
-  /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----/,
-  /\bAKIA[0-9A-Z]{16}\b/,
-  /\bgh[pousr]_[A-Za-z0-9]{36,}\b/,
-  /\bgithub_pat_[A-Za-z0-9_]{22,}/,
-  /\bsk-ant-[A-Za-z0-9_-]{20,}/,
-  /\bsk-[A-Za-z0-9]{32,}\b/,
-  /\bxox[abprs]-[A-Za-z0-9-]{10,}/,
-  /\bAIza[0-9A-Za-z_-]{35}\b/,
-];
 function gitEnvironment(): NodeJS.ProcessEnv {
   return Object.fromEntries(
     Object.entries(process.env).filter(([key]) => !/^GIT_/i.test(key)),
@@ -153,7 +119,7 @@ function walk(
   return paths;
 }
 const byPath = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
-function readRegular(path: string, size: number): Buffer | 'changed' {
+export function readRegular(path: string, size: number): Buffer | 'changed' {
   const before = lstatSync(path);
   const fd = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
   try {
@@ -262,7 +228,7 @@ export function collectRepository(
       omit(path, 'binary');
       continue;
     }
-    if (SECRET_CONTENT.some((pattern) => pattern.test(content))) {
+    if (containsSecret(content)) {
       omit(path, 'secret_content');
       continue;
     }
