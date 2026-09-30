@@ -29,6 +29,7 @@ export const contextItemSchema = z
       'failure',
       'question',
       'memory',
+      'handoff',
     ]),
     required: z.boolean(),
     priority: z.number().int().min(0).max(100),

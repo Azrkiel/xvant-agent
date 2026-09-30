@@ -31,9 +31,9 @@ export function canonicalJson(value: unknown): string {
       : child,
   );
 }
-const sha256 = (text: string) =>
+export const sha256 = (text: string) =>
   createHash('sha256').update(text).digest('hex');
-function deepFreeze<T>(value: T): T {
+export function deepFreeze<T>(value: T): T {
   if (value && typeof value === 'object') {
     for (const child of Object.values(value)) deepFreeze(child);
     Object.freeze(value);
