@@ -1,8 +1,0 @@
-diff --git a/claude-1.txt b/claude-1.txt
-new file mode 100644
-index 0000000000000000000000000000000000000000..a97295cb93ac01396338c78d4004783c41373f59
---- /dev/null
-+++ b/claude-1.txt
-@@ -0,0 +1,2 @@
-+claude-1 4ac39ed1
-+resumed 4ac39ed1

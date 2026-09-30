@@ -1,1 +1,0 @@
-{"classification":"offline","browser":"msedge.exe","status":"succeeded","code":null,"title":"XVANT fixture","httpStatus":200,"textSeen":true,"consoleErrors":["fixture console error"],"blockedRequests":["http://example.com/leak"],"screenshotPng":true,"screenshotBytes":9174,"profileRemoved":true,"activeCount":0}

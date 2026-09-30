@@ -1,1 +1,0 @@
-{"classification":"offline","liveProvidersTested":[],"scenario":"permission","state":"ready_for_acceptance","status":"verified","outcome":"completed","verification":"passed","endpointBound":true,"loopback":true,"interruptAdmission":null,"methods":["opencode/serve","session/get","session/prompt","permission/reply"],"activeCount":0,"accepted":false}

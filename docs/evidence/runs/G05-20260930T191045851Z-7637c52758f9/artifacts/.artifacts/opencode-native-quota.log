@@ -1,1 +1,0 @@
-{"classification":"offline","liveProvidersTested":[],"kind":"opencode","state":"needs_attention","outcome":"failed","interruptAdmission":null,"interruptActor":null,"failure":{"code":"QUOTA_BLOCKED","scope":"quota_group","native":"APIError:429"},"blocked":"QUOTA_BLOCKED","sessionBound":false,"nativeSessionId":"session-1","journalEntries":4,"activeCount":0,"accepted":false}

@@ -1,1 +1,0 @@
-{"version":2,"kind":"git","baseCommit":"8eb685ef193d8d9ffd2e9643d865b81e52ddc6a0","gitTree":"8cf9ce6d442430f72c6f655e9fe188c170d2dfb4","patch":"343e23c3deccb05ac1245bb94b72cccf01becdcf9683a982ea65f475e81e895b","patchBytes":731,"files":[{"path":"src/fetch.mjs","status":"M"}]}

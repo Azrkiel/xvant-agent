@@ -1,8 +1,0 @@
-diff --git a/hello.txt b/hello.txt
-new file mode 100644
-index 0000000000000000000000000000000000000000..86d5cffec438221ed5b4669c977b619df9e032e0
---- /dev/null
-+++ b/hello.txt
-@@ -0,0 +1 @@
-+hi from codex
-\ No newline at end of file
