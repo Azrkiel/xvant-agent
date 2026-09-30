@@ -95,6 +95,8 @@ export type RootPhase =
   | 'cancelled';
 export interface RootState {
   phase: RootPhase;
+  /** The user's repository; its checkout is never changed. */
+  repository?: string;
   objective: string;
   acceptanceCriteria: string[];
   plan: Plan | null;
@@ -164,6 +166,7 @@ export class Orchestrator {
     const maxRepairs = spec.maxRepairs ?? 2;
     const state: RootState = {
       phase: 'planning',
+      repository: spec.repository,
       objective: spec.objective,
       acceptanceCriteria: spec.acceptanceCriteria,
       plan: null,

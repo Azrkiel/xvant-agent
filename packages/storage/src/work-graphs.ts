@@ -125,6 +125,27 @@ export class WorkGraphs {
       payload: JSON.parse(row.payload),
     }));
   }
+  /** Events across every graph after a cursor, for live streams. */
+  allEvents(after = 0, limit = 500): WorkEvent[] {
+    if (!Number.isSafeInteger(after) || after < 0) fail('INVALID_INPUT');
+    return (
+      this.#db
+        .prepare(
+          'SELECT sequence,graph_id,kind,payload FROM work_events WHERE sequence>? ORDER BY sequence LIMIT ?',
+        )
+        .all(after, Math.min(Math.max(limit, 1), 5000)) as {
+        sequence: number;
+        graph_id: string;
+        kind: string;
+        payload: string;
+      }[]
+    ).map((row) => ({
+      sequence: row.sequence,
+      graphId: row.graph_id,
+      kind: row.kind,
+      payload: JSON.parse(row.payload),
+    }));
+  }
   #append(id: string, kind: string, payload: unknown): void {
     this.#db
       .prepare('INSERT INTO work_events(graph_id,kind,payload) VALUES(?,?,?)')

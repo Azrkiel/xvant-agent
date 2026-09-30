@@ -2,6 +2,7 @@
 // a Git repository. Work happens in XVANT-owned worktrees and lands on an
 // `xvant/<id>` branch; your checkout and branches are never changed.
 //
+//   npm run xvant -- ui [--no-open] [--port N]
 //   npm run xvant -- runtimes
 //   npm run xvant -- run --repo PATH --objective TEXT [--criterion TEXT]...
 //                        [--check "COMMAND"]... [--max-active N] [--no-review]
@@ -11,12 +12,13 @@
 import { mkdirSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { Store } from '../packages/storage/src/store.ts';
 import { ArtifactStore } from '../packages/storage/src/artifacts.ts';
 import { discoverRuntime } from '../packages/adapters/src/live/discover.ts';
 import { Orchestrator } from '../apps/controller/src/orchestrator.ts';
 import { LiveTurnRunner } from '../apps/controller/src/turn-runner.ts';
+import { shellCheck } from '../apps/controller/src/app.ts';
 
 const home = resolve(process.env.XVANT_HOME ?? join(homedir(), '.xvant'));
 const [command, ...rest] = process.argv.slice(2);
@@ -59,17 +61,37 @@ function discover(only) {
   }
   return { runtimes, table };
 }
-function shellCheck(command) {
-  // Checks are commands you register; they run in XVANT's worktrees.
-  return process.platform === 'win32'
-    ? {
-        executable: process.env.ComSpec ?? 'C:\\Windows\\System32\\cmd.exe',
-        args: ['/d', '/s', '/c', command],
-      }
-    : { executable: '/bin/sh', args: ['-c', command] };
-}
 
-if (command === 'runtimes') {
+if (command === 'ui') {
+  const { startApp } = await import('../apps/controller/src/app.ts');
+  const app = await startApp({
+    home,
+    ...(value('--port') ? { port: Number(value('--port')) } : {}),
+  });
+  // The single-use capability rides in the URL fragment, which browsers never send.
+  const url = app.origin + '/#bootstrap=' + app.bootstrapToken;
+  console.log('XVANT is running at ' + app.origin + ' (Ctrl+C to stop).');
+  if (rest.includes('--no-open') || process.platform !== 'win32')
+    console.log('Open this once to sign in: ' + url);
+  else
+    spawn(
+      process.env.ComSpec ?? 'cmd.exe',
+      ['/d', '/s', '/c', 'start "" "' + url + '"'],
+      {
+        windowsVerbatimArguments: true,
+        windowsHide: true,
+        stdio: 'ignore',
+        detached: true,
+      },
+    ).unref();
+  const stop = async () => {
+    console.log('Stopping XVANT; running workers are interrupted.');
+    await app.close();
+    process.exit(0);
+  };
+  process.on('SIGINT', stop);
+  process.on('SIGTERM', stop);
+} else if (command === 'runtimes') {
   for (const found of discover(['codex', 'claude', 'opencode']).table)
     console.log(
       found.runtimeKind.padEnd(9),
@@ -281,6 +303,6 @@ if (command === 'runtimes') {
     store.close();
   }
 } else {
-  console.error('Commands: runtimes | run | status [ID] | accept ID');
+  console.error('Commands: ui | runtimes | run | status [ID] | accept ID');
   process.exit(2);
 }

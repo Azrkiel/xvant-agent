@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>XVANT</title>
+    <link rel="stylesheet" href="/app.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="bar">
+      <h1 class="brand">XVANT</h1>
+      <ul class="runtimes" id="runtimes" aria-label="Runtimes"></ul>
+      <button type="button" class="danger" id="stop-all">Stop all work</button>
+    </header>
+    <div class="layout">
+      <nav class="side" aria-labelledby="runs-heading">
+        <div class="side-head">
+          <h2 id="runs-heading">Runs</h2>
+          <button type="button" id="new-run">New run</button>
+        </div>
+        <ul id="runs" class="runs"></ul>
+        <h2 id="workers-heading">Workers</h2>
+        <ul id="workers" class="workers" aria-labelledby="workers-heading"></ul>
+      </nav>
+      <main id="main" tabindex="-1"></main>
+    </div>
+    <div
+      id="status"
+      class="visually-hidden"
+      role="status"
+      aria-live="polite"
+    ></div>
+    <dialog id="confirm">
+      <form method="dialog">
+        <h2 id="confirm-title"></h2>
+        <p id="confirm-body"></p>
+        <div class="actions">
+          <button value="cancel" type="submit">Go back</button>
+          <button
+            value="ok"
+            type="submit"
+            class="primary"
+            id="confirm-ok"
+          ></button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>

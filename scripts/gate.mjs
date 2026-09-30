@@ -12,11 +12,11 @@ const args = process.argv.slice(2);
 if (
   args.length !== 3 ||
   args[0] !== '--phase' ||
-  !['01', '02', '03', '04', '05', '06'].includes(args[1]) ||
+  !['01', '02', '03', '04', '05', '06', '07'].includes(args[1]) ||
   args[2] !== '--offline'
 ) {
   console.error(
-    'Usage: npm run gate -- --phase 01|02|03|04|05|06 --offline. Live gates run through scripts/live-gate.mjs.',
+    'Usage: npm run gate -- --phase 01|02|03|04|05|06|07 --offline. Live gates run through scripts/live-gate.mjs.',
   );
   process.exit(2);
 }
@@ -70,15 +70,17 @@ const report = {
   gitVersion: git(['--version']).stdout.trim(),
   classification: 'offline',
   qualificationScope:
-    phase === '06'
-      ? 'offline-orchestration'
-      : phase === '05'
-        ? 'offline-tools-skills'
-        : phase === '04'
-          ? 'offline-context-handoff'
-          : phase === '03'
-            ? 'offline-provider-transport-foundation'
-            : 'offline-simulation',
+    phase === '07'
+      ? 'offline-local-app'
+      : phase === '06'
+        ? 'offline-orchestration'
+        : phase === '05'
+          ? 'offline-tools-skills'
+          : phase === '04'
+            ? 'offline-context-handoff'
+            : phase === '03'
+              ? 'offline-provider-transport-foundation'
+              : 'offline-simulation',
   runtimeKind: 'simulated',
   liveProvidersTested: [],
   checks: [],

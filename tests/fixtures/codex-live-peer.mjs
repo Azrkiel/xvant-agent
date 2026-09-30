@@ -6,6 +6,7 @@ import { createInterface } from 'node:readline';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { followInstruction, followMcpInstruction } from './fake-edit.mjs';
+import { plannerOrReviewerReply } from './fake-replies.mjs';
 // The bridge Codex would load from -c mcp_servers={xvant={url=...}}.
 const mcpUrl = /url="([^"]+)"/.exec(process.argv.join(' '))?.[1];
 const mcp = process.argv[2] !== 'no-mcp' &&
@@ -120,9 +121,13 @@ input.on('line', async (line) => {
       note('turn/started', { threadId, turn: turn('inProgress') });
       send({ id: request.id, result: { turn: turn('inProgress') } });
       const text = request.params.input?.[0]?.text ?? '';
-      const followed = (await followMcpInstruction(text, mcp))
-        ? 'edited'
-        : followInstruction(text);
+      const reply = plannerOrReviewerReply(text);
+      const followed = reply
+        ? 'replied'
+        : (await followMcpInstruction(text, mcp))
+          ? 'edited'
+          : followInstruction(text);
+      const final = reply ? { ...answer, text: reply } : answer;
       if (scenario === 'hang' || followed === 'hang') break;
       if (scenario === 'fail') {
         note('turn/completed', { threadId, turn: turn('failed') });
@@ -163,7 +168,7 @@ input.on('line', async (line) => {
         delta: 'Created hello.txt.',
       });
       note('item/completed', {
-        item: answer,
+        item: final,
         threadId,
         turnId,
         completedAtMs: 3,
@@ -173,7 +178,7 @@ input.on('line', async (line) => {
         turnId,
         tokenUsage: { total: { totalTokens: 1234 } },
       });
-      note('turn/completed', { threadId, turn: turn('completed', [answer]) });
+      note('turn/completed', { threadId, turn: turn('completed', [final]) });
       break;
     case 'turn/interrupt':
       send({ id: request.id, result: {} });

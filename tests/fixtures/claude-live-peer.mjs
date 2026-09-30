@@ -5,6 +5,7 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { followInstruction, followMcpInstruction } from './fake-edit.mjs';
+import { plannerOrReviewerReply } from './fake-replies.mjs';
 
 const [scenario, ...args] = process.argv.slice(2);
 if (args.includes('--version')) {
@@ -38,15 +39,18 @@ process.stdin.on('end', async () => {
   const config = args.includes('--mcp-config')
     ? JSON.parse(readFileSync(flag('--mcp-config'), 'utf8')).mcpServers.xvant
     : undefined;
-  const followed = (await followMcpInstruction(
-    prompt,
-    config && {
-      url: config.url,
-      token: config.headers.Authorization.slice('Bearer '.length),
-    },
-  ))
-    ? 'edited'
-    : followInstruction(prompt);
+  const reply = plannerOrReviewerReply(prompt);
+  const followed = reply
+    ? 'replied'
+    : (await followMcpInstruction(
+          prompt,
+          config && {
+            url: config.url,
+            token: config.headers.Authorization.slice('Bearer '.length),
+          },
+        ))
+      ? 'edited'
+      : followInstruction(prompt);
   if (scenario === 'hang' || followed === 'hang') {
     setInterval(() => {}, 1000);
     return;
@@ -90,7 +94,7 @@ process.stdin.on('end', async () => {
     is_error: false,
     session_id: session,
     uuid: 'result-1',
-    result: 'DONE',
+    result: reply ?? 'DONE',
     num_turns: 2,
     usage: { input_tokens: 100, output_tokens: 20 },
     total_cost_usd: 0.17,

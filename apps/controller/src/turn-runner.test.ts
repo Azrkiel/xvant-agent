@@ -140,11 +140,11 @@ it('orchestrates nodes on all three runtimes through their live controllers', as
     const task = store.getTask(n.attempts[0]!.taskId);
     expect(task.state).toBe('accepted');
   }
-  // The fake reviewer answers without a verdict: approval is not assumed.
+  // claude-1 approves, but it also built node b: not an independent review.
   // claude-1 also built node b, so its review is recorded as not independent.
   expect(state.review).toMatchObject({
     alias: 'claude-1',
-    approve: false,
+    approve: true,
     independent: false,
   });
 });

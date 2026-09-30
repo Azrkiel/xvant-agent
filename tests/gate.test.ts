@@ -93,7 +93,7 @@ it('Phase 2 gate requires storage, process, auth, recovery and service suites', 
     'tests/faults/crash.test.ts',
   ])
     expect(suites[file]).toBeGreaterThan(0);
-  expect(() => phaseSuites('07')).toThrow();
+  expect(() => phaseSuites('08')).toThrow();
   const phase6 = phaseSuites('06');
   for (const [file, minimum] of Object.entries(phaseSuites('05')))
     expect(phase6[file]).toBe(minimum);

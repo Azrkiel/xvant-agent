@@ -48,7 +48,7 @@ export function validateTestReport(
   return { total, suites };
 }
 export function phaseSuites(phase: string): Record<string, number> {
-  if (!['01', '02', '03', '04', '05', '06'].includes(phase))
+  if (!['01', '02', '03', '04', '05', '06', '07'].includes(phase))
     throw new Error('Unsupported gate phase');
   const baseline: Record<string, number> = {
     'packages/contracts/src/contracts.test.ts': 15,
@@ -154,6 +154,12 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/storage/src/integration.test.ts': 4,
               'apps/controller/src/orchestrator.test.ts': 6,
               'apps/controller/src/turn-runner.test.ts': 2,
+            }
+          : {}),
+        ...(Number(phase) >= 7
+          ? {
+              'apps/controller/src/app.test.ts': 4,
+              'tests/e2e/ui.test.ts': 3,
             }
           : {}),
       };
