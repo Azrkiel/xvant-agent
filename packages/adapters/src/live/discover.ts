@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { delimiter, isAbsolute, join, resolve } from 'node:path';
-import { LIVE_ROUTES } from '../../../contracts/src/live.ts';
+import { LIVE_ROUTES, versionAccepted } from '../../../contracts/src/live.ts';
 import type { ProviderKind } from '../../../contracts/src/providers.ts';
 
 export interface DiscoveredRuntime {
@@ -93,7 +93,7 @@ export function discoverRuntime(
       runtimeKind: kind,
       status: !match
         ? 'failed'
-        : match[1] === expectedVersion
+        : versionAccepted(kind, match[1]!)
           ? 'qualified'
           : 'version_mismatch',
       executable,

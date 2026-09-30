@@ -11,6 +11,7 @@ import { createWorktree } from '../packages/storage/src/git-workspace.ts';
 import { LIVE_ROUTES } from '../packages/contracts/src/live.ts';
 import { NativeReviewController } from '../apps/controller/src/native-review.ts';
 import { archiveRun, sourceHash } from './evidence-bundle.ts';
+import { discoverRuntime } from '../packages/adapters/src/live/discover.ts';
 
 const args = process.argv.slice(2);
 const runtime = args[args.indexOf('--runtime') + 1];
@@ -71,11 +72,17 @@ store.create('create', {
 });
 store.queue('queue', 'task', 0);
 const route = LIVE_ROUTES[runtime];
+const found = discoverRuntime(runtime, { executable });
+if (found.status !== 'qualified') {
+  console.error(runtime + ' is ' + found.status + ' (' + found.version + ')');
+  process.exit(2);
+}
+const installed = found.version;
 const report = {
   generatedAt: new Date().toISOString(),
   classification: 'live',
   scope: runtime + '-workspace-write-smoke',
-  runtimeVersion: route.runtimeVersion,
+  runtimeVersion: installed,
   adapterVersion: route.adapterVersion,
   stateDirectory: root,
   sourceHash: sourceHash(resolve('.')),
@@ -141,7 +148,7 @@ try {
       // Claude sessions are host-chosen UUIDs; Codex returns its own thread ID.
       nativeSessionId:
         runtime === 'claude' ? randomUUID() : 'pending:connection',
-      runtimeVersion: route.runtimeVersion,
+      runtimeVersion: installed,
       adapterVersion: route.adapterVersion,
       mode: 'managed',
       quotaGroupId: runtime + '-subscription',

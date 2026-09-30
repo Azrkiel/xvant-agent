@@ -182,7 +182,7 @@ export async function runLiveHandoff(
         endpointId: route.transport,
         nativeSessionId:
           runtime === 'claude' ? randomUUID() : 'pending:' + taskId,
-        runtimeVersion: route.runtimeVersion,
+        runtimeVersion: spec.version ?? route.runtimeVersion,
         adapterVersion: route.adapterVersion,
         mode: 'managed' as const,
         quotaGroupId: runtime + '-subscription',

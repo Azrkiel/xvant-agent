@@ -17,7 +17,10 @@ import {
   claudeArgs,
   type ClaudeTurnResult,
 } from '../../../packages/adapters/src/live/claude-headless.ts';
-import { LIVE_ROUTES } from '../../../packages/contracts/src/live.ts';
+import {
+  LIVE_ROUTES,
+  versionAccepted,
+} from '../../../packages/contracts/src/live.ts';
 import type { InterruptAdmission } from '../../../packages/contracts/src/providers.ts';
 import { NativeVerifier } from './native-verifier.ts';
 import { NativeReviewController } from './native-review.ts';
@@ -121,7 +124,7 @@ export class LiveClaudeController {
     if (
       input.classification !== 'live' ||
       input.worker.runtimeKind !== 'claude' ||
-      input.worker.runtimeVersion !== LIVE_ROUTES.claude.runtimeVersion ||
+      !versionAccepted('claude', input.worker.runtimeVersion) ||
       input.worker.adapterVersion !== LIVE_ROUTES.claude.adapterVersion ||
       !['create', 'resume'].includes(mode)
     )
@@ -181,7 +184,11 @@ export class LiveClaudeController {
     let failed = false,
       interrupted = false;
     let result: ClaudeTurnResult | undefined;
-    const stream = new ClaudeHeadlessStream(session, profile);
+    const stream = new ClaudeHeadlessStream(
+      session,
+      profile,
+      input.worker.runtimeVersion,
+    );
     const unknown = () => {
       try {
         this.store.providers.unknown(id, token);
@@ -336,7 +343,8 @@ export class LiveClaudeController {
       probe.reason !== 'exited' ||
       probe.exitCode !== 0 ||
       probe.stdout.trim() !==
-        LIVE_ROUTES.claude.runtimeVersion + ' (Claude Code)'
+        // The installed binary must be the version this dispatch records.
+        input.worker.runtimeVersion + ' (Claude Code)'
     )
       throw new Error('VERSION_UNSUPPORTED');
   }

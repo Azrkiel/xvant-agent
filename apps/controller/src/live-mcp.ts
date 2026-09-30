@@ -164,7 +164,7 @@ export async function runLiveMcp(
           endpointId: route.transport,
           nativeSessionId:
             kind === 'claude' ? randomUUID() : 'pending:' + taskId,
-          runtimeVersion: route.runtimeVersion,
+          runtimeVersion: spec.version ?? route.runtimeVersion,
           adapterVersion: route.adapterVersion,
           mode: 'managed' as const,
           quotaGroupId: kind + '-subscription',

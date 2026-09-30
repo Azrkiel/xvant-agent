@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LIVE_ROUTES, liveRouteIssue } from './live.ts';
+import { LIVE_ROUTES, liveRouteIssue, versionAccepted } from './live.ts';
 
 const uuid = '01a0f355-2260-71d2-bd32-9fd8718d9045';
 const approval = (over: Record<string, unknown> = {}) => ({
@@ -90,4 +90,21 @@ describe('live routes', () => {
         'c1',
       ),
     ).toBeUndefined());
+});
+
+describe('runtime version compatibility', () => {
+  it('accepts later patches of the qualified minor and records them', () => {
+    expect(versionAccepted('claude', LIVE_ROUTES.claude.runtimeVersion)).toBe(
+      true,
+    );
+    expect(versionAccepted('claude', '2.1.299')).toBe(true);
+    expect(versionAccepted('claude', '2.1.284')).toBe(false);
+    expect(versionAccepted('claude', '2.2.0')).toBe(false);
+    expect(versionAccepted('claude', '3.1.285')).toBe(false);
+  });
+  it('keeps prerelease pins exact', () => {
+    expect(versionAccepted('codex', '0.158.0-alpha.2.1')).toBe(true);
+    expect(versionAccepted('codex', '0.158.0-alpha.2.2')).toBe(false);
+    expect(versionAccepted('codex', '0.158.1')).toBe(false);
+  });
 });

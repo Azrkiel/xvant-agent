@@ -115,7 +115,7 @@ export class LiveTurnRunner implements TurnRunner {
           worker.runtimeKind === 'claude'
             ? randomUUID()
             : 'pending:' + request.taskId,
-        runtimeVersion: route.runtimeVersion,
+        runtimeVersion: runtime.version ?? route.runtimeVersion,
         adapterVersion: route.adapterVersion,
         mode: 'managed' as const,
         quotaGroupId: worker.quotaGroupId,

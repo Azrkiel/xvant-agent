@@ -10,7 +10,12 @@ import { discoverRuntime } from '../packages/adapters/src/live/discover.ts';
 const args = process.argv.slice(2);
 const value = (name) =>
   args.includes(name) ? args[args.indexOf(name) + 1] : undefined;
-const FIXTURES = { '03': ['roster'], '04': ['handoff'], '05': ['mcp'] };
+const FIXTURES = {
+  '03': ['roster'],
+  '04': ['handoff'],
+  '05': ['mcp'],
+  '06': ['parallel-feature'],
+};
 const phase = value('--phase');
 const fixture = value('--fixture');
 if (!args.includes('--approve-live') || !FIXTURES[phase]?.includes(fixture)) {
@@ -48,7 +53,7 @@ for (const kind of ['codex', 'claude', 'opencode']) {
   const found = discoverRuntime(kind);
   report.runtimes[kind] = found;
   if (found.status === 'qualified')
-    runtimes[kind] = { executable: found.executable };
+    runtimes[kind] = { executable: found.executable, version: found.version };
 }
 const state = join(
   realpathSync(resolve('.artifacts')),
@@ -96,6 +101,16 @@ try {
       onEvent,
     });
     report.handoff = result;
+  } else if (fixture === 'parallel-feature') {
+    const { runLiveParallel } =
+      await import('../apps/controller/src/live-parallel.ts');
+    result = await runLiveParallel(state, {
+      runtimes,
+      onEvent,
+      onChange: (s, kind) =>
+        console.log('graph'.padEnd(11), kind.padEnd(8), s.phase),
+    });
+    report.parallel = result;
   } else {
     const { runLiveMcp } = await import('../apps/controller/src/live-mcp.ts');
     result = await runLiveMcp(state, { runtimes, onEvent });

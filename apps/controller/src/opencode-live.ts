@@ -8,14 +8,14 @@ import {
   safePath,
 } from '../../../packages/storage/src/artifacts.ts';
 import { WorkerSupervisor } from '../../../packages/supervisor/src/index.ts';
-import {
-  OpenCodeCliStream,
-  OPENCODE_CLI_VERSION,
-} from '../../../packages/adapters/src/opencode/cli-stream.ts';
+import { OpenCodeCliStream } from '../../../packages/adapters/src/opencode/cli-stream.ts';
 import { NativeVerifier } from './native-verifier.ts';
 import { NativeReviewController } from './native-review.ts';
 import type { InterruptAdmission } from '../../../packages/contracts/src/providers.ts';
-import { FREE_OPENCODE_MODELS } from '../../../packages/contracts/src/live.ts';
+import {
+  FREE_OPENCODE_MODELS,
+  versionAccepted,
+} from '../../../packages/contracts/src/live.ts';
 import { OpenCodeRunStream } from '../../../packages/adapters/src/live/opencode-run.ts';
 import type { LiveEvent, LiveRunResult } from './codex-live.ts';
 
@@ -128,7 +128,7 @@ export class LiveOpenCodeController {
     if (
       input.classification !== 'live' ||
       input.worker.runtimeKind !== 'opencode' ||
-      input.worker.runtimeVersion !== OPENCODE_CLI_VERSION ||
+      !versionAccepted('opencode', input.worker.runtimeVersion) ||
       input.worker.adapterVersion !== 'opencode-cli-v2'
     )
       throw new Error('VERSION_UNSUPPORTED');
@@ -163,7 +163,7 @@ export class LiveOpenCodeController {
         previous.status !== 'accepted' ||
         previous.classification !== 'live' ||
         previous.worker.runtimeKind !== 'opencode' ||
-        previous.worker.runtimeVersion !== OPENCODE_CLI_VERSION ||
+        !versionAccepted('opencode', previous.worker.runtimeVersion) ||
         previous.worker.hostId !== input.worker.hostId ||
         previous.worker.quotaGroupId !== input.worker.quotaGroupId ||
         previous.workspaceId !== input.workspaceId ||
@@ -192,7 +192,7 @@ export class LiveOpenCodeController {
         inventory.reason !== 'exited' ||
         inventory.exitCode !== 0 ||
         inventory.outputTruncated ||
-        inventory.stdout.trim() !== 'opencode v' + OPENCODE_CLI_VERSION
+        inventory.stdout.trim() !== 'opencode v' + input.worker.runtimeVersion
       )
         throw new Error('VERSION_UNSUPPORTED');
       if (this.stopped) throw new Error('CONTROLLER_STOPPED');

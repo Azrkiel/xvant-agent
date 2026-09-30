@@ -89,6 +89,7 @@ export type RootPhase =
   | 'verifying'
   | 'reviewing'
   | 'ready'
+  | 'accepted'
   | 'failed'
   | 'needs_attention'
   | 'cancelled';

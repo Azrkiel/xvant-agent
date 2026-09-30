@@ -108,7 +108,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'apps/controller/src/opencode-live.test.ts': 21,
               'packages/adapters/src/opencode/cli-stream.test.ts': 21,
               'tests/faults/opencode-live.test.ts': 12,
-              'packages/contracts/src/live.test.ts': 9,
+              'packages/contracts/src/live.test.ts': 11,
               'packages/storage/src/git-workspace.test.ts': 5,
               'packages/adapters/src/live/live-streams.test.ts': 11,
               'apps/controller/src/codex-live.test.ts': 6,

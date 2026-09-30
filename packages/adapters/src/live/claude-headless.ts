@@ -97,11 +97,18 @@ export class ClaudeHeadlessStream {
   private readonly decoder = new JsonLineDecoder(1048576);
   private readonly session: string;
   private readonly mode: string;
+  private readonly version: string;
   private init = false;
   private result: z.infer<typeof resultSchema> | undefined;
   private error: unknown;
-  constructor(sessionId: string, profile: ClaudeProfile) {
+  constructor(
+    sessionId: string,
+    profile: ClaudeProfile,
+    /** The version the host probed; the stream must report the same one. */
+    version: string = LIVE_ROUTES.claude.runtimeVersion,
+  ) {
     this.session = sessionId;
+    this.version = version;
     this.mode = profile === 'workspace-write' ? 'acceptEdits' : 'default';
   }
   get started(): boolean {
@@ -126,7 +133,7 @@ export class ClaudeHeadlessStream {
           throw new Error('BILLING_UNVERIFIED');
         if (
           init.data.session_id !== this.session ||
-          init.data.claude_code_version !== LIVE_ROUTES.claude.runtimeVersion ||
+          init.data.claude_code_version !== this.version ||
           init.data.permissionMode !== this.mode
         )
           throw new Error('SESSION_MISMATCH');

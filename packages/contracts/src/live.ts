@@ -36,6 +36,22 @@ export const LIVE_ROUTES = {
     session: RegExp;
   }
 >;
+/**
+ * Whether an installed version may use a route. Runtimes auto-update, so a
+ * later patch of the qualified major.minor is accepted and recorded as the
+ * version actually used; the live gates re-qualify it. Prerelease pins (and
+ * anything not plain semver) must match exactly.
+ */
+export function versionAccepted(kind: ProviderKind, version: string): boolean {
+  const pinned = LIVE_ROUTES[kind].runtimeVersion;
+  if (version === pinned) return true;
+  const plain = /^(\d+)\.(\d+)\.(\d+)$/;
+  const a = plain.exec(pinned),
+    b = plain.exec(version);
+  return (
+    !!a && !!b && a[1] === b[1] && a[2] === b[2] && Number(b[3]) >= Number(a[3])
+  );
+}
 /** OpenCode models that bill nothing. Anything else could route to a paid provider. */
 export const FREE_OPENCODE_MODELS = ['opencode/big-pickle'] as const;
 
@@ -70,7 +86,10 @@ export function liveRouteIssue(
     return 'VERSION_UNSUPPORTED';
   const route = LIVE_ROUTES[worker.runtimeKind as ProviderKind];
   if (
-    worker.runtimeVersion !== route.runtimeVersion ||
+    !versionAccepted(
+      worker.runtimeKind as ProviderKind,
+      worker.runtimeVersion,
+    ) ||
     worker.adapterVersion !== route.adapterVersion ||
     approval.transport !== route.transport
   )

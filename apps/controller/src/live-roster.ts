@@ -21,6 +21,8 @@ export interface RosterRuntime {
   executable: string;
   /** Fixture launchers only. */
   prefixArgs?: readonly string[];
+  /** Installed version from discovery; defaults to the pinned one. */
+  version?: string;
   /** `default` or a model the runtime accepts. */
   model?: string;
 }
@@ -194,7 +196,8 @@ export async function runLiveRoster(
         hostId: 'local',
         endpointId: route.transport,
         nativeSessionId: session,
-        runtimeVersion: route.runtimeVersion,
+        runtimeVersion:
+          options.runtimes[worker.kind].version ?? route.runtimeVersion,
         adapterVersion: route.adapterVersion,
         mode: 'managed',
         quotaGroupId: worker.kind + '-subscription',
