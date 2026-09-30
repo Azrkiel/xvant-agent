@@ -11,11 +11,11 @@ const args = process.argv.slice(2);
 if (
   args.length !== 3 ||
   args[0] !== '--phase' ||
-  !['01', '02', '03', '04'].includes(args[1]) ||
+  !['01', '02', '03', '04', '05'].includes(args[1]) ||
   args[2] !== '--offline'
 ) {
   console.error(
-    'Usage: npm run gate -- --phase 01|02|03|04 --offline. Live gates remain unavailable.',
+    'Usage: npm run gate -- --phase 01|02|03|04|05 --offline. Live gates remain unavailable.',
   );
   process.exit(2);
 }
@@ -69,11 +69,13 @@ const report = {
   gitVersion: git(['--version']).stdout.trim(),
   classification: 'offline',
   qualificationScope:
-    phase === '04'
-      ? 'offline-context-handoff'
-      : phase === '03'
-        ? 'offline-provider-transport-foundation'
-        : 'offline-simulation',
+    phase === '05'
+      ? 'offline-tools-skills'
+      : phase === '04'
+        ? 'offline-context-handoff'
+        : phase === '03'
+          ? 'offline-provider-transport-foundation'
+          : 'offline-simulation',
   runtimeKind: 'simulated',
   liveProvidersTested: [],
   checks: [],
@@ -190,7 +192,7 @@ try {
         sha256: hash(readFileSync(resolve(root, path))),
       });
   }
-  if (phase === '03' || phase === '04') {
+  if (['03', '04', '05'].includes(phase)) {
     check('provider-fixtures', [
       'scripts/probe.mjs',
       '--offline',
@@ -379,7 +381,7 @@ try {
       }
     }
   }
-  if (phase === '04') {
+  if (phase === '04' || phase === '05') {
     check('handoff-fixture', ['scripts/handoff-fixture.mjs']);
     const handoff = JSON.parse(
       readFileSync(resolve(artifacts, 'handoff-fixture.log'), 'utf8'),
@@ -394,6 +396,49 @@ try {
       handoff.requiredFacts.present !== handoff.requiredFacts.expected
     )
       throw new Error('Handoff fixture failed');
+  }
+  if (phase === '05') {
+    check('tools-fixture', ['scripts/tools-fixture.mjs']);
+    const tools = JSON.parse(
+      readFileSync(resolve(artifacts, 'tools-fixture.log'), 'utf8'),
+    );
+    if (
+      tools.classification !== 'offline' ||
+      tools.liveProvidersTested.length !== 0 ||
+      tools.problems.length !== 0 ||
+      Object.keys(tools.checks).length < 14 ||
+      !Object.values(tools.checks).every((value) => value === true)
+    )
+      throw new Error('Tools fixture failed');
+    check('compatibility-report', ['scripts/compatibility-report.mjs']);
+    const compatibility = JSON.parse(
+      readFileSync(resolve(artifacts, 'compatibility-report.log'), 'utf8'),
+    );
+    const externalRestricted = compatibility.rows.filter(
+      (row) =>
+        ['codex', 'claude', 'opencode'].includes(row.runtime) &&
+        row.profile === 'read-only',
+    );
+    if (
+      compatibility.rows.length !== 100 ||
+      externalRestricted.length !== 30 ||
+      !externalRestricted.every((row) => row.status === 'blocked')
+    )
+      throw new Error('Compatibility report failed');
+    // A missing browser exits 2 and fails the gate: unavailable is not a pass.
+    check('browser-fixture', ['scripts/browser-fixture.mjs']);
+    const browser = JSON.parse(
+      readFileSync(resolve(artifacts, 'browser-fixture.log'), 'utf8'),
+    );
+    if (
+      browser.status !== 'succeeded' ||
+      !browser.profileRemoved ||
+      browser.activeCount !== 0 ||
+      !browser.blockedRequests.some((url) =>
+        url.startsWith('http://example.com/'),
+      )
+    )
+      throw new Error('Browser fixture failed');
   }
   const after = snapshot();
   if (after.sha256 !== before.sha256)

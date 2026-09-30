@@ -100,6 +100,39 @@ calls are made; the live handoff gate remains open.
   Imports become proposals, never accepted records. External transcripts are
   read without modification and stored as artifacts.
 
+## Phase 5 tools and skills
+
+`npm run gate -- --phase 05 --offline` runs everything through Phase 4 plus the
+Phase 5 suites, a hostile-worker fixture behind the MCP bridge, the compatibility
+report and a real-browser check. A host without a Chromium browser reports the
+browser check as unavailable, which fails the gate rather than passing it.
+
+- **Tools** (`packages/tools`): `file.read`, `file.apply_patch`, `repo.search`,
+  `git.inspect`, `command.run`, `test.run`, `artifact.publish`,
+  `agent.read_result`, `agent.request_work`, `memory.search`, `memory.propose` and
+  `browser.inspect`. Every call passes one gate: the task catalog, the permission
+  profile's effect classes, and for process actions an approval bound to the exact
+  action hash. Results are schema-checked, size-capped and receipted. Workspace
+  paths cannot escape, follow links, reach `.git` or secret files, or write outside
+  owned paths. Patches name the hash they were based on. Git inspection never runs
+  repository-configured programs. Commands never go through a shell.
+- **MCP bridge** (`mcp.ts`): one authenticated loopback endpoint per task attempt
+  exposes only that task's catalog to an external runtime.
+- **Skills** (`skills/`, `packages/skills`): ten original skills with hashed
+  instructions, exact-version dependencies, declarative hooks and fixtures. Skills
+  cannot grant tools or permissions; selected skills are pinned by hash for the
+  life of a task. Every fixture's check fails on the untouched repository and
+  passes with its reference solution.
+- **Native-tool bypass**: Codex, Claude Code and OpenCode run their own shell,
+  edit and web tools outside XVANT. None of their restriction mechanisms is
+  live-tested, so read-only profiles are blocked on them, and trusted-local needs
+  an explicit acknowledgement. `node scripts/compatibility-report.mjs` prints the
+  full skill × runtime × profile matrix.
+- **Browser** (`browser.inspect`): a host-registered Chromium browser, a new
+  temporary profile per call, loopback origins only, and every other request
+  blocked through DevTools. This is defense in depth for trusted local pages, not
+  a network sandbox.
+
 ## Layout
 
 | Path                              | Responsibility                                      |
@@ -109,6 +142,9 @@ calls are made; the live handoff gate remains open.
 | `packages/adapters/src/simulated` | Deterministic simulation and fault fixtures         |
 | `packages/context`                | Packets, retrieval, handoffs, inspection, transfer  |
 | `packages/memory`                 | Memory freshness and packet conversion              |
+| `packages/tools`                  | Tool registry, tools, MCP bridge, browser           |
+| `packages/skills`                 | Skill catalog, pinning, hooks, compatibility        |
+| `skills`, `fixtures/skills`       | Original skills and their evaluation fixtures       |
 | `apps/controller`                 | In-memory orchestration and runnable demo           |
 | `scripts`                         | Offline gate and test-report validation             |
 | `tests`                           | Gate-policy tests                                   |

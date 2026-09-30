@@ -48,7 +48,7 @@ export function validateTestReport(
   return { total, suites };
 }
 export function phaseSuites(phase: string): Record<string, number> {
-  if (!['01', '02', '03', '04'].includes(phase))
+  if (!['01', '02', '03', '04', '05'].includes(phase))
     throw new Error('Unsupported gate phase');
   const baseline: Record<string, number> = {
     'packages/contracts/src/contracts.test.ts': 15,
@@ -70,7 +70,7 @@ export function phaseSuites(phase: string): Record<string, number> {
         'apps/controller/src/service.test.ts': 3,
         'apps/controller/src/http/server.test.ts': 11,
         'tests/faults/crash.test.ts': 7,
-        ...(phase === '03' || phase === '04'
+        ...(['03', '04', '05'].includes(phase)
           ? {
               'packages/adapters/src/providers/conformance.test.ts': 19,
               'packages/adapters/src/providers/protocol.test.ts': 8,
@@ -109,7 +109,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'tests/faults/opencode-live.test.ts': 12,
             }
           : {}),
-        ...(phase === '04'
+        ...(phase === '04' || phase === '05'
           ? {
               'packages/context/src/packet.test.ts': 21,
               'packages/context/src/retrieval.test.ts': 12,
@@ -119,6 +119,23 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/context/src/inspect.test.ts': 2,
               'packages/context/src/transfer.test.ts': 6,
               'apps/controller/src/handoff-fixture.test.ts': 3,
+            }
+          : {}),
+        ...(phase === '05'
+          ? {
+              'packages/tools/src/registry.test.ts': 10,
+              'packages/tools/src/files.test.ts': 18,
+              'packages/tools/src/repository.test.ts': 6,
+              'packages/tools/src/process.test.ts': 12,
+              'packages/tools/src/controller.test.ts': 5,
+              'packages/tools/src/mcp.test.ts': 8,
+              'packages/tools/src/browser.test.ts': 8,
+              'packages/skills/src/catalog.test.ts': 12,
+              'packages/skills/src/hooks.test.ts': 4,
+              'packages/skills/src/bundled.test.ts': 13,
+              'packages/skills/src/compatibility.test.ts': 4,
+              'packages/policy/src/runtimes.test.ts': 9,
+              'apps/controller/src/tools-fixture.test.ts': 1,
             }
           : {}),
       };
