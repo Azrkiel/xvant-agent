@@ -1,0 +1,54 @@
+{
+  "bundleId": "G02-20260927T001137506Z-e373b7507a82",
+  "archivedAt": "2026-09-30T15:12:19.655Z",
+  "sourceRoot": "C:/Users/jiang/XVANT",
+  "receipt": {
+    "file": "C:/Users/jiang/XVANT/docs/evidence/G02.json",
+    "sha256": "e41795a254ac979dfc0a67b67f4e186841e8963de9e461d8f7543c9cc296904b",
+    "status": "passed"
+  },
+  "artifacts": [
+    {
+      "path": ".artifacts/typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/format.log",
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/tests.log",
+      "sha256": "fe2beeeae2d18bac24994900d5beba7462ed0904e08f321fb10ea8bcbce63c1a",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/runtime.log",
+      "sha256": "138c3bf5a8e868989b30263b72b014689991bfb1a6a982018994895893fe18fc",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/tests.json",
+      "sha256": "82f2c31b40b2915726d086191d81de8f4ecef7f799535f427c0561a20c2192cf",
+      "status": "preserved"
+    },
+    {
+      "path": "coverage/coverage-summary.json",
+      "sha256": "15b8da94572bd9ef0c784749e084f9d29a3b1f101ed41a79f44d25d7c3ca5e52",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/source-manifest.json",
+      "sha256": "f7c53fb2b19feee507ac96877340432741d113c41a8a640c607914208c862885",
+      "status": "preserved"
+    }
+  ],
+  "extras": [],
+  "integrity": "complete"
+}

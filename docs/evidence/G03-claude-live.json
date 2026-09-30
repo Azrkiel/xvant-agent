@@ -1,0 +1,24 @@
+{
+  "generatedAt": "2026-09-30T17:54:35.090Z",
+  "classification": "live",
+  "scope": "claude-workspace-write-smoke",
+  "runtimeVersion": "2.1.285",
+  "adapterVersion": "claude-headless-v1",
+  "stateDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent\\.artifacts/live-claude-1790790874083",
+  "events": 4,
+  "state": "ready_for_acceptance",
+  "finalText": "Created `hello.txt` in the current directory. It holds the single line `hi from claude`. Nothing else was changed or committed.",
+  "tokens": 171,
+  "auth": {
+    "mode": "claude.ai",
+    "plan": "subscription"
+  },
+  "sessionId": "880aa3f2-f7a9-4cb9-a026-34a31940d618",
+  "runId": "371cc112-e0dc-47c3-a135-7ae47547cb61",
+  "outcome": "completed",
+  "verification": "passed",
+  "failure": null,
+  "activeCount": 0,
+  "acceptedAfterRestart": true,
+  "status": "passed"
+}

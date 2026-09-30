@@ -1,0 +1,46 @@
+{
+  "bundleId": "G03-opencode-live-20260930T141100224Z-a5e691af1f99",
+  "archivedAt": "2026-09-30T15:12:18.149Z",
+  "sourceRoot": "C:/Users/jiang/.codex/worktrees/verify-opencode-live/xvant-agent",
+  "receipt": {
+    "file": "C:/Users/jiang/.codex/worktrees/verify-opencode-live/xvant-agent/docs/evidence/G03-opencode-live.json",
+    "sha256": "700fae13439160aeff251777b33fede4aa65f8e2878ea9888d6fe2d8fb3fc3fc",
+    "status": "passed"
+  },
+  "artifacts": [],
+  "extras": [
+    {
+      "path": ".artifacts/opencode-live-1790777460222/objects/352903925ac47158d69629e588b12bb4409560aa8b469e4f5e6e82ffb6a40566",
+      "sha256": "352903925ac47158d69629e588b12bb4409560aa8b469e4f5e6e82ffb6a40566"
+    },
+    {
+      "path": ".artifacts/opencode-live-1790777460222/objects/3e9575269ccef8c7e0bf23f9fd492e7d0ff3a239233daf543986595f2f10fb4b",
+      "sha256": "3e9575269ccef8c7e0bf23f9fd492e7d0ff3a239233daf543986595f2f10fb4b"
+    },
+    {
+      "path": ".artifacts/opencode-live-1790777460222/objects/a81ee24542d49697a64d3d44feadddd68bf4f2927d7a0100259b935db55ab029",
+      "sha256": "a81ee24542d49697a64d3d44feadddd68bf4f2927d7a0100259b935db55ab029"
+    },
+    {
+      "path": ".artifacts/opencode-live-1790777460222/objects/e5de88e57d2c3dc2f77bc49fdcdda764f662abf6f3c29e43cd885764f8a629b6",
+      "sha256": "e5de88e57d2c3dc2f77bc49fdcdda764f662abf6f3c29e43cd885764f8a629b6"
+    },
+    {
+      "path": ".artifacts/opencode-live-1790777460222/objects/ebdb186697bf886604b16ec2a5f97a6932c9c6d992d5e42c8e44f50231467c1d",
+      "sha256": "ebdb186697bf886604b16ec2a5f97a6932c9c6d992d5e42c8e44f50231467c1d"
+    },
+    {
+      "path": ".artifacts/opencode-live-1790777460222/state.sqlite",
+      "sha256": "16898beffcad7a30e7c2d1d42d386e8e0f701bbbfeff924dc82a16b42ec8c150"
+    },
+    {
+      "path": ".artifacts/opencode-live-1790777460222/work/.xvant-result-attempt1.txt",
+      "sha256": "352903925ac47158d69629e588b12bb4409560aa8b469e4f5e6e82ffb6a40566"
+    },
+    {
+      "path": ".artifacts/opencode-live-1790777460222/work/.xvant-result-attempt2.txt",
+      "sha256": "352903925ac47158d69629e588b12bb4409560aa8b469e4f5e6e82ffb6a40566"
+    }
+  ],
+  "integrity": "complete"
+}

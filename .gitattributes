@@ -1,1 +1,4 @@
 * text=auto eol=lf
+
+# Evidence bundles are verified by exact byte hashes; never convert line endings.
+docs/evidence/runs/** -text

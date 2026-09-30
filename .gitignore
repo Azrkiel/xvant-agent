@@ -5,3 +5,7 @@ coverage/
 dist/
 *.tsbuildinfo
 .env
+
+# Evidence bundles keep copies of gate artifacts from these directories.
+!docs/evidence/runs/**/.artifacts/
+!docs/evidence/runs/**/coverage/

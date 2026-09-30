@@ -1,0 +1,490 @@
+
+ RUN  v5.0.1 C:/Users/jiang/Downloads/xvant/xvant-agent
+      Coverage enabled with v8
+
+ ✓ apps/controller/src/codex-offline.test.ts (35 tests) 36555ms
+   ✓ orchestrates success through owned shutdown, verification and review without acceptance 661ms
+   ✓ orchestrates approval through owned shutdown, verification and review without acceptance 423ms
+   ✓ retains reservations after malformed without verifying or resending 1410ms
+   ✓ retains reservations after timeout without verifying or resending 3284ms
+   ✓ retains reservations after late-malformed without verifying or resending 1408ms
+   ✓ does not dispatch a turn when stopped immediately after session setup 1378ms
+   ✓ stops an in-flight peer without verification or replay 1441ms
+   ✓ keeps connection identity separate from existing command identities 535ms
+   ✓ performs explicit create before turn dispatch and binds evidence to the returned session 671ms
+   ✓ performs explicit resume before turn dispatch and binds evidence to the returned session 558ms
+   ✓ never starts a turn or retries after thread-rpc-error 1352ms
+   ✓ never starts a turn or retries after thread-mismatch 1462ms
+   ✓ never starts a turn or retries after thread-malformed 1419ms
+   ✓ never starts a turn or retries after thread-timeout 3256ms
+   ✓ keeps native-error away from verification and acceptance 1422ms
+   ✓ keeps native-retry away from verification and acceptance 1371ms
+   ✓ keeps turn-rpc-error away from verification and acceptance 1394ms
+   ✓ keeps turn-failed away from verification and acceptance 331ms
+   ✓ never sends turn/interrupt for a holding turn without admission 3247ms
+   ✓ keeps an admitted interrupt unknown after interrupt-error 1508ms
+   ✓ keeps an admitted interrupt unknown after interrupt-ignored 1564ms
+   ✓ rejects Codex interrupt before dispatch and after the terminal turn 609ms
+   ✓ fences Codex interrupt admission after controller takeover 1858ms
+   ✓ classifies Codex native-error and blocks the account group 1720ms
+ ✓ tests/native-process.test.ts (2 tests) 25470ms
+   ✓ claude native offline process conformance 12514ms
+   ✓ opencode native offline process conformance 12952ms
+ ✓ tests/faults/native-controller.test.ts (26 tests) 26299ms
+   ✓ claude: recovers controller death at native.after_reserve without replay or acceptance 679ms
+   ✓ claude: recovers controller death at native.after_setup without replay or acceptance 1142ms
+   ✓ claude: recovers controller death at provider.interrupt.before_commit without replay or acceptance 897ms
+   ✓ claude: recovers controller death at native.after_interrupt_request without replay or acceptance 1164ms
+   ✓ claude: recovers controller death at native.after_interrupt without replay or acceptance 1046ms
+   ✓ claude: recovers controller death at provider.send.before_commit without replay or acceptance 644ms
+   ✓ claude: recovers controller death at provider.receive.before_commit without replay or acceptance 1007ms
+   ✓ claude: recovers controller death at native.after_shutdown without replay or acceptance 1216ms
+   ✓ claude: recovers controller death at provider.result.before_commit without replay or acceptance 946ms
+   ✓ claude: recovers controller death at native.before_review without replay or acceptance 1293ms
+   ✓ claude: recovers controller death at native.prepare.before_commit without replay or acceptance 1204ms
+   ✓ opencode: recovers controller death at native.after_reserve without replay or acceptance 529ms
+   ✓ opencode: recovers controller death at native.after_setup without replay or acceptance 893ms
+   ✓ opencode: recovers controller death at provider.interrupt.before_commit without replay or acceptance 1023ms
+   ✓ opencode: recovers controller death at native.after_interrupt_request without replay or acceptance 912ms
+   ✓ opencode: recovers controller death at native.after_interrupt without replay or acceptance 1030ms
+   ✓ opencode: recovers controller death at provider.send.before_commit without replay or acceptance 625ms
+   ✓ opencode: recovers controller death at provider.receive.before_commit without replay or acceptance 891ms
+   ✓ opencode: recovers controller death at native.after_shutdown without replay or acceptance 1146ms
+   ✓ opencode: recovers controller death at provider.result.before_commit without replay or acceptance 1004ms
+   ✓ opencode: recovers controller death at native.before_review without replay or acceptance 1299ms
+   ✓ opencode: recovers controller death at native.prepare.before_commit without replay or acceptance 1072ms
+   ✓ claude: keeps a committed quota block across death at provider.failure.before_commit 1301ms
+   ✓ claude: keeps a committed quota block across death at provider.result.before_commit 1121ms
+   ✓ opencode: keeps a committed quota block across death at provider.failure.before_commit 1037ms
+   ✓ opencode: keeps a committed quota block across death at provider.result.before_commit 1159ms
+ ✓ apps/controller/src/opencode-http.test.ts (17 tests) 18525ms
+   ✓ runs success over an owned authenticated endpoint through review 612ms
+   ✓ runs permission over an owned authenticated endpoint through review 531ms
+   ✓ never journals or persists the endpoint secret 539ms
+   ✓ refuses no-auth (an unauthenticated server) before any session traffic 1484ms
+   ✓ refuses wrong-version (an unpinned server version) before any session traffic 1596ms
+   ✓ refuses announce-remote (a non-loopback announcement) before any session traffic 1293ms
+   ✓ creates and binds a session over HTTP before prompting 674ms
+   ✓ never prompts after setup-mismatch 1613ms
+   ✓ never prompts after create-permission 1484ms
+   ✓ admits a host interrupt and confirms abort before cancelling 425ms
+   ✓ times out a holding turn without admission and never aborts 4386ms
+   ✓ classifies error from the event stream 1635ms
+   ✓ classifies quota-error from the event stream 417ms
+   ✓ fences a stale owner after endpoint binding 1610ms
+ ✓ packages/supervisor/src/index.test.ts (14 tests) 15342ms
+   ✓ owned process supervision (8)
+     ✓ hard deadline kills a worker that does not cooperate 1367ms
+     ✓ rejects forged identity and accepts owned cancellation 1142ms
+     ✓ abort interrupts active execution 1192ms
+   ✓ terminates the owned ordinary descendant tree on deadline 1588ms
+   ✓ global stop interrupts every owned process and rejects stale generations 1410ms
+   ✓ retains ownership after uncertain shutdown so cancellation can be retried 7743ms
+ ✓ apps/controller/src/native-offline.test.ts (98 tests) 126132ms
+   ✓ claude: performs setup before fixture dispatch 785ms
+   ✓ claude: confirms interrupt without verifying or accepting 501ms
+   ✓ claude: confirms interrupt-result-first without verifying or accepting 498ms
+   ✓ claude: fails closed after setup-error 1754ms
+   ✓ claude: fails closed after setup-mismatch 1750ms
+   ✓ claude: fails closed after setup-timeout 3242ms
+   ✓ claude: fails closed after interrupt-error 1914ms
+   ✓ claude: fails closed after interrupt-mismatch 1795ms
+   ✓ claude: fails closed after interrupt-timeout 3363ms
+   ✓ claude: fails closed after interrupt-partial 538ms
+   ✓ claude: fails closed after interrupt-ack-only 3461ms
+   ✓ claude: does not dispatch after stop at the setup boundary 1643ms
+   ✓ claude: journals success through shutdown and review without acceptance 780ms
+   ✓ claude: journals permission through shutdown and review without acceptance 793ms
+   ✓ claude: retains reservations after wrong-session 1753ms
+   ✓ claude: retains reservations after malformed 1572ms
+   ✓ claude: retains reservations after partial 610ms
+   ✓ claude: retains reservations after error 551ms
+   ✓ claude: retains reservations after timeout 3424ms
+   ✓ claude: fails closed at provider.receive.before_commit 1708ms
+   ✓ claude: fails closed at native.after_shutdown 501ms
+   ✓ claude: stops an in-flight peer without verification 2012ms
+   ✓ claude: refuses result persistence after controller takeover 480ms
+   ✓ claude: preserves verified evidence when stopped before review 774ms
+   ✓ opencode: performs setup before fixture dispatch 679ms
+   ✓ opencode: confirms interrupt without verifying or accepting 531ms
+   ✓ opencode: confirms interrupt-result-first without verifying or accepting 452ms
+   ✓ opencode: fails closed after setup-error 1391ms
+   ✓ opencode: fails closed after setup-mismatch 1608ms
+   ✓ opencode: fails closed after setup-timeout 3259ms
+   ✓ opencode: fails closed after interrupt-error 1615ms
+   ✓ opencode: fails closed after interrupt-mismatch 1893ms
+   ✓ opencode: fails closed after interrupt-timeout 3261ms
+   ✓ opencode: fails closed after interrupt-partial 462ms
+   ✓ opencode: fails closed after interrupt-ack-only 3449ms
+   ✓ opencode: does not dispatch after stop at the setup boundary 1539ms
+   ✓ opencode: journals success through shutdown and review without acceptance 748ms
+   ✓ opencode: journals permission through shutdown and review without acceptance 758ms
+   ✓ opencode: retains reservations after wrong-session 1688ms
+   ✓ opencode: retains reservations after malformed 1529ms
+   ✓ opencode: retains reservations after partial 500ms
+   ✓ opencode: retains reservations after error 1571ms
+   ✓ opencode: retains reservations after timeout 3172ms
+   ✓ opencode: fails closed at provider.send.before_commit 1400ms
+   ✓ opencode: fails closed at provider.receive.before_commit 1653ms
+   ✓ opencode: fails closed at native.after_shutdown 506ms
+   ✓ opencode: stops an in-flight peer without verification 1406ms
+   ✓ opencode: refuses result persistence after controller takeover 452ms
+   ✓ opencode: preserves verified evidence when stopped before review 802ms
+   ✓ does not prepare review when registered verification fails 742ms
+   ✓ creates and binds an OpenCode session before success 693ms
+   ✓ creates and binds an OpenCode session before permission 711ms
+   ✓ creates and binds an OpenCode session before interrupt 470ms
+   ✓ does not dispatch after OpenCode creation setup-error 1509ms
+   ✓ does not dispatch after OpenCode creation setup-mismatch 1597ms
+   ✓ does not dispatch after OpenCode creation setup-timeout 3279ms
+   ✓ does not dispatch after OpenCode creation create-malformed 1552ms
+   ✓ does not dispatch after OpenCode creation create-reused 1523ms
+   ✓ does not dispatch after OpenCode creation create-permission 1645ms
+   ✓ does not dispatch after OpenCode creation create-partial 3545ms
+   ✓ keeps the provisional reservation when a returned session belongs to another connection 1541ms
+   ✓ retains the newly bound session when stopped before dispatch 1641ms
+   ✓ launches a reserved Claude creation UUID through success 714ms
+   ✓ launches a reserved Claude creation UUID through permission 792ms
+   ✓ launches a reserved Claude creation UUID through interrupt 474ms
+   ✓ persists explicit Claude resume options instead of an implicit latest session 671ms
+   ✓ retains Claude UUID after launch-error without verification 421ms
+   ✓ retains Claude UUID after launch-timeout without verification 3199ms
+   ✓ retains Claude UUID after wrong-session without verification 1501ms
+   ✓ claude: never interrupts a holding turn without host admission 3354ms
+   ✓ claude: makes repeated interrupt admission idempotent 467ms
+   ✓ claude: rejects interrupt before dispatch and after a terminal result 813ms
+   ✓ claude: leaves admission retryable after a failed commit 490ms
+   ✓ claude: fences interrupt admission after controller takeover 1766ms
+   ✓ opencode: never interrupts a holding turn without host admission 3389ms
+   ✓ opencode: makes repeated interrupt admission idempotent 518ms
+   ✓ opencode: rejects interrupt before dispatch and after a terminal result 699ms
+   ✓ opencode: leaves admission retryable after a failed commit 460ms
+   ✓ opencode: fences interrupt admission after controller takeover 1477ms
+   ✓ rejects Claude interrupt admission without advertised receipt capabilities 1780ms
+   ✓ claude: records auth-error and blocks the account group until cleared 1217ms
+   ✓ claude: records quota-error and blocks the account group until cleared 1550ms
+   ✓ claude: keeps model and worker failures attempt-scoped 469ms
+   ✓ claude: classifies an error result without leaking message text 501ms
+   ✓ claude: never records an abort error after an admitted interrupt 632ms
+   ✓ opencode: records auth-error and blocks the account group until cleared 1382ms
+   ✓ opencode: records quota-error and blocks the account group until cleared 1309ms
+   ✓ opencode: keeps model and worker failures attempt-scoped 534ms
+   ✓ opencode: classifies an error result without leaking message text 1586ms
+   ✓ opencode: never records an abort error after an admitted interrupt 439ms
+ ✓ packages/storage/src/providers.test.ts (58 tests) 14853ms
+   ✓ bounds journal growth and poisons the connection at the limit 11566ms
+ ✓ apps/controller/src/opencode-live.test.ts (20 tests) 14990ms
+   ✓ journals before launch, verifies output, and accepts live evidence explicitly after restart 781ms
+   ✓ retains reservations without acceptance on malformed 412ms
+   ✓ retains reservations without acceptance on wrong-session 468ms
+   ✓ retains reservations without acceptance on nonzero 493ms
+   ✓ retains reservations without acceptance on timeout 3691ms
+   ✓ blocks account on v2 auth failure without persisting raw error text 594ms
+   ✓ never dispatches inference after invalid provisioning: create-malformed 479ms
+   ✓ never dispatches inference after invalid provisioning: create-wrong-root 474ms
+   ✓ never dispatches inference after invalid provisioning: create-nonzero 379ms
+   ✓ persists interrupt admission before process cancellation and retains uncertainty 1707ms
+   ✓ retains durable work on injected failure at live.after_reserve 313ms
+   ✓ retains durable work on injected failure at live.after_intent 375ms
+   ✓ retains durable work on injected failure at live.after_shutdown 609ms
+   ✓ snapshots caller inputs before asynchronous inventory 917ms
+   ✓ persists an auth block when valid error is followed by malformed output 577ms
+   ✓ refuses cross-project resume of an accepted native session 852ms
+   ✓ lets a workspace-write run edit through its own tools, without a host result file 855ms
+   ✓ stops a run that reports any billed step 520ms
+ ✓ apps/controller/src/codex-live.test.ts (6 tests) 11213ms
+   ✓ edits its worktree, binds identities and prepares patch evidence for review 2718ms
+   ✓ stops before any thread when the session is not on the subscription login 2034ms
+   ✓ records a failed turn without verification 1002ms
+   ✓ interrupts a running turn through host admission 1095ms
+   ✓ rejects write access without acknowledged native bypass 864ms
+   ✓ times out as unknown without replaying the turn 3496ms
+ ✓ tests/faults/opencode-live.test.ts (12 tests) 12058ms
+   ✓ recovers live CLI controller death at live.after_reserve without replay or acceptance 983ms
+   ✓ recovers live CLI controller death at provider.send.before_commit without replay or acceptance 675ms
+   ✓ recovers live CLI controller death at live.after_session without replay or acceptance 887ms
+   ✓ recovers live CLI controller death at provider.session.before_commit without replay or acceptance 903ms
+   ✓ recovers live CLI controller death at live.after_intent without replay or acceptance 835ms
+   ✓ recovers live CLI controller death at live.after_launch without replay or acceptance 1015ms
+   ✓ recovers live CLI controller death at provider.receive.before_commit without replay or acceptance 925ms
+   ✓ recovers live CLI controller death at live.after_shutdown without replay or acceptance 1007ms
+   ✓ recovers live CLI controller death at provider.result.before_commit without replay or acceptance 914ms
+   ✓ recovers live CLI controller death at provider.verify.before_commit without replay or acceptance 1198ms
+   ✓ recovers live CLI controller death at provider.verified.before_commit without replay or acceptance 1413ms
+   ✓ recovers live CLI controller death at native.prepare.before_commit without replay or acceptance 1291ms
+ ✓ packages/storage/src/git-workspace.test.ts (5 tests) 8219ms
+   ✓ creates an isolated worktree at a recorded base commit 960ms
+   ✓ captures working-tree changes as a patch against the base 2746ms
+   ✓ is independent of commits the worker made 2150ms
+   ✓ rejects a directory that is not the worktree root 840ms
+   ✓ rejects a tampered patch during verification 1520ms
+ ✓ apps/controller/src/claude-live.test.ts (7 tests) 8438ms
+   ✓ builds explicit-session arguments without user MCP servers or network tools 714ms
+   ✓ removes API-key and nested-session variables from the child 486ms
+   ✓ edits its worktree and prepares verified evidence on the reserved session 2349ms
+   ✓ refuses a session that reports an API key 938ms
+   ✓ refuses a stream for another session 1051ms
+   ✓ records a classified account failure 952ms
+   ✓ cancels a running turn by stopping its owning process 1942ms
+ ✓ tests/faults/codex-controller.test.ts (9 tests) 7735ms
+   ✓ recovers controller death at codex.after_reserve without replay or acceptance 604ms
+   ✓ recovers controller death at codex.after_shutdown without replay or acceptance 860ms
+   ✓ recovers controller death at provider.result.before_commit without replay or acceptance 788ms
+   ✓ recovers controller death at codex.before_review without replay or acceptance 1113ms
+   ✓ recovers controller death at native.prepare.before_commit without replay or acceptance 1158ms
+   ✓ recovers controller death at provider.session.before_commit without replay or acceptance 755ms
+   ✓ recovers controller death at codex.after_session without replay or acceptance 830ms
+   ✓ recovers controller death at provider.interrupt.before_commit without replay or acceptance 772ms
+   ✓ recovers controller death at codex.after_interrupt_request without replay or acceptance 848ms
+ ✓ apps/controller/src/durable.test.ts (13 tests) 7713ms
+   ✓ runs isolated simulation and trusted checks then accepts after restart 634ms
+   ✓ persists normalized quota cause 402ms
+   ✓ persists normalized failure cause 407ms
+   ✓ persists normalized malformed cause 377ms
+   ✓ persists normalized unknown cause 372ms
+   ✓ does not dispatch again when an idempotent request is repeated 492ms
+   ✓ records verifier failure without accepting worker claims 536ms
+   ✓ kills a hanging verifier and persists attention 2559ms
+   ✓ recovers incomplete verification after restart 712ms
+   ✓ normalizes synchronous verifier configuration failures 460ms
+   ✓ renews a short lease while the controller is idle 661ms
+ ✓ tests/codex-process.test.ts (6 tests) 6205ms
+   ✓ Codex offline stdio process (6)
+     ✓ runs success through real Node pipes with no provider 1027ms
+     ✓ runs approval through real Node pipes with no provider 784ms
+     ✓ runs interrupt through real Node pipes with no provider 652ms
+     ✓ retains uncertainty after disconnect and does not resend 669ms
+     ✓ retains uncertainty after malformed and does not resend 850ms
+     ✓ retains uncertainty after timeout and does not resend 2214ms
+ ✓ tests/faults/opencode-http.test.ts (6 tests) 5540ms
+   ✓ recovers HTTP controller death at opencode.before_launch without replay, secrets or orphans 762ms
+   ✓ recovers HTTP controller death at provider.endpoint.before_commit without replay, secrets or orphans 848ms
+   ✓ recovers HTTP controller death at opencode.after_endpoint without replay, secrets or orphans 867ms
+   ✓ recovers HTTP controller death at opencode.after_setup without replay, secrets or orphans 885ms
+   ✓ recovers HTTP controller death at opencode.after_interrupt_request without replay, secrets or orphans 1139ms
+   ✓ recovers HTTP controller death at provider.result.before_commit without replay, secrets or orphans 1033ms
+ ✓ packages/tools/src/repository.test.ts (6 tests) 4447ms
+   ✓ repo.search (2)
+     ✓ returns ranked files with matching lines 654ms
+     ✓ bounds results 397ms
+   ✓ git.inspect (4)
+     ✓ reports status without secret paths 537ms
+     ✓ returns a diff that drops secret files and credential-bearing hunks 602ms
+     ✓ reports head, branch and distance from the task base revision 882ms
+     ✓ never runs repository-configured diff drivers or fsmonitor hooks 1368ms
+ ✓ tests/faults/claude-launch.test.ts (8 tests) 4766ms
+   ✓ recovers Claude create crash at native.after_reserve without launch replay 679ms
+   ✓ recovers Claude create crash at provider.send.before_commit without launch replay 567ms
+   ✓ recovers Claude create crash at native.before_launch without launch replay 543ms
+   ✓ recovers Claude create crash at native.after_launch without launch replay 633ms
+   ✓ recovers Claude resume crash at native.after_reserve without launch replay 521ms
+   ✓ recovers Claude resume crash at provider.send.before_commit without launch replay 630ms
+   ✓ recovers Claude resume crash at native.before_launch without launch replay 521ms
+   ✓ recovers Claude resume crash at native.after_launch without launch replay 663ms
+ ✓ apps/controller/src/native-verifier.test.ts (21 tests) 4382ms
+   ✓ retains reservations after verifier timeout 1173ms
+   ✓ does not publish late evidence after ownership changes during a check 652ms
+   ✓ restores verified receipts together with every referenced artifact 576ms
+ ✓ packages/skills/src/bundled.test.ts (13 tests) 4786ms
+   ✓ bundled skills (13)
+     ✓ fixture diagnose-off-by-one fails untouched and passes with its reference solution 654ms
+     ✓ fixture handoff-partial-feature fails untouched and passes with its reference solution 319ms
+     ✓ fixture implement-clamp fails untouched and passes with its reference solution 540ms
+     ✓ fixture integrate-two-patches fails untouched and passes with its reference solution 670ms
+     ✓ fixture plan-rate-limit fails untouched and passes with its reference solution 349ms
+     ✓ fixture review-unsafe-merge fails untouched and passes with its reference solution 370ms
+     ✓ fixture test-slugify fails untouched and passes with its reference solution 985ms
+ ✓ tests/faults/provider-crash.test.ts (8 tests) 4399ms
+   ✓ recovers actual process death at provider.reserve.before_commit without replay 537ms
+   ✓ recovers actual process death at provider.send.before_commit without replay 532ms
+   ✓ recovers actual process death at before_write without replay 489ms
+   ✓ recovers actual process death at after_write without replay 497ms
+   ✓ recovers actual process death at provider.receive.before_commit without replay 531ms
+   ✓ recovers actual process death at after_ack without replay 514ms
+   ✓ recovers actual process death at provider.result.before_commit without replay 552ms
+   ✓ recovers actual process death at after_result without replay 740ms
+ ✓ tests/faults/native-session.test.ts (4 tests) 3676ms
+   ✓ recovers OpenCode creation death at native.after_reserve without dispatch or recreation 842ms
+   ✓ recovers OpenCode creation death at provider.session.before_commit without dispatch or recreation 912ms
+   ✓ recovers OpenCode creation death at native.after_session without dispatch or recreation 947ms
+   ✓ recovers OpenCode creation death at native.after_setup without dispatch or recreation 969ms
+ ✓ packages/tools/src/browser.test.ts (8 tests) 3904ms
+   ✓ browser.inspect (8)
+     ✓ captures page evidence in an isolated, deleted profile 1632ms
+     ✓ stops the browser and removes the profile when the page never loads 2098ms
+ ✓ tests/faults/crash.test.ts (7 tests) 3709ms
+   ✓ survives process death at create.before_commit without replay 583ms
+   ✓ survives process death at dispatch.before_commit without replay 543ms
+   ✓ survives process death at after_dispatch without replay 468ms
+   ✓ survives process death at send.before_commit without replay 512ms
+   ✓ survives process death at after_send without replay 541ms
+   ✓ survives process death at after_ack without replay 513ms
+   ✓ survives process death at after_result without replay 543ms
+ ✓ apps/controller/src/handoff-fixture.test.ts (3 tests) 3111ms
+   ✓ offline handoff fixture (3)
+     ✓ lets a second worker finish the task from the packet alone 1147ms
+     ✓ fails when the handoff omits the continuation value 947ms
+     ✓ makes the recipient refuse a tampered packet 1015ms
+ ✓ apps/controller/src/native-review.test.ts (12 tests) 3379ms
+   ✓ accepts only the explicit reviewed offline evidence and audits the actor 367ms
+   ✓ rolls acceptance state, event and reservation release back together 570ms
+   ✓ does not review unrelated objects or accept a reconciled connection 618ms
+   ✓ preserves a pending immutable review across controller restart 500ms
+ ✓ apps/controller/src/offline-roster.test.ts (2 tests) 3015ms
+   ✓ routes ten concurrent named workers to their own sessions and outcomes 3005ms
+ ✓ tests/faults/native-verification.test.ts (4 tests) 2825ms
+   ✓ preserves native verification across process boundary provider.verify.before_commit 553ms
+   ✓ preserves native verification across process boundary provider.verified.before_commit 696ms
+   ✓ preserves native verification across process boundary after_verified 815ms
+   ✓ preserves native verification across process boundary success 755ms
+ ✓ tests/faults/native-acceptance.test.ts (3 tests) 2436ms
+   ✓ atomically survives native acceptance crash at native.prepare.before_commit 906ms
+   ✓ atomically survives native acceptance crash at native.accept.before_commit 776ms
+   ✓ atomically survives native acceptance crash at after_accepted 749ms
+ ✓ packages/context/src/retrieval.test.ts (12 tests) 1556ms
+ ✓ packages/tools/src/process.test.ts (12 tests) 2377ms
+   ✓ command.run (10)
+     ✓ stops at its deadline and redacts credential-shaped output 1532ms
+   ✓ test.run (2)
+     ✓ runs a host-registered command without per-action approval and binds the revision 316ms
+ ✓ packages/storage/src/artifacts.test.ts (20 tests) 1522ms
+ ✓ tests/probe.test.ts (12 tests) 1875ms
+   ✓ provider probe boundary (12)
+     ✓ CLI rejects unsafe or malformed flags: [] 363ms
+     ✓ CLI rejects unsafe or malformed flags: [ '--live', '--read-only', …(2) ] 416ms
+     ✓ CLI rejects unsafe or malformed flags: [ '--offline', '--runtime', …(2) ] 364ms
+     ✓ CLI rejects unsafe or malformed flags: [ '--inventory-only', …(2) ] 363ms
+     ✓ CLI offline mode runs in real Node with no credentials or provider executables 353ms
+ ✓ packages/supervisor/src/interactive.test.ts (3 tests) 1450ms
+   ✓ bounds streamed output and stops callback failures 1123ms
+ ✓ apps/controller/src/http/server.test.ts (11 tests) 1017ms
+   ✓ loads in the pinned Node strip-only runtime 563ms
+ ✓ packages/tools/src/mcp.test.ts (8 tests) 917ms
+ ✓ apps/controller/src/service.test.ts (3 tests) 863ms
+   ✓ creates, queues, executes and accepts through authenticated HTTP 789ms
+ ✓ packages/storage/src/memory.test.ts (12 tests) 502ms
+ ✓ packages/adapters/src/opencode/endpoint.test.ts (9 tests) 728ms
+   ✓ keeps a quiet event stream open past the request timeout 327ms
+ ✓ packages/storage/src/store.test.ts (20 tests) 638ms
+ ✓ apps/controller/src/tools-fixture.test.ts (1 test) 643ms
+   ✓ holds every G05 boundary against a hostile worker behind the MCP bridge 641ms
+ ✓ packages/tools/src/controller.test.ts (5 tests) 302ms
+ ✓ packages/skills/src/catalog.test.ts (12 tests) 254ms
+ ✓ packages/adapters/src/codex/transport.test.ts (20 tests) 227ms
+ ✓ packages/storage/src/workspace.test.ts (5 tests) 155ms
+ ✓ packages/tools/src/files.test.ts (18 tests) 177ms
+ ✓ packages/adapters/src/codex/thread.test.ts (15 tests) 164ms
+ ✓ tests/evidence-bundle.test.ts (8 tests) 126ms
+ ✓ packages/context/src/packet.test.ts (21 tests) 122ms
+ ✓ packages/tools/src/registry.test.ts (10 tests) 112ms
+ ✓ packages/adapters/src/providers/conformance.test.ts (19 tests) 164ms
+ ✓ packages/adapters/src/codex/lifecycle.test.ts (9 tests) 109ms
+ ✓ packages/core/src/graph.test.ts (20 tests) 87ms
+ ✓ packages/adapters/src/providers/native-stream.test.ts (34 tests) 74ms
+ ✓ packages/adapters/src/opencode/cli-stream.test.ts (21 tests) 88ms
+ ✓ packages/context/src/transfer.test.ts (6 tests) 57ms
+ ✓ packages/adapters/src/codex/profile.test.ts (5 tests) 67ms
+ ✓ packages/core/src/task.test.ts (26 tests) 71ms
+ ✓ packages/adapters/src/simulated/simulated.test.ts (10 tests) 54ms
+ ✓ apps/controller/src/controller.test.ts (24 tests) 86ms
+ ✓ packages/skills/src/hooks.test.ts (4 tests) 49ms
+ ✓ packages/adapters/src/live/live-streams.test.ts (11 tests) 31ms
+ ✓ packages/context/src/handoff.test.ts (10 tests) 38ms
+ ✓ packages/adapters/src/providers/native-lifecycle.test.ts (34 tests) 58ms
+ ✓ packages/adapters/src/providers/failures.test.ts (18 tests) 27ms
+ ✓ tests/gate.test.ts (16 tests) 32ms
+ ✓ packages/adapters/src/providers/protocol.test.ts (8 tests) 32ms
+ ✓ packages/context/src/inspect.test.ts (2 tests) 27ms
+ ✓ packages/contracts/src/contracts.test.ts (15 tests) 26ms
+ ✓ packages/memory/src/relevance.test.ts (5 tests) 22ms
+ ✓ packages/adapters/src/providers/claude-launch.test.ts (16 tests) 23ms
+ ✓ packages/core/src/native-acceptance.test.ts (9 tests) 21ms
+ ✓ packages/contracts/src/live.test.ts (9 tests) 10ms
+ ✓ packages/policy/src/runtimes.test.ts (9 tests) 11ms
+ ✓ packages/policy/src/index.test.ts (2 tests) 8ms
+ ✓ packages/skills/src/compatibility.test.ts (4 tests) 13ms
+
+ Test Files  76 passed (76)
+      Tests  1016 passed (1016)
+   Start at  14:06:42
+   Duration  228.86s (tests 95%, import 3%, transform 1%, worker 1%)
+
+JSON report written to C:/Users/jiang/Downloads/xvant/xvant-agent/.artifacts/tests.json
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   94.28 |    90.26 |   97.36 |   95.58 |                   
+ ...controller/src |   92.72 |    89.71 |   96.87 |   94.33 |                   
+  codex-offline.ts |    93.5 |       90 |   94.73 |   94.92 | ...19,133-136,309 
+  controller.ts    |   94.82 |    90.47 |     100 |   94.59 | ...45,208,250,266 
+  durable.ts       |   82.66 |    77.55 |     100 |   83.33 | ...19,133,161-169 
+  ...ve-offline.ts |    95.4 |    96.09 |   95.65 |   96.22 | ...37,150-153,359 
+  ...e-verifier.ts |   96.29 |       96 |     100 |   98.03 | 54                
+  opencode-live.ts |   90.36 |       86 |   92.85 |   94.66 | ...30,152,182-185 
+  service.ts       |   94.44 |    83.33 |     100 |   97.05 | 37                
+ ...oller/src/http |   91.45 |    88.34 |   94.73 |   92.79 |                   
+  server.ts        |   91.45 |    88.34 |   94.73 |   92.79 | ...46,189,222,241 
+ ...ters/src/codex |   93.15 |    91.94 |   95.34 |   95.63 |                   
+  durable.ts       |   92.85 |     87.5 |     100 |   92.85 | 25                
+  lifecycle.ts     |    89.7 |    90.47 |   93.75 |   94.21 | ...78,211,244,325 
+  transport.ts     |   95.86 |    93.75 |      95 |   96.89 | 30,144,186,199    
+ ...pters/src/live |   97.91 |    88.29 |     100 |   97.77 |                   
+  ...e-headless.ts |   98.21 |    90.16 |     100 |   98.07 | 135               
+  opencode-run.ts  |    97.5 |    84.84 |     100 |   97.36 | 120               
+ ...s/src/opencode |   96.95 |    94.59 |    92.3 |   99.28 |                   
+  cli-stream.ts    |   97.36 |    96.15 |   83.33 |     100 | 100,113           
+  endpoint.ts      |   96.59 |    93.22 |      95 |   98.61 | 123               
+ .../src/providers |    97.9 |    95.56 |   98.48 |    98.8 |                   
+  claude-launch.ts |      90 |     87.5 |     100 |     100 | 31                
+  failures.ts      |     100 |    96.55 |     100 |     100 | 38,86             
+  ...-lifecycle.ts |    98.8 |      100 |   92.85 |   98.75 | 212               
+  ...e-profiles.ts |   93.33 |    83.33 |     100 |   92.85 | 23                
+  native-stream.ts |   96.66 |    92.61 |     100 |   98.66 | 161,311           
+  protocol.ts      |     100 |    95.45 |     100 |     100 | 90                
+  registry.ts      |   98.87 |    97.46 |     100 |   98.71 | 166               
+ .../src/simulated |   88.88 |    86.66 |     100 |   91.17 |                   
+  index.ts         |   88.88 |    86.66 |     100 |   91.17 | 45,64-65          
+ ...es/context/src |   93.77 |    86.52 |     100 |   93.81 |                   
+  handoff.ts       |   96.29 |    89.47 |     100 |   96.29 | 55                
+  inspect.ts       |     100 |       70 |     100 |     100 | 45-51,61-71,89    
+  packet.ts        |     100 |    95.23 |     100 |     100 | 28,69             
+  retrieval.ts     |   90.27 |    82.41 |     100 |   90.29 | ...08,220-221,276 
+  transfer.ts      |   92.72 |    90.38 |     100 |   92.59 | 72,109,153,158    
+ .../contracts/src |   99.15 |       98 |     100 |   99.11 |                   
+  live.ts          |      95 |    95.23 |     100 |   94.73 | 70                
+ packages/core/src |     100 |    98.82 |     100 |     100 |                   
+  task.ts          |     100 |    96.77 |     100 |     100 | 147               
+ ...ges/policy/src |   96.49 |    95.83 |     100 |   96.36 |                   
+  index.ts         |      90 |     87.5 |     100 |      90 | 39                
+  tools.ts         |   96.15 |    96.42 |     100 |   95.83 | 49                
+ ...ges/skills/src |      90 |    85.18 |     100 |   92.07 |                   
+  catalog.ts       |      84 |    75.51 |     100 |   86.95 | ...96,100,177,207 
+  compatibility.ts |    91.3 |     87.5 |     100 |   95.23 | 42                
+  hooks.ts         |     100 |    97.14 |     100 |     100 | 80                
+ ...es/storage/src |   93.51 |    88.96 |   98.47 |   95.58 |                   
+  artifacts.ts     |   92.26 |       88 |     100 |   95.23 | ...96,112,305,360 
+  git-workspace.ts |   87.23 |    76.92 |    87.5 |   92.68 | 43,56,77          
+  memory.ts        |   97.53 |    93.24 |     100 |   97.29 | 157,188           
+  providers.ts     |   94.93 |     89.3 |     100 |   96.41 | ...30,668,696,729 
+  store.ts         |   95.07 |    92.44 |    97.1 |   95.57 | ...63-467,474,654 
+  workspace.ts     |   87.62 |    81.57 |     100 |   94.04 | 87,90,105,115,181 
+ ...supervisor/src |   91.54 |    93.51 |    90.9 |    91.2 |                   
+  index.ts         |   91.54 |    93.51 |    90.9 |    91.2 | ...08-309,312-313 
+ ...ages/tools/src |   94.11 |    82.74 |   95.45 |   95.07 |                   
+  browser.ts       |   89.68 |    71.42 |      96 |    92.5 | ...23,268-269,318 
+  controller.ts    |     100 |    92.85 |     100 |     100 | 243               
+  files.ts         |   93.58 |    85.18 |     100 |   92.95 | 28,33,36,90,183   
+  mcp.ts           |   95.61 |    86.74 |     100 |   96.87 | 86,182,216        
+  process.ts       |   96.55 |       75 |     100 |   96.55 | 111               
+  registry.ts      |     100 |    97.29 |     100 |     100 | 114               
+  repository.ts    |   91.66 |    76.31 |      80 |   92.53 | ...21,228,234,238 
+  workspace.ts     |   95.83 |    93.75 |     100 |   95.45 | 23                
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 94.28% ( 4173/4426 )
+Branches     : 90.26% ( 2892/3204 )
+Functions    : 97.36% ( 739/759 )
+Lines        : 95.58% ( 3873/4052 )
+================================================================================

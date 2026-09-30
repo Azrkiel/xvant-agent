@@ -1,0 +1,10 @@
+diff --git a/README.md b/README.md
+index 7985030a4c6cd14abb43c1f6ab817d963cbd4778..36ac9b1d9d522e2899d21ada242ce90ae89cd7e3 100644
+--- a/README.md
++++ b/README.md
+@@ -4,3 +4,5 @@
+ 
+ - `greet(name)` in server/greet.mjs
+ - `banner(text)` in web/format.mjs
++- `farewell(name)` in server/greet.mjs
++- `shout(text)` in web/format.mjs

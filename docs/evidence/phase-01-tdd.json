@@ -1,0 +1,45 @@
+{
+  "scope": "Real Vitest red stages. Initial import-only failure is not counted as a behavior test run.",
+  "notes": [
+    "Lifecycle red used explicit unimplemented stubs. Contract schema tests were already implemented.",
+    "Graph negative fixtures were corrected after type checking; final graph coverage and assertions qualify them.",
+    "Request-isolation red is a regression reproduction against working code."
+  ],
+  "stages": [
+    {
+      "path": ".artifacts/domain-red.json",
+      "sha256": "fbc70a84f9bc56e05f0503f89d69830fb35f4d1d1ea48124307ac0e54ecc93c1",
+      "discovered": 41,
+      "passed": 18,
+      "failed": 23
+    },
+    {
+      "path": ".artifacts/graph-red.json",
+      "sha256": "c7ba2a157988fc0cea54784389f33111d8f6c90804391ac9b17eeaebac6830d8",
+      "discovered": 20,
+      "passed": 16,
+      "failed": 4
+    },
+    {
+      "path": ".artifacts/orchestration-red.json",
+      "sha256": "991f0244509b92283daaa6fc2ed9861e89f5ec7bba4d03550ebb1e2fe952aa83",
+      "discovered": 33,
+      "passed": 0,
+      "failed": 33
+    },
+    {
+      "path": ".artifacts/gate-red.json",
+      "sha256": "dd1c0548246e921eac7339b89584583132de1cc40e861397f75c93966ca666d9",
+      "discovered": 15,
+      "passed": 13,
+      "failed": 2
+    },
+    {
+      "path": ".artifacts/request-isolation-red.json",
+      "sha256": "34e270fccfc88219af2cbd762fec4e11293a0b34f1b4dea1f85d1381facfa079",
+      "discovered": 24,
+      "passed": 23,
+      "failed": 1
+    }
+  ]
+}

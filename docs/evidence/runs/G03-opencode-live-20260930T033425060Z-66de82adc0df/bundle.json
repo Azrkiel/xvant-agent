@@ -1,0 +1,46 @@
+{
+  "bundleId": "G03-opencode-live-20260930T033425060Z-66de82adc0df",
+  "archivedAt": "2026-09-30T15:12:18.383Z",
+  "sourceRoot": "C:/Users/jiang/Downloads/xvant/xvant-agent",
+  "receipt": {
+    "file": "C:/Users/jiang/Downloads/xvant/xvant-agent/docs/evidence/G03-opencode-live.json",
+    "sha256": "2c2116c09453ee8ca622cf844a7ecc520cd8aca9c1d21e525d204275485b34a7",
+    "status": "passed"
+  },
+  "artifacts": [],
+  "extras": [
+    {
+      "path": ".artifacts/opencode-live-1790739265058/objects/255ed26eaf3564ccb3519003c0963bfcf4a506477b39429ddd21d9ec524005c7",
+      "sha256": "255ed26eaf3564ccb3519003c0963bfcf4a506477b39429ddd21d9ec524005c7"
+    },
+    {
+      "path": ".artifacts/opencode-live-1790739265058/objects/2ef7f5be293ecc8788df0dce378e465a8ffc0acf7ae4a993fad8e0b7cbd89a54",
+      "sha256": "2ef7f5be293ecc8788df0dce378e465a8ffc0acf7ae4a993fad8e0b7cbd89a54"
+    },
+    {
+      "path": ".artifacts/opencode-live-1790739265058/objects/a42be993881ddd86e8ba890ed6af733072c8582c04cdaf01505ab2543a473bf0",
+      "sha256": "a42be993881ddd86e8ba890ed6af733072c8582c04cdaf01505ab2543a473bf0"
+    },
+    {
+      "path": ".artifacts/opencode-live-1790739265058/objects/a5b11d326ded94206569750295ca150e4b83cdd3d9078441a5ce201c087973df",
+      "sha256": "a5b11d326ded94206569750295ca150e4b83cdd3d9078441a5ce201c087973df"
+    },
+    {
+      "path": ".artifacts/opencode-live-1790739265058/objects/e7369e1021dcad79f53d9f130385d4722e4973840474b1aee41cc6baa69c77ac",
+      "sha256": "e7369e1021dcad79f53d9f130385d4722e4973840474b1aee41cc6baa69c77ac"
+    },
+    {
+      "path": ".artifacts/opencode-live-1790739265058/state.sqlite",
+      "sha256": "30b9a169022952a8a77ebf67583273c3d11e1edb614c0a101a4007281e6983aa"
+    },
+    {
+      "path": ".artifacts/opencode-live-1790739265058/work/.xvant-result-attempt1.txt",
+      "sha256": "a42be993881ddd86e8ba890ed6af733072c8582c04cdaf01505ab2543a473bf0"
+    },
+    {
+      "path": ".artifacts/opencode-live-1790739265058/work/.xvant-result-attempt2.txt",
+      "sha256": "a42be993881ddd86e8ba890ed6af733072c8582c04cdaf01505ab2543a473bf0"
+    }
+  ],
+  "integrity": "complete"
+}

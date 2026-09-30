@@ -1,0 +1,54 @@
+{
+  "bundleId": "G05-live-mcp-20260930T190248611Z-e1b0bd228ddc",
+  "archivedAt": "2026-09-30T19:09:15.094Z",
+  "sourceRoot": "C:/Users/jiang/Downloads/xvant/xvant-agent",
+  "receipt": {
+    "file": "C:/Users/jiang/Downloads/xvant/xvant-agent/docs/evidence/G05-live-mcp.json",
+    "sha256": "b970754d8d6c5af554ed2c3fc2700b1121e1bbff3bd853f7b196fc87d0af0ae5",
+    "status": "failed"
+  },
+  "artifacts": [],
+  "extras": [
+    {
+      "path": ".artifacts/live-mcp-1790794970950/objects/23e3a2aac8e02314db2033ed14b75dbe299dc17c410d790e885bec22a861e7cc",
+      "sha256": "23e3a2aac8e02314db2033ed14b75dbe299dc17c410d790e885bec22a861e7cc"
+    },
+    {
+      "path": ".artifacts/live-mcp-1790794970950/objects/2ba8e4ca93836312c8a2c3da1f223a267025a12b7cad942b66e35ec97cdbda78",
+      "sha256": "2ba8e4ca93836312c8a2c3da1f223a267025a12b7cad942b66e35ec97cdbda78"
+    },
+    {
+      "path": ".artifacts/live-mcp-1790794970950/objects/5b23b0ddd7bd6d36493158734291e35bfd7efa8a4c2b90913884c5af47964e3b",
+      "sha256": "5b23b0ddd7bd6d36493158734291e35bfd7efa8a4c2b90913884c5af47964e3b"
+    },
+    {
+      "path": ".artifacts/live-mcp-1790794970950/objects/67b886870c9caeb5d27584b21f198f4e1a089199fc5ed004fbbd12708b379a51",
+      "sha256": "67b886870c9caeb5d27584b21f198f4e1a089199fc5ed004fbbd12708b379a51"
+    },
+    {
+      "path": ".artifacts/live-mcp-1790794970950/objects/7355e233c4faa58cb9747f865fa3699db0d2346bd24afbeb6e7befa9d4ae6a0e",
+      "sha256": "7355e233c4faa58cb9747f865fa3699db0d2346bd24afbeb6e7befa9d4ae6a0e"
+    },
+    {
+      "path": ".artifacts/live-mcp-1790794970950/objects/a574df3df449bac4f999622fd3f42d2d93cfb3a7becd53c77abeba80375e86e7",
+      "sha256": "a574df3df449bac4f999622fd3f42d2d93cfb3a7becd53c77abeba80375e86e7"
+    },
+    {
+      "path": ".artifacts/live-mcp-1790794970950/objects/b35042596dc3fc5e0e17b2a0e759efb65c12db66f2274b0b91283b97bee7e02b",
+      "sha256": "b35042596dc3fc5e0e17b2a0e759efb65c12db66f2274b0b91283b97bee7e02b"
+    },
+    {
+      "path": ".artifacts/live-mcp-1790794970950/objects/da17fa590d562c9b3b7a4cdd0fa926f53c4b47918d23edd4c35df138a0620563",
+      "sha256": "da17fa590d562c9b3b7a4cdd0fa926f53c4b47918d23edd4c35df138a0620563"
+    },
+    {
+      "path": ".artifacts/live-mcp-1790794970950/objects/e91e6963eb5b738edd9901c89377a575f5a5b3ec21db4a7986823dd2a156c593",
+      "sha256": "e91e6963eb5b738edd9901c89377a575f5a5b3ec21db4a7986823dd2a156c593"
+    },
+    {
+      "path": ".artifacts/live-mcp-1790794970950/state.sqlite",
+      "sha256": "e66fbc55a08f176385f0477da2dc80567c63cd98d7c1cd3151ad4c00399da7bd"
+    }
+  ],
+  "integrity": "complete"
+}

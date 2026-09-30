@@ -1,0 +1,42 @@
+{
+  "bundleId": "G04-live-handoff-20260930T191739946Z-7637c52758f9",
+  "archivedAt": "2026-09-30T19:18:42.210Z",
+  "sourceRoot": "C:/Users/jiang/Downloads/xvant/xvant-agent",
+  "receipt": {
+    "file": "C:/Users/jiang/Downloads/xvant/xvant-agent/docs/evidence/G04-live-handoff.json",
+    "sha256": "d5cafeed00829c540f1bdbb6620656d7ee51efb181fee3b16d17d750f2d7d1b9",
+    "status": "passed"
+  },
+  "artifacts": [],
+  "extras": [
+    {
+      "path": ".artifacts/live-handoff-1790795862542/objects/343e23c3deccb05ac1245bb94b72cccf01becdcf9683a982ea65f475e81e895b",
+      "sha256": "343e23c3deccb05ac1245bb94b72cccf01becdcf9683a982ea65f475e81e895b"
+    },
+    {
+      "path": ".artifacts/live-handoff-1790795862542/objects/4863b6e32f36ffdb765990b39d9777e27bcb358ee6ef63c0e75d4a752de5f6f3",
+      "sha256": "4863b6e32f36ffdb765990b39d9777e27bcb358ee6ef63c0e75d4a752de5f6f3"
+    },
+    {
+      "path": ".artifacts/live-handoff-1790795862542/objects/4b2b556760308ecb7c581625166373b143a734298b6d7cf84af616b81fca1671",
+      "sha256": "4b2b556760308ecb7c581625166373b143a734298b6d7cf84af616b81fca1671"
+    },
+    {
+      "path": ".artifacts/live-handoff-1790795862542/objects/a41d607a8e2486e1e8ca68e093bbd1ebe5596045c29d614fd72ad994765c3059",
+      "sha256": "a41d607a8e2486e1e8ca68e093bbd1ebe5596045c29d614fd72ad994765c3059"
+    },
+    {
+      "path": ".artifacts/live-handoff-1790795862542/objects/e9cf353a839c343d82a19ed347f847280d72232291cee1b09709ebdbf602ddba",
+      "sha256": "e9cf353a839c343d82a19ed347f847280d72232291cee1b09709ebdbf602ddba"
+    },
+    {
+      "path": ".artifacts/live-handoff-1790795862542/objects/f20f986d6d363488838b4ed42515efed6382be007281bfb74390d1bc6e0e524e",
+      "sha256": "f20f986d6d363488838b4ed42515efed6382be007281bfb74390d1bc6e0e524e"
+    },
+    {
+      "path": ".artifacts/live-handoff-1790795862542/state.sqlite",
+      "sha256": "8bccf7bd3593e2c0d5e68ef835b39efe7b1541ac8f0d2babb509073b9168bacf"
+    }
+  ],
+  "integrity": "complete"
+}

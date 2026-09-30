@@ -1,0 +1,59 @@
+{
+  "bundleId": "G01-20260926T174838004Z-35b98ef5b386",
+  "archivedAt": "2026-09-30T15:12:19.396Z",
+  "sourceRoot": "C:/Users/jiang/XVANT",
+  "receipt": {
+    "file": "C:/Users/jiang/XVANT/docs/evidence/G01.json",
+    "sha256": "3cfead1fdcec7ab437d1451c91a59d97fc7d4e1c8421d11f3148501f822b3b95",
+    "status": "passed"
+  },
+  "artifacts": [
+    {
+      "path": ".artifacts/typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/format.log",
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/tests.log",
+      "sha256": "fe2beeeae2d18bac24994900d5beba7462ed0904e08f321fb10ea8bcbce63c1a",
+      "expected": "836f913e4dc932bbd89878e5c5915e3f083ce56af5085294dd84749058fbef52",
+      "status": "mismatch"
+    },
+    {
+      "path": ".artifacts/runtime.log",
+      "sha256": "138c3bf5a8e868989b30263b72b014689991bfb1a6a982018994895893fe18fc",
+      "expected": "c9db17fd214fa9c7ea1c3ba0e82272fd1db999ddcdbab3537a7ef6d638360228",
+      "status": "mismatch"
+    },
+    {
+      "path": ".artifacts/tests.json",
+      "sha256": "82f2c31b40b2915726d086191d81de8f4ecef7f799535f427c0561a20c2192cf",
+      "expected": "d2ce7a3299c262ba4a5c99a83ee1fb437a486341c23ffa8ca024adb3de6e3818",
+      "status": "mismatch"
+    },
+    {
+      "path": "coverage/coverage-summary.json",
+      "sha256": "15b8da94572bd9ef0c784749e084f9d29a3b1f101ed41a79f44d25d7c3ca5e52",
+      "expected": "55d79aa2927fbb1f6a4c09168f75843a1cfb183f259e8db814ff88bc61030a1d",
+      "status": "mismatch"
+    },
+    {
+      "path": ".artifacts/source-manifest.json",
+      "sha256": "f7c53fb2b19feee507ac96877340432741d113c41a8a640c607914208c862885",
+      "expected": "714cdbaa6f2e157430cb56df0d2e349569ca3e0210e1864c7f7b028f8610eb93",
+      "status": "mismatch"
+    }
+  ],
+  "extras": [],
+  "integrity": "partial"
+}

@@ -1,0 +1,50 @@
+{
+  "bundleId": "G06-live-parallel-feature-20260930T195514618Z-b36991f10c1d",
+  "archivedAt": "2026-09-30T19:56:27.072Z",
+  "sourceRoot": "C:/Users/jiang/Downloads/xvant/xvant-agent",
+  "receipt": {
+    "file": "C:/Users/jiang/Downloads/xvant/xvant-agent/docs/evidence/G06-live-parallel-feature.json",
+    "sha256": "c79a4da5cdb2fe05b845380608023dc4034e893769402625f74e1e0db9998ade",
+    "status": "failed"
+  },
+  "artifacts": [],
+  "extras": [
+    {
+      "path": ".artifacts/live-parallel-feature-1790798116260/objects/1211ee31e64cd45ad6f6ad526ecddae1349cf79eb89d2dabd17e5bbcadf257a6",
+      "sha256": "1211ee31e64cd45ad6f6ad526ecddae1349cf79eb89d2dabd17e5bbcadf257a6"
+    },
+    {
+      "path": ".artifacts/live-parallel-feature-1790798116260/objects/1e644c7d1a79ddd19e6d3740d489ee73aa24a8cad5597f9304965c2882fb1a21",
+      "sha256": "1e644c7d1a79ddd19e6d3740d489ee73aa24a8cad5597f9304965c2882fb1a21"
+    },
+    {
+      "path": ".artifacts/live-parallel-feature-1790798116260/objects/4e45af5c0fad50acc05936d5826e2041229ec4652a0c38df026db7855106f62a",
+      "sha256": "4e45af5c0fad50acc05936d5826e2041229ec4652a0c38df026db7855106f62a"
+    },
+    {
+      "path": ".artifacts/live-parallel-feature-1790798116260/objects/6ff88f474cfdfd6bfbb65ac6ccce05ac49673b04db894c3766e8f4ba8dbf0ff1",
+      "sha256": "6ff88f474cfdfd6bfbb65ac6ccce05ac49673b04db894c3766e8f4ba8dbf0ff1"
+    },
+    {
+      "path": ".artifacts/live-parallel-feature-1790798116260/objects/953bd6afecc1543a1a3af5ed9a26266999e7f1a02555db08e0c4d354bfa1721f",
+      "sha256": "953bd6afecc1543a1a3af5ed9a26266999e7f1a02555db08e0c4d354bfa1721f"
+    },
+    {
+      "path": ".artifacts/live-parallel-feature-1790798116260/objects/a1fa9032aeaaa57b7a9443db33228151649895c8c07e69a088bfe739010873d2",
+      "sha256": "a1fa9032aeaaa57b7a9443db33228151649895c8c07e69a088bfe739010873d2"
+    },
+    {
+      "path": ".artifacts/live-parallel-feature-1790798116260/objects/caca4a38f273e26ec68dbae29a286b64fb216c8c2fda4261e4740e9f42bad127",
+      "sha256": "caca4a38f273e26ec68dbae29a286b64fb216c8c2fda4261e4740e9f42bad127"
+    },
+    {
+      "path": ".artifacts/live-parallel-feature-1790798116260/objects/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".artifacts/live-parallel-feature-1790798116260/state.sqlite",
+      "sha256": "e3301921e69617f1fa161ae1bc9ac7b96e736cf99dab6a93c96fc23af8a59e67"
+    }
+  ],
+  "integrity": "complete"
+}

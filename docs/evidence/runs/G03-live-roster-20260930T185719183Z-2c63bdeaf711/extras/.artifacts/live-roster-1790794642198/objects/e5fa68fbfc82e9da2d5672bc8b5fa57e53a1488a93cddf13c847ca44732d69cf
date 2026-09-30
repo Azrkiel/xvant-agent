@@ -1,0 +1,8 @@
+diff --git a/opencode-1.txt b/opencode-1.txt
+new file mode 100644
+index 0000000000000000000000000000000000000000..b3c5ae1a90271f36d3295d08a925e47bff62de73
+--- /dev/null
++++ b/opencode-1.txt
+@@ -0,0 +1 @@
++opencode-1 4ac39ed1
+\ No newline at end of file

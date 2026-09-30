@@ -1,0 +1,114 @@
+{
+  "gateId": "G06-live-parallel-feature",
+  "status": "passed",
+  "generatedAt": "2026-09-30T20:25:12.212Z",
+  "classification": "live",
+  "fixture": "parallel-feature",
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "sourceHash": "bb2a7fbf8131efb7a30df1625c4145d5726ed7224ec02da700f3c3597c54f136",
+  "runtimes": {
+    "codex": {
+      "runtimeKind": "codex",
+      "status": "qualified",
+      "executable": "C:\\Users\\jiang\\AppData\\Local\\OpenAI\\Codex\\bin\\faa963e871dd422c\\codex.exe",
+      "version": "0.158.0-alpha.2.1",
+      "expectedVersion": "0.158.0-alpha.2.1",
+      "candidates": 1
+    },
+    "claude": {
+      "runtimeKind": "claude",
+      "status": "qualified",
+      "executable": "C:\\Users\\jiang\\.local\\bin\\claude.exe",
+      "version": "2.1.286",
+      "expectedVersion": "2.1.285",
+      "candidates": 1
+    },
+    "opencode": {
+      "runtimeKind": "opencode",
+      "status": "qualified",
+      "executable": "C:\\Users\\jiang\\AppData\\Local\\hermes\\node\\node_modules\\@opencode\\cli\\bin\\opencode.exe",
+      "version": "2.0.19",
+      "expectedVersion": "2.0.19",
+      "candidates": 1
+    }
+  },
+  "limitations": [
+    "Trusted-local: native runtime tools edit their own worktree and bypass XVANT approvals and receipts.",
+    "Qualifies this host and these runtime versions only; Linux is deferred by the operator.",
+    "Token counts are what each runtime reports; subscription usage has no per-call bill."
+  ],
+  "stateDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent\\.artifacts\\live-parallel-feature-1790799914192",
+  "parallel": {
+    "classification": "live",
+    "scope": "live-parallel-feature",
+    "phase": "ready",
+    "reason": null,
+    "plan": [
+      {
+        "id": "server-farewell",
+        "assignee": "any",
+        "dependsOn": [],
+        "writablePaths": [
+          "server/greet.mjs"
+        ]
+      },
+      {
+        "id": "web-shout",
+        "assignee": "any",
+        "dependsOn": [],
+        "writablePaths": [
+          "web/format.mjs"
+        ]
+      },
+      {
+        "id": "readme-api",
+        "assignee": "any",
+        "dependsOn": [
+          "server-farewell",
+          "web-shout"
+        ],
+        "writablePaths": [
+          "README.md"
+        ]
+      }
+    ],
+    "workersUsed": [
+      "opencode-1",
+      "claude-1"
+    ],
+    "runtimesUsed": [
+      "opencode",
+      "claude"
+    ],
+    "reviewer": {
+      "alias": "codex-1",
+      "approve": true,
+      "findings": [],
+      "independent": true,
+      "sameRuntime": false
+    },
+    "checks": [
+      "behaviour:passed"
+    ],
+    "branch": "xvant/feature",
+    "userCheckoutUntouched": true,
+    "events": [
+      "graph.created",
+      "graph.planned",
+      "node.dispatched",
+      "node.dispatched",
+      "node.integrated",
+      "node.integrated",
+      "node.dispatched",
+      "node.integrated",
+      "graph.checked",
+      "graph.reviewed",
+      "graph.ready"
+    ],
+    "problems": []
+  },
+  "elapsedMs": 77921,
+  "problems": []
+}

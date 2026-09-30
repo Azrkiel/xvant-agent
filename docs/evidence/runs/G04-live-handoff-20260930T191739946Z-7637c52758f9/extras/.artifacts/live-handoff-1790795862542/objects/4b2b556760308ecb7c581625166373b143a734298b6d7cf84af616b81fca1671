@@ -1,0 +1,10 @@
+diff --git a/src/fetch.mjs b/src/fetch.mjs
+index 5ccd13b5ad4a1e6dcca2cc166c6e525f8b074815..871c06aeb69edc74697c6dfe63ffc91459a80b2e 100644
+--- a/src/fetch.mjs
++++ b/src/fetch.mjs
+@@ -1,4 +1,5 @@
+ export const MAX_RETRIES = 0;
++export const RETRY_ON = [429, 503];
+ 
+ // Calls `call` until it resolves. There is no limit yet.
+ export async function fetchWithRetry(call) {

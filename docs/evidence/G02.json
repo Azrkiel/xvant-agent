@@ -1,0 +1,146 @@
+{
+  "gateId": "G02",
+  "status": "passed",
+  "generatedAt": "2026-09-27T13:36:07.700Z",
+  "sourceRevision": "d25a78b9ae9dc7834009136cdca7e6dbe81f8ac2",
+  "branch": "main",
+  "dirtyTreeHash": "88316de6c21c31fca0f5e6a9319b4c3abff86a4700eac543ad63f01a1a42025f",
+  "sourceHashScope": "All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.",
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "npmVersion": "npm/12.0.2 node/v24.21.0 win32 x64 workspaces/false",
+  "gitVersion": "git version 2.55.0.windows.3",
+  "classification": "offline",
+  "runtimeKind": "simulated",
+  "liveProvidersTested": [],
+  "checks": [
+    {
+      "id": "typecheck",
+      "command": [
+        "C:\\Users\\jiang\\XVANT\\.tools\\node_modules\\node-win-x64\\bin\\node.exe",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
+      "startedAt": "2026-09-27T13:36:07.981Z",
+      "finishedAt": "2026-09-27T13:36:10.408Z",
+      "exitCode": 0
+    },
+    {
+      "id": "lint",
+      "command": [
+        "C:\\Users\\jiang\\XVANT\\.tools\\node_modules\\node-win-x64\\bin\\node.exe",
+        "node_modules/eslint/bin/eslint.js",
+        "packages",
+        "apps",
+        "scripts",
+        "tests"
+      ],
+      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
+      "startedAt": "2026-09-27T13:36:10.410Z",
+      "finishedAt": "2026-09-27T13:36:12.055Z",
+      "exitCode": 0
+    },
+    {
+      "id": "format",
+      "command": [
+        "C:\\Users\\jiang\\XVANT\\.tools\\node_modules\\node-win-x64\\bin\\node.exe",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "."
+      ],
+      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
+      "startedAt": "2026-09-27T13:36:12.055Z",
+      "finishedAt": "2026-09-27T13:36:13.253Z",
+      "exitCode": 0
+    },
+    {
+      "id": "tests",
+      "command": [
+        "C:\\Users\\jiang\\XVANT\\.tools\\node_modules\\node-win-x64\\bin\\node.exe",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--coverage",
+        "--reporter=default",
+        "--reporter=json",
+        "--outputFile=.artifacts/tests.json"
+      ],
+      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
+      "startedAt": "2026-09-27T13:36:13.253Z",
+      "finishedAt": "2026-09-27T13:36:27.925Z",
+      "exitCode": 0,
+      "expectedCount": 198,
+      "observedCount": 198,
+      "suites": {
+        "packages/contracts/src/contracts.test.ts": 15,
+        "packages/core/src/task.test.ts": 26,
+        "packages/core/src/graph.test.ts": 20,
+        "packages/adapters/src/simulated/simulated.test.ts": 10,
+        "apps/controller/src/controller.test.ts": 24,
+        "tests/gate.test.ts": 16,
+        "packages/storage/src/store.test.ts": 20,
+        "packages/storage/src/artifacts.test.ts": 20,
+        "packages/supervisor/src/index.test.ts": 11,
+        "packages/policy/src/index.test.ts": 2,
+        "apps/controller/src/durable.test.ts": 13,
+        "apps/controller/src/service.test.ts": 3,
+        "apps/controller/src/http/server.test.ts": 11,
+        "tests/faults/crash.test.ts": 7
+      }
+    },
+    {
+      "id": "runtime",
+      "command": [
+        "C:\\Users\\jiang\\XVANT\\.tools\\node_modules\\node-win-x64\\bin\\node.exe",
+        "apps/controller/src/durable-demo.ts"
+      ],
+      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
+      "startedAt": "2026-09-27T13:36:27.936Z",
+      "finishedAt": "2026-09-27T13:36:28.703Z",
+      "exitCode": 0
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".artifacts/typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".artifacts/lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".artifacts/format.log",
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    },
+    {
+      "path": ".artifacts/tests.log",
+      "sha256": "f34da949cebf25a91204750ff5345731751f7706f77c39d8af5c5a978ad4d822"
+    },
+    {
+      "path": ".artifacts/runtime.log",
+      "sha256": "138c3bf5a8e868989b30263b72b014689991bfb1a6a982018994895893fe18fc"
+    },
+    {
+      "path": ".artifacts/tests.json",
+      "sha256": "633872d18f43e7749cdf3fccc2011d4ddf5c23eedd7a2b75fbaa72b89999c372"
+    },
+    {
+      "path": "coverage/coverage-summary.json",
+      "sha256": "c79c41835e5224635364061f643f50b1a8be2834026f1130622ff33b1a33df92"
+    },
+    {
+      "path": ".artifacts/source-manifest.json",
+      "sha256": "3eb1658fa90df793e576a2754cfedd706aac611bd1840d7c409b6062d3a2b27b"
+    }
+  ],
+  "limitations": [
+    "This report qualifies only its recorded host and platform; other CI jobs need their own reports.",
+    "Simulation fixtures do not qualify provider protocols, subscriptions, or real coding ability.",
+    "Process supervision is trusted-local only. No hostile-code, filesystem, network, or escaped-descendant containment is qualified.",
+    "Linux code and CI are configured but require their own observed run."
+  ],
+  "rollbackProcedure": "Keep the branch unmerged; no external service or data migration was changed.",
+  "lastKnownGoodVersion": null
+}

@@ -1,0 +1,11 @@
+diff --git a/README.md b/README.md
+index 7985030a4c6cd14abb43c1f6ab817d963cbd4778..f65d6c9cc37bcad99c47a9e998b22b8282c5a625 100644
+--- a/README.md
++++ b/README.md
+@@ -3,4 +3,6 @@
+ ## API
+ 
+ - `greet(name)` in server/greet.mjs
++- `farewell(name)` in server/greet.mjs — returns a goodbye greeting: `Goodbye, <name>!`
+ - `banner(text)` in web/format.mjs
++- `shout(text)` in web/format.mjs — returns `text` uppercased with a trailing `!`

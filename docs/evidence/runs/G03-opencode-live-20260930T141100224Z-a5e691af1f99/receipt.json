@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-09-30T14:11:00.224Z",
+  "classification": "live",
+  "scope": "opencode-cli-durable-text",
+  "runtimeVersion": "2.0.19",
+  "model": "opencode/big-pickle",
+  "fullMixedG03": false,
+  "stateDirectory": "C:\\Users\\jiang\\.codex\\worktrees\\verify-opencode-live\\xvant-agent\\.artifacts\\opencode-live-1790777460222",
+  "checks": [
+    {
+      "turn": 1,
+      "state": "ready_for_acceptance",
+      "status": "verified",
+      "outcome": "completed",
+      "verification": "passed",
+      "sessionId": "ses_f0d586e17ffeahNjCm2UYGQZv7",
+      "activeCount": 0,
+      "acceptedAfterRestart": true,
+      "classification": "live"
+    },
+    {
+      "turn": 2,
+      "state": "ready_for_acceptance",
+      "status": "verified",
+      "outcome": "completed",
+      "verification": "passed",
+      "sessionId": "ses_f0d586e17ffeahNjCm2UYGQZv7",
+      "activeCount": 0,
+      "acceptedAfterRestart": true,
+      "classification": "live"
+    }
+  ],
+  "sourceHash": "a5e691af1f996fb25ae068bac96a7f59b445da3135f08acc7c8a2ea69a5c6a24",
+  "sameSession": true,
+  "status": "passed"
+}

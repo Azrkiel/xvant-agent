@@ -1,0 +1,1 @@
+{"version":2,"kind":"git","baseCommit":"94a459a6515fa2cbbfa25df061a0ef03695f1e4c","gitTree":"13ea1271476731b27c39c513333f164a8231e467","patch":"1352cd56482f2f61fcb9a26a266e47cb36daddf83a38e48080d566ba0d6e30c6","patchBytes":350,"files":[{"path":"server/greet.mjs","status":"M"}]}

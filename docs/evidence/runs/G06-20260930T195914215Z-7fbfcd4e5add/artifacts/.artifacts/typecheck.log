@@ -1,0 +1,7 @@
+apps/controller/src/turn-runner.test.ts(145,39): error TS1127: Invalid character.
+apps/controller/src/turn-runner.test.ts(145,45): error TS1005: ',' expected.
+apps/controller/src/turn-runner.test.ts(145,63): error TS1127: Invalid character.
+apps/controller/src/turn-runner.test.ts(145,69): error TS1005: ',' expected.
+apps/controller/src/turn-runner.test.ts(145,84): error TS1127: Invalid character.
+apps/controller/src/turn-runner.test.ts(145,90): error TS1005: ',' expected.
+apps/controller/src/turn-runner.test.ts(145,109): error TS1127: Invalid character.

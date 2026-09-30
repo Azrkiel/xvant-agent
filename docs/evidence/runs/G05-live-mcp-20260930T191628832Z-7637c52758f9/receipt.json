@@ -1,0 +1,91 @@
+{
+  "gateId": "G05-live-mcp",
+  "status": "passed",
+  "generatedAt": "2026-09-30T19:16:28.832Z",
+  "classification": "live",
+  "fixture": "mcp",
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "sourceHash": "7637c52758f9956f09436017f94732cfd2d43e2ddb472316392902d7496026ac",
+  "runtimes": {
+    "codex": {
+      "runtimeKind": "codex",
+      "status": "qualified",
+      "executable": "C:\\Users\\jiang\\AppData\\Local\\OpenAI\\Codex\\bin\\faa963e871dd422c\\codex.exe",
+      "version": "0.158.0-alpha.2.1",
+      "expectedVersion": "0.158.0-alpha.2.1",
+      "candidates": 1
+    },
+    "claude": {
+      "runtimeKind": "claude",
+      "status": "qualified",
+      "executable": "C:\\Users\\jiang\\.local\\bin\\claude.exe",
+      "version": "2.1.285",
+      "expectedVersion": "2.1.285",
+      "candidates": 1
+    },
+    "opencode": {
+      "runtimeKind": "opencode",
+      "status": "qualified",
+      "executable": "C:\\Users\\jiang\\AppData\\Local\\hermes\\node\\node_modules\\@opencode\\cli\\bin\\opencode.exe",
+      "version": "2.0.19",
+      "expectedVersion": "2.0.19",
+      "candidates": 1
+    }
+  },
+  "limitations": [
+    "Trusted-local: native runtime tools edit their own worktree and bypass XVANT approvals and receipts.",
+    "Qualifies this host and these runtime versions only; Linux is deferred by the operator.",
+    "Token counts are what each runtime reports; subscription usage has no per-call bill."
+  ],
+  "stateDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent\\.artifacts\\live-mcp-1790795791533",
+  "mcp": {
+    "classification": "live",
+    "scope": "live-mcp",
+    "turns": [
+      {
+        "runtimeKind": "codex",
+        "state": "ready_for_acceptance",
+        "outcome": "completed",
+        "verification": "passed",
+        "receipts": [
+          {
+            "tool": "file.read",
+            "status": "succeeded"
+          }
+        ],
+        "problems": []
+      },
+      {
+        "runtimeKind": "claude",
+        "state": "ready_for_acceptance",
+        "outcome": "completed",
+        "verification": "passed",
+        "receipts": [
+          {
+            "tool": "file.read",
+            "status": "succeeded"
+          }
+        ],
+        "problems": []
+      },
+      {
+        "runtimeKind": "opencode",
+        "state": "ready_for_acceptance",
+        "outcome": "completed",
+        "verification": "passed",
+        "receipts": [
+          {
+            "tool": "file.read",
+            "status": "succeeded"
+          }
+        ],
+        "problems": []
+      }
+    ],
+    "problems": []
+  },
+  "elapsedMs": 67717,
+  "problems": []
+}

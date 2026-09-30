@@ -1,0 +1,84 @@
+
+ RUN  v5.0.1 C:/Users/jiang/XVANT
+      Coverage enabled with v8
+
+ ✓ packages/policy/src/index.test.ts (2 tests) 22ms
+ ✓ tests/gate.test.ts (16 tests) 68ms
+ ✓ packages/contracts/src/contracts.test.ts (15 tests) 61ms
+ ✓ packages/adapters/src/simulated/simulated.test.ts (10 tests) 108ms
+ ✓ apps/controller/src/controller.test.ts (24 tests) 200ms
+ ✓ packages/core/src/task.test.ts (26 tests) 234ms
+ ✓ packages/core/src/graph.test.ts (20 tests) 280ms
+ ✓ packages/storage/src/store.test.ts (20 tests) 1195ms
+ ✓ apps/controller/src/http/server.test.ts (11 tests) 1464ms
+   ✓ loads in the pinned Node strip-only runtime 716ms
+ ✓ apps/controller/src/service.test.ts (3 tests) 1585ms
+   ✓ creates, queues, executes and accepts through authenticated HTTP 1468ms
+ ✓ packages/storage/src/artifacts.test.ts (20 tests) 3548ms
+   ✓ verified snapshots (4)
+     ✓ restores a consistent database and verified artifacts to a new destination 326ms
+ ✓ tests/faults/crash.test.ts (7 tests) 4118ms
+   ✓ survives process death at create.before_commit without replay 1030ms
+   ✓ survives process death at dispatch.before_commit without replay 673ms
+   ✓ survives process death at after_dispatch without replay 518ms
+   ✓ survives process death at send.before_commit without replay 415ms
+   ✓ survives process death at after_send without replay 480ms
+   ✓ survives process death at after_ack without replay 542ms
+   ✓ survives process death at after_result without replay 453ms
+ ✓ apps/controller/src/durable.test.ts (13 tests) 7695ms
+   ✓ runs isolated simulation and trusted checks then accepts after restart 1232ms
+   ✓ persists normalized quota cause 547ms
+   ✓ persists normalized failure cause 426ms
+   ✓ persists normalized malformed cause 389ms
+   ✓ persists normalized unknown cause 401ms
+   ✓ does not dispatch again when an idempotent request is repeated 703ms
+   ✓ records verifier failure without accepting worker claims 518ms
+   ✓ kills a hanging verifier and persists attention 2115ms
+   ✓ recovers incomplete verification after restart 408ms
+   ✓ renews a short lease while the controller is idle 638ms
+ ✓ packages/supervisor/src/index.test.ts (11 tests) 14230ms
+   ✓ owned process supervision (6)
+     ✓ captures exit and bounded combined output without shell evaluation 448ms
+     ✓ hard deadline kills a worker that does not cooperate 1785ms
+     ✓ rejects forged identity and accepts owned cancellation 1164ms
+     ✓ abort interrupts active execution 1143ms
+   ✓ terminates the owned ordinary descendant tree on deadline 1121ms
+   ✓ global stop interrupts every owned process and rejects stale generations 926ms
+   ✓ retains ownership after uncertain shutdown so cancellation can be retried 7493ms
+
+ Test Files  14 passed (14)
+      Tests  198 passed (198)
+   Start at  20:11:43
+   Duration  15.36s (tests 79%, import 13%, transform 6%, worker 2%)
+
+JSON report written to C:/Users/jiang/XVANT/.artifacts/tests.json
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |    93.1 |    89.76 |   97.22 |      94 |                   
+ ...controller/src |   90.74 |    84.67 |     100 |   91.24 |                   
+  controller.ts    |   94.82 |    90.47 |     100 |   94.59 | ...45,208,250,266 
+  durable.ts       |   82.66 |    77.55 |     100 |   83.33 | ...19,133,161-169 
+  service.ts       |   94.44 |    83.33 |     100 |   97.05 | 37                
+ ...oller/src/http |   91.45 |    88.34 |   94.73 |   92.79 |                   
+  server.ts        |   91.45 |    88.34 |   94.73 |   92.79 | ...46,189,222,241 
+ .../src/simulated |   88.88 |    86.66 |     100 |   91.17 |                   
+  index.ts         |   88.88 |    86.66 |     100 |   91.17 | 45,64-65          
+ packages/core/src |     100 |    98.36 |     100 |     100 |                   
+  task.ts          |     100 |    96.77 |     100 |     100 | 146               
+ ...ges/policy/src |      90 |     87.5 |     100 |      90 |                   
+  index.ts         |      90 |     87.5 |     100 |      90 | 39                
+ ...es/storage/src |   93.71 |    90.29 |   97.64 |   94.98 |                   
+  artifacts.ts     |   92.34 |     86.9 |     100 |      95 | ...96,112,283,322 
+  store.ts         |    94.8 |    92.15 |   96.49 |   94.97 | ...84,415-419,426 
+ ...supervisor/src |      90 |    89.23 |   91.66 |   90.62 |                   
+  index.ts         |      90 |    89.23 |   91.66 |   90.62 | ...25-226,229-230 
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 93.1% ( 985/1058 )
+Branches     : 89.76% ( 570/635 )
+Functions    : 97.22% ( 175/180 )
+Lines        : 94% ( 925/984 )
+================================================================================

@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-09-30T18:11:50.271Z",
+  "classification": "live",
+  "scope": "codex-workspace-write-smoke",
+  "runtimeVersion": "0.158.0-alpha.2.1",
+  "adapterVersion": "codex-app-server-v1",
+  "stateDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent\\.artifacts/live-codex-1790791909626",
+  "sourceHash": "f58d587e91a6783ac2b9000a434fff2ca1244a1a02932f1ee91a2846602c2887",
+  "events": 35,
+  "state": "ready_for_acceptance",
+  "finalText": "Created `hello.txt` containing exactly `hi from codex`. No other files changed.",
+  "tokens": 44135,
+  "auth": {
+    "mode": "chatgpt",
+    "plan": "plus"
+  },
+  "sessionId": "01a0f384-07cf-7231-91c3-ecf437def37c",
+  "runId": "01a0f384-0a14-71f3-99bb-5b1bb3a6c26a",
+  "outcome": "completed",
+  "verification": "passed",
+  "failure": null,
+  "activeCount": 0,
+  "acceptedAfterRestart": true,
+  "status": "passed"
+}
