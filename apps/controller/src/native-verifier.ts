@@ -4,6 +4,7 @@ import type { NativeVerification } from '../../../packages/contracts/src/native-
 import { Store } from '../../../packages/storage/src/store.ts';
 import { ArtifactStore } from '../../../packages/storage/src/artifacts.ts';
 import { captureWorkspace } from '../../../packages/storage/src/workspace.ts';
+import { captureGitWorkspace } from '../../../packages/storage/src/git-workspace.ts';
 import { WorkerSupervisor } from '../../../packages/supervisor/src/index.ts';
 
 interface Check {
@@ -17,6 +18,8 @@ export class NativeVerifier {
   private readonly workspaces: Readonly<Record<string, string>>;
   private readonly checks: Readonly<Record<string, Check>>;
   private readonly timeout: number;
+  private readonly gitBases: Readonly<Record<string, string>>;
+  private readonly maxCheckOutput: number;
   private readonly supervisor = new WorkerSupervisor();
   private stopped = false;
   constructor(
@@ -24,17 +27,29 @@ export class NativeVerifier {
     objects: ArtifactStore,
     workspaces: Record<string, string>,
     checks: Record<string, Check>,
-    options: { timeoutMs?: number } = {},
+    options: {
+      timeoutMs?: number;
+      /** Workspaces that are Git worktrees, with the base commit their evidence is a patch against. */
+      gitBases?: Record<string, string>;
+      /** Bytes of check output allowed before verification is uncertain. */
+      maxCheckOutputBytes?: number;
+    } = {},
   ) {
     this.store = store;
     this.objects = objects;
     this.workspaces = structuredClone(workspaces);
     this.checks = structuredClone(checks);
     this.timeout = options.timeoutMs ?? 10000;
+    this.gitBases = structuredClone(options.gitBases ?? {});
+    this.maxCheckOutput = options.maxCheckOutputBytes ?? 65536;
+    // Real test suites need minutes; the bound stays finite.
     if (
       !Number.isSafeInteger(this.timeout) ||
       this.timeout < 1 ||
-      this.timeout > 60000
+      this.timeout > 3_600_000 ||
+      !Number.isSafeInteger(this.maxCheckOutput) ||
+      this.maxCheckOutput < 1 ||
+      this.maxCheckOutput > 16_777_216
     )
       throw new Error('INVALID_INPUT');
   }
@@ -69,7 +84,14 @@ export class NativeVerifier {
     heartbeat.unref();
     let verification: NativeVerification;
     try {
-      const before = captureWorkspace(root, this.objects);
+      const base = Object.hasOwn(this.gitBases, pending.workspaceId)
+        ? this.gitBases[pending.workspaceId]
+        : undefined;
+      const capture = () =>
+        base
+          ? captureGitWorkspace(root, base, this.objects)
+          : captureWorkspace(root, this.objects);
+      const before = capture();
       const binding = {
         taskId: task.id,
         attemptId: connection.attemptId,
@@ -97,7 +119,7 @@ export class NativeVerifier {
           attemptId: connection.attemptId,
           generation: connection.generation,
           timeoutMs: this.timeout,
-          maxOutputBytes: 65536,
+          maxOutputBytes: this.maxCheckOutput,
           userApprovedTrustedLocal: true,
         }).result;
         if (
@@ -121,7 +143,7 @@ export class NativeVerifier {
           status:
             result.exitCode === 0 ? ('passed' as const) : ('failed' as const),
         });
-        const after = captureWorkspace(root, this.objects);
+        const after = capture();
         if (
           after.treeHash !== before.treeHash ||
           after.workspaceRootHash !== before.workspaceRootHash

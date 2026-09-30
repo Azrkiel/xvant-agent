@@ -13,6 +13,10 @@ import {
   providerWorkerSchema,
   type NativeFailure,
 } from '../../contracts/src/providers.ts';
+import {
+  liveApprovalSchema,
+  liveRouteIssue,
+} from '../../contracts/src/live.ts';
 
 export const providerMigration = `
 CREATE TABLE provider_connections(id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id), body TEXT NOT NULL);
@@ -27,27 +31,17 @@ const specSchema = z
     workspaceId: idSchema,
     expectedVersion: z.number().int().nonnegative(),
     classification: z.enum(['offline', 'live']),
-    liveApproval: z
-      .strictObject({
-        actorId: idSchema,
-        model: z.literal('opencode/big-pickle'),
-        transport: z.literal('cli'),
-        userApprovedTrustedLocal: z.literal(true),
-      })
-      .optional(),
+    liveApproval: liveApprovalSchema.optional(),
     worker: providerWorkerSchema.extend({ mode: z.literal('managed') }),
   })
   .superRefine((value, context) => {
-    const supported =
-      value.liveApproval !== undefined &&
-      value.worker.runtimeKind === 'opencode' &&
-      value.worker.runtimeVersion === '2.0.19' &&
-      value.worker.adapterVersion === 'opencode-cli-v2' &&
-      (/^ses_[A-Za-z0-9]+$/.test(value.worker.nativeSessionId) ||
-        value.worker.nativeSessionId === 'pending:' + value.connectionId);
     if (
       value.classification === 'live'
-        ? !supported
+        ? liveRouteIssue(
+            value.liveApproval,
+            value.worker,
+            value.connectionId,
+          ) !== undefined
         : value.liveApproval !== undefined
     )
       context.addIssue({
@@ -119,6 +113,7 @@ const DISPATCH = new Set([
   'fixture/start',
   'session/prompt',
   'opencode/cli-run',
+  'claude/headless-run',
 ]);
 function fail(code: string): never {
   throw new Error(code);
@@ -240,7 +235,9 @@ export class ProviderJournal {
     const count = this.db
       .prepare('SELECT count(*) n FROM provider_entries WHERE connection_id=?')
       .get(id) as { n: number };
-    if (count.n >= 4096) fail('LIMIT_EXCEEDED');
+    // Live coding turns emit thousands of tool items; fixtures stay tightly bounded.
+    const limit = this.get(id).classification === 'live' ? 65536 : 4096;
+    if (count.n >= limit) fail('LIMIT_EXCEEDED');
     this.db
       .prepare('INSERT INTO provider_entries(connection_id,body) VALUES(?,?)')
       .run(id, JSON.stringify(value));
@@ -284,7 +281,8 @@ export class ProviderJournal {
     this.host.transaction(() => {
       this.assertWritable(id, token);
       const bytes = JSON.stringify(message);
-      if (Buffer.byteLength(bytes) > 65536) fail('LIMIT_EXCEEDED');
+      const max = this.get(id).classification === 'live' ? 1048576 : 65536;
+      if (Buffer.byteLength(bytes) > max) fail('LIMIT_EXCEEDED');
       // Output/error bodies can contain secrets. Persist a content digest and routing metadata only.
       this.append(id, {
         direction: 'in',

@@ -8,7 +8,13 @@ import { CODEX_VERSION } from './profile.ts';
 export function durableCodexChannel(
   store: Store,
   connection: ProviderConnection,
-  options: Pick<ChannelOptions, 'write' | 'onMessage' | 'timeoutMs'>,
+  options: Pick<
+    ChannelOptions,
+    'write' | 'onMessage' | 'timeoutMs' | 'maxFrameBytes'
+  > & {
+    /** Journal only messages that can change state; streamed deltas confer none. */
+    journal?: (message: Record<string, unknown>) => boolean;
+  },
 ): RpcChannel {
   // Use stored identity, not caller-supplied worker metadata.
   const saved = store.providers.get(connection.connectionId);
@@ -30,6 +36,10 @@ export function durableCodexChannel(
       await options.write(frame);
     },
     beforeReceive: (message) => {
+      if (options.journal && !options.journal(message)) {
+        store.providers.assertWritable(id, token);
+        return;
+      }
       store.providers.recordMessage(id, token, message);
     },
     onClose: () => {

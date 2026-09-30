@@ -32,6 +32,34 @@ export function verifiedWorkspaceObjects(
       hashes: z.array(hashSchema).max(1025),
     })
     .parse(JSON.parse(objects.get(evidence.artifactSetHash).toString()));
+  const raw = JSON.parse(objects.get(evidence.treeHash).toString()) as {
+    version?: unknown;
+  };
+  if (raw.version === 2) {
+    const git = z
+      .strictObject({
+        version: z.literal(2),
+        kind: z.literal('git'),
+        baseCommit: z.string().regex(/^[a-f0-9]{40}([a-f0-9]{24})?$/),
+        gitTree: z.string().regex(/^[a-f0-9]{40}([a-f0-9]{24})?$/),
+        patch: hashSchema,
+        patchBytes: z.number().int().nonnegative(),
+        files: z.array(
+          z.strictObject({
+            path: z.string().min(1),
+            status: z.enum(['A', 'M', 'D', 'T']),
+          }),
+        ),
+      })
+      .parse(raw);
+    const hashes = [...new Set([evidence.treeHash, git.patch])].sort();
+    if (
+      JSON.stringify(hashes) !== JSON.stringify(set.hashes) ||
+      objects.get(git.patch).length !== git.patchBytes
+    )
+      throw new Error('INVALID_EVIDENCE');
+    return [...new Set([...hashes, evidence.artifactSetHash])].sort();
+  }
   const tree = z
     .strictObject({
       version: z.literal(1),

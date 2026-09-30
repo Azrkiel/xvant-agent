@@ -52,7 +52,61 @@ if (scenario === 'auth') {
   );
   process.exit(1);
 }
-if (scenario === 'timeout') {
+if (scenario === 'tools' || scenario === 'billed') {
+  // Shaped after a live 2.0.19 tool run: a tool step, then a text step.
+  const { writeFileSync } = await import('node:fs');
+  if (
+    JSON.parse(process.env.OPENCODE_CONFIG_CONTENT ?? '{}').permission?.edit !==
+    'allow'
+  )
+    process.exit(3);
+  const emit = (value) => console.log(JSON.stringify({ ...base, ...value }));
+  const part = (mid, extra) => ({ sessionID, messageID: mid, ...extra });
+  emit({
+    type: 'step_start',
+    part: part('msg_1', { id: 'p1', type: 'step-start', snapshot: 'a' }),
+  });
+  writeFileSync('hello.txt', 'hi from opencode\n');
+  emit({
+    type: 'tool_use',
+    part: part('msg_1', {
+      partID: 'p2',
+      id: 'call_1',
+      type: 'tool',
+      tool: 'write',
+      state: { status: 'completed' },
+    }),
+  });
+  emit({
+    type: 'step_finish',
+    part: part('msg_1', {
+      id: 'p3',
+      type: 'step-finish',
+      reason: 'tool-calls',
+      snapshot: 'b',
+      cost: scenario === 'billed' ? 0.002 : 0,
+      tokens: {
+        input: 90,
+        output: 10,
+        reasoning: 0,
+        cache: { read: 0, write: 0 },
+      },
+    }),
+  });
+  emit({
+    type: 'step_start',
+    part: part('msg_2', { id: 'p4', type: 'step-start', snapshot: 'b' }),
+  });
+  emit({
+    type: 'text',
+    part: part('msg_2', {
+      id: 'p5',
+      type: 'text',
+      text: 'Created hello.txt.',
+      time: { start: 1, end: 2 },
+    }),
+  });
+} else if (scenario === 'timeout') {
   setInterval(() => {}, 1000);
 } else {
   console.log(

@@ -264,3 +264,61 @@ it('refuses cross-project resume of an accepted native session', async () => {
     ),
   ).rejects.toThrow('RESUME_UNVERIFIED');
 });
+
+function writer(scenario: string) {
+  controller = new LiveOpenCodeController(
+    store,
+    objects,
+    { workspace },
+    {
+      check: {
+        executable: process.execPath,
+        args: [
+          '-e',
+          "if(require('node:fs').readFileSync('hello.txt','utf8').trim()!=='hi from opencode')process.exit(1)",
+        ],
+      },
+    },
+    {
+      executable: process.execPath,
+      prefixArgs: [
+        fileURLToPath(
+          new URL('../../../tests/fixtures/opencode-cli.mjs', import.meta.url),
+        ),
+        scenario,
+      ],
+      timeoutMs: 5000,
+    },
+  );
+  return controller;
+}
+const writeSpec = {
+  ...spec,
+  liveApproval: {
+    ...approval,
+    profile: 'workspace-write' as const,
+    acknowledgedNativeBypass: true as const,
+  },
+};
+it('lets a workspace-write run edit through its own tools, without a host result file', async () => {
+  const result = await writer('tools').runLive(writeSpec);
+  expect(result.task.state).toBe('ready_for_acceptance');
+  expect(result.finalText).toBe('Created hello.txt.');
+  expect(result.tokens).toBe(100);
+  expect(store.providers.get('connection').nativeRunId).toBe('msg_2');
+  expect(existsSync(join(workspace, '.xvant-result-attempt.txt'))).toBe(false);
+});
+it('stops a run that reports any billed step', async () => {
+  const result = await writer('billed').runLive(writeSpec);
+  expect(result.task.state).toBe('needs_attention');
+  expect(store.providers.get('connection').status).toBe('unknown');
+});
+it('refuses workspace writes without acknowledged native bypass', async () => {
+  await expect(
+    writer('tools').runLive({
+      ...spec,
+      liveApproval: { ...approval, profile: 'workspace-write' as const },
+    }),
+  ).rejects.toThrow();
+  expect(() => store.providers.get('connection')).toThrow('NOT_FOUND');
+});

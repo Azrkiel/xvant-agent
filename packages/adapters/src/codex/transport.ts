@@ -86,6 +86,8 @@ const messageSchema = z.union([
     id: rpcId.optional(),
     method: z.string().min(1).max(128),
     params: z.unknown().optional(),
+    // Observed on live 0.158.0-alpha.2.1 notifications; timing metadata only.
+    emittedAtMs: z.number().int().nonnegative().optional(),
   }),
 ]);
 export interface WriteIntent {

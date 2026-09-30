@@ -15,15 +15,30 @@ import {
 import { NativeVerifier } from './native-verifier.ts';
 import { NativeReviewController } from './native-review.ts';
 import type { InterruptAdmission } from '../../../packages/contracts/src/providers.ts';
+import { FREE_OPENCODE_MODELS } from '../../../packages/contracts/src/live.ts';
+import { OpenCodeRunStream } from '../../../packages/adapters/src/live/opencode-run.ts';
+import type { LiveEvent, LiveRunResult } from './codex-live.ts';
 
 type Checks = Record<string, { executable: string; args: readonly string[] }>;
 interface Options {
   executable: string;
   prefixArgs?: readonly string[];
   timeoutMs?: number;
+  checkTimeoutMs?: number;
+  /** Git worktree workspaces and their base commits (workspace-write). */
+  gitBases?: Record<string, string>;
+  onEvent?: (event: LiveEvent) => void;
   fault?: (point: string) => void;
 }
-/** Trusted-local, explicitly approved text-only OpenCode CLI execution. Not OS containment. */
+/** Tool permissions for workspace-write runs: edit and shell in the worktree, no web. */
+const WRITE_CONFIG = JSON.stringify({
+  permission: { edit: 'allow', bash: 'allow', webfetch: 'deny' },
+});
+/**
+ * Trusted-local, explicitly approved OpenCode CLI execution on free models.
+ * 	ext answers into a host-written result file; workspace-write lets the
+ * worker's tools edit its Git worktree. Not OS containment.
+ */
 export class LiveOpenCodeController {
   private readonly supervisor = new WorkerSupervisor();
   private readonly verifier: NativeVerifier;
@@ -57,11 +72,16 @@ export class LiveOpenCodeController {
       !isAbsolute(options.executable) ||
       !Number.isSafeInteger(this.options.timeoutMs) ||
       this.options.timeoutMs! < 1 ||
-      this.options.timeoutMs! > 60000
+      this.options.timeoutMs! > 4 * 60 * 60 * 1000
     )
       throw new Error('INVALID_INPUT');
     this.verifier = new NativeVerifier(store, objects, workspaces, checks, {
-      timeoutMs: this.options.timeoutMs!,
+      timeoutMs: Math.min(
+        options.checkTimeoutMs ?? this.options.timeoutMs!,
+        3_600_000,
+      ),
+      gitBases: options.gitBases ?? {},
+      maxCheckOutputBytes: 8 * 1024 * 1024,
     });
     this.review = new NativeReviewController(store, objects);
   }
@@ -75,6 +95,12 @@ export class LiveOpenCodeController {
     return call(actor);
   }
   async run(input: ProviderDispatch, resumeFromConnectionId?: string) {
+    return (await this.runLive(input, resumeFromConnectionId)).task;
+  }
+  async runLive(
+    input: ProviderDispatch,
+    resumeFromConnectionId?: string,
+  ): Promise<LiveRunResult> {
     input = structuredClone(input);
     if (this.stopped) throw new Error('CONTROLLER_STOPPED');
     if (this.busy) throw new Error('CAPACITY_LIMIT');
@@ -87,7 +113,9 @@ export class LiveOpenCodeController {
       throw new Error('VERSION_UNSUPPORTED');
     if (
       !input.liveApproval ||
-      input.liveApproval.model !== 'opencode/big-pickle' ||
+      !(FREE_OPENCODE_MODELS as readonly string[]).includes(
+        input.liveApproval.model,
+      ) ||
       input.liveApproval.transport !== 'cli' ||
       input.liveApproval.userApprovedTrustedLocal !== true ||
       !input.liveApproval.actorId
@@ -100,8 +128,9 @@ export class LiveOpenCodeController {
     const task = this.store.getTask(input.taskId);
     if (task.requiredCheckIds.some((id) => !Object.hasOwn(this.checks, id)))
       throw new Error('VERIFIER_UNAVAILABLE');
+    const write = input.liveApproval.profile === 'workspace-write';
     const resultPath = join(root, '.xvant-result-' + input.attemptId + '.txt');
-    if (existsSync(resultPath)) throw new Error('RESULT_EXISTS');
+    if (!write && existsSync(resultPath)) throw new Error('RESULT_EXISTS');
     let session = 'pending:' + input.connectionId;
     if (resumeFromConnectionId) {
       const previous = this.store.providers.get(resumeFromConnectionId);
@@ -161,8 +190,20 @@ export class LiveOpenCodeController {
       let interrupted = false,
         failed = false;
       let stream: OpenCodeCliStream;
+      let toolStream: OpenCodeRunStream | undefined;
+      let final: { text: string; tokens: number | null } = {
+        text: '',
+        tokens: null,
+      };
+      const emit = (kind: LiveEvent['kind'], text: string) => {
+        try {
+          this.options.onEvent?.({ connectionId: id, kind, text });
+        } catch {
+          /* Observers cannot affect execution. */
+        }
+      };
       const recordFailure = () => {
-        const failure = stream?.failure;
+        const failure = toolStream ? toolStream.failed : stream?.failure;
         if (failure && !interrupted)
           this.store.providers.recordFailure(id, token, failure);
       };
@@ -234,6 +275,7 @@ export class LiveOpenCodeController {
         stream = new OpenCodeCliStream(session, (message) =>
           this.store.providers.recordMessage(id, token, message),
         );
+        if (write) toolStream = new OpenCodeRunStream(session);
         const args = [
           ...this.options.prefixArgs!,
           'run',
@@ -255,7 +297,10 @@ export class LiveOpenCodeController {
           frame: JSON.stringify({
             executable: this.options.executable,
             args,
-            resultFile: '.xvant-result-' + input.attemptId + '.txt',
+            resultFile: write
+              ? null
+              : '.xvant-result-' + input.attemptId + '.txt',
+            profile: write ? 'workspace-write' : 'text',
             resumeFromConnectionId: resumeFromConnectionId ?? null,
           }),
         });
@@ -272,10 +317,17 @@ export class LiveOpenCodeController {
           timeoutMs: this.options.timeoutMs!,
           maxOutputBytes: 1048576,
           userApprovedTrustedLocal: true,
+          ...(write ? { env: { OPENCODE_CONFIG_CONTENT: WRITE_CONFIG } } : {}),
           interactive: {
+            retainStdout: !write,
             onStdout: (bytes) => {
               try {
-                stream.receive(bytes);
+                if (toolStream) {
+                  const { frames, signals } = toolStream.receive(bytes);
+                  for (const frame of frames)
+                    this.store.providers.recordMessage(id, token, frame);
+                  for (const signal of signals) emit(signal.kind, signal.text);
+                } else stream.receive(bytes);
                 recordFailure();
               } catch {
                 failed = true;
@@ -308,17 +360,21 @@ export class LiveOpenCodeController {
           interrupted ||
           this.stopped ||
           stopped.reason !== 'exited' ||
-          stopped.outputTruncated
+          (!write && stopped.outputTruncated)
         )
           throw new Error('OPERATION_UNKNOWN');
-        const result = stream.end();
-        if (result.kind === 'failed')
+        const result = toolStream ? toolStream.end() : stream.end();
+        final = {
+          text: result.text,
+          tokens: 'tokens' in result ? result.tokens : null,
+        };
+        if (result.kind === 'failed' && result.failure)
           this.store.providers.recordFailure(id, token, result.failure);
         if (!result.nativeMessageId) throw new Error('OPERATION_UNKNOWN');
         if (result.kind === 'completed' && stopped.exitCode !== 0)
           throw new Error('OPERATION_UNKNOWN');
         this.store.providers.assertWritable(id, token);
-        if (result.kind === 'completed')
+        if (result.kind === 'completed' && !write)
           writeFileSync(resultPath, result.text, { flag: 'wx' });
         this.store.providers.bindRun(id, token, result.nativeMessageId);
         this.store.providers.finish(
@@ -346,7 +402,12 @@ export class LiveOpenCodeController {
         if (run) await run.result;
         clearInterval(heartbeat);
       }
-      return this.store.getTask(input.taskId);
+      return {
+        task: this.store.getTask(input.taskId),
+        finalText: final.text,
+        tokens: final.tokens,
+        auth: { mode: 'opencode-free', plan: input.liveApproval.model },
+      };
     } finally {
       this.busy = false;
     }

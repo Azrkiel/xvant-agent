@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   chmodSync,
@@ -47,6 +48,29 @@ const portable = (path: string) => path.split(sep).join('/');
 function inside(root: string, path: string) {
   const rel = relative(root, path);
   return rel !== '' && !rel.startsWith('..') && !/^[a-zA-Z]:/.test(rel);
+}
+
+/**
+ * The gates' source identity: every Git-indexed and nonignored file except
+ * docs/evidence, hashed by content, including uncommitted changes.
+ */
+export function sourceHash(root: string): string {
+  const listing = spawnSync(
+    'git',
+    ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
+    { cwd: root, encoding: 'utf8', shell: false, windowsHide: true },
+  );
+  if (listing.status !== 0) throw new Error('Cannot inventory source tree');
+  const files = [...new Set(listing.stdout.split('\0').filter(Boolean))]
+    .filter((path) => !path.startsWith('docs/evidence/'))
+    .sort()
+    .map((path) => ({
+      path,
+      sha256: existsSync(resolve(root, path))
+        ? sha256(readFileSync(resolve(root, path)))
+        : 'deleted',
+    }));
+  return sha256(JSON.stringify(files));
 }
 
 export function bundleId(

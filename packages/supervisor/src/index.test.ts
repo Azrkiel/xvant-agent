@@ -30,6 +30,37 @@ describe('owned process supervision', () => {
     expect(result.outputTruncated).toBe(true);
     expect(supervisor.activeCount).toBe(0);
   });
+  it('streams long sessions without retaining or truncating stdout', async () => {
+    const supervisor = new WorkerSupervisor();
+    let seen = 0;
+    const run = supervisor.start({
+      ...command("process.stdout.write('x'.repeat(100000))"),
+      interactive: { retainStdout: false, onStdout: (b) => (seen += b.length) },
+    });
+    run.endInput();
+    const result = await run.result;
+    expect(result.reason).toBe('exited');
+    expect(seen).toBe(100000);
+    expect(result.stdout).toBe('');
+    expect(result.outputTruncated).toBe(false);
+  });
+  it('removes inherited variables case-insensitively', async () => {
+    process.env.XVANT_TEST_SECRET = 'leak';
+    try {
+      const result = await new WorkerSupervisor().start({
+        ...command(
+          "process.stdout.write(String(Object.keys(process.env).some(k=>k.toUpperCase()==='XVANT_TEST_SECRET')))",
+        ),
+        unsetEnv: ['xvant_test_secret'],
+      }).result;
+      expect(result.stdout).toBe('false');
+    } finally {
+      delete process.env.XVANT_TEST_SECRET;
+    }
+    expect(() =>
+      new WorkerSupervisor().start({ ...command(''), unsetEnv: ['BAD NAME'] }),
+    ).toThrow('INVALID_INPUT');
+  });
   it('hard deadline kills a worker that does not cooperate', async () => {
     const supervisor = new WorkerSupervisor();
     const run = supervisor.start({

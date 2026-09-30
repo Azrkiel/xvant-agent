@@ -47,8 +47,26 @@ export class CodexLifecycle {
   private runId: string | undefined;
   private terminal = false;
   private nativeFailure: NativeFailure | undefined;
-  constructor(version: string, threadId?: string) {
+  private readonly write: boolean;
+  private readonly model: string | undefined;
+  /**
+   * workspace-write lets the worker edit its own worktree without prompts
+   * (sandbox workspace-write, approval never). Read-only is the default.
+   */
+  constructor(
+    version: string,
+    threadId?: string,
+    options: { profile?: 'read-only' | 'workspace-write'; model?: string } = {},
+  ) {
     if (version !== CODEX_VERSION) fail('VERSION_UNSUPPORTED');
+    this.write = options.profile === 'workspace-write';
+    this.model =
+      options.model === undefined || options.model === 'default'
+        ? undefined
+        : z
+            .string()
+            .regex(/^[A-Za-z0-9._-]{1,64}$/)
+            .parse(options.model);
     this.threadId =
       threadId === undefined ? undefined : nativeIdSchema.parse(threadId);
   }
@@ -76,9 +94,12 @@ export class CodexLifecycle {
     if (!isAbsolute(cwd)) fail('INVALID_INPUT');
     const params = {
       cwd: resolve(cwd),
-      approvalPolicy: 'untrusted' as const,
+      approvalPolicy: this.write ? ('never' as const) : ('untrusted' as const),
       approvalsReviewer: 'user' as const,
-      sandbox: 'read-only' as const,
+      sandbox: this.write
+        ? ('workspace-write' as const)
+        : ('read-only' as const),
+      ...(this.model ? { model: this.model } : {}),
       ...(mode === 'resume'
         ? { threadId: this.threadId!, excludeTurns: true }
         : {}),
@@ -123,9 +144,9 @@ export class CodexLifecycle {
         (this.observedThreadId && id !== this.observedThreadId) ||
         value.cwd !== this.opening.cwd ||
         value.thread.cwd !== this.opening.cwd ||
-        value.approvalPolicy !== 'untrusted' ||
+        value.approvalPolicy !== (this.write ? 'never' : 'untrusted') ||
         value.approvalsReviewer !== 'user' ||
-        value.sandbox.type !== 'readOnly' ||
+        value.sandbox.type !== (this.write ? 'workspaceWrite' : 'readOnly') ||
         value.sandbox.networkAccess === true ||
         value.thread.cliVersion !== CODEX_VERSION ||
         value.thread.status.type !== 'idle' ||
@@ -166,12 +187,14 @@ export class CodexLifecycle {
           ? 'ILLEGAL_TRANSITION'
           : 'WORKER_BUSY',
       );
-    const text = z.string().trim().min(1).max(10000).parse(objective);
+    const text = z.string().trim().min(1).max(100000).parse(objective);
+    // Write turns inherit the thread's validated sandbox and approval policy.
     const params = {
       threadId: this.threadId,
       input: [{ type: 'text', text, text_elements: [] }],
-      approvalPolicy: 'untrusted',
-      sandboxPolicy: { type: 'readOnly' },
+      ...(this.write
+        ? {}
+        : { approvalPolicy: 'untrusted', sandboxPolicy: { type: 'readOnly' } }),
     };
     validateNative('TurnStartParams', params);
     this.state = 'starting';
