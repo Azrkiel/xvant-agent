@@ -10,7 +10,7 @@ const binding = {
   generation: z.number().int().positive(),
   hostId: idSchema,
   runtimeKind: providerKindSchema,
-  classification: z.literal('offline'),
+  classification: z.enum(['offline', 'live']),
   nativeSessionId: nativeIdSchema,
   nativeRunId: nativeIdSchema,
   treeHash: hashSchema,
@@ -82,5 +82,5 @@ export const nativeAcceptanceSchema = z.strictObject({
   expectedVersion: z.number().int().nonnegative(),
   reviewedEvidenceHash: hashSchema,
   actorId: idSchema,
-  classification: z.literal('offline'),
+  classification: z.enum(['offline', 'live']),
 });

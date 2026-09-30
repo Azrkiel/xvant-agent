@@ -93,7 +93,8 @@ function check(id, args) {
     encoding: 'utf8',
     shell: false,
     windowsHide: true,
-    timeout: 180000,
+    // The full Windows coverage suite includes bounded process-death tests.
+    timeout: id === 'tests' ? 600000 : 180000,
     maxBuffer: 16 * 1024 * 1024,
   });
   const log = resolve(artifacts, id + '.log');

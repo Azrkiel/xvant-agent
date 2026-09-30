@@ -75,7 +75,7 @@ export const taskSchema = createTaskSchema.extend({
     .strictObject({
       connectionId: idSchema,
       runtimeKind: z.enum(['codex', 'claude', 'opencode']),
-      classification: z.literal('offline'),
+      classification: z.enum(['offline', 'live']),
     })
     .optional(),
 });

@@ -26,6 +26,11 @@ const spec = {
     quotaGroupId: 'account',
   },
 };
+it('refuses live qualification on the fixed offline controller', async () => {
+  await expect(
+    controller.run({ ...spec, classification: 'live' }),
+  ).rejects.toThrow('LIVE_DISABLED');
+});
 let root: string,
   store: Store,
   objects: ArtifactStore,

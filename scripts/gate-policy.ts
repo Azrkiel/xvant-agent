@@ -104,6 +104,9 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/adapters/src/opencode/endpoint.test.ts': 9,
               'apps/controller/src/opencode-http.test.ts': 16,
               'tests/faults/opencode-http.test.ts': 6,
+              'apps/controller/src/opencode-live.test.ts': 17,
+              'packages/adapters/src/opencode/cli-stream.test.ts': 21,
+              'tests/faults/opencode-live.test.ts': 12,
             }
           : {}),
       };

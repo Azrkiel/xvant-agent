@@ -697,6 +697,7 @@ export class Store {
           .update(canonical(evidence))
           .digest('hex');
         if (
+          spec.classification !== evidence.classification ||
           canonical(saved) !== canonical(evidence) ||
           evidenceHash !== spec.reviewedEvidenceHash
         )

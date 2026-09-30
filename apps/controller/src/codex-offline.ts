@@ -100,6 +100,7 @@ export class OfflineCodexController {
     scenarioInput: string = 'success',
     modeInput: 'create' | 'resume' = 'resume',
   ) {
+    if (input.classification !== 'offline') throw new Error('LIVE_DISABLED');
     if (this.stopped) throw new Error('CONTROLLER_STOPPED');
     const scenario = scenarioSchema.parse(scenarioInput);
     const mode = z.enum(['create', 'resume']).parse(modeInput);

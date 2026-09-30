@@ -1,4 +1,9 @@
 import { beforeEach, afterEach, expect, it, vi } from 'vitest';
+it('refuses live qualification on the fixed native controller', async () => {
+  await expect(
+    controller.run({ ...spec('opencode'), classification: 'live' }),
+  ).rejects.toThrow('LIVE_DISABLED');
+});
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

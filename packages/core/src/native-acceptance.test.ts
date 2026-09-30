@@ -98,3 +98,38 @@ it('clears native qualification when work is revised', () => {
     }).nativeQualification,
   ).toBeUndefined();
 });
+
+it('preserves live classification through review and acceptance', () => {
+  const live = {
+    ...evidence,
+    classification: 'live' as const,
+    receipts: evidence.receipts.map((receipt) => ({
+      ...receipt,
+      classification: 'live' as const,
+    })),
+  };
+  const prepared = nativeAcceptanceTask(task, 'ready_for_acceptance', live);
+  expect(prepared.nativeQualification?.classification).toBe('live');
+  expect(nativeAcceptanceTask(prepared, 'accepted', live).state).toBe(
+    'accepted',
+  );
+  expect(() =>
+    nativeAcceptanceTask(
+      {
+        ...prepared,
+        nativeQualification: {
+          ...prepared.nativeQualification!,
+          classification: 'offline',
+        },
+      },
+      'accepted',
+      live,
+    ),
+  ).toThrow('STALE_EVIDENCE');
+  expect(() =>
+    nativeAcceptanceTask(task, 'ready_for_acceptance', {
+      ...live,
+      receipts: evidence.receipts,
+    }),
+  ).toThrow('Mismatched');
+});

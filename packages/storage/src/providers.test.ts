@@ -836,3 +836,242 @@ it('treats an HTTP prompt as turn dispatch for interrupts and session binding', 
   store.providers.requestInterrupt('connection', connection.token, 'operator');
   expect(store.providers.get('connection').interrupt?.actorId).toBe('operator');
 });
+
+const liveSpec = {
+  ...spec,
+  classification: 'live' as const,
+  liveApproval: {
+    actorId: 'operator',
+    model: 'opencode/big-pickle' as const,
+    transport: 'cli' as const,
+    userApprovedTrustedLocal: true as const,
+  },
+  worker: {
+    ...worker,
+    runtimeKind: 'opencode' as const,
+    runtimeVersion: '2.0.19',
+    adapterVersion: 'opencode-cli-v2',
+    nativeSessionId: 'ses_HostReserved123',
+  },
+};
+it('admits approved live Big Pickle with an existing native session and CLI interrupt', () => {
+  const connection = store.providers.reserve(liveSpec);
+  expect(connection).toMatchObject(liveSpec);
+  expect(
+    store.providers.occupied(
+      'native:' +
+        JSON.stringify(['opencode', 'host', liveSpec.worker.nativeSessionId]),
+    ),
+  ).toBe(true);
+  expect(() =>
+    store.providers.requestInterrupt(
+      'connection',
+      connection.token,
+      'operator',
+    ),
+  ).toThrow('NOT_INTERRUPTIBLE');
+  store.providers.recordIntent('connection', connection.token, {
+    id: 1,
+    method: 'opencode/cli-run',
+    frame: '{}\n',
+  });
+  store.providers.requestInterrupt('connection', connection.token, 'operator');
+  expect(store.providers.get('connection').interrupt?.actorId).toBe('operator');
+});
+it.each([
+  { liveApproval: undefined },
+  { liveApproval: { ...liveSpec.liveApproval, actorId: '' } },
+  { liveApproval: { ...liveSpec.liveApproval, model: 'other/model' } },
+  { liveApproval: { ...liveSpec.liveApproval, transport: 'http' } },
+  {
+    liveApproval: { ...liveSpec.liveApproval, userApprovedTrustedLocal: false },
+  },
+  { worker: { ...liveSpec.worker, runtimeKind: 'codex' } },
+  { worker: { ...liveSpec.worker, runtimeVersion: '1.18.33' } },
+  { worker: { ...liveSpec.worker, adapterVersion: 'v1' } },
+  { worker: { ...liveSpec.worker, mode: 'attached-control' } },
+  { worker: { ...liveSpec.worker, nativeSessionId: 'pending:other' } },
+  { classification: 'offline' },
+])('rejects unsupported or unapproved live admission %#', (override) => {
+  expect(() => store.providers.reserve({ ...liveSpec, ...override })).toThrow();
+  expect(store.getTask('task').state).toBe('queued');
+  expect(store.providers.occupied('workspace:workspace')).toBe(false);
+});
+it('atomically replaces an approved provisional live reservation with its native session', () => {
+  const pending = {
+    ...liveSpec,
+    worker: { ...liveSpec.worker, nativeSessionId: 'pending:connection' },
+  };
+  const connection = store.providers.reserve(pending);
+  store.providers.recordIntent('connection', connection.token, {
+    id: 1,
+    method: 'session/create',
+    frame: '{}',
+  });
+  store.providers.bindSession('connection', connection.token, 'ses_Native123');
+  expect(store.providers.get('connection').worker.nativeSessionId).toBe(
+    'ses_Native123',
+  );
+  expect(
+    store.providers.occupied(
+      'native:' + JSON.stringify(['opencode', 'host', 'pending:connection']),
+    ),
+  ).toBe(false);
+  expect(
+    store.providers.occupied(
+      'native:' + JSON.stringify(['opencode', 'host', 'ses_Native123']),
+    ),
+  ).toBe(true);
+});
+it('retains live authorization and reservations after restart without replay', () => {
+  const connection = store.providers.reserve(liveSpec);
+  store.providers.recordIntent('connection', connection.token, {
+    id: 1,
+    method: 'opencode/cli-run',
+    frame: '{}\n',
+  });
+  now += 501;
+  const next = open();
+  expect(next.recover()).toEqual(['attempt']);
+  expect(next.providers.get('connection')).toMatchObject({
+    ...liveSpec,
+    status: 'unknown',
+  });
+  expect(next.providers.occupied('workspace:workspace')).toBe(true);
+  expect(
+    next.providers.occupied(
+      'native:' +
+        JSON.stringify(['opencode', 'host', liveSpec.worker.nativeSessionId]),
+    ),
+  ).toBe(true);
+  expect(() =>
+    next.providers.recordIntent('connection', connection.token, {
+      id: 2,
+      method: 'opencode/cli-run',
+      frame: '{}\n',
+    }),
+  ).toThrow('STALE_FENCE');
+  expect(next.providers.entries('connection')).toHaveLength(1);
+});
+it('preserves live approval and uncertainty in snapshot restore', async () => {
+  const connection = store.providers.reserve(liveSpec);
+  store.providers.unknown('connection', connection.token);
+  await backupSnapshot(
+    store,
+    new ArtifactStore(join(root, 'objects')),
+    join(root, 'backup'),
+  );
+  await restoreSnapshot(join(root, 'backup'), join(root, 'restored'));
+  const restored = new Store(join(root, 'restored', 'state.sqlite'), {
+    owner: 'restored',
+    now: () => 2000,
+  });
+  stores.push(restored);
+  expect(restored.providers.get('connection')).toMatchObject({
+    ...liveSpec,
+    status: 'unknown',
+  });
+  expect(restored.providers.occupied('workspace:workspace')).toBe(true);
+});
+
+it.each(['offline', 'live'] as const)(
+  'requires matching classification for %s durable evidence and acceptance',
+  (classification) => {
+    const connection = store.providers.reserve(
+      classification === 'live' ? liveSpec : spec,
+    );
+    const objects = new ArtifactStore(join(root, 'objects'));
+    const treeHash = objects.put(
+      Buffer.from(JSON.stringify({ version: 1, directories: [], files: [] })),
+    );
+    const artifactSetHash = objects.put(
+      Buffer.from(JSON.stringify({ version: 1, hashes: [treeHash] })),
+    );
+    const binding = {
+      taskId: 'task',
+      attemptId: 'attempt',
+      connectionId: 'connection',
+      workspaceId: 'workspace',
+      workRevision: connection.workRevision,
+      generation: connection.generation,
+      hostId: 'host',
+      runtimeKind: connection.worker.runtimeKind,
+      classification,
+      nativeSessionId: connection.worker.nativeSessionId,
+      nativeRunId: 'run1',
+      treeHash,
+      artifactSetHash,
+      workspaceRootHash: 'a'.repeat(64),
+    };
+    const result = {
+      status: 'passed' as const,
+      evidence: {
+        ...binding,
+        receipts: [
+          {
+            ...binding,
+            checkId: 'test',
+            commandHash: 'b'.repeat(64),
+            status: 'passed' as const,
+          },
+        ],
+      },
+    };
+    store.providers.bindRun('connection', connection.token, 'run1');
+    store.providers.finish('connection', connection.token, 'run1', 'completed');
+    store.providers.beginVerification('connection', connection.token);
+    const other =
+      classification === 'live' ? ('offline' as const) : ('live' as const);
+    expect(() =>
+      store.providers.finishVerification(
+        'connection',
+        connection.token,
+        {
+          status: 'passed',
+          evidence: {
+            ...result.evidence,
+            classification: other,
+            receipts: result.evidence.receipts.map((receipt) => ({
+              ...receipt,
+              classification: other,
+            })),
+          },
+        },
+        objects,
+      ),
+    ).toThrow('STALE_EVIDENCE');
+    store.providers.finishVerification(
+      'connection',
+      connection.token,
+      result,
+      objects,
+    );
+    const prepared = store.prepareNativeAcceptance(
+      'prepare',
+      'connection',
+      store.getTask('task').rowVersion,
+      objects,
+    );
+    const approval = {
+      connectionId: 'connection',
+      expectedVersion: prepared.rowVersion,
+      reviewedEvidenceHash: prepared.evidenceHash,
+      actorId: 'reviewer',
+      classification,
+    };
+    expect(() =>
+      store.acceptNative(
+        'mismatch',
+        { ...approval, classification: other },
+        objects,
+      ),
+    ).toThrow('STALE_EVIDENCE');
+    expect(store.getTask('task').state).toBe('ready_for_acceptance');
+    expect(
+      store.acceptNative('accept', approval, objects).nativeQualification
+        ?.classification,
+    ).toBe(classification);
+    expect(store.providers.occupied('workspace:workspace')).toBe(false);
+    expect(store.events(0).at(-1)?.payload).toMatchObject({ classification });
+  },
+);

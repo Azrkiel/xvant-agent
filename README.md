@@ -1,6 +1,6 @@
 # XVANT
 
-Original local agent harness. Phase 2 adds durable SQLite state, supervised simulated workers, process checks, an authenticated loopback API, and verified snapshots. It makes no model calls.
+Original local agent harness. Phase 2 adds durable SQLite state, supervised simulated workers, process checks, an authenticated loopback API, and verified snapshots. The default demos make no model calls; the explicitly approved OpenCode live probe below does.
 
 ## Run
 
@@ -53,7 +53,7 @@ flowchart LR
 
 Programmatic service entry: `startService(localStateDirectory, trustedChecks)` in `apps/controller/src/service.ts`. It returns the loopback origin, one-use bootstrap token, and a close method. The host delivers that token privately; never put it in a URL or log it. There is no UI yet.
 
-Simulation hashes do not prove real code changes. Workspace IDs reserve logical resources; they do not isolate filesystem access. Restricted profiles fail closed: Windows taskkill/Linux process groups are not hostile-code containment. Unknown operations retain reservations until trusted reconciliation. Live providers, subscriptions, Linux runtime qualification, and real repository attestation remain unverified.
+Simulation hashes do not prove real code changes. Workspace IDs reserve logical resources; they do not isolate filesystem access. Restricted profiles fail closed: Windows taskkill/Linux process groups are not hostile-code containment. Unknown operations retain reservations until trusted reconciliation. Mixed live providers, subscriptions, Linux runtime qualification, and real repository attestation remain unverified.
 
 Use local nonsynchronized storage. Snapshots restore into new directories only and preserve the controller lease TTL. Verify snapshots before recovering user data.
 
@@ -62,7 +62,7 @@ Use local nonsynchronized storage. Snapshots restore into new directories only a
 `npm run probe -- --offline --runtime all` exercises ten synthetic provider
 identities. `npm run probe -- --inventory-only --runtime all` reads CLI versions
 without model calls. `npm run gate -- --phase 03 --offline` verifies the offline
-foundation and all earlier suites. Live providers remain disabled; this does not
+foundation and all earlier suites. Those controllers reject live dispatch; this does not
 complete the live Phase 3 milestone. See [adapter boundaries](packages/adapters/README.md).
 
 ## Layout
@@ -78,3 +78,17 @@ complete the live Phase 3 milestone. See [adapter boundaries](packages/adapters/
 | `docs/evidence`                   | Compatibility decisions and gate results            |
 
 Run `npm test`, `npm run typecheck`, `npm run lint`, or `npm run format:check` for individual checks. Run the gate on each host to qualify that host.
+
+## Durable OpenCode live integration
+
+`LiveOpenCodeController` supports explicitly approved, trusted-local text turns with OpenCode **2.0.19** and **opencode/big-pickle**. It journals native session creation before spawning the CLI, atomically reserves the returned session ID, journals inference, validates the JSON stream, runs host-registered checks against stable workspace snapshots, and prepares evidence for explicit acceptance. Accepted sessions can resume within the same project, workspace, host, and account. Recovery retains uncertain reservations and never replays a prompt automatically.
+
+Run the opt-in qualification with the installed executable:
+
+```powershell
+npm run probe:live:opencode -- --approve-live --executable "C:\Users\jiang\AppData\Local\hermes\node\node_modules\@opencode\cli\bin\opencode.exe"
+```
+
+This runs two real model turns, checks token recall on the same native session, reopens SQLite before each explicit fixture acceptance, and writes `docs/evidence/G03-opencode-live.json`. State and workspace artifacts remain under `.artifacts/opencode-live-*`. No paid fallback is configured. This provider-specific receipt does not complete the mixed-provider live G03 milestone.
+
+The CLI inherits standard OpenCode configuration and permissions; it is not sandboxed. No automatic permission approval is supplied. Tool events and unknown output fail the text protocol, but rejecting an event cannot undo a tool already run. Use only trusted local workspaces. A controller permits one active run at a time. Interrupts, timeouts, and uncertain shutdown retain reservations for trusted reconciliation. The HTTP and offline fixture controllers remain separate and cannot qualify live evidence.

@@ -19,15 +19,42 @@ CREATE TABLE provider_connections(id TEXT PRIMARY KEY, task_id TEXT NOT NULL REF
 CREATE TABLE provider_entries(sequence INTEGER PRIMARY KEY AUTOINCREMENT, connection_id TEXT NOT NULL REFERENCES provider_connections(id), body TEXT NOT NULL);
 CREATE TABLE provider_reservations(resource TEXT PRIMARY KEY, connection_id TEXT NOT NULL REFERENCES provider_connections(id));
 `;
-const specSchema = z.strictObject({
-  connectionId: idSchema,
-  taskId: idSchema,
-  attemptId: idSchema,
-  workspaceId: idSchema,
-  expectedVersion: z.number().int().nonnegative(),
-  classification: z.literal('offline'),
-  worker: providerWorkerSchema.extend({ mode: z.literal('managed') }),
-});
+const specSchema = z
+  .strictObject({
+    connectionId: idSchema,
+    taskId: idSchema,
+    attemptId: idSchema,
+    workspaceId: idSchema,
+    expectedVersion: z.number().int().nonnegative(),
+    classification: z.enum(['offline', 'live']),
+    liveApproval: z
+      .strictObject({
+        actorId: idSchema,
+        model: z.literal('opencode/big-pickle'),
+        transport: z.literal('cli'),
+        userApprovedTrustedLocal: z.literal(true),
+      })
+      .optional(),
+    worker: providerWorkerSchema.extend({ mode: z.literal('managed') }),
+  })
+  .superRefine((value, context) => {
+    const supported =
+      value.liveApproval !== undefined &&
+      value.worker.runtimeKind === 'opencode' &&
+      value.worker.runtimeVersion === '2.0.19' &&
+      value.worker.adapterVersion === 'opencode-cli-v2' &&
+      (/^ses_[A-Za-z0-9]+$/.test(value.worker.nativeSessionId) ||
+        value.worker.nativeSessionId === 'pending:' + value.connectionId);
+    if (
+      value.classification === 'live'
+        ? !supported
+        : value.liveApproval !== undefined
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'LIVE_APPROVAL_REQUIRED_OR_UNSUPPORTED',
+      });
+  });
 export type ProviderDispatch = z.input<typeof specSchema>;
 export interface ProviderConnection extends ProviderDispatch {
   token: string;
@@ -87,7 +114,12 @@ interface Host {
   };
 }
 /** Journal methods that dispatch a turn to the provider. */
-const DISPATCH = new Set(['turn/start', 'fixture/start', 'session/prompt']);
+const DISPATCH = new Set([
+  'turn/start',
+  'fixture/start',
+  'session/prompt',
+  'opencode/cli-run',
+]);
 function fail(code: string): never {
   throw new Error(code);
 }
