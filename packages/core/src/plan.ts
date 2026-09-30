@@ -105,7 +105,11 @@ export function extractJson(reply: string): unknown {
 export function planningPrompt(input: {
   objective: string;
   acceptanceCriteria: readonly string[];
-  workers: readonly { alias: string; runtimeKind: string }[];
+  workers: readonly {
+    alias: string;
+    runtimeKind: string;
+    roles?: readonly string[];
+  }[];
   repositorySummary: string;
   maxNodes: number;
 }): string {
@@ -119,7 +123,16 @@ export function planningPrompt(input: {
     ...input.acceptanceCriteria.map((c) => '- ' + c),
     '',
     '## Available workers',
-    ...input.workers.map((w) => '- @' + w.alias + ' (' + w.runtimeKind + ')'),
+    ...input.workers.map(
+      (w) =>
+        '- @' +
+        w.alias +
+        ' (' +
+        w.runtimeKind +
+        (w.roles?.length ? '; ' + w.roles.join(', ') : '') +
+        ')',
+    ),
+    'Assign implementation only to workers with the worker role. Leave assignee as any unless a specific worker is needed.',
     '',
     '## Repository',
     input.repositorySummary,

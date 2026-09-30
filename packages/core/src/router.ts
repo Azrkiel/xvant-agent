@@ -34,11 +34,24 @@ export function routeNode(
   const excluded: RouteDecision['excluded'] = [];
   const exclude = (alias: string, reason: string) =>
     excluded.push({ alias, reason });
+  const assigned = node.assignee.startsWith('@')
+    ? workers.find(
+        (w) => w.alias.toLowerCase() === node.assignee.slice(1).toLowerCase(),
+      )
+    : undefined;
+  // A named worker must hold the node's role; otherwise route by policy.
+  if (assigned && !assigned.roles.includes(node.role)) {
+    const routed = routeNode({ ...node, assignee: 'any' }, workers, context);
+    return {
+      ...routed,
+      reasons: [
+        node.assignee + ' is not configured for role ' + node.role,
+        ...routed.reasons,
+      ],
+    };
+  }
   if (node.assignee.startsWith('@')) {
-    const alias = node.assignee.slice(1);
-    const worker = workers.find(
-      (w) => w.alias.toLowerCase() === alias.toLowerCase(),
-    );
+    const worker = assigned;
     if (!worker)
       return {
         alias: null,

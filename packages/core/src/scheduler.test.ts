@@ -209,3 +209,16 @@ describe('review routing', () => {
     expect(decision.reasons).toContain('Wrote none of the reviewed work');
   });
 });
+
+describe('explicit assignment', () => {
+  it('routes by policy when the named worker lacks the role', () => {
+    const decision = routeNode(task({ assignee: '@claude-2' }), [
+      worker('claude-2', { roles: ['reviewer'] }),
+      worker('opencode-1', { roles: ['worker'] }),
+    ]);
+    expect(decision.alias).toBe('opencode-1');
+    expect(decision.reasons[0]).toBe(
+      '@claude-2 is not configured for role worker',
+    );
+  });
+});
