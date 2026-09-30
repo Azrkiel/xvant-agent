@@ -8,3 +8,8 @@ docs/evidence
 # Hashed skill instructions and fixture data must keep their exact bytes.
 skills/**/SKILL.md
 fixtures/skills
+
+# Planning records and session handoffs are kept byte-for-byte.
+.Codex
+plan.md
+docs/*.md
