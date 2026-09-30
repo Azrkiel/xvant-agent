@@ -5,6 +5,7 @@ import { dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hostname, platform, release } from 'node:os';
 import { validateTestReport, phaseSuites } from './gate-policy.ts';
+import { archiveRun } from './evidence-bundle.ts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -460,9 +461,21 @@ try {
   report.failure = error instanceof Error ? error.message : 'Gate failed';
   console.error(report.failure);
 }
-writeFileSync(
-  resolve(root, 'docs/evidence/' + gateId + '.json'),
-  JSON.stringify(report, null, 2) + '\n',
-);
+const receiptFile = resolve(root, 'docs/evidence/' + gateId + '.json');
+writeFileSync(receiptFile, JSON.stringify(report, null, 2) + '\n');
 console.log(gateId + ': ' + report.status);
 process.exitCode = report.status === 'passed' ? 0 : 1;
+// The next run overwrites .artifacts; keep this run's bytes. Failed runs too.
+try {
+  const bundle = archiveRun({
+    receiptFile,
+    sourceRoot: root,
+    destination: resolve(root, 'docs/evidence/runs'),
+  });
+  console.log('evidence bundle: ' + bundle.bundleId + ' ' + bundle.integrity);
+  if (report.status === 'passed' && bundle.integrity !== 'complete')
+    throw new Error('Declared artifacts changed before archival');
+} catch (error) {
+  console.error('Evidence archival failed: ' + error.message);
+  process.exitCode = 1;
+}

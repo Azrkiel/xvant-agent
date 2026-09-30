@@ -57,6 +57,7 @@ export function phaseSuites(phase: string): Record<string, number> {
     'packages/adapters/src/simulated/simulated.test.ts': 10,
     'apps/controller/src/controller.test.ts': 24,
     'tests/gate.test.ts': 16,
+    'tests/evidence-bundle.test.ts': 8,
   };
   return phase === '01'
     ? baseline

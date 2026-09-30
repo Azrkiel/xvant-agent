@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
-import { resolve, join, isAbsolute } from 'node:path';
+import { resolve, join, isAbsolute, relative } from 'node:path';
+import { archiveRun } from './evidence-bundle.ts';
 import { randomBytes, createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { Store } from '../packages/storage/src/store.ts';
@@ -174,4 +175,17 @@ try {
     JSON.stringify(report, null, 2),
   );
   console.log(JSON.stringify(report, null, 2));
+  // Live runs are not replayable; keep the durable state beside the receipt.
+  try {
+    const bundle = archiveRun({
+      receiptFile: 'docs/evidence/G03-opencode-live.json',
+      sourceRoot: '.',
+      destination: 'docs/evidence/runs',
+      extras: [relative(resolve('.'), root)],
+    });
+    console.log('evidence bundle: ' + bundle.bundleId);
+  } catch (e) {
+    console.error('Evidence archival failed: ' + e.message);
+    process.exitCode = 1;
+  }
 }
