@@ -11,11 +11,11 @@ const args = process.argv.slice(2);
 if (
   args.length !== 3 ||
   args[0] !== '--phase' ||
-  !['01', '02', '03'].includes(args[1]) ||
+  !['01', '02', '03', '04'].includes(args[1]) ||
   args[2] !== '--offline'
 ) {
   console.error(
-    'Usage: npm run gate -- --phase 01|02|03 --offline. Live gates remain unavailable.',
+    'Usage: npm run gate -- --phase 01|02|03|04 --offline. Live gates remain unavailable.',
   );
   process.exit(2);
 }
@@ -69,9 +69,11 @@ const report = {
   gitVersion: git(['--version']).stdout.trim(),
   classification: 'offline',
   qualificationScope:
-    phase === '03'
-      ? 'offline-provider-transport-foundation'
-      : 'offline-simulation',
+    phase === '04'
+      ? 'offline-context-handoff'
+      : phase === '03'
+        ? 'offline-provider-transport-foundation'
+        : 'offline-simulation',
   runtimeKind: 'simulated',
   liveProvidersTested: [],
   checks: [],
@@ -188,7 +190,7 @@ try {
         sha256: hash(readFileSync(resolve(root, path))),
       });
   }
-  if (phase === '03') {
+  if (phase === '03' || phase === '04') {
     check('provider-fixtures', [
       'scripts/probe.mjs',
       '--offline',
@@ -376,6 +378,22 @@ try {
           throw new Error('Native session creation fixture failed');
       }
     }
+  }
+  if (phase === '04') {
+    check('handoff-fixture', ['scripts/handoff-fixture.mjs']);
+    const handoff = JSON.parse(
+      readFileSync(resolve(artifacts, 'handoff-fixture.log'), 'utf8'),
+    );
+    if (
+      handoff.classification !== 'offline' ||
+      handoff.liveProvidersTested.length !== 0 ||
+      handoff.problems.length !== 0 ||
+      handoff.from === handoff.to ||
+      handoff.recipient.completed !== true ||
+      handoff.sentinelsAbsent !== true ||
+      handoff.requiredFacts.present !== handoff.requiredFacts.expected
+    )
+      throw new Error('Handoff fixture failed');
   }
   const after = snapshot();
   if (after.sha256 !== before.sha256)

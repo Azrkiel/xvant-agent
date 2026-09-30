@@ -65,6 +65,41 @@ without model calls. `npm run gate -- --phase 03 --offline` verifies the offline
 foundation and all earlier suites. Those controllers reject live dispatch; this does not
 complete the live Phase 3 milestone. See [adapter boundaries](packages/adapters/README.md).
 
+## Phase 4 context and handoffs
+
+Workers receive focused context through sealed packets, not raw transcripts.
+`npm run gate -- --phase 04 --offline` runs every earlier suite and fixture plus the
+Phase 4 suites and a handoff fixture. In that fixture, a Codex-named worker hands a
+partly finished task to a Claude-named simulated worker in a separate process.
+The recipient sees only the packet and must complete the task from it. No model
+calls are made; the live handoff gate remains open.
+
+- **Packets** (`packages/context/src/packet.ts`) carry the objective, acceptance
+  criteria, revisions, recipient, write ownership, tools, skills and sourced items.
+  The objective, criteria, policy and required items are never truncated: an
+  oversized packet fails so the task can be split. Optional items enter whole by
+  priority. Token counts are conservative byte-based estimates. Every packet has a
+  hash seal that recipients verify.
+- **Retrieval** (`retrieval.ts`) uses Git ignore rules (with repository fsmonitor
+  programs disabled) or a bounded walk. It never opens secret-named files
+  (`.env*`, keys, `.npmrc`, `.ssh/` and similar), drops credential-shaped content,
+  refuses links, binary and oversized files, and ranks with SQLite FTS5.
+  Detection is defense in depth, not a guarantee.
+- **Memory** (`packages/storage/src/memory.ts`, schema v3) holds namespaced records
+  with provenance. Workers can only propose, bound to their task's current
+  attempt; acceptance, rejection and supersession are explicit. Reads are scoped
+  to one project. Records anchored to files become stale when those files change
+  (`packages/memory`), and stale, unaccepted, rejected or cross-project records
+  never enter a packet.
+- **Handoffs** (`handoff.ts`) copy requirements from the task record, keep exact
+  revisions, remaining work, failed attempts, questions and artifact hashes, and
+  make every fact a required packet item.
+- **Inspection** (`inspect.ts`) explains why each candidate was included or
+  omitted, without copying content.
+- **Import and export** (`transfer.ts`) move accepted memory as sealed bundles.
+  Imports become proposals, never accepted records. External transcripts are
+  read without modification and stored as artifacts.
+
 ## Layout
 
 | Path                              | Responsibility                                      |
@@ -72,6 +107,8 @@ complete the live Phase 3 milestone. See [adapter boundaries](packages/adapters/
 | `packages/contracts`              | Validated boundary schemas and typed errors         |
 | `packages/core`                   | Pure transitions, evidence consistency, graph rules |
 | `packages/adapters/src/simulated` | Deterministic simulation and fault fixtures         |
+| `packages/context`                | Packets, retrieval, handoffs, inspection, transfer  |
+| `packages/memory`                 | Memory freshness and packet conversion              |
 | `apps/controller`                 | In-memory orchestration and runnable demo           |
 | `scripts`                         | Offline gate and test-report validation             |
 | `tests`                           | Gate-policy tests                                   |

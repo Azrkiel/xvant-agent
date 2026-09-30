@@ -213,8 +213,9 @@ result also requires attention and retains reservations. Only trusted host
 reconciliation releases them; no HTTP or provider message exposes that authority.
 Native results never acquire simulated hashes, receipts or acceptance authority.
 
-Schema v2 migrates existing v1 databases transactionally. Verified snapshots support
-both versions, including the provider records and reservation constraints. Eight
+Schema v2 migrates existing v1 databases transactionally; v3 adds project memory.
+Verified snapshots support all three versions, including the provider records,
+reservation constraints and the memory index definition. Eight
 real-process crash tests cover reservation/intent commits, pipe writes, reply
 persistence and terminal results. These tests and the six synthetic Codex process
 scenarios qualify offline durability only. Native artifact attestation and host

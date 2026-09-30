@@ -93,7 +93,21 @@ it('Phase 2 gate requires storage, process, auth, recovery and service suites', 
     'tests/faults/crash.test.ts',
   ])
     expect(suites[file]).toBeGreaterThan(0);
-  expect(() => phaseSuites('04')).toThrow();
+  expect(() => phaseSuites('05')).toThrow();
+  const phase4 = phaseSuites('04');
+  for (const [file, minimum] of Object.entries(phaseSuites('03')))
+    expect(phase4[file]).toBe(minimum);
+  for (const file of [
+    'packages/context/src/packet.test.ts',
+    'packages/context/src/retrieval.test.ts',
+    'packages/storage/src/memory.test.ts',
+    'packages/memory/src/relevance.test.ts',
+    'packages/context/src/handoff.test.ts',
+    'packages/context/src/inspect.test.ts',
+    'packages/context/src/transfer.test.ts',
+    'apps/controller/src/handoff-fixture.test.ts',
+  ])
+    expect(phase4[file]).toBeGreaterThan(0);
   expect(
     Object.values(phaseSuites('01')).reduce((a, b) => a + b, 0),
   ).toBeGreaterThanOrEqual(110);

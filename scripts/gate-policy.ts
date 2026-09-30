@@ -48,7 +48,7 @@ export function validateTestReport(
   return { total, suites };
 }
 export function phaseSuites(phase: string): Record<string, number> {
-  if (phase !== '01' && phase !== '02' && phase !== '03')
+  if (!['01', '02', '03', '04'].includes(phase))
     throw new Error('Unsupported gate phase');
   const baseline: Record<string, number> = {
     'packages/contracts/src/contracts.test.ts': 15,
@@ -70,7 +70,7 @@ export function phaseSuites(phase: string): Record<string, number> {
         'apps/controller/src/service.test.ts': 3,
         'apps/controller/src/http/server.test.ts': 11,
         'tests/faults/crash.test.ts': 7,
-        ...(phase === '03'
+        ...(phase === '03' || phase === '04'
           ? {
               'packages/adapters/src/providers/conformance.test.ts': 19,
               'packages/adapters/src/providers/protocol.test.ts': 8,
@@ -107,6 +107,18 @@ export function phaseSuites(phase: string): Record<string, number> {
               'apps/controller/src/opencode-live.test.ts': 17,
               'packages/adapters/src/opencode/cli-stream.test.ts': 21,
               'tests/faults/opencode-live.test.ts': 12,
+            }
+          : {}),
+        ...(phase === '04'
+          ? {
+              'packages/context/src/packet.test.ts': 21,
+              'packages/context/src/retrieval.test.ts': 12,
+              'packages/storage/src/memory.test.ts': 12,
+              'packages/memory/src/relevance.test.ts': 5,
+              'packages/context/src/handoff.test.ts': 10,
+              'packages/context/src/inspect.test.ts': 2,
+              'packages/context/src/transfer.test.ts': 6,
+              'apps/controller/src/handoff-fixture.test.ts': 3,
             }
           : {}),
       };
