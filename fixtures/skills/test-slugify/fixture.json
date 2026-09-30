@@ -1,0 +1,10 @@
+{
+  "id": "test-slugify",
+  "skill": "test-change",
+  "objective": "Add test/slugify.test.mjs that exits non-zero when slugify is wrong. Cover letter case, surrounding whitespace, runs of punctuation and leading or trailing separators.",
+  "acceptanceCriteria": [
+    "test/slugify.test.mjs passes on src/slugify.js",
+    "The tests fail on plausible bugs in slugify"
+  ],
+  "check": "check.mjs"
+}

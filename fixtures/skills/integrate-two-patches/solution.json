@@ -1,0 +1,19 @@
+{
+  "edits": [
+    {
+      "path": "src/greet.js",
+      "expectedHash": "93fc7cb66e4c6a7e6ef623fbffc0ecb2e057f182c304f2d4d1bd89051df88302",
+      "replacements": [
+        {
+          "find": "export function greet(name) {\n  return 'Hello, ' + name;",
+          "replace": "export function greet(name, greeting = 'Hello') {\n  return greeting + ', ' + name + '!';"
+        }
+      ]
+    },
+    {
+      "path": "INTEGRATION.md",
+      "expectedHash": null,
+      "content": "# Integration\n\n- Conflict in src/greet.js: both patches rewrite the return line.\n- Resolution: keep patch b's greeting parameter and patch a's exclamation mark: `greeting + ', ' + name + '!'`.\n- Verified with test/greet.test.mjs.\n"
+    }
+  ]
+}

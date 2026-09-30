@@ -1,0 +1,72 @@
+{
+  "id": "integrate-patches",
+  "version": "1.0.0",
+  "description": "Combine patches into one tree, resolving overlaps explicitly and verifying the combined result.",
+  "origin": "xvant-original",
+  "license": "Apache-2.0",
+  "inputs": [
+    {
+      "name": "objective",
+      "description": "What the task must achieve, from the task record.",
+      "required": true
+    },
+    {
+      "name": "acceptanceCriteria",
+      "description": "Conditions the result is checked against.",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "integratedTree",
+      "description": "The combined change with a passing test receipt."
+    },
+    {
+      "name": "conflicts",
+      "description": "Each conflict and its resolution."
+    }
+  ],
+  "steps": [
+    {
+      "id": "collect",
+      "description": "Read each patch and the base files it targets. Note which patches touch the same lines.",
+      "evidence": "Citations for every overlapping region."
+    },
+    {
+      "id": "apply",
+      "description": "Apply patches one at a time against current hashes. When two overlap, combine their intent by hand; never drop one silently.",
+      "evidence": "file.apply_patch receipts for each application."
+    },
+    {
+      "id": "verify",
+      "description": "Run the registered tests on the combined result.",
+      "evidence": "A passing test.run receipt for the combined revision."
+    },
+    {
+      "id": "record",
+      "description": "Write down each conflict, how it was resolved, and which behavior each patch contributed.",
+      "evidence": "The integration note."
+    }
+  ],
+  "requiredTools": ["file.read", "file.apply_patch", "test.run", "git.inspect"],
+  "runtimes": ["codex", "claude", "opencode", "native-local", "simulated"],
+  "maxContextTokens": 6000,
+  "dependencies": [
+    {
+      "id": "test-change",
+      "version": "1.0.0"
+    }
+  ],
+  "hooks": [
+    {
+      "id": "tests-pass",
+      "event": "on_complete",
+      "action": {
+        "kind": "require_check",
+        "checkId": "tests"
+      }
+    }
+  ],
+  "fixtures": ["integrate-two-patches"],
+  "instructionsHash": "1cb435565cbb4c7517975b39abf7216fec38bbcea4391d54ef2e583d1407e1dc"
+}

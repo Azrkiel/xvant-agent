@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
+const read = (path) => readFileSync(path, 'utf8');
+const sha = (path) => createHash('sha256').update(readFileSync(path)).digest('hex');
+const run = (file) => execFileSync(process.execPath, [file], { stdio: 'pipe' });
+assert.equal(sha('test/range.test.mjs'), '5f19acc2f486946bbb649f848d2a7f74fc0d35a5aeb15659753291b20f42392c', 'the test must not be edited');
+run('test/range.test.mjs');
+assert.ok(existsSync('DIAGNOSIS.md'), 'DIAGNOSIS.md is missing');
+const text = read('DIAGNOSIS.md');
+assert.ok(text.includes('src/range.js'), 'names the file');
+assert.ok(/off-by-one|<=/i.test(text), 'names the cause');

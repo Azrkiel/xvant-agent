@@ -1,0 +1,10 @@
+{
+  "id": "review-unsafe-merge",
+  "skill": "review-change",
+  "objective": "Review changes/proposed.diff. Write review/FINDINGS.json: an array of {file, severity, summary} findings, most severe first. Do not modify the source.",
+  "acceptanceCriteria": [
+    "review/FINDINGS.json lists findings most severe first",
+    "src/transfer.js is unchanged"
+  ],
+  "check": "check.mjs"
+}

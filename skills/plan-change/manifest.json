@@ -1,0 +1,64 @@
+{
+  "id": "plan-change",
+  "version": "1.0.0",
+  "description": "Turn an objective into an ordered, checkable implementation plan grounded in the code.",
+  "origin": "xvant-original",
+  "license": "Apache-2.0",
+  "inputs": [
+    {
+      "name": "objective",
+      "description": "What the task must achieve, from the task record.",
+      "required": true
+    },
+    {
+      "name": "acceptanceCriteria",
+      "description": "Conditions the result is checked against.",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "plan",
+      "description": "Numbered steps naming files and checks, followed by risks."
+    }
+  ],
+  "steps": [
+    {
+      "id": "scope",
+      "description": "Restate the objective and every acceptance criterion in your own words, and list what must not change.",
+      "evidence": "The restated criteria and the protected behavior."
+    },
+    {
+      "id": "survey",
+      "description": "Use the repository map (explore-repository) to find each file the change touches and each test that covers it.",
+      "evidence": "path:line citations for the affected code and tests."
+    },
+    {
+      "id": "sequence",
+      "description": "Order the work into small numbered steps. Each step names the files it changes and how it will be checked.",
+      "evidence": "A numbered plan whose steps each name files and a check."
+    },
+    {
+      "id": "risks",
+      "description": "List what could break, how you would notice, and what you would do instead.",
+      "evidence": "A risks section with detection for each risk."
+    }
+  ],
+  "requiredTools": [
+    "repo.search",
+    "file.read",
+    "git.inspect",
+    "file.apply_patch"
+  ],
+  "runtimes": ["codex", "claude", "opencode", "native-local", "simulated"],
+  "maxContextTokens": 6000,
+  "dependencies": [
+    {
+      "id": "explore-repository",
+      "version": "1.0.0"
+    }
+  ],
+  "hooks": [],
+  "fixtures": ["plan-rate-limit"],
+  "instructionsHash": "2db5bbf7b51f6140da0c192d6dac473c0dcc6055b976bd560b4fcc30f96708bb"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "implement-clamp",
+  "skill": "implement-change",
+  "objective": "Add clamp(value, min, max) to src/math.js so test/math.test.mjs passes; throw RangeError when min > max.",
+  "acceptanceCriteria": [
+    "test/math.test.mjs passes",
+    "sum keeps its behavior"
+  ],
+  "check": "check.mjs"
+}

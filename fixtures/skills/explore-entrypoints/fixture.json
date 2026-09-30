@@ -1,0 +1,10 @@
+{
+  "id": "explore-entrypoints",
+  "skill": "explore-repository",
+  "objective": "Write docs/MAP.md: one line per module under src/ with its path and exported functions, and name the entry point.",
+  "acceptanceCriteria": [
+    "docs/MAP.md lists every module under src/ with its exported functions",
+    "docs/MAP.md names src/index.js as the entry point"
+  ],
+  "check": "check.mjs"
+}

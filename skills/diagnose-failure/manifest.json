@@ -1,0 +1,64 @@
+{
+  "id": "diagnose-failure",
+  "version": "1.0.0",
+  "description": "Find and fix the root cause of a failing check without weakening the check.",
+  "origin": "xvant-original",
+  "license": "Apache-2.0",
+  "inputs": [
+    {
+      "name": "objective",
+      "description": "What the task must achieve, from the task record.",
+      "required": true
+    },
+    {
+      "name": "acceptanceCriteria",
+      "description": "Conditions the result is checked against.",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "diagnosis",
+      "description": "Symptom, root cause with citation, and the fix."
+    },
+    {
+      "name": "testReceipt",
+      "description": "The passing test.run receipt after the fix."
+    }
+  ],
+  "steps": [
+    {
+      "id": "reproduce",
+      "description": "Run the failing check and record the exact output before changing anything.",
+      "evidence": "A failing test.run receipt."
+    },
+    {
+      "id": "isolate",
+      "description": "Read the failing assertion and follow the values back to the code that produced them. Form one hypothesis at a time.",
+      "evidence": "path:line citations for the fault and the reasoning."
+    },
+    {
+      "id": "fix",
+      "description": "Change the code at the root cause. Do not weaken, skip or edit the failing test to make it pass.",
+      "evidence": "A file.apply_patch receipt that leaves test files untouched."
+    },
+    {
+      "id": "confirm",
+      "description": "Re-run the check, then write the diagnosis: symptom, cause, fix.",
+      "evidence": "A passing test.run receipt and the written diagnosis."
+    }
+  ],
+  "requiredTools": [
+    "test.run",
+    "file.read",
+    "repo.search",
+    "git.inspect",
+    "file.apply_patch"
+  ],
+  "runtimes": ["codex", "claude", "opencode", "native-local", "simulated"],
+  "maxContextTokens": 6000,
+  "dependencies": [],
+  "hooks": [],
+  "fixtures": ["diagnose-off-by-one"],
+  "instructionsHash": "ebc74794d83f25be714926a4a9dbcec3e5a33bda278f8e75def36cd1183165f8"
+}

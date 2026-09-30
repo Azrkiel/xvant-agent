@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
+const read = (path) => readFileSync(path, 'utf8');
+const sha = (path) => createHash('sha256').update(readFileSync(path)).digest('hex');
+const run = (file) => execFileSync(process.execPath, [file], { stdio: 'pipe' });
+run('test/greet.test.mjs');
+const note = read('INTEGRATION.md');
+assert.ok(/conflict/i.test(note) && note.includes('src/greet.js'), 'records the conflict');

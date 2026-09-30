@@ -1,0 +1,9 @@
+{
+  "edits": [
+    {
+      "path": "review/FINDINGS.json",
+      "expectedHash": null,
+      "content": "[\n  {\n    \"file\": \"src/transfer.js\",\n    \"severity\": \"critical\",\n    \"summary\": \"The diff removes the positive-amount validation, so zero, negative or NaN amounts move money in the wrong direction or corrupt balances.\"\n  },\n  {\n    \"file\": \"src/transfer.js\",\n    \"severity\": \"low\",\n    \"summary\": \"The new memo return value is not covered by tests.\"\n  }\n]\n"
+    }
+  ]
+}

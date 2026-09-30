@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
+const read = (path) => readFileSync(path, 'utf8');
+const sha = (path) => createHash('sha256').update(readFileSync(path)).digest('hex');
+const run = (file) => execFileSync(process.execPath, [file], { stdio: 'pipe' });
+assert.equal(sha('src/transfer.js'), '671f30c25ddf0797c75231dd22866a4d88fcd96b21327f091c7b9d3efa53e96f', 'the reviewed source must not change');
+const findings = JSON.parse(read('review/FINDINGS.json'));
+assert.ok(Array.isArray(findings) && findings.length > 0, 'findings array');
+const [top] = findings;
+assert.ok(['critical', 'high'].includes(top.severity), 'most severe first');
+assert.equal(top.file, 'src/transfer.js');
+assert.ok(/amount|validat/i.test(top.summary), 'names the removed validation');

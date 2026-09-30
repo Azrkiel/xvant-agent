@@ -1,0 +1,12 @@
+{
+  "id": "plan-rate-limit",
+  "skill": "plan-change",
+  "objective": "Write PLAN.md: an ordered plan to add per-client rate limiting (10 requests per minute) to src/server.js without changing /health.",
+  "acceptanceCriteria": [
+    "PLAN.md has at least three numbered steps",
+    "The steps name src/limiter.js and src/server.js",
+    "A step says how the change is tested",
+    "PLAN.md lists at least one risk"
+  ],
+  "check": "check.mjs"
+}

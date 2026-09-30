@@ -1,0 +1,54 @@
+{
+  "id": "document-change",
+  "version": "1.0.0",
+  "description": "Bring documentation in line with the code, citing the code for every documented fact.",
+  "origin": "xvant-original",
+  "license": "Apache-2.0",
+  "inputs": [
+    {
+      "name": "objective",
+      "description": "What the task must achieve, from the task record.",
+      "required": true
+    },
+    {
+      "name": "acceptanceCriteria",
+      "description": "Conditions the result is checked against.",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "documentation",
+      "description": "Updated documentation whose facts each match cited code."
+    }
+  ],
+  "steps": [
+    {
+      "id": "collect",
+      "description": "Read the code for the behavior to document: names, arguments, defaults and effects.",
+      "evidence": "path:line citations for each fact."
+    },
+    {
+      "id": "compare",
+      "description": "Read the existing documentation and list what is missing, wrong or outdated.",
+      "evidence": "A list of gaps with citations."
+    },
+    {
+      "id": "write",
+      "description": "Update the documentation in place, matching its structure and tone. Keep existing sections intact.",
+      "evidence": "A file.apply_patch receipt for the docs."
+    },
+    {
+      "id": "check",
+      "description": "Re-read the result against the code so every documented fact matches a cited line.",
+      "evidence": "A fact-to-citation list."
+    }
+  ],
+  "requiredTools": ["file.read", "file.apply_patch", "repo.search"],
+  "runtimes": ["codex", "claude", "opencode", "native-local", "simulated"],
+  "maxContextTokens": 4000,
+  "dependencies": [],
+  "hooks": [],
+  "fixtures": ["document-cli-flag"],
+  "instructionsHash": "c52d36285be7b427c8ed500c4174f931c361244196ed11a4015c955ff82cba53"
+}

@@ -1,0 +1,59 @@
+{
+  "id": "evaluate-skill",
+  "version": "1.0.0",
+  "description": "Compare a candidate skill or routing change with the baseline on paired held-out tasks and decide promote or retain.",
+  "origin": "xvant-original",
+  "license": "Apache-2.0",
+  "inputs": [
+    {
+      "name": "objective",
+      "description": "What the task must achieve, from the task record.",
+      "required": true
+    },
+    {
+      "name": "acceptanceCriteria",
+      "description": "Conditions the result is checked against.",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "evaluation",
+      "description": "Wins, losses, regressions and a promote or retain decision with its rule."
+    }
+  ],
+  "steps": [
+    {
+      "id": "load",
+      "description": "Read baseline and candidate results for the same held-out tasks. Refuse unpaired or missing entries.",
+      "evidence": "Citations for both result sets."
+    },
+    {
+      "id": "compare",
+      "description": "For each task, classify the candidate as a win, loss or tie against the baseline. A loss on a task the baseline passed is a regression.",
+      "evidence": "A per-task table."
+    },
+    {
+      "id": "decide",
+      "description": "Apply the promotion rules exactly as written. Correctness regressions outweigh any aggregate gain.",
+      "evidence": "The rule applied and its inputs."
+    },
+    {
+      "id": "report",
+      "description": "Write the decision with counts, regressions and the rule that decided it.",
+      "evidence": "The evaluation file."
+    }
+  ],
+  "requiredTools": [
+    "file.read",
+    "file.apply_patch",
+    "agent.read_result",
+    "artifact.publish"
+  ],
+  "runtimes": ["codex", "claude", "opencode", "native-local", "simulated"],
+  "maxContextTokens": 4000,
+  "dependencies": [],
+  "hooks": [],
+  "fixtures": ["evaluate-candidate"],
+  "instructionsHash": "7dd51a8b93e7cb8f6c2060a003b467a745f30aff112b029dd74cc73812e70268"
+}

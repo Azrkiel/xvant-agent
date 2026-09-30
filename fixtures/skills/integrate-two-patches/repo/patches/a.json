@@ -1,0 +1,10 @@
+{
+  "summary": "End greetings with an exclamation mark",
+  "edits": [
+    {
+      "path": "src/greet.js",
+      "find": "return 'Hello, ' + name;",
+      "replace": "return 'Hello, ' + name + '!';"
+    }
+  ]
+}

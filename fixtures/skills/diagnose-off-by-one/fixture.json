@@ -1,0 +1,10 @@
+{
+  "id": "diagnose-off-by-one",
+  "skill": "diagnose-failure",
+  "objective": "test/range.test.mjs fails. Find the root cause, fix it in src/range.js, and write DIAGNOSIS.md with the symptom, the cause and the fix.",
+  "acceptanceCriteria": [
+    "test/range.test.mjs passes unchanged",
+    "DIAGNOSIS.md names src/range.js and the cause"
+  ],
+  "check": "check.mjs"
+}

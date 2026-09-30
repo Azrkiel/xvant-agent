@@ -1,0 +1,9 @@
+{
+  "edits": [
+    {
+      "path": "HANDOFF.json",
+      "expectedHash": null,
+      "content": "{\n  \"summary\": \"CSV export works for small inputs; streaming for large exports is not started.\",\n  \"completed\": [\n    \"src/csv.js converts rows to CSV\"\n  ],\n  \"remaining\": [\n    \"src/export.js:4 TODO(handoff): stream large exports instead of building one string\"\n  ],\n  \"openQuestions\": [\n    \"Should exportRows return a stream or accept a writable target?\"\n  ],\n  \"failedAttempts\": [\n    {\n      \"summary\": \"Buffered rows in chunks of 1000\",\n      \"reason\": \"Memory still spiked because toCsv joins all rows\"\n    }\n  ]\n}\n"
+    }
+  ]
+}

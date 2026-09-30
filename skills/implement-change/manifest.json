@@ -1,0 +1,75 @@
+{
+  "id": "implement-change",
+  "version": "1.0.0",
+  "description": "Implement a scoped code change with hash-checked edits and passing registered tests.",
+  "origin": "xvant-original",
+  "license": "Apache-2.0",
+  "inputs": [
+    {
+      "name": "objective",
+      "description": "What the task must achieve, from the task record.",
+      "required": true
+    },
+    {
+      "name": "acceptanceCriteria",
+      "description": "Conditions the result is checked against.",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "patch",
+      "description": "The applied edits with before and after hashes."
+    },
+    {
+      "name": "testReceipt",
+      "description": "The passing test.run receipt for the final revision."
+    }
+  ],
+  "steps": [
+    {
+      "id": "read",
+      "description": "Read every file you will edit and keep the hash file.read returns; each edit must name the hash it was based on.",
+      "evidence": "file.read receipts with hashes."
+    },
+    {
+      "id": "change",
+      "description": "Edit only owned paths. Prefer exact replacements over rewriting whole files, and keep unrelated behavior intact.",
+      "evidence": "A file.apply_patch receipt listing before and after hashes."
+    },
+    {
+      "id": "verify",
+      "description": "Run the registered tests. If they fail, read the failure, fix the cause, and run them again.",
+      "evidence": "A passing test.run receipt bound to the current revision."
+    },
+    {
+      "id": "report",
+      "description": "Summarize what changed and why, citing the patch and test receipts.",
+      "evidence": "A summary that cites receipts only."
+    }
+  ],
+  "requiredTools": ["file.read", "file.apply_patch", "test.run", "repo.search"],
+  "runtimes": ["codex", "claude", "opencode", "native-local", "simulated"],
+  "maxContextTokens": 6000,
+  "dependencies": [],
+  "hooks": [
+    {
+      "id": "tests-pass",
+      "event": "on_complete",
+      "action": {
+        "kind": "require_check",
+        "checkId": "tests"
+      }
+    },
+    {
+      "id": "step-evidence",
+      "event": "after_step",
+      "action": {
+        "kind": "record_evidence",
+        "label": "Step finished"
+      }
+    }
+  ],
+  "fixtures": ["implement-clamp"],
+  "instructionsHash": "f82e0cb20b661de2624c08088d7cb83a49f4a88b1a57f565a1f8e0018e49ab7d"
+}

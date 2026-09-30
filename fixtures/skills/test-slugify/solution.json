@@ -1,0 +1,9 @@
+{
+  "edits": [
+    {
+      "path": "test/slugify.test.mjs",
+      "expectedHash": null,
+      "content": "import assert from 'node:assert/strict';\nimport { slugify } from '../src/slugify.js';\n\nassert.equal(slugify('Hello World'), 'hello-world');\nassert.equal(slugify('  padded  '), 'padded');\nassert.equal(slugify('a, b; c'), 'a-b-c');\nassert.equal(slugify('...edge...'), 'edge');\nassert.equal(slugify('Mixed CASE!'), 'mixed-case');\nassert.equal(slugify(' two  spaces '), 'two-spaces');\n"
+    }
+  ]
+}

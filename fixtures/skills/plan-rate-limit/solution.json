@@ -1,0 +1,9 @@
+{
+  "edits": [
+    {
+      "path": "PLAN.md",
+      "expectedHash": null,
+      "content": "# Plan: per-client rate limiting\n\n1. Implement a sliding one-minute window per client in src/limiter.js: allow(client, now) returns false after 10 requests.\n2. Call allow(request.client, Date.now()) in src/server.js before normal handling and return 429 when it is false; leave /health unchanged.\n3. Add test/limiter.test.mjs covering the 10th and 11th request and window expiry, and extend test/server.test.mjs to confirm /health is never limited.\n\n## Risks\n\n- Unbounded growth of per-client state: detect with a test that expires old windows; prune entries older than a minute.\n- Clock skew in tests: pass `now` explicitly instead of reading the clock inside the limiter.\n"
+    }
+  ]
+}

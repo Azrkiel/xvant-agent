@@ -1,0 +1,14 @@
+{
+  "edits": [
+    {
+      "path": "src/math.js",
+      "expectedHash": "4a55def8b436bfbdad6298095c1398a43c04500f69ee7d7a7630ea809dac7441",
+      "replacements": [
+        {
+          "find": "  return values.reduce((total, value) => total + value, 0);\n}\n",
+          "replace": "  return values.reduce((total, value) => total + value, 0);\n}\n\nexport function clamp(value, min, max) {\n  if (min > max) throw new RangeError('min must not exceed max');\n  return Math.min(Math.max(value, min), max);\n}\n"
+        }
+      ]
+    }
+  ]
+}

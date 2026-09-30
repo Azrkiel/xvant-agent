@@ -5,3 +5,6 @@ node_modules
 coverage
 docs/plans
 docs/evidence
+# Hashed skill instructions and fixture data must keep their exact bytes.
+skills/**/SKILL.md
+fixtures/skills

@@ -1,0 +1,11 @@
+{
+  "id": "handoff-partial-feature",
+  "skill": "handoff-work",
+  "objective": "Stop here and hand off. Write HANDOFF.json with summary, completed, remaining, openQuestions and failedAttempts so another worker can finish without re-reading everything. Include every TODO(handoff) location in remaining.",
+  "acceptanceCriteria": [
+    "HANDOFF.json has all five fields",
+    "remaining names src/export.js",
+    "failedAttempts records the chunking attempt"
+  ],
+  "check": "check.mjs"
+}

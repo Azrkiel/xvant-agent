@@ -1,0 +1,9 @@
+{
+  "edits": [
+    {
+      "path": "EVALUATION.json",
+      "expectedHash": null,
+      "content": "{\n  \"wins\": 2,\n  \"losses\": 1,\n  \"regressions\": [\n    \"t3\"\n  ],\n  \"decision\": \"retain\",\n  \"reason\": \"t3 passes on the baseline and fails on the candidate; any regression blocks promotion.\"\n}\n"
+    }
+  ]
+}

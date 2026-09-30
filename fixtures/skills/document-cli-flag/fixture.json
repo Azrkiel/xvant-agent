@@ -1,0 +1,10 @@
+{
+  "id": "document-cli-flag",
+  "skill": "document-change",
+  "objective": "Document every option src/cli.js accepts in the Options section of README.md.",
+  "acceptanceCriteria": [
+    "The Options section documents --verbose and --dry-run",
+    "Other README sections are preserved"
+  ],
+  "check": "check.mjs"
+}

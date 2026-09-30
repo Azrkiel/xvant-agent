@@ -1,0 +1,59 @@
+{
+  "id": "explore-repository",
+  "version": "1.0.0",
+  "description": "Build a sourced map of an unfamiliar repository: entry points, modules, exports and how they connect.",
+  "origin": "xvant-original",
+  "license": "Apache-2.0",
+  "inputs": [
+    {
+      "name": "objective",
+      "description": "What the task must achieve, from the task record.",
+      "required": true
+    },
+    {
+      "name": "acceptanceCriteria",
+      "description": "Conditions the result is checked against.",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "repositoryMap",
+      "description": "One line per relevant module with path, exports and connections, each backed by a citation."
+    }
+  ],
+  "steps": [
+    {
+      "id": "orient",
+      "description": "Read the top-level layout, package manifests and README to learn languages, entry points and how the project is built and tested.",
+      "evidence": "Receipts for the files read and the layout observed."
+    },
+    {
+      "id": "locate",
+      "description": "Search for the modules, symbols and configuration the objective touches. Prefer exact identifiers from the task over guesses.",
+      "evidence": "Search receipts with the matched paths."
+    },
+    {
+      "id": "trace",
+      "description": "Read the call path between the entry point and the relevant code until each claim in the map is backed by a line you read.",
+      "evidence": "path:line citations for every relationship."
+    },
+    {
+      "id": "record",
+      "description": "Write the map where the task asks for it. Keep one line per module: path, what it exports, and how it connects.",
+      "evidence": "A file.apply_patch receipt for the map."
+    }
+  ],
+  "requiredTools": [
+    "repo.search",
+    "file.read",
+    "git.inspect",
+    "file.apply_patch"
+  ],
+  "runtimes": ["codex", "claude", "opencode", "native-local", "simulated"],
+  "maxContextTokens": 6000,
+  "dependencies": [],
+  "hooks": [],
+  "fixtures": ["explore-entrypoints"],
+  "instructionsHash": "7fc9b1a7cd56e056a3802bd99a2c6ed3438d7a1bfad59386393f32921c13a1ab"
+}

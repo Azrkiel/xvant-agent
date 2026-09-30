@@ -1,0 +1,59 @@
+{
+  "id": "review-change",
+  "version": "1.0.0",
+  "description": "Review a proposed change and report evidence-backed findings, most severe first, without editing it.",
+  "origin": "xvant-original",
+  "license": "Apache-2.0",
+  "inputs": [
+    {
+      "name": "objective",
+      "description": "What the task must achieve, from the task record.",
+      "required": true
+    },
+    {
+      "name": "acceptanceCriteria",
+      "description": "Conditions the result is checked against.",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "findings",
+      "description": "Findings with file, severity and summary, most severe first."
+    }
+  ],
+  "steps": [
+    {
+      "id": "context",
+      "description": "Read the change and the code around it until you can state what it is meant to do.",
+      "evidence": "A one-paragraph statement of intent with citations."
+    },
+    {
+      "id": "inspect",
+      "description": "Check correctness, removed safeguards, error handling, security-sensitive paths and tests. Compare against the unchanged code.",
+      "evidence": "path:line citations for each observation."
+    },
+    {
+      "id": "classify",
+      "description": "Rate each finding critical, high, medium or low by user impact, and keep only findings you can support.",
+      "evidence": "Findings with severity and evidence."
+    },
+    {
+      "id": "report",
+      "description": "Write findings most severe first. Do not modify the code under review.",
+      "evidence": "The findings file; unchanged source hashes."
+    }
+  ],
+  "requiredTools": [
+    "git.inspect",
+    "file.read",
+    "repo.search",
+    "file.apply_patch"
+  ],
+  "runtimes": ["codex", "claude", "opencode", "native-local", "simulated"],
+  "maxContextTokens": 8000,
+  "dependencies": [],
+  "hooks": [],
+  "fixtures": ["review-unsafe-merge"],
+  "instructionsHash": "57757fcdaab74ccc404b65a1cf6b6a8eac4ffe9df16499fe9ce1901b3f95ed89"
+}

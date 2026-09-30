@@ -1,0 +1,10 @@
+{
+  "summary": "Allow a custom greeting word",
+  "edits": [
+    {
+      "path": "src/greet.js",
+      "find": "export function greet(name) {\n  return 'Hello, ' + name;",
+      "replace": "export function greet(name, greeting = 'Hello') {\n  return greeting + ', ' + name;"
+    }
+  ]
+}

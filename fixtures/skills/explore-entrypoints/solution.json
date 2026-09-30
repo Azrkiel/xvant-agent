@@ -1,0 +1,9 @@
+{
+  "edits": [
+    {
+      "path": "docs/MAP.md",
+      "expectedHash": null,
+      "content": "# Module map\n\nEntry point: src/index.js\n\n- src/index.js: exports main; calls reserveItem and applyDiscount\n- src/stock.js: exports reserveItem\n- src/pricing.js: exports applyDiscount; uses formatCurrency\n- src/util/format.js: exports formatCurrency\n"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "edits": [
+    {
+      "path": "README.md",
+      "expectedHash": "082573b31675c845fc6ea87e807042773829ad981b7b0f5ec60919f5f9fe86a7",
+      "replacements": [
+        {
+          "find": "- `--verbose`: print each step.\n",
+          "replace": "- `--verbose`: print each step.\n- `--dry-run`: report the files that would change without writing anything.\n"
+        }
+      ]
+    }
+  ]
+}

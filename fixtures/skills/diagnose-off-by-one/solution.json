@@ -1,0 +1,19 @@
+{
+  "edits": [
+    {
+      "path": "src/range.js",
+      "expectedHash": "c8543d17ec6260c49f38786afef9b45765f21d54ad72ea71462c76ee00a6063b",
+      "replacements": [
+        {
+          "find": "i <= n",
+          "replace": "i < n"
+        }
+      ]
+    },
+    {
+      "path": "DIAGNOSIS.md",
+      "expectedHash": null,
+      "content": "# Diagnosis\n\n- Symptom: range(3) returned [0, 1, 2, 3] and range(0) returned [0].\n- Cause: off-by-one in src/range.js; the loop condition `i <= n` includes n.\n- Fix: loop while `i < n`, so range(n) yields n values starting at 0.\n"
+    }
+  ]
+}

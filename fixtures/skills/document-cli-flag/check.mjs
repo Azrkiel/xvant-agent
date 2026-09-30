@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
+const read = (path) => readFileSync(path, 'utf8');
+const sha = (path) => createHash('sha256').update(readFileSync(path)).digest('hex');
+const run = (file) => execFileSync(process.execPath, [file], { stdio: 'pipe' });
+const text = read('README.md');
+const start = text.indexOf('## Options');
+assert.ok(start >= 0, 'Options section');
+const end = text.indexOf('\n## ', start + 1);
+const section = text.slice(start, end < 0 ? undefined : end);
+assert.ok(section.includes('--verbose'), 'documents --verbose');
+const line = section.split('\n').find((entry) => entry.includes('--dry-run'));
+assert.ok(line && line.length >= 30, 'documents --dry-run with a description');
+assert.ok(/without|not/i.test(line), 'says nothing is written');
+for (const heading of ['## Usage', '## License']) assert.ok(text.includes(heading), heading + ' preserved');

@@ -1,0 +1,60 @@
+{
+  "id": "handoff-work",
+  "version": "1.0.0",
+  "description": "Stop cleanly and record everything the next worker needs to continue without rediscovery.",
+  "origin": "xvant-original",
+  "license": "Apache-2.0",
+  "inputs": [
+    {
+      "name": "objective",
+      "description": "What the task must achieve, from the task record.",
+      "required": true
+    },
+    {
+      "name": "acceptanceCriteria",
+      "description": "Conditions the result is checked against.",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "handoff",
+      "description": "Summary, completed work, remaining work with paths, open questions and failed attempts."
+    }
+  ],
+  "steps": [
+    {
+      "id": "inventory",
+      "description": "Check the working tree and your receipts: what changed, what passed, what failed.",
+      "evidence": "git.inspect status and diff receipts."
+    },
+    {
+      "id": "remaining",
+      "description": "Name every unfinished item with the file it lives in, including TODO markers you left.",
+      "evidence": "A remaining list with paths."
+    },
+    {
+      "id": "questions",
+      "description": "Write down decisions you could not make and failed approaches with their reasons, so they are not repeated.",
+      "evidence": "Open questions and failed attempts."
+    },
+    {
+      "id": "write",
+      "description": "Write the handoff record the task asks for. It must stand alone: the next worker may not see your conversation.",
+      "evidence": "The handoff file or artifact receipt."
+    }
+  ],
+  "requiredTools": [
+    "git.inspect",
+    "file.read",
+    "repo.search",
+    "file.apply_patch",
+    "artifact.publish"
+  ],
+  "runtimes": ["codex", "claude", "opencode", "native-local", "simulated"],
+  "maxContextTokens": 4000,
+  "dependencies": [],
+  "hooks": [],
+  "fixtures": ["handoff-partial-feature"],
+  "instructionsHash": "2c1272e5a7468b63aa2cc7d8fafa0c6369623a4ee90d2da2d2fd529233ee2c87"
+}

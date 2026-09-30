@@ -1,0 +1,67 @@
+{
+  "id": "test-change",
+  "version": "1.0.0",
+  "description": "Write tests that pass on correct code and fail on plausible bugs.",
+  "origin": "xvant-original",
+  "license": "Apache-2.0",
+  "inputs": [
+    {
+      "name": "objective",
+      "description": "What the task must achieve, from the task record.",
+      "required": true
+    },
+    {
+      "name": "acceptanceCriteria",
+      "description": "Conditions the result is checked against.",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "tests",
+      "description": "Test files that exercise each promised behavior."
+    },
+    {
+      "name": "testReceipt",
+      "description": "A passing test.run receipt."
+    }
+  ],
+  "steps": [
+    {
+      "id": "inventory",
+      "description": "List the behaviors the code promises from its source and the task, including edge cases and error paths.",
+      "evidence": "A behavior list with path:line citations."
+    },
+    {
+      "id": "write",
+      "description": "Write tests that each check one behavior with concrete expected values. A test must fail if that behavior breaks.",
+      "evidence": "A file.apply_patch receipt for the test file."
+    },
+    {
+      "id": "run",
+      "description": "Run the tests against the current code; they must pass.",
+      "evidence": "A passing test.run receipt."
+    },
+    {
+      "id": "challenge",
+      "description": "For each behavior, ask which simple bug the tests would miss, and add a case that catches it.",
+      "evidence": "The list of bugs considered and the case that catches each."
+    }
+  ],
+  "requiredTools": ["file.read", "file.apply_patch", "test.run", "repo.search"],
+  "runtimes": ["codex", "claude", "opencode", "native-local", "simulated"],
+  "maxContextTokens": 6000,
+  "dependencies": [],
+  "hooks": [
+    {
+      "id": "tests-pass",
+      "event": "on_complete",
+      "action": {
+        "kind": "require_check",
+        "checkId": "tests"
+      }
+    }
+  ],
+  "fixtures": ["test-slugify"],
+  "instructionsHash": "a3b377ead52dc29ec5cb2368976d361b716a4d25cac727a96f08da5c5231e573"
+}

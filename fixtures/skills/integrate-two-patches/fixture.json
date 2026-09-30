@@ -1,0 +1,10 @@
+{
+  "id": "integrate-two-patches",
+  "skill": "integrate-patches",
+  "objective": "Integrate patches/a.json and patches/b.json into src/greet.js so both behaviors hold and test/greet.test.mjs passes. Record the conflict in INTEGRATION.md.",
+  "acceptanceCriteria": [
+    "test/greet.test.mjs passes",
+    "INTEGRATION.md records the conflict in src/greet.js"
+  ],
+  "check": "check.mjs"
+}

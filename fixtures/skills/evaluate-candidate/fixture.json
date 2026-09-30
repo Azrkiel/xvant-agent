@@ -1,0 +1,11 @@
+{
+  "id": "evaluate-candidate",
+  "skill": "evaluate-skill",
+  "objective": "Compare results/candidate.json with results/baseline.json under EVALUATION_RULES.md and write EVALUATION.json with wins, losses, regressions (task ids) and decision (promote or retain).",
+  "acceptanceCriteria": [
+    "EVALUATION.json counts wins and losses",
+    "regressions lists every baseline pass the candidate fails",
+    "decision follows the rules"
+  ],
+  "check": "check.mjs"
+}
