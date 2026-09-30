@@ -245,7 +245,7 @@ export function collectRepository(
 }
 
 /** Lowercase identifier words, including camelCase and snake_case parts. */
-function words(text: string): string[] {
+export function words(text: string): string[] {
   const out: string[] = [];
   for (const token of text.match(/[\p{L}\p{N}_]+/gu) ?? []) {
     out.push(token.toLowerCase());
