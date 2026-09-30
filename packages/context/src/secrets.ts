@@ -36,3 +36,11 @@ const SECRET_CONTENT = [
 export function containsSecret(text: string): boolean {
   return SECRET_CONTENT.some((pattern) => pattern.test(text));
 }
+/** Replace known credential shapes in untrusted output. Defense in depth only. */
+export function redactSecrets(text: string): string {
+  return SECRET_CONTENT.reduce(
+    (current, pattern) =>
+      current.replace(new RegExp(pattern.source, 'g'), '[REDACTED]'),
+    text,
+  );
+}
