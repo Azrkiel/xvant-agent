@@ -82,7 +82,7 @@ export const taskSchema = createTaskSchema.extend({
   nativeQualification: z
     .strictObject({
       connectionId: idSchema,
-      runtimeKind: z.enum(['codex', 'claude', 'opencode']),
+      runtimeKind: z.enum(['codex', 'claude', 'opencode', 'native-local']),
       classification: z.enum(['offline', 'live']),
     })
     .optional(),

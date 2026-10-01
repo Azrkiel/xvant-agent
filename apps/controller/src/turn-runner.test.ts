@@ -193,6 +193,20 @@ it('names why a node check failed so the repair prompt can fix it', async () => 
   expect(outcome.status).toBe('verification_failed');
   expect(outcome.failure).toContain('Checks failed: unit');
   expect(outcome.failure).toContain('expected answer 42, got 41');
+  // The failed turn's process is known to have stopped, so the same worker
+  // can take the repair instead of finding its own reservation still held.
+  const repair = await runner.run({
+    taskId: 'node-a-repair',
+    projectId: 'p',
+    alias: 'codex-1',
+    prompt:
+      'Create a file named a.txt in the current directory whose entire content is the single line: a ok. Do not change anything else.',
+    workspace: { path: repo, baseCommit },
+    checks: {
+      unit: { executable: process.execPath, args: ['-e', 'process.exit(0)'] },
+    },
+  });
+  expect(repair.status).toBe('accepted');
 });
 
 it('writes large prompts as bounded UTF-8 pieces', async () => {

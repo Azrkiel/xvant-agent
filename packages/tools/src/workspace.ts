@@ -6,10 +6,10 @@ import { safePath } from '../../storage/src/artifacts.ts';
 import { secretPath } from '../../context/src/secrets.ts';
 import type { ToolContext } from './registry.ts';
 
-/** Is `path` one of the owned paths or inside an owned directory? */
+/** Is `path` one of the owned paths or inside an owned directory? `.` owns the whole workspace. */
 export function owns(writablePaths: readonly string[], path: string): boolean {
   return writablePaths.some(
-    (owned) => path === owned || path.startsWith(owned + '/'),
+    (owned) => owned === '.' || path === owned || path.startsWith(owned + '/'),
   );
 }
 export function workspaceRoot(context: ToolContext): string {

@@ -23,7 +23,7 @@ export interface Check {
 }
 export interface WorkerSpec {
   alias: string;
-  runtimeKind: 'codex' | 'claude' | 'opencode';
+  runtimeKind: 'codex' | 'claude' | 'opencode' | 'native-local';
   quotaGroupId: string;
   roles: readonly ('worker' | 'reviewer' | 'planner')[];
 }
@@ -34,6 +34,11 @@ export interface TurnRequest {
   prompt: string;
   workspace: { path: string; baseCommit: string };
   checks: Record<string, Check>;
+  /**
+   * Paths the turn may change; absent or empty means the whole worktree.
+   * External runtimes get them as prompt text; XVANT's own tools enforce them.
+   */
+  writablePaths?: string[];
 }
 export interface TurnOutcome {
   status:
@@ -222,6 +227,7 @@ export class Orchestrator {
       label: string,
       prompt: string,
       checks: Record<string, Check>,
+      writablePaths: string[] = [],
     ) => {
       const taskId = turnId(label);
       const tree = worktree(taskId);
@@ -235,6 +241,7 @@ export class Orchestrator {
           prompt,
           workspace: tree,
           checks: Object.keys(checks).length ? checks : noop,
+          ...(writablePaths.length ? { writablePaths } : {}),
         });
         return { taskId, outcome };
       } finally {
@@ -444,7 +451,13 @@ export class Orchestrator {
             const id = entry.node.id;
             inflight.set(
               id,
-              turn(alias, id, nodePrompt(entry), nodeChecks)
+              turn(
+                alias,
+                id,
+                nodePrompt(entry),
+                nodeChecks,
+                entry.node.writablePaths,
+              )
                 .then(({ taskId, outcome }) =>
                   settleNode(id, alias, taskId, outcome),
                 )

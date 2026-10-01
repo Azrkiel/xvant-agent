@@ -52,6 +52,16 @@ export function versionAccepted(kind: ProviderKind, version: string): boolean {
     !!a && !!b && a[1] === b[1] && a[2] === b[2] && Number(b[3]) >= Number(a[3])
   );
 }
+/**
+ * XVANT's own loop on a local model server. The version is the loop's; the
+ * model is named in the approval and must be explicit, never `default`.
+ */
+export const NATIVE_LOCAL_ROUTE = {
+  runtimeVersion: '1.0.0',
+  adapterVersion: 'xvant-native-v1',
+  transport: 'loopback-http',
+  session: uuid,
+} as const;
 /** OpenCode models that bill nothing. Anything else could route to a paid provider. */
 export const FREE_OPENCODE_MODELS = ['opencode/big-pickle'] as const;
 
@@ -59,7 +69,7 @@ export const liveApprovalSchema = z.strictObject({
   actorId: idSchema,
   /** `default` lets the runtime pick; otherwise a bounded model identifier. */
   model: z.string().regex(/^[A-Za-z0-9._/:-]{1,96}$/),
-  transport: z.enum(['app-server', 'headless', 'cli']),
+  transport: z.enum(['app-server', 'headless', 'cli', 'loopback-http']),
   userApprovedTrustedLocal: z.literal(true),
   /** `text` answers without editing; `workspace-write` edits its own worktree. */
   profile: z.enum(['text', 'workspace-write']).optional(),
@@ -82,6 +92,25 @@ export function liveRouteIssue(
   const parsed = liveApprovalSchema.safeParse(approvalInput);
   if (!parsed.success) return 'LIVE_APPROVAL_REQUIRED';
   const approval = parsed.data;
+  if (worker.runtimeKind === 'native-local') {
+    const route = NATIVE_LOCAL_ROUTE;
+    if (
+      worker.runtimeVersion !== route.runtimeVersion ||
+      worker.adapterVersion !== route.adapterVersion ||
+      approval.transport !== route.transport
+    )
+      return 'VERSION_UNSUPPORTED';
+    if (
+      worker.nativeSessionId !== 'pending:' + connectionId &&
+      !route.session.test(worker.nativeSessionId)
+    )
+      return 'SESSION_MISMATCH';
+    // The local endpoint must be told which model to load; nothing is implied.
+    if (approval.model === 'default') return 'LIVE_APPROVAL_REQUIRED';
+    // XVANT's own tools act through the registry: there is no native bypass.
+    if (approval.acknowledgedNativeBypass !== undefined) return 'POLICY_DENIED';
+    return undefined;
+  }
   if (!Object.hasOwn(LIVE_ROUTES, worker.runtimeKind))
     return 'VERSION_UNSUPPORTED';
   const route = LIVE_ROUTES[worker.runtimeKind as ProviderKind];

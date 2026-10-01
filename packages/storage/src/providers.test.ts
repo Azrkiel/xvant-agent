@@ -1075,3 +1075,54 @@ it.each(['offline', 'live'] as const)(
     expect(store.events(0).at(-1)?.payload).toMatchObject({ classification });
   },
 );
+it('journals tool receipts durably, fenced, bound to the attempt and without result bodies', () => {
+  const connection = store.providers.reserve({
+    ...spec,
+    worker: { ...worker, runtimeKind: 'native-local' },
+  });
+  const receipt = {
+    receiptId: '11111111-1111-4111-8111-111111111111',
+    tool: 'file.read',
+    version: '1.0.0',
+    projectId: 'project',
+    taskId: 'task',
+    attemptId: 'attempt',
+    workerId: 'worker',
+    actionHash: 'a'.repeat(64),
+    status: 'succeeded' as const,
+    result: { content: 'private file text' },
+    startedAt: 1,
+    finishedAt: 2,
+  };
+  store.providers.recordToolReceipt('connection', connection.token, receipt);
+  expect(() =>
+    store.providers.recordToolReceipt('connection', connection.token, {
+      ...receipt,
+      attemptId: 'other',
+    }),
+  ).toThrow('STALE_EVIDENCE');
+  expect(() =>
+    store.providers.recordToolReceipt('connection', connection.token, {
+      ...receipt,
+      status: 'invented',
+    }),
+  ).toThrow();
+  expect(() =>
+    store.providers.recordToolReceipt('connection', 'wrong', receipt),
+  ).toThrow('STALE_FENCE');
+  store.close();
+  store = open();
+  const saved = store
+    .events(0, 1000)
+    .filter((e) => e.kind === 'tool.receipt')
+    .map((e) => e.payload);
+  expect(saved).toHaveLength(1);
+  expect(saved[0]).toMatchObject({
+    connectionId: 'connection',
+    receiptId: receipt.receiptId,
+    tool: 'file.read',
+    status: 'succeeded',
+    resultBytes: JSON.stringify(receipt.result).length,
+  });
+  expect(JSON.stringify(saved)).not.toContain('private file text');
+});
