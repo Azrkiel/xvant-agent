@@ -93,7 +93,16 @@ it('Phase 2 gate requires storage, process, auth, recovery and service suites', 
     'tests/faults/crash.test.ts',
   ])
     expect(suites[file]).toBeGreaterThan(0);
-  expect(() => phaseSuites('08')).toThrow();
+  expect(() => phaseSuites('09')).toThrow();
+  const phase8 = phaseSuites('08');
+  for (const [file, minimum] of Object.entries(phaseSuites('07')))
+    expect(phase8[file]).toBe(minimum);
+  for (const file of [
+    'packages/native-agent/src/loop.test.ts',
+    'apps/controller/src/native-turn-runner.test.ts',
+    'apps/controller/src/native-loop-fixture.test.ts',
+  ])
+    expect(phase8[file]).toBeGreaterThan(0);
   const phase6 = phaseSuites('06');
   for (const [file, minimum] of Object.entries(phaseSuites('05')))
     expect(phase6[file]).toBe(minimum);

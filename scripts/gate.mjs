@@ -12,11 +12,11 @@ const args = process.argv.slice(2);
 if (
   args.length !== 3 ||
   args[0] !== '--phase' ||
-  !['01', '02', '03', '04', '05', '06', '07'].includes(args[1]) ||
+  !['01', '02', '03', '04', '05', '06', '07', '08'].includes(args[1]) ||
   args[2] !== '--offline'
 ) {
   console.error(
-    'Usage: npm run gate -- --phase 01|02|03|04|05|06|07 --offline. Live gates run through scripts/live-gate.mjs.',
+    'Usage: npm run gate -- --phase 01|02|03|04|05|06|07|08 --offline. Live gates run through scripts/live-gate.mjs.',
   );
   process.exit(2);
 }
@@ -70,17 +70,19 @@ const report = {
   gitVersion: git(['--version']).stdout.trim(),
   classification: 'offline',
   qualificationScope:
-    phase === '07'
-      ? 'offline-local-app'
-      : phase === '06'
-        ? 'offline-orchestration'
-        : phase === '05'
-          ? 'offline-tools-skills'
-          : phase === '04'
-            ? 'offline-context-handoff'
-            : phase === '03'
-              ? 'offline-provider-transport-foundation'
-              : 'offline-simulation',
+    phase === '08'
+      ? 'offline-native-loop'
+      : phase === '07'
+        ? 'offline-local-app'
+        : phase === '06'
+          ? 'offline-orchestration'
+          : phase === '05'
+            ? 'offline-tools-skills'
+            : phase === '04'
+              ? 'offline-context-handoff'
+              : phase === '03'
+                ? 'offline-provider-transport-foundation'
+                : 'offline-simulation',
   runtimeKind: 'simulated',
   liveProvidersTested: [],
   checks: [],
@@ -461,6 +463,23 @@ try {
       Object.values(run.nodes).some((node) => node.status !== 'integrated')
     )
       throw new Error('Orchestration fixture failed');
+  }
+  if (Number(phase) >= 8) {
+    check('native-loop-fixture', ['scripts/native-loop-fixture.mjs']);
+    const native = JSON.parse(
+      readFileSync(resolve(artifacts, 'native-loop-fixture.log'), 'utf8'),
+    );
+    if (
+      native.classification !== 'offline' ||
+      native.liveProvidersTested.length !== 0 ||
+      native.runtimeKind !== 'native-local' ||
+      native.problems.length !== 0 ||
+      Object.keys(native.checks).length < 11 ||
+      !Object.values(native.checks).every((value) => value === true) ||
+      Object.keys(native.skills).length !== 10 ||
+      !Object.values(native.skills).every((value) => value === 'passed')
+    )
+      throw new Error('Native loop fixture failed');
   }
   const after = snapshot();
   if (after.sha256 !== before.sha256)
