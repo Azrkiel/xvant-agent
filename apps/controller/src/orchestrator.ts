@@ -121,8 +121,12 @@ export interface RootState {
 }
 const tail = (text: string, max = 3000) =>
   text.length > max ? '…' + text.slice(-max) : text;
+// The first line names the failure; check output below it varies run to run.
 const signature = (text: string) =>
-  createHash('sha256').update(text).digest('hex').slice(0, 16);
+  createHash('sha256')
+    .update(text.split('\n', 1)[0]!)
+    .digest('hex')
+    .slice(0, 16);
 
 /**
  * Coordinates one root task across named workers: plan, route, run nodes in
@@ -393,7 +397,7 @@ export class Orchestrator {
             ? [
                 '',
                 '## Previous attempt failed',
-                tail(entry.lastFailure),
+                tail(entry.lastFailure, 9000),
                 'Fix the cause before finishing.',
               ]
             : []),

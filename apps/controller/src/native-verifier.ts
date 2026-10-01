@@ -6,6 +6,10 @@ import { ArtifactStore } from '../../../packages/storage/src/artifacts.ts';
 import { captureWorkspace } from '../../../packages/storage/src/workspace.ts';
 import { captureGitWorkspace } from '../../../packages/storage/src/git-workspace.ts';
 import { WorkerSupervisor } from '../../../packages/supervisor/src/index.ts';
+import { redactSecrets } from '../../../packages/context/src/secrets.ts';
+
+/** Characters of failing-check output kept for repair prompts. */
+const OUTPUT_TAIL = 4000;
 
 interface Check {
   executable: string;
@@ -21,6 +25,7 @@ export class NativeVerifier {
   private readonly gitBases: Readonly<Record<string, string>>;
   private readonly maxCheckOutput: number;
   private readonly supervisor = new WorkerSupervisor();
+  private readonly failures = new Map<string, Record<string, string>>();
   private stopped = false;
   constructor(
     store: Store,
@@ -109,6 +114,8 @@ export class NativeVerifier {
         workspaceRootHash: before.workspaceRootHash,
       };
       const receipts = [];
+      const failures: Record<string, string> = {};
+      this.failures.delete(id);
       for (const checkId of task.requiredCheckIds) {
         if (this.stopped) throw new Error('VERIFIER_UNCERTAIN');
         const check = this.checks[checkId]!;
@@ -128,6 +135,13 @@ export class NativeVerifier {
           result.outputTruncated
         )
           throw new Error('VERIFIER_UNCERTAIN');
+        if (result.exitCode !== 0) {
+          const output = redactSecrets(result.stdout + result.stderr);
+          failures[checkId] =
+            output.length > OUTPUT_TAIL
+              ? '…' + output.slice(-OUTPUT_TAIL)
+              : output;
+        }
         receipts.push({
           ...binding,
           checkId,
@@ -150,6 +164,7 @@ export class NativeVerifier {
         )
           throw new Error('WORKSPACE_CHANGED');
       }
+      if (Object.keys(failures).length) this.failures.set(id, failures);
       verification = {
         status: receipts.every((receipt) => receipt.status === 'passed')
           ? 'passed'
@@ -173,6 +188,13 @@ export class NativeVerifier {
       verification,
       this.objects,
     );
+  }
+  /**
+   * Redacted output tails of the checks that failed in the latest verification
+   * of a connection. Diagnostic only: never part of evidence or receipts.
+   */
+  checkOutput(id: string): Record<string, string> {
+    return { ...this.failures.get(id) };
   }
   stop(): void {
     this.stopped = true;

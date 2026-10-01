@@ -162,6 +162,7 @@ export class LiveTurnRunner implements TurnRunner {
     } finally {
       this.#active.delete(request.taskId);
     }
+    const checkOutput = controller.checkOutput(request.taskId);
     controller.stop();
     const saved = store.providers.get(request.taskId);
     const task = store.getTask(request.taskId);
@@ -195,11 +196,18 @@ export class LiveTurnRunner implements TurnRunner {
     const failure = saved.failure
       ? saved.failure.code + ':' + saved.failure.native
       : saved.verification?.status === 'failed'
-        ? 'Checks failed: ' +
-          saved.verification.evidence.receipts
-            .filter((r) => r.status === 'failed')
-            .map((r) => r.checkId)
-            .join(', ')
+        ? [
+            'Checks failed: ' +
+              saved.verification.evidence.receipts
+                .filter((r) => r.status === 'failed')
+                .map((r) => r.checkId)
+                .join(', '),
+            ...Object.entries(checkOutput).flatMap(([id, output]) => [
+              '',
+              '### Output of ' + id,
+              output,
+            ]),
+          ].join('\n')
         : undefined;
     const status: TurnOutcome['status'] =
       saved.outcome === 'cancelled'

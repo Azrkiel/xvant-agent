@@ -242,6 +242,29 @@ it('repairs a failed node once and stops a repeated identical failure', async ()
   expect(state.nodes.docs!.status).toBe('pending');
 });
 
+it('passes check output to the repair and treats changing output as the same failure', async () => {
+  let apiTries = 0;
+  const runner = new FakeRunner((request) => {
+    const label = byLabel(request);
+    if (label === 'api')
+      return {
+        status: 'verification_failed',
+        failure:
+          'Checks failed: unit\n\n### Output of unit\nexpected 42, got 41 (' +
+          ++apiTries +
+          ' ms)',
+      };
+    return { write: { [label + '.txt']: 'x\n' } };
+  });
+  const state = await orchestrate(runner, { plan, review: false });
+  const api = state.nodes.api!;
+  expect(api.status).toBe('failed');
+  expect(api.attempts).toHaveLength(2);
+  expect(
+    runner.calls.find((c) => c.taskId === api.attempts[1]!.taskId)!.prompt,
+  ).toMatch(/Previous attempt failed[\s\S]*expected 42, got 41 \(1 ms\)/);
+});
+
 it('never retries an unknown outcome', async () => {
   const runner = new FakeRunner((request) =>
     byLabel(request) === 'api'

@@ -460,6 +460,10 @@ export class LiveOpenCodeController {
       this.busy = false;
     }
   }
+  /** Redacted output tails of the checks that failed for a connection. */
+  checkOutput(connectionId: string): Record<string, string> {
+    return this.verifier.checkOutput(connectionId);
+  }
   stop() {
     this.stopped = true;
     this.supervisor.stopAll();
