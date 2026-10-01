@@ -294,3 +294,30 @@ it('runs native-local nodes inside an orchestrated root through the live runner'
     }),
   ).rejects.toThrow('RUNTIME_UNAVAILABLE');
 });
+
+it('accepts a turn in a store that already holds more than one page of events', async () => {
+  const reads = Array.from({ length: 8 }, () =>
+    toolCall('file.read', { path: 'README.md' }),
+  );
+  const outcome = await turn(
+    runner(
+      (messages, n) =>
+        n <= 15
+          ? { toolCalls: reads }
+          : n === 16
+            ? {
+                toolCalls: [
+                  toolCall('file.apply_patch', {
+                    edits: [
+                      { path: 'a.txt', expectedHash: null, content: 'a\n' },
+                    ],
+                  }),
+                ],
+              }
+            : { text: 'done ' + messages.length },
+      { limits: { maxSteps: 20, maxContextChars: 400_000 } },
+    ),
+  );
+  expect(store.events(0, 1000).length).toBeGreaterThan(120);
+  expect(outcome.status).toBe('accepted');
+});

@@ -209,13 +209,11 @@ export function settleTurn(
     files = manifest.files.map((f) => f.path);
   }
   if (task.state === 'ready_for_acceptance') {
-    const prepared = store
-      .events(0)
-      .find(
-        (e) =>
-          e.kind === 'native.ready_for_acceptance' &&
-          (e.payload as { connectionId: string }).connectionId === taskId,
-      )?.payload as { rowVersion: number; evidenceHash: string };
+    const prepared = store.lastEvent(taskId, 'native.ready_for_acceptance')
+      ?.payload as
+      | { connectionId: string; rowVersion: number; evidenceHash: string }
+      | undefined;
+    if (prepared?.connectionId !== taskId) throw new Error('NOT_FOUND');
     review.accept('accept-' + taskId, {
       connectionId: taskId,
       expectedVersion: prepared.rowVersion,
