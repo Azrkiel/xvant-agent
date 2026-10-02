@@ -1,0 +1,79 @@
+{
+  "bundleId": "G08-20261001T235526749Z-6db32cdf2102",
+  "archivedAt": "2026-10-02T01:26:38.100Z",
+  "sourceRoot": "C:/Users/jiang/Downloads/xvant/xvant-agent",
+  "receipt": {
+    "file": "C:/Users/jiang/Downloads/xvant/xvant-agent/docs/evidence/G08.json",
+    "sha256": "8d723bca6b4c9a1f63dbae5e871462de4af32091dae991a0c8ba37bc9e445e88",
+    "status": "failed"
+  },
+  "artifacts": [
+    {
+      "path": ".artifacts/typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/format.log",
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/tests.log",
+      "sha256": "b27574a2589b8b875f286d635151f183efbdfe262e44814958fdb651a6d09289",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/runtime.log",
+      "sha256": "138c3bf5a8e868989b30263b72b014689991bfb1a6a982018994895893fe18fc",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/tests.json",
+      "sha256": "00ec5d2a10040f15facfe173383a977ef9e4e67c54f642d55514de939542e8e1",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/provider-fixtures.log",
+      "sha256": "bed319a96216d716f6a5c0cf98f77fdd52f5ace2888544fa7bb0b514493c5030",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/controller-roster.log",
+      "sha256": "6e66aeebf0f7a909ec769b79a070b32fdbd055e9dcb7665496d71a8532da18d2",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/opencode-http-permission.log",
+      "sha256": "fc021bf766a3fd34a8193308680745846139d1282ecb824fc1938d8e230c503e",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/opencode-http-interrupt.log",
+      "sha256": "de2eb35f7a1b57a8141b4171fda7543bda20aaa4a370f76ef2aa38bc1815ae48",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/opencode-http-no-auth.log",
+      "sha256": "31bb25f0690ed48231c8096dcabc226321c5d4fbfc95385379b46c1a88d546ed",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/codex-transport.log",
+      "sha256": "6c50e061191a1287a4dfc71f851681d36a4f794d7f19cd8516213cecbafb59dc",
+      "status": "preserved"
+    },
+    {
+      "path": ".artifacts/claude-native-stream.log",
+      "sha256": "4f6043bbb5966784e4167e51777351c9e5a62d840d509d26846e4b110f056c6a",
+      "status": "preserved"
+    }
+  ],
+  "extras": [],
+  "integrity": "complete"
+}

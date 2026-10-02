@@ -1,6 +1,6 @@
 # XVANT verification register
 
-Reconciled 2026-09-30 (updated the same evening after the live gates) from the [scope audit](../../.Codex/handoffs/2026-09-30-1039.md) and immutable evidence bundles. It supersedes the status cells in the [release gates](2026-09-26-xvant-release-gates.md) register. The requirements in that file still apply.
+Reconciled 2026-09-30 (updated the same evening after the live gates, and on 2026-10-01 for Phase 8) from the [scope audit](../../.Codex/handoffs/2026-09-30-1039.md) and immutable evidence bundles. It supersedes the status cells in the [release gates](2026-09-26-xvant-release-gates.md) register. The requirements in that file still apply.
 
 Bundles live in `C:/Users/jiang/Downloads/xvant/xvant-agent/docs/evidence/runs/<bundleId>/`. Each holds `receipt.json`, the exact artifact bytes the receipt declares, and `bundle.json` with hashes. Run `node scripts/archive-evidence.mjs --verify` to re-check every bundle. Since this date, `npm run gate` and `npm run probe:live:opencode` write a bundle for every run, including failed runs.
 
@@ -16,9 +16,9 @@ Status vocabulary: **passed** (checks ran on a recorded source hash with retaine
 | G03 | passed (in cumulative G06) | **passed**: 2 Codex + 3 Claude + 5 OpenCode, distinct sessions, host-verified, accepted after restart; 1 resume and 1 live interrupt per runtime | deferred | `G03-live-roster-20260930T185719183Z-2c63bdeaf711` (commit 8f40a8a) | P03.5 attached/imported-session control not implemented (managed sessions only) |
 | G04 | passed (in cumulative G06) | **passed**: Codex sender → Claude recipient from the sealed packet alone; 8/8 facts, no sentinels in prompt or result | deferred | `G04-live-handoff-20260930T191739946Z-7637c52758f9` (commit 24b4df3) | — |
 | G05 | passed (in cumulative G06) | **passed**: all three runtimes called XVANT `file.read` through the authenticated task-scoped MCP bridge | deferred | `G05-live-mcp-20260930T191628832Z-7637c52758f9` (commit 24b4df3) | Read-only profiles stay blocked: native tool restrictions are not live-tested; trusted-local with acknowledged bypass is the supported profile |
-| G06 | **passed** 1050 tests, 28 checks incl. orchestration fixture | not_run (live parallel-feature fixture implemented) | deferred | `G06-20260930T194252197Z-9eaadf3f69b6` (commit 224fdb4) | Live parallel-feature run; UI (G07) |
+| G06 | **passed** 1050 tests, 28 checks incl. orchestration fixture | **passed**: planner split server/web/README, workers on two runtimes, independent Codex review (4th run; runs 1–3 found real defects, fixed) | deferred | `G06-20260930T194252197Z-9eaadf3f69b6` (commit 224fdb4); live `G06-live-parallel-feature-20260930T202512212Z-bb2a7fbf8131` | — |
 | G07 | **passed** 1062 tests, 28 checks: app API security/flows + Edge E2E (keyboard, reload, double submit, stop, XSS-as-text) | not_run (no real-repo UI run yet) | deferred | `G07-20260930T230043374Z-bf8393a423da` | Real-repo run through the UI; broader accessibility audit |
-| G08 | not_implemented | not_run | not_run | none | Native loop; local-model hardware |
+| G08 | implemented (commits d65520a–38beb03); targeted suites and `native-loop-fixture` pass (11/11 checks, 10/10 skill fixtures); **failed** as a full gate run: the coverage suite exceeded the 10-minute stage limit under memory pressure (~1.7 GB free) | blocked: no tool-calling chat model in LM Studio (download needs operator approval) | not_run | `G08-20261001T235526749Z-6db32cdf2102` (failed, resource starvation; source 38beb03) | Rerun `npm run gate -- --phase 08 --offline` with ≥3 GB free; live `native-local` fixture needs a local model |
 | G09 | not_implemented | not_run | not_run | none | Baselines, held-out evaluation |
 | G10 | not_implemented | not_run | not_run | none | Soak, install, security, packaging |
 
