@@ -21,6 +21,7 @@
     "probe": "node scripts/probe.mjs",
     "benchmark": "node scripts/benchmark.mjs",
     "release:check": "node scripts/release-check.mjs",
+    "audit:release": "node scripts/audit.mjs",
     "probe:live:opencode": "node scripts/opencode-live.mjs",
     "demo": "node --experimental-strip-types apps/controller/src/demo.ts",
     "demo:durable": "node apps/controller/src/durable-demo.ts",
