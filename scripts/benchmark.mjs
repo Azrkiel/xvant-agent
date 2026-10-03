@@ -25,6 +25,7 @@ import { discoverRuntime } from '../packages/adapters/src/live/discover.ts';
 import {
   liveConfiguration,
   nativeConfiguration,
+  orchestratedConfiguration,
 } from '../apps/controller/src/benchmark-live.ts';
 import { LocalEndpointProvider } from '../packages/native-agent/src/local-endpoint.ts';
 
@@ -83,6 +84,14 @@ const skillFor = (taskId) => {
   return readFileSync(resolve('skills', skill, 'SKILL.md'), 'utf8');
 };
 // A `-criteria` suffix states the task's acceptance criteria, as XVANT does for its workers.
+const criteriaList = (taskId) => {
+  const task = suite.tasks.find((t) => t.id === taskId);
+  const fixture = join(
+    dirname(suitePath(suiteDir, task.check)),
+    'fixture.json',
+  );
+  return JSON.parse(readFileSync(fixture, 'utf8')).acceptanceCriteria;
+};
 const criteriaFor = (taskId) => {
   const task = suite.tasks.find((t) => t.id === taskId);
   const fixture = join(
@@ -95,7 +104,8 @@ const criteriaFor = (taskId) => {
     ...acceptanceCriteria.map((c) => '- ' + c),
   ].join('\n');
 };
-const bare = (name) => name.replace(/-(skills|criteria)$/, '');
+// A `-xvant` suffix runs XVANT's orchestration (plan, work, repair, review) on that runtime.
+const bare = (name) => name.replace(/-(skills|criteria|xvant)$/, '');
 const LIVE = {
   'claude-haiku': 'haiku',
   'claude-sonnet': 'sonnet',
@@ -161,16 +171,20 @@ for (const name of live.filter((n) => bare(n) !== 'native-local')) {
     console.error(kind + ' runtime not qualified: ' + found.status);
     process.exit(1);
   }
-  available[name] = liveConfiguration({
-    kind,
-    runtime: {
-      executable: found.executable,
-      version: found.version,
-      model: LIVE[bare(name)],
-    },
-    ...extra(name),
-    stateRoot: join(state, 'controllers'),
-  });
+  const runtime = {
+    executable: found.executable,
+    version: found.version,
+    model: LIVE[bare(name)],
+  };
+  const stateRoot = join(state, 'controllers');
+  available[name] = name.endsWith('-xvant')
+    ? orchestratedConfiguration({
+        kind,
+        runtime,
+        stateRoot,
+        criteria: criteriaList,
+      })
+    : liveConfiguration({ kind, runtime, ...extra(name), stateRoot });
 }
 // A live campaign asks Windows not to idle-sleep while it runs; a suspended
 // host loses the attempts in flight. Closing the lid still suspends.
