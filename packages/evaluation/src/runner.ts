@@ -21,7 +21,8 @@ export const attemptRecordSchema = z.strictObject({
    * `accepted`: the hidden check passed. `failed`: it did not, or the
    * configuration gave up. `incomplete`: a quota or availability limit
    * stopped the attempt; it is never counted as a success and never retried
-   * automatically. `excluded`: declared up front with a reason.
+   * automatically; so does an attempt the host was suspended under.
+   * `excluded`: declared up front with a reason.
    */
   status: z.enum(['accepted', 'failed', 'incomplete', 'excluded']),
   reason: z.string().max(500).optional(),
@@ -125,6 +126,8 @@ export async function runBenchmark(options: {
   workRoot: string;
   exclusions?: (Scheduled & { reason: string })[];
   signal?: AbortSignal;
+  /** Wall clock; tests replace it. */
+  now?: () => number;
   onRecord?: (record: AttemptRecord) => void;
 }): Promise<{ schedule: Scheduled[]; records: AttemptRecord[] }> {
   const { suite, lock } = verifyFrozen(options.suiteDir);
@@ -146,7 +149,8 @@ export async function runBenchmark(options: {
     if (options.signal?.aborted) break;
     const task = suite.tasks.find((t) => t.id === attempt.taskId)!;
     const configuration = options.configurations[attempt.configuration]!;
-    const startedAt = new Date();
+    const now = options.now ?? Date.now;
+    const startedAt = new Date(now());
     const record: AttemptRecord = {
       suiteId: suite.id,
       frozenHash: lock.frozenHash,
@@ -222,7 +226,14 @@ export async function runBenchmark(options: {
           ).slice(0, 500);
         }
       }
-      record.elapsedMs = Date.now() - startedAt.getTime();
+      record.elapsedMs = now() - startedAt.getTime();
+      // An attempt cannot outlive its timeout unless the host was suspended
+      // under it. Whatever it reported, its result and timing are not evidence.
+      if (record.elapsedMs > task.timeoutMs * 2) {
+        record.status = 'incomplete';
+        record.checkPassed = null;
+        record.reason = 'host suspended during the attempt';
+      }
     }
     appendFileSync(options.recordsPath, JSON.stringify(record) + '\n');
     done.add(attemptKey(attempt));

@@ -273,6 +273,17 @@ describe('campaign', () => {
     });
     expect(readRecords(join(root, 'records.jsonl'))).toEqual(records);
   }, 60000);
+  it('marks an attempt that outlived its timeout incomplete, even if it passed', async () => {
+    // The clock jumps ten hours between the start and the end of each attempt.
+    let clock = 0;
+    const { records } = await campaign({ right }, 1, {
+      now: () => (clock += 36_000_000),
+    });
+    expect(records.map((r) => [r.status, r.checkPassed, r.reason])).toEqual([
+      ['incomplete', null, 'host suspended during the attempt'],
+      ['incomplete', null, 'host suspended during the attempt'],
+    ]);
+  }, 60000);
   it('rejects records from a different freeze', async () => {
     await campaign({ right });
     writeFileSync(join(suiteDir, 'alpha', 'repo', 'new.txt'), 'x');

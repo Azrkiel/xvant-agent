@@ -6,6 +6,7 @@
 // and `claude-sonnet` run real turns on the Claude subscription login and need
 // --approve-live; nothing here can fall back to an API key.
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { spawn } from 'node:child_process';
 import { hostname, platform, release } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import {
@@ -153,6 +154,21 @@ for (const name of live.filter((n) => bare(n) !== 'native-local')) {
     stateRoot: join(state, 'controllers'),
   });
 }
+// A live campaign asks Windows not to idle-sleep while it runs; a suspended
+// host loses the attempts in flight. Closing the lid still suspends.
+const awake =
+  live.length && process.platform === 'win32'
+    ? spawn(
+        'powershell',
+        [
+          '-NoProfile',
+          '-Command',
+          'Add-Type -Namespace Xvant -Name Power -MemberDefinition \'[DllImport("kernel32.dll")] public static extern uint SetThreadExecutionState(uint flags);\'; [void][Xvant.Power]::SetThreadExecutionState(0x80000001); [void][Console]::In.ReadLine()',
+        ],
+        { stdio: ['pipe', 'ignore', 'ignore'], windowsHide: true },
+      )
+    : undefined;
+process.on('exit', () => awake?.kill());
 const { schedule, records } = await runBenchmark({
   suiteDir,
   configurations: Object.fromEntries(names.map((n) => [n, available[n]])),
@@ -167,6 +183,7 @@ const { schedule, records } = await runBenchmark({
       r.status,
     ),
 });
+awake?.kill();
 const summary = summarize(suite, lock.frozenHash, schedule, records);
 const shape = suiteId === 'v1' ? v1ShapeProblems(suite) : [];
 const report = {
