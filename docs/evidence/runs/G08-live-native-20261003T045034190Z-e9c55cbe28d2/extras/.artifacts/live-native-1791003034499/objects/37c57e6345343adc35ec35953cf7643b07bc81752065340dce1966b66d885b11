@@ -1,0 +1,1 @@
+{"version":2,"kind":"git","baseCommit":"acf97960137b3b37063cf5cba01a26b7cebb7017","gitTree":"219ce1d19781a2bb894d2008e54f7809ab2950a1","patch":"eb941f0432d532aad8e5b0df44ce734d5cba3cdd2b87c2cdd66cff14c7901dd3","patchBytes":485,"files":[{"path":"src/math.js","status":"M"}]}

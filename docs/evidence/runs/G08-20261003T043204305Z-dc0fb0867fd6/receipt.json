@@ -1,10 +1,10 @@
 {
   "gateId": "G08",
-  "status": "passed",
-  "generatedAt": "2026-10-03T04:39:48.791Z",
+  "status": "failed",
+  "generatedAt": "2026-10-03T04:32:04.305Z",
   "sourceRevision": "956c06d77995d9fe906f92d9c0187c2bd5e846a8",
   "branch": "codex/phase-5-tools",
-  "dirtyTreeHash": "e9c55cbe28d2a561c69d7955ee2df536e19524b3f39e2dfbfbd31e4bff22cf62",
+  "dirtyTreeHash": "dc0fb0867fd671553d8271411773c093fa7922f22b01e35506fc79d39a8039be",
   "sourceHashScope": "All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.",
   "operatingSystem": "win32 10.0.26200",
   "executionHost": "kvn",
@@ -24,8 +24,8 @@
         "--noEmit"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:39:49.046Z",
-      "finishedAt": "2026-10-03T04:39:54.490Z",
+      "startedAt": "2026-10-03T04:32:04.639Z",
+      "finishedAt": "2026-10-03T04:32:14.077Z",
       "exitCode": 0
     },
     {
@@ -39,8 +39,8 @@
         "tests"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:39:54.493Z",
-      "finishedAt": "2026-10-03T04:39:58.129Z",
+      "startedAt": "2026-10-03T04:32:14.080Z",
+      "finishedAt": "2026-10-03T04:32:20.225Z",
       "exitCode": 0
     },
     {
@@ -52,8 +52,8 @@
         "."
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:39:58.129Z",
-      "finishedAt": "2026-10-03T04:40:02.499Z",
+      "startedAt": "2026-10-03T04:32:20.226Z",
+      "finishedAt": "2026-10-03T04:32:25.158Z",
       "exitCode": 0
     },
     {
@@ -68,104 +68,9 @@
         "--outputFile=.artifacts/tests.json"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:40:02.500Z",
-      "finishedAt": "2026-10-03T04:43:33.818Z",
-      "exitCode": 0,
-      "expectedCount": 1095,
-      "observedCount": 1128,
-      "suites": {
-        "packages/contracts/src/contracts.test.ts": 15,
-        "packages/core/src/task.test.ts": 26,
-        "packages/core/src/graph.test.ts": 20,
-        "packages/adapters/src/simulated/simulated.test.ts": 10,
-        "apps/controller/src/controller.test.ts": 24,
-        "tests/gate.test.ts": 18,
-        "tests/evidence-bundle.test.ts": 8,
-        "packages/storage/src/store.test.ts": 21,
-        "packages/storage/src/artifacts.test.ts": 20,
-        "packages/supervisor/src/index.test.ts": 14,
-        "packages/policy/src/index.test.ts": 2,
-        "apps/controller/src/durable.test.ts": 13,
-        "apps/controller/src/service.test.ts": 3,
-        "apps/controller/src/http/server.test.ts": 11,
-        "tests/faults/crash.test.ts": 7,
-        "packages/adapters/src/providers/conformance.test.ts": 19,
-        "packages/adapters/src/providers/protocol.test.ts": 8,
-        "tests/probe.test.ts": 12,
-        "packages/adapters/src/codex/transport.test.ts": 20,
-        "packages/adapters/src/codex/profile.test.ts": 5,
-        "packages/adapters/src/codex/lifecycle.test.ts": 9,
-        "packages/adapters/src/codex/thread.test.ts": 15,
-        "tests/codex-process.test.ts": 6,
-        "packages/storage/src/providers.test.ts": 59,
-        "tests/faults/provider-crash.test.ts": 8,
-        "packages/storage/src/workspace.test.ts": 5,
-        "apps/controller/src/native-verifier.test.ts": 23,
-        "tests/faults/native-verification.test.ts": 4,
-        "packages/core/src/native-acceptance.test.ts": 9,
-        "apps/controller/src/native-review.test.ts": 12,
-        "tests/faults/native-acceptance.test.ts": 3,
-        "apps/controller/src/codex-offline.test.ts": 35,
-        "packages/supervisor/src/interactive.test.ts": 3,
-        "tests/faults/codex-controller.test.ts": 9,
-        "packages/adapters/src/providers/native-stream.test.ts": 34,
-        "packages/adapters/src/providers/native-lifecycle.test.ts": 34,
-        "tests/native-process.test.ts": 2,
-        "apps/controller/src/native-offline.test.ts": 98,
-        "packages/adapters/src/providers/claude-launch.test.ts": 16,
-        "tests/faults/claude-launch.test.ts": 8,
-        "tests/faults/native-controller.test.ts": 26,
-        "tests/faults/native-session.test.ts": 4,
-        "packages/adapters/src/providers/failures.test.ts": 18,
-        "apps/controller/src/offline-roster.test.ts": 2,
-        "packages/adapters/src/opencode/endpoint.test.ts": 9,
-        "apps/controller/src/opencode-http.test.ts": 17,
-        "tests/faults/opencode-http.test.ts": 6,
-        "apps/controller/src/opencode-live.test.ts": 21,
-        "packages/adapters/src/opencode/cli-stream.test.ts": 21,
-        "tests/faults/opencode-live.test.ts": 12,
-        "packages/contracts/src/live.test.ts": 19,
-        "packages/storage/src/git-workspace.test.ts": 5,
-        "packages/adapters/src/live/live-streams.test.ts": 11,
-        "apps/controller/src/codex-live.test.ts": 6,
-        "apps/controller/src/claude-live.test.ts": 7,
-        "packages/adapters/src/live/discover.test.ts": 3,
-        "apps/controller/src/live-roster.test.ts": 2,
-        "apps/controller/src/live-gates.test.ts": 3,
-        "packages/context/src/packet.test.ts": 21,
-        "packages/context/src/retrieval.test.ts": 12,
-        "packages/storage/src/memory.test.ts": 12,
-        "packages/memory/src/relevance.test.ts": 5,
-        "packages/context/src/handoff.test.ts": 10,
-        "packages/context/src/inspect.test.ts": 2,
-        "packages/context/src/transfer.test.ts": 6,
-        "apps/controller/src/handoff-fixture.test.ts": 3,
-        "packages/context/src/render.test.ts": 3,
-        "packages/tools/src/registry.test.ts": 10,
-        "packages/tools/src/files.test.ts": 19,
-        "packages/tools/src/repository.test.ts": 6,
-        "packages/tools/src/process.test.ts": 12,
-        "packages/tools/src/controller.test.ts": 5,
-        "packages/tools/src/mcp.test.ts": 8,
-        "packages/tools/src/browser.test.ts": 8,
-        "packages/skills/src/catalog.test.ts": 12,
-        "packages/skills/src/hooks.test.ts": 4,
-        "packages/skills/src/bundled.test.ts": 13,
-        "packages/skills/src/compatibility.test.ts": 5,
-        "packages/policy/src/runtimes.test.ts": 9,
-        "apps/controller/src/tools-fixture.test.ts": 1,
-        "packages/core/src/scheduler.test.ts": 12,
-        "packages/storage/src/integration.test.ts": 4,
-        "apps/controller/src/orchestrator.test.ts": 7,
-        "apps/controller/src/turn-runner.test.ts": 3,
-        "apps/controller/src/app.test.ts": 4,
-        "tests/e2e/ui.test.ts": 3,
-        "packages/native-agent/src/local-endpoint.test.ts": 20,
-        "packages/native-agent/src/loop.test.ts": 14,
-        "apps/controller/src/native-turn-runner.test.ts": 10,
-        "apps/controller/src/native-loop-fixture.test.ts": 2,
-        "apps/controller/src/live-native.test.ts": 3
-      }
+      "startedAt": "2026-10-03T04:32:25.159Z",
+      "finishedAt": "2026-10-03T04:37:13.424Z",
+      "exitCode": 1
     },
     {
       "id": "runtime",
@@ -174,8 +79,8 @@
         "apps/controller/src/durable-demo.ts"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:33.864Z",
-      "finishedAt": "2026-10-03T04:43:34.545Z",
+      "startedAt": "2026-10-03T04:37:13.426Z",
+      "finishedAt": "2026-10-03T04:37:14.087Z",
       "exitCode": 0
     },
     {
@@ -188,8 +93,8 @@
         "all"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:34.547Z",
-      "finishedAt": "2026-10-03T04:43:34.776Z",
+      "startedAt": "2026-10-03T04:37:14.089Z",
+      "finishedAt": "2026-10-03T04:37:14.291Z",
       "exitCode": 0
     },
     {
@@ -199,8 +104,8 @@
         "scripts/roster-fixture.mjs"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:34.777Z",
-      "finishedAt": "2026-10-03T04:43:36.695Z",
+      "startedAt": "2026-10-03T04:37:14.291Z",
+      "finishedAt": "2026-10-03T04:37:16.160Z",
       "exitCode": 0
     },
     {
@@ -211,8 +116,8 @@
         "permission"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:36.696Z",
-      "finishedAt": "2026-10-03T04:43:37.430Z",
+      "startedAt": "2026-10-03T04:37:16.160Z",
+      "finishedAt": "2026-10-03T04:37:16.863Z",
       "exitCode": 0
     },
     {
@@ -223,8 +128,8 @@
         "interrupt"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:37.431Z",
-      "finishedAt": "2026-10-03T04:43:38.002Z",
+      "startedAt": "2026-10-03T04:37:16.864Z",
+      "finishedAt": "2026-10-03T04:37:17.438Z",
       "exitCode": 0
     },
     {
@@ -235,8 +140,8 @@
         "no-auth"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:38.002Z",
-      "finishedAt": "2026-10-03T04:43:38.991Z",
+      "startedAt": "2026-10-03T04:37:17.438Z",
+      "finishedAt": "2026-10-03T04:37:18.515Z",
       "exitCode": 0
     },
     {
@@ -247,8 +152,8 @@
         "success"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:38.991Z",
-      "finishedAt": "2026-10-03T04:43:39.470Z",
+      "startedAt": "2026-10-03T04:37:18.516Z",
+      "finishedAt": "2026-10-03T04:37:18.947Z",
       "exitCode": 0
     },
     {
@@ -260,8 +165,8 @@
         "permission"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:39.470Z",
-      "finishedAt": "2026-10-03T04:43:39.918Z",
+      "startedAt": "2026-10-03T04:37:18.948Z",
+      "finishedAt": "2026-10-03T04:37:19.394Z",
       "exitCode": 0
     },
     {
@@ -272,8 +177,8 @@
         "claude"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:39.919Z",
-      "finishedAt": "2026-10-03T04:43:40.608Z",
+      "startedAt": "2026-10-03T04:37:19.394Z",
+      "finishedAt": "2026-10-03T04:37:20.051Z",
       "exitCode": 0
     },
     {
@@ -285,8 +190,8 @@
         "interrupt"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:40.609Z",
-      "finishedAt": "2026-10-03T04:43:41.158Z",
+      "startedAt": "2026-10-03T04:37:20.051Z",
+      "finishedAt": "2026-10-03T04:37:20.586Z",
       "exitCode": 0
     },
     {
@@ -298,8 +203,8 @@
         "quota-error"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:41.158Z",
-      "finishedAt": "2026-10-03T04:43:41.834Z",
+      "startedAt": "2026-10-03T04:37:20.587Z",
+      "finishedAt": "2026-10-03T04:37:21.113Z",
       "exitCode": 0
     },
     {
@@ -312,8 +217,8 @@
         "create"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:41.835Z",
-      "finishedAt": "2026-10-03T04:43:42.918Z",
+      "startedAt": "2026-10-03T04:37:21.114Z",
+      "finishedAt": "2026-10-03T04:37:21.821Z",
       "exitCode": 0
     },
     {
@@ -326,8 +231,8 @@
         "create"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:42.919Z",
-      "finishedAt": "2026-10-03T04:43:43.502Z",
+      "startedAt": "2026-10-03T04:37:21.821Z",
+      "finishedAt": "2026-10-03T04:37:22.338Z",
       "exitCode": 0
     },
     {
@@ -339,8 +244,8 @@
         "permission"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:43.502Z",
-      "finishedAt": "2026-10-03T04:43:43.976Z",
+      "startedAt": "2026-10-03T04:37:22.338Z",
+      "finishedAt": "2026-10-03T04:37:22.795Z",
       "exitCode": 0
     },
     {
@@ -351,8 +256,8 @@
         "opencode"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:43.976Z",
-      "finishedAt": "2026-10-03T04:43:44.675Z",
+      "startedAt": "2026-10-03T04:37:22.795Z",
+      "finishedAt": "2026-10-03T04:37:23.460Z",
       "exitCode": 0
     },
     {
@@ -364,8 +269,8 @@
         "interrupt"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:44.676Z",
-      "finishedAt": "2026-10-03T04:43:45.289Z",
+      "startedAt": "2026-10-03T04:37:23.460Z",
+      "finishedAt": "2026-10-03T04:37:24.013Z",
       "exitCode": 0
     },
     {
@@ -377,8 +282,8 @@
         "quota-error"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:45.290Z",
-      "finishedAt": "2026-10-03T04:43:45.846Z",
+      "startedAt": "2026-10-03T04:37:24.013Z",
+      "finishedAt": "2026-10-03T04:37:24.536Z",
       "exitCode": 0
     },
     {
@@ -391,8 +296,8 @@
         "create"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:45.846Z",
-      "finishedAt": "2026-10-03T04:43:46.701Z",
+      "startedAt": "2026-10-03T04:37:24.536Z",
+      "finishedAt": "2026-10-03T04:37:25.270Z",
       "exitCode": 0
     },
     {
@@ -405,8 +310,8 @@
         "create"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:46.701Z",
-      "finishedAt": "2026-10-03T04:43:47.398Z",
+      "startedAt": "2026-10-03T04:37:25.270Z",
+      "finishedAt": "2026-10-03T04:37:25.815Z",
       "exitCode": 0
     },
     {
@@ -416,8 +321,8 @@
         "scripts/handoff-fixture.mjs"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:47.399Z",
-      "finishedAt": "2026-10-03T04:43:48.447Z",
+      "startedAt": "2026-10-03T04:37:25.816Z",
+      "finishedAt": "2026-10-03T04:37:26.752Z",
       "exitCode": 0
     },
     {
@@ -427,8 +332,8 @@
         "scripts/tools-fixture.mjs"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:48.448Z",
-      "finishedAt": "2026-10-03T04:43:49.152Z",
+      "startedAt": "2026-10-03T04:37:26.752Z",
+      "finishedAt": "2026-10-03T04:37:27.437Z",
       "exitCode": 0
     },
     {
@@ -438,8 +343,8 @@
         "scripts/compatibility-report.mjs"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:49.153Z",
-      "finishedAt": "2026-10-03T04:43:49.483Z",
+      "startedAt": "2026-10-03T04:37:27.438Z",
+      "finishedAt": "2026-10-03T04:37:27.735Z",
       "exitCode": 0
     },
     {
@@ -449,8 +354,8 @@
         "scripts/browser-fixture.mjs"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:43:49.484Z",
-      "finishedAt": "2026-10-03T04:44:10.876Z",
+      "startedAt": "2026-10-03T04:37:27.735Z",
+      "finishedAt": "2026-10-03T04:37:49.111Z",
       "exitCode": 0
     },
     {
@@ -460,8 +365,8 @@
         "scripts/orchestration-fixture.mjs"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:44:10.876Z",
-      "finishedAt": "2026-10-03T04:44:42.222Z",
+      "startedAt": "2026-10-03T04:37:49.111Z",
+      "finishedAt": "2026-10-03T04:38:20.564Z",
       "exitCode": 0
     },
     {
@@ -471,8 +376,8 @@
         "scripts/native-loop-fixture.mjs"
       ],
       "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-03T04:44:42.222Z",
-      "finishedAt": "2026-10-03T04:44:48.070Z",
+      "startedAt": "2026-10-03T04:38:20.565Z",
+      "finishedAt": "2026-10-03T04:38:25.764Z",
       "exitCode": 0
     }
   ],
@@ -491,7 +396,7 @@
     },
     {
       "path": ".artifacts/tests.log",
-      "sha256": "910d080a2aaa291838311647a7cd1ecbc0e0de6ab3da1d26287bdcc4ce38b34c"
+      "sha256": "dcda0f2cc47f0a970416fc71e3abb9afd572919c1055a8b5b0a8aedc1c592f3f"
     },
     {
       "path": ".artifacts/runtime.log",
@@ -499,11 +404,7 @@
     },
     {
       "path": ".artifacts/tests.json",
-      "sha256": "0033ba4e6570358d73172a73e4be5f38b2f0ce58c1c5a7a031c2e8bb15b45ac9"
-    },
-    {
-      "path": "coverage/coverage-summary.json",
-      "sha256": "d88d87ce68afb259bda8b99f4e0a93649078eeb9df868bf0d2b63cbd67530249"
+      "sha256": "8f06c165bfe2b6e02d5f6e523731fbc0179e3f304f43f727a207089155ed11ab"
     },
     {
       "path": ".artifacts/provider-fixtures.log",
@@ -579,7 +480,7 @@
     },
     {
       "path": ".artifacts/handoff-fixture.log",
-      "sha256": "1ba41d39afbb47eac7b904547cc3eb868f2b973587cc76c8f3fc708ac85a74c3"
+      "sha256": "955f37a388b96beebea33331dc92f07319df74d29b8622fd897c275980cbe13b"
     },
     {
       "path": ".artifacts/tools-fixture.log",
@@ -599,11 +500,7 @@
     },
     {
       "path": ".artifacts/native-loop-fixture.log",
-      "sha256": "5181becdb39da80c17eedb5e457ad9fab3ed2531746ebd6b0df4be1c71736614"
-    },
-    {
-      "path": ".artifacts/source-manifest.json",
-      "sha256": "669f9b0133431c3976a73afeb1e0cf6d28a1d16b06d6f40ce7fc50ff73216f13"
+      "sha256": "025f7c4642128241e4a6fb9939b86b04db24f203b3742af0590ced2b6493f5b7"
     }
   ],
   "limitations": [
@@ -613,5 +510,6 @@
     "Linux code and CI are configured but require their own observed run."
   ],
   "rollbackProcedure": "Keep the branch unmerged; no external service or data migration was changed.",
-  "lastKnownGoodVersion": null
+  "lastKnownGoodVersion": null,
+  "failure": "Unexpected token 'w', \"warning: i\"... is not valid JSON"
 }

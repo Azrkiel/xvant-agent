@@ -1,0 +1,30 @@
+{
+  "bundleId": "G08-live-native-20261003T045034190Z-e9c55cbe28d2",
+  "archivedAt": "2026-10-03T04:51:05.896Z",
+  "sourceRoot": "C:/Users/jiang/downloads/xvant/xvant-agent",
+  "receipt": {
+    "file": "C:/Users/jiang/downloads/xvant/xvant-agent/docs/evidence/G08-live-native.json",
+    "sha256": "42c5711d73c638973a74dcac12e776c64aa2a3109c469ffed5a91680c22f31f1",
+    "status": "passed"
+  },
+  "artifacts": [],
+  "extras": [
+    {
+      "path": ".artifacts/live-native-1791003034499/objects/37c57e6345343adc35ec35953cf7643b07bc81752065340dce1966b66d885b11",
+      "sha256": "37c57e6345343adc35ec35953cf7643b07bc81752065340dce1966b66d885b11"
+    },
+    {
+      "path": ".artifacts/live-native-1791003034499/objects/df53c57d7966e12e9702a1d5169e628fc809ff9da2f7d6c6d46f6e51ca25f80d",
+      "sha256": "df53c57d7966e12e9702a1d5169e628fc809ff9da2f7d6c6d46f6e51ca25f80d"
+    },
+    {
+      "path": ".artifacts/live-native-1791003034499/objects/eb941f0432d532aad8e5b0df44ce734d5cba3cdd2b87c2cdd66cff14c7901dd3",
+      "sha256": "eb941f0432d532aad8e5b0df44ce734d5cba3cdd2b87c2cdd66cff14c7901dd3"
+    },
+    {
+      "path": ".artifacts/live-native-1791003034499/state.sqlite",
+      "sha256": "4532e36bf55618384fb78b5bf4849b288f4891df61eaaf44808ec0e556aea5ba"
+    }
+  ],
+  "integrity": "complete"
+}

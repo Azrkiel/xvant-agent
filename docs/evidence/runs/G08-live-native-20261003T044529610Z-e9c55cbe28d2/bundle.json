@@ -1,0 +1,13 @@
+{
+  "bundleId": "G08-live-native-20261003T044529610Z-e9c55cbe28d2",
+  "archivedAt": "2026-10-03T04:45:32.567Z",
+  "sourceRoot": "C:/Users/jiang/downloads/xvant/xvant-agent",
+  "receipt": {
+    "file": "C:/Users/jiang/downloads/xvant/xvant-agent/docs/evidence/G08-live-native.json",
+    "sha256": "b2b27ea9bb6e5d1d7d0d62f5039405132c7f2f595ec8e3e11e5abe6648479bf9",
+    "status": "failed"
+  },
+  "artifacts": [],
+  "extras": [],
+  "integrity": "complete"
+}

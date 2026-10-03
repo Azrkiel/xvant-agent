@@ -1,0 +1,62 @@
+{
+  "gateId": "G08-live-native",
+  "status": "passed",
+  "generatedAt": "2026-10-03T04:50:34.190Z",
+  "classification": "live",
+  "fixture": "native",
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "sourceHash": "e9c55cbe28d2a561c69d7955ee2df536e19524b3f39e2dfbfbd31e4bff22cf62",
+  "runtimes": {},
+  "limitations": [
+    "Qualifies this host, this local model and one small change only; it says nothing about harder tasks.",
+    "Trusted-local: registry tools bound the worktree, but checks run as ordinary local processes.",
+    "Linux is deferred by the operator."
+  ],
+  "stateDirectory": "C:\\Users\\jiang\\downloads\\xvant\\xvant-agent\\.artifacts\\live-native-1791003034499",
+  "native": {
+    "classification": "live",
+    "scope": "live-native",
+    "provider": "lmstudio:qwen2.5-7b-instruct",
+    "model": "qwen2.5-7b-instruct",
+    "capabilities": {
+      "model": "qwen2.5-7b-instruct",
+      "toolCalls": true,
+      "contextTokens": null
+    },
+    "state": "accepted",
+    "outcome": "accepted",
+    "finalText": "The `clamp` function has been added to `src/math.js`, and the \"tests\" check has passed successfully. No other changes were made to the repository.",
+    "changedFiles": [
+      "src/math.js"
+    ],
+    "modelCalls": 3,
+    "receipts": [
+      {
+        "tool": "file.read",
+        "status": "succeeded"
+      },
+      {
+        "tool": "file.read",
+        "status": "succeeded"
+      },
+      {
+        "tool": "file.read",
+        "status": "succeeded"
+      },
+      {
+        "tool": "file.apply_patch",
+        "status": "succeeded"
+      },
+      {
+        "tool": "test.run",
+        "status": "succeeded"
+      }
+    ],
+    "activeCount": 0,
+    "problems": []
+  },
+  "elapsedMs": 31147,
+  "problems": []
+}
