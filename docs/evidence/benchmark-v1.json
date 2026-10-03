@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-03T18:37:01.747Z",
+  "generatedAt": "2026-10-03T20:58:15.045Z",
   "classification": "live",
   "stateDirectory": "C:\\Users\\jiang\\downloads\\xvant\\xvant-agent\\.artifacts\\benchmark-v1",
   "runtimes": {
@@ -43,6 +43,30 @@
         "model": "haiku",
         "instructions": "criteria"
       }
+    },
+    "claude-haiku-xvant": {
+      "scheduled": 72,
+      "accepted": 55,
+      "failed": 17,
+      "incomplete": 0,
+      "excluded": 0,
+      "missing": 0,
+      "successRate": 0.7638888888888888,
+      "tasksAlwaysAccepted": 13,
+      "medianElapsedMs": 96223,
+      "inputTokens": null,
+      "outputTokens": null,
+      "totalTokens": 580626,
+      "toolFailures": null,
+      "conflicts": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
     }
   },
   "bySplit": {
@@ -50,12 +74,20 @@
       "claude-haiku-criteria": {
         "scheduled": 36,
         "accepted": 35
+      },
+      "claude-haiku-xvant": {
+        "scheduled": 36,
+        "accepted": 30
       }
     },
     "tuning": {
       "claude-haiku-criteria": {
         "scheduled": 36,
         "accepted": 32
+      },
+      "claude-haiku-xvant": {
+        "scheduled": 36,
+        "accepted": 25
       }
     }
   },
@@ -2009,6 +2041,2039 @@
       "humanRework": null,
       "versions": {
         "runtime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-config-validation",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:44:41.419Z",
+      "elapsedMs": 105167,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 7213
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-event-hooks",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:46:26.587Z",
+      "elapsedMs": 99467,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 9144
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-money-format",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:48:06.055Z",
+      "elapsedMs": 110595,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 10776
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-store-limit",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:49:56.651Z",
+      "elapsedMs": 127124,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 7900
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-unique-slug",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:52:03.777Z",
+      "elapsedMs": 97575,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 7040
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "diagnose-off-by-one",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:53:41.352Z",
+      "elapsedMs": 91084,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 6275
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "document-cli-flag",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:55:12.437Z",
+      "elapsedMs": 115867,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 7179
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "evaluate-candidate",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:57:08.304Z",
+      "elapsedMs": 70371,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 4697
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "explore-entrypoints",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:58:18.676Z",
+      "elapsedMs": 81359,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 4983
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-cache-expiry",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:59:40.037Z",
+      "elapsedMs": 74455,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 5200
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-csv-quotes",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:00:54.493Z",
+      "elapsedMs": 127098,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 13928
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-flaky-token-test",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:03:01.592Z",
+      "elapsedMs": 98499,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 7624
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-interval-merge",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T19:04:40.092Z",
+      "elapsedMs": 144515,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 12911
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-pagination",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:07:04.608Z",
+      "elapsedMs": 67725,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 4328
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-retry-attempts",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:08:12.334Z",
+      "elapsedMs": 80659,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 5821
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "handoff-partial-feature",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T19:09:32.993Z",
+      "elapsedMs": 302384,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 30678
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "implement-clamp",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:14:35.378Z",
+      "elapsedMs": 66219,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 3934
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "integrate-two-patches",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:15:41.599Z",
+      "elapsedMs": 178774,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 11747
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "plan-rate-limit",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T19:18:40.374Z",
+      "elapsedMs": 80597,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 5411
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-config-validation",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T19:24:12.218Z",
+      "elapsedMs": 85757,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 5564
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-config-validation",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:25:37.977Z",
+      "elapsedMs": 89295,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 6779
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-event-hooks",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:27:07.273Z",
+      "elapsedMs": 157751,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 11818
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-event-hooks",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T19:29:45.025Z",
+      "elapsedMs": 146211,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 12252
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-money-format",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:32:11.237Z",
+      "elapsedMs": 115069,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 8710
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-money-format",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:34:06.308Z",
+      "elapsedMs": 129952,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 9899
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-store-limit",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:36:16.261Z",
+      "elapsedMs": 113572,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 8917
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-store-limit",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:38:09.834Z",
+      "elapsedMs": 105488,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 8641
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-unique-slug",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:39:55.323Z",
+      "elapsedMs": 76017,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 4526
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-unique-slug",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:41:11.341Z",
+      "elapsedMs": 101713,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 6784
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "diagnose-off-by-one",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:42:53.055Z",
+      "elapsedMs": 168858,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 11027
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "diagnose-off-by-one",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:45:41.914Z",
+      "elapsedMs": 169642,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 9971
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "document-cli-flag",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:48:31.557Z",
+      "elapsedMs": 83275,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 4752
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "document-cli-flag",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:49:54.833Z",
+      "elapsedMs": 73180,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 3727
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "evaluate-candidate",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T19:51:08.014Z",
+      "elapsedMs": 146003,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 11163
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "evaluate-candidate",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T19:53:34.018Z",
+      "elapsedMs": 65558,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 3853
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "explore-entrypoints",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:54:39.577Z",
+      "elapsedMs": 80775,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 4729
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "explore-entrypoints",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:56:00.352Z",
+      "elapsedMs": 73308,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 4685
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-cache-expiry",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "needs_attention: PLAN_INVALID",
+      "startedAt": "2026-10-03T19:57:13.661Z",
+      "elapsedMs": 65074,
+      "checkPassed": null,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 5113
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-cache-expiry",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:58:18.736Z",
+      "elapsedMs": 84763,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 5438
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-csv-quotes",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T19:59:43.500Z",
+      "elapsedMs": 122376,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 11242
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-csv-quotes",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T20:01:45.877Z",
+      "elapsedMs": 168698,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 16445
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-flaky-token-test",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:04:34.576Z",
+      "elapsedMs": 91091,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 6054
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-flaky-token-test",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:06:05.668Z",
+      "elapsedMs": 124210,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 9784
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-interval-merge",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:08:09.879Z",
+      "elapsedMs": 151519,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 11528
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-interval-merge",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T20:10:41.398Z",
+      "elapsedMs": 126025,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 9498
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-pagination",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:12:47.424Z",
+      "elapsedMs": 71944,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 5237
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-pagination",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:13:59.368Z",
+      "elapsedMs": 65339,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 4193
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-retry-attempts",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:15:04.707Z",
+      "elapsedMs": 74911,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 5008
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-retry-attempts",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:16:19.619Z",
+      "elapsedMs": 79766,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 5335
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "handoff-partial-feature",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T20:17:39.385Z",
+      "elapsedMs": 130414,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 10618
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "handoff-partial-feature",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "needs_attention: PLAN_INVALID",
+      "startedAt": "2026-10-03T20:19:49.800Z",
+      "elapsedMs": 67252,
+      "checkPassed": null,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 5820
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "implement-clamp",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:20:57.053Z",
+      "elapsedMs": 64225,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 4102
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "implement-clamp",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:22:01.279Z",
+      "elapsedMs": 61388,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 3439
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "integrate-two-patches",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:23:02.668Z",
+      "elapsedMs": 138022,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 12392
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": true,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "integrate-two-patches",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:25:20.691Z",
+      "elapsedMs": 115695,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 8490
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "plan-rate-limit",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T20:27:16.387Z",
+      "elapsedMs": 292107,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 25520
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "plan-rate-limit",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "needs_attention: PLAN_INVALID",
+      "startedAt": "2026-10-03T20:32:08.495Z",
+      "elapsedMs": 69963,
+      "checkPassed": null,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 5078
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "rename-timeout-option",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:33:18.459Z",
+      "elapsedMs": 87452,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 6955
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "rename-timeout-option",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T20:34:45.912Z",
+      "elapsedMs": 129590,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 13141
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "rename-timeout-option",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:36:55.503Z",
+      "elapsedMs": 94152,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 7812
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "review-unsafe-merge",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:38:29.655Z",
+      "elapsedMs": 131592,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 8192
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "review-unsafe-merge",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:40:41.248Z",
+      "elapsedMs": 82470,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 4670
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "review-unsafe-merge",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:42:03.719Z",
+      "elapsedMs": 60381,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 2949
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "review-user-queries",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:43:04.101Z",
+      "elapsedMs": 73667,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 4710
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "review-user-queries",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:44:17.769Z",
+      "elapsedMs": 82185,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 4593
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "review-user-queries",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T20:45:39.955Z",
+      "elapsedMs": 83003,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 4814
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "test-slugify",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:47:02.959Z",
+      "elapsedMs": 93101,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 6212
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "test-slugify",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:48:36.061Z",
+      "elapsedMs": 96562,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 6266
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "test-slugify",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:50:12.624Z",
+      "elapsedMs": 114286,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 9052
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "write-duration-tests",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:52:06.911Z",
+      "elapsedMs": 175678,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 12677
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "write-duration-tests",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:55:02.590Z",
+      "elapsedMs": 96353,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 6606
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "write-duration-tests",
+      "configuration": "claude-haiku-xvant",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T20:56:38.943Z",
+      "elapsedMs": 96093,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 7057
+      },
+      "toolFailures": null,
+      "conflicts": 0,
+      "recovered": false,
+      "humanRework": null,
+      "versions": {
+        "runtime": "xvant-orchestrated",
+        "workerRuntime": "claude",
         "runtimeVersion": "2.1.288",
         "adapter": "claude-headless-v1",
         "model": "haiku",

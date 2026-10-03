@@ -1,0 +1,585 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90mC:/Users/jiang/Downloads/xvant/xvant-agent[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m apps/controller/src/orchestrator.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 21864[2mms[22m[39m
+   [33m[2m✓[22m[39m plans, runs parallel nodes, integrates, verifies and reviews independently[33m 5290[2mms[22m[39m
+   [33m[2m✓[22m[39m repairs a failed node once and stops a repeated identical failure[33m 3666[2mms[22m[39m
+   [33m[2m✓[22m[39m passes check output to the repair and treats changing output as the same failure[33m 2653[2mms[22m[39m
+   [33m[2m✓[22m[39m never retries an unknown outcome[33m 1879[2mms[22m[39m
+   [33m[2m✓[22m[39m reruns a node that conflicts on the new integration head[33m 3951[2mms[22m[39m
+   [33m[2m✓[22m[39m re-plans once after an invalid plan and fixes a failing combined check[33m 4205[2mms[22m[39m
+ [32m✓[39m packages/evaluation/src/v1.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 25798[2mms[22m[39m
+   [33m[2m✓[22m[39m the v1 suite is frozen, has the planned shape, and every check separates its solution from no change[33m 24896[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m apps/controller/src/live-roster.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 16976[2mms[22m[39m
+   [33m[2m✓[22m[39m runs the 2/3/5 roster with distinct sessions, resume and interruption[33m 16972[2mms[22m[39m
+ [32m✓[39m packages/evaluation/src/evaluation.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 19634[2mms[22m[39m
+   [32m✓[39m campaign [2m(6)[22m
+     [33m[2m✓[22m[39m lets only the hidden host check decide acceptance[33m 2660[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps quota-interrupted attempts incomplete and does not retry them[33m 617[2mms[22m[39m
+     [33m[2m✓[22m[39m resumes a stopped campaign without rerunning recorded attempts[33m 1474[2mms[22m[39m
+     [33m[2m✓[22m[39m records failures, give-ups, errors and declared exclusions[33m 1734[2mms[22m[39m
+     [33m[2m✓[22m[39m marks an attempt that outlived its timeout incomplete, even if it passed[33m 761[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects records from a different freeze[33m 702[2mms[22m[39m
+   [32m✓[39m report and promotion [2m(3)[22m
+     [33m[2m✓[22m[39m does not invent usage and labels small samples[33m 3303[2mms[22m[39m
+     [33m[2m✓[22m[39m blocks a candidate that accepts fewer held-out tasks, whatever else improves[33m 3199[2mms[22m[39m
+     [33m[2m✓[22m[39m promotes only with a measured benefit and passing safety fixtures[33m 5115[2mms[22m[39m
+ [32m✓[39m apps/controller/src/native-offline.test.ts [2m([22m[2m98 tests[22m[2m)[22m[33m 89191[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: performs setup before fixture dispatch[33m 575[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: confirms interrupt without verifying or accepting[33m 316[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: confirms interrupt-result-first without verifying or accepting[33m 328[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after setup-error[33m 1014[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after setup-mismatch[33m 994[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after setup-timeout[33m 2854[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-error[33m 1053[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-mismatch[33m 1118[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-timeout[33m 2800[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-partial[33m 321[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-ack-only[33m 2789[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: does not dispatch after stop at the setup boundary[33m 1088[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: journals success through shutdown and review without acceptance[33m 479[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: journals permission through shutdown and review without acceptance[33m 470[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: retains reservations after wrong-session[33m 1102[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: retains reservations after malformed[33m 1071[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: retains reservations after partial[33m 342[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: retains reservations after error[33m 328[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: retains reservations after timeout[33m 2749[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed at provider.receive.before_commit[33m 992[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed at native.after_shutdown[33m 380[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: stops an in-flight peer without verification[33m 866[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: refuses result persistence after controller takeover[33m 327[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: preserves verified evidence when stopped before review[33m 432[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: performs setup before fixture dispatch[33m 453[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: confirms interrupt without verifying or accepting[33m 336[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: confirms interrupt-result-first without verifying or accepting[33m 310[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after setup-error[33m 1122[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after setup-mismatch[33m 1036[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after setup-timeout[33m 2825[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-error[33m 1000[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-mismatch[33m 1054[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-timeout[33m 2837[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-partial[33m 351[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-ack-only[33m 2931[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: does not dispatch after stop at the setup boundary[33m 1039[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: journals success through shutdown and review without acceptance[33m 471[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: journals permission through shutdown and review without acceptance[33m 561[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after wrong-session[33m 1030[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after malformed[33m 1185[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after partial[33m 344[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after error[33m 1081[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after timeout[33m 2787[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed at provider.send.before_commit[33m 852[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed at provider.receive.before_commit[33m 1125[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed at native.after_shutdown[33m 326[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: stops an in-flight peer without verification[33m 835[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: refuses result persistence after controller takeover[33m 313[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: preserves verified evidence when stopped before review[33m 503[2mms[22m[39m
+   [33m[2m✓[22m[39m does not prepare review when registered verification fails[33m 434[2mms[22m[39m
+   [33m[2m✓[22m[39m creates and binds an OpenCode session before success[33m 465[2mms[22m[39m
+   [33m[2m✓[22m[39m creates and binds an OpenCode session before permission[33m 460[2mms[22m[39m
+   [33m[2m✓[22m[39m creates and binds an OpenCode session before interrupt[33m 328[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation setup-error[33m 1064[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation setup-mismatch[33m 1076[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation setup-timeout[33m 2843[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation create-malformed[33m 1115[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation create-reused[33m 1096[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation create-permission[33m 1021[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation create-partial[33m 2812[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps the provisional reservation when a returned session belongs to another connection[33m 1099[2mms[22m[39m
+   [33m[2m✓[22m[39m retains the newly bound session when stopped before dispatch[33m 1025[2mms[22m[39m
+   [33m[2m✓[22m[39m launches a reserved Claude creation UUID through success[33m 480[2mms[22m[39m
+   [33m[2m✓[22m[39m launches a reserved Claude creation UUID through permission[33m 487[2mms[22m[39m
+   [33m[2m✓[22m[39m launches a reserved Claude creation UUID through interrupt[33m 341[2mms[22m[39m
+   [33m[2m✓[22m[39m persists explicit Claude resume options instead of an implicit latest session[33m 470[2mms[22m[39m
+   [33m[2m✓[22m[39m retains Claude UUID after launch-error without verification[33m 303[2mms[22m[39m
+   [33m[2m✓[22m[39m retains Claude UUID after launch-timeout without verification[33m 2859[2mms[22m[39m
+   [33m[2m✓[22m[39m retains Claude UUID after wrong-session without verification[33m 1090[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: never interrupts a holding turn without host admission[33m 2755[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: makes repeated interrupt admission idempotent[33m 318[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: rejects interrupt before dispatch and after a terminal result[33m 465[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: leaves admission retryable after a failed commit[33m 379[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fences interrupt admission after controller takeover[33m 1071[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: never interrupts a holding turn without host admission[33m 2842[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: makes repeated interrupt admission idempotent[33m 323[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: rejects interrupt before dispatch and after a terminal result[33m 476[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: leaves admission retryable after a failed commit[33m 336[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fences interrupt admission after controller takeover[33m 1071[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects Claude interrupt admission without advertised receipt capabilities[33m 1054[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: records auth-error and blocks the account group until cleared[33m 798[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: records quota-error and blocks the account group until cleared[33m 794[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: keeps model and worker failures attempt-scoped[33m 308[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: never records an abort error after an admitted interrupt[33m 313[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: records auth-error and blocks the account group until cleared[33m 788[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: records quota-error and blocks the account group until cleared[33m 808[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: classifies an error result without leaking message text[33m 844[2mms[22m[39m
+ [32m✓[39m apps/controller/src/app.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 13114[2mms[22m[39m
+   [33m[2m✓[22m[39m serves the page publicly with a strict policy and guards every API call[33m 317[2mms[22m[39m
+   [33m[2m✓[22m[39m runs a task end to end, once per submission, and accepts only what was reviewed[33m 6114[2mms[22m[39m
+   [33m[2m✓[22m[39m streams run events and resumes from the last event ID[33m 5602[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects a folder that is not a Git repository and stops running work[33m 1079[2mms[22m[39m
+ [32m✓[39m apps/controller/src/codex-offline.test.ts [2m([22m[2m35 tests[22m[2m)[22m[33m 24923[2mms[22m[39m
+   [33m[2m✓[22m[39m orchestrates success through owned shutdown, verification and review without acceptance[33m 479[2mms[22m[39m
+   [33m[2m✓[22m[39m orchestrates approval through owned shutdown, verification and review without acceptance[33m 319[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations after malformed without verifying or resending[33m 945[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations after timeout without verifying or resending[33m 2780[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations after late-malformed without verifying or resending[33m 908[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch a turn when stopped immediately after session setup[33m 870[2mms[22m[39m
+   [33m[2m✓[22m[39m stops an in-flight peer without verification or replay[33m 790[2mms[22m[39m
+   [33m[2m✓[22m[39m performs explicit create before turn dispatch and binds evidence to the returned session[33m 352[2mms[22m[39m
+   [33m[2m✓[22m[39m never starts a turn or retries after thread-rpc-error[33m 840[2mms[22m[39m
+   [33m[2m✓[22m[39m never starts a turn or retries after thread-mismatch[33m 847[2mms[22m[39m
+   [33m[2m✓[22m[39m never starts a turn or retries after thread-malformed[33m 892[2mms[22m[39m
+   [33m[2m✓[22m[39m never starts a turn or retries after thread-timeout[33m 2909[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps native-error away from verification and acceptance[33m 1019[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps native-retry away from verification and acceptance[33m 867[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps turn-rpc-error away from verification and acceptance[33m 908[2mms[22m[39m
+   [33m[2m✓[22m[39m never sends turn/interrupt for a holding turn without admission[33m 2880[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps an admitted interrupt unknown after interrupt-error[33m 1030[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps an admitted interrupt unknown after interrupt-ignored[33m 1007[2mms[22m[39m
+   [33m[2m✓[22m[39m fences Codex interrupt admission after controller takeover[33m 937[2mms[22m[39m
+   [33m[2m✓[22m[39m classifies Codex native-error and blocks the account group[33m 885[2mms[22m[39m
+ [32m✓[39m tests/faults/native-controller.test.ts [2m([22m[2m26 tests[22m[2m)[22m[33m 21043[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at native.after_reserve without replay or acceptance[33m 511[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at native.after_setup without replay or acceptance[33m 597[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at provider.interrupt.before_commit without replay or acceptance[33m 613[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at native.after_interrupt_request without replay or acceptance[33m 748[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at native.after_interrupt without replay or acceptance[33m 756[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at provider.send.before_commit without replay or acceptance[33m 422[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at provider.receive.before_commit without replay or acceptance[33m 931[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at native.after_shutdown without replay or acceptance[33m 850[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at provider.result.before_commit without replay or acceptance[33m 756[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at native.before_review without replay or acceptance[33m 925[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at native.prepare.before_commit without replay or acceptance[33m 908[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at native.after_reserve without replay or acceptance[33m 421[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at native.after_setup without replay or acceptance[33m 936[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at provider.interrupt.before_commit without replay or acceptance[33m 1561[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at native.after_interrupt_request without replay or acceptance[33m 1002[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at native.after_interrupt without replay or acceptance[33m 950[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at provider.send.before_commit without replay or acceptance[33m 488[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at provider.receive.before_commit without replay or acceptance[33m 754[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at native.after_shutdown without replay or acceptance[33m 851[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at provider.result.before_commit without replay or acceptance[33m 824[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at native.before_review without replay or acceptance[33m 987[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at native.prepare.before_commit without replay or acceptance[33m 977[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: keeps a committed quota block across death at provider.failure.before_commit[33m 799[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: keeps a committed quota block across death at provider.result.before_commit[33m 912[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: keeps a committed quota block across death at provider.failure.before_commit[33m 795[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: keeps a committed quota block across death at provider.result.before_commit[33m 762[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m tests/e2e/ui.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 13687[2mms[22m[39m
+   [33m[2m✓[22m[39m completes a run keyboard-first, from sign-in to acceptance[33m 9277[2mms[22m[39m
+   [33m[2m✓[22m[39m shows worker output as text and stops running work from the page[33m 2843[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses to run without the one-time capability[33m 612[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m apps/controller/src/native-turn-runner.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 11311[2mms[22m[39m
+   [33m[2m✓[22m[39m runs a node through the native loop, host-verifies and accepts it as native-local[33m 1539[2mms[22m[39m
+   [33m[2m✓[22m[39m journals every tool receipt so they survive a restart[33m 1313[2mms[22m[39m
+   [33m[2m✓[22m[39m enforces node write ownership through the tools, not the prompt[33m 1277[2mms[22m[39m
+   [33m[2m✓[22m[39m reports failing checks with their output for the repair[33m 1290[2mms[22m[39m
+   [33m[2m✓[22m[39m admits a live dispatch only as an explicit model over loopback HTTP[33m 1258[2mms[22m[39m
+   [33m[2m✓[22m[39m runs native-local nodes inside an orchestrated root through the live runner[33m 2258[2mms[22m[39m
+   [33m[2m✓[22m[39m accepts a turn in a store that already holds more than one page of events[33m 1529[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m tests/native-process.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 19042[2mms[22m[39m
+   [33m[2m✓[22m[39m claude native offline process conformance[33m 9023[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode native offline process conformance[33m 10015[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m apps/controller/src/turn-runner.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 10573[2mms[22m[39m
+   [33m[2m✓[22m[39m orchestrates nodes on all three runtimes through their live controllers[33m 7507[2mms[22m[39m
+   [33m[2m✓[22m[39m names why a node check failed so the repair prompt can fix it[33m 2804[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.env', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'config/deploy.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/fetch.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/fetch.mjs', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m apps/controller/src/live-gates.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 10165[2mms[22m[39m
+   [33m[2m✓[22m[39m delivers a value each runtime can only obtain through the MCP bridge[33m 5491[2mms[22m[39m
+   [33m[2m✓[22m[39m fails a runtime that never calls the bridge[33m 1794[2mms[22m[39m
+   [33m[2m✓[22m[39m continues a task on another runtime from the sealed packet alone[33m 2877[2mms[22m[39m
+ [32m✓[39m packages/supervisor/src/index.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 12757[2mms[22m[39m
+   [32m✓[39m owned process supervision [2m(8)[22m
+     [33m[2m✓[22m[39m hard deadline kills a worker that does not cooperate[33m 934[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects forged identity and accepts owned cancellation[33m 794[2mms[22m[39m
+     [33m[2m✓[22m[39m abort interrupts active execution[33m 748[2mms[22m[39m
+   [33m[2m✓[22m[39m terminates the owned ordinary descendant tree on deadline[33m 1310[2mms[22m[39m
+   [33m[2m✓[22m[39m global stop interrupts every owned process and rejects stale generations[33m 948[2mms[22m[39m
+   [33m[2m✓[22m[39m retains ownership after uncertain shutdown so cancellation can be retried[33m 7460[2mms[22m[39m
+ [32m✓[39m apps/controller/src/opencode-live.test.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 10923[2mms[22m[39m
+   [33m[2m✓[22m[39m journals before launch, verifies output, and accepts live evidence explicitly after restart[33m 569[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations without acceptance on wrong-session[33m 348[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations without acceptance on nonzero[33m 343[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations without acceptance on timeout[33m 2922[2mms[22m[39m
+   [33m[2m✓[22m[39m blocks account on v2 auth failure without persisting raw error text[33m 406[2mms[22m[39m
+   [33m[2m✓[22m[39m persists interrupt admission before process cancellation and retains uncertainty[33m 968[2mms[22m[39m
+   [33m[2m✓[22m[39m retains durable work on injected failure at live.after_shutdown[33m 364[2mms[22m[39m
+   [33m[2m✓[22m[39m snapshots caller inputs before asynchronous inventory[33m 534[2mms[22m[39m
+   [33m[2m✓[22m[39m persists an auth block when valid error is followed by malformed output[33m 341[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses cross-project resume of an accepted native session[33m 562[2mms[22m[39m
+   [33m[2m✓[22m[39m lets a workspace-write run edit through its own tools, without a host result file[33m 526[2mms[22m[39m
+   [33m[2m✓[22m[39m stops a run that reports any billed step[33m 323[2mms[22m[39m
+   [33m[2m✓[22m[39m cancels a workspace-write run by stopping the process that owns its turn[33m 999[2mms[22m[39m
+ [32m✓[39m apps/controller/src/opencode-http.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 12949[2mms[22m[39m
+   [33m[2m✓[22m[39m runs success over an owned authenticated endpoint through review[33m 497[2mms[22m[39m
+   [33m[2m✓[22m[39m runs permission over an owned authenticated endpoint through review[33m 442[2mms[22m[39m
+   [33m[2m✓[22m[39m never journals or persists the endpoint secret[33m 423[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses no-auth (an unauthenticated server) before any session traffic[33m 887[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses wrong-version (an unpinned server version) before any session traffic[33m 971[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses announce-remote (a non-loopback announcement) before any session traffic[33m 1004[2mms[22m[39m
+   [33m[2m✓[22m[39m creates and binds a session over HTTP before prompting[33m 387[2mms[22m[39m
+   [33m[2m✓[22m[39m never prompts after setup-mismatch[33m 995[2mms[22m[39m
+   [33m[2m✓[22m[39m never prompts after create-permission[33m 889[2mms[22m[39m
+   [33m[2m✓[22m[39m times out a holding turn without admission and never aborts[33m 3867[2mms[22m[39m
+   [33m[2m✓[22m[39m classifies error from the event stream[33m 1014[2mms[22m[39m
+   [33m[2m✓[22m[39m fences a stale owner after endpoint binding[33m 934[2mms[22m[39m
+ [32m✓[39m packages/evaluation/src/smoke.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 10409[2mms[22m[39m
+   [33m[2m✓[22m[39m the committed smoke suite is frozen and separates a solution from no change[33m 10014[2mms[22m[39m
+ [32m✓[39m apps/controller/src/benchmark-live.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 10267[2mms[22m[39m
+   [33m[2m✓[22m[39m runs one runtime turn per attempt and lets the hidden check accept it[33m 1837[2mms[22m[39m
+   [33m[2m✓[22m[39m records a rate-limited turn as incomplete, not failed[33m 610[2mms[22m[39m
+   [33m[2m✓[22m[39m runs the native loop as a configuration with unknown usage[33m 1524[2mms[22m[39m
+   [33m[2m✓[22m[39m runs XVANT orchestration and hands its combined result to the hidden check[33m 6294[2mms[22m[39m
+warning: in the working copy of 'a.txt', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m apps/controller/src/codex-live.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 8354[2mms[22m[39m
+   [33m[2m✓[22m[39m edits its worktree, binds identities and prepares patch evidence for review[33m 2029[2mms[22m[39m
+   [33m[2m✓[22m[39m stops before any thread when the session is not on the subscription login[33m 1539[2mms[22m[39m
+   [33m[2m✓[22m[39m records a failed turn without verification[33m 712[2mms[22m[39m
+   [33m[2m✓[22m[39m interrupts a running turn through host admission[33m 724[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects write access without acknowledged native bypass[33m 549[2mms[22m[39m
+   [33m[2m✓[22m[39m times out as unknown without replaying the turn[33m 2799[2mms[22m[39m
+warning: in the working copy of 'a.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'a.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'a.txt', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m packages/storage/src/integration.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 6340[2mms[22m[39m
+   [33m[2m✓[22m[39m applies independent patches one at a time and merges non-overlapping edits[33m 2283[2mms[22m[39m
+   [33m[2m✓[22m[39m reports a conflict and leaves the branch where it was[33m 2785[2mms[22m[39m
+   [33m[2m✓[22m[39m treats an empty patch as a no-op and reopens after a restart[33m 964[2mms[22m[39m
+   [33m[2m✓[22m[39m persists work graphs with optimistic versions and an event history[33m 305[2mms[22m[39m
+ [32m✓[39m apps/controller/src/claude-live.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 6553[2mms[22m[39m
+   [33m[2m✓[22m[39m builds explicit-session arguments without user MCP servers or network tools[33m 524[2mms[22m[39m
+   [33m[2m✓[22m[39m removes API-key and nested-session variables from the child[33m 481[2mms[22m[39m
+   [33m[2m✓[22m[39m edits its worktree and prepares verified evidence on the reserved session[33m 1841[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses a session that reports an API key[33m 707[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses a stream for another session[33m 743[2mms[22m[39m
+   [33m[2m✓[22m[39m records a classified account failure[33m 764[2mms[22m[39m
+   [33m[2m✓[22m[39m cancels a running turn by stopping its owning process[33m 1490[2mms[22m[39m
+ [32m✓[39m packages/storage/src/git-workspace.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 5850[2mms[22m[39m
+   [33m[2m✓[22m[39m creates an isolated worktree at a recorded base commit[33m 681[2mms[22m[39m
+   [33m[2m✓[22m[39m captures working-tree changes as a patch against the base[33m 1934[2mms[22m[39m
+   [33m[2m✓[22m[39m is independent of commits the worker made[33m 1583[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects a directory that is not the worktree root[33m 648[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects a tampered patch during verification[33m 1002[2mms[22m[39m
+ [32m✓[39m tests/faults/opencode-live.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 9150[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at live.after_reserve without replay or acceptance[33m 688[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at provider.send.before_commit without replay or acceptance[33m 570[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at live.after_session without replay or acceptance[33m 633[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at provider.session.before_commit without replay or acceptance[33m 650[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at live.after_intent without replay or acceptance[33m 664[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at live.after_launch without replay or acceptance[33m 766[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at provider.receive.before_commit without replay or acceptance[33m 671[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at live.after_shutdown without replay or acceptance[33m 799[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at provider.result.before_commit without replay or acceptance[33m 835[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at provider.verify.before_commit without replay or acceptance[33m 882[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at provider.verified.before_commit without replay or acceptance[33m 1006[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at native.prepare.before_commit without replay or acceptance[33m 980[2mms[22m[39m
+ [32m✓[39m apps/controller/src/native-loop-fixture.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 6327[2mms[22m[39m
+   [33m[2m✓[22m[39m holds every G08 boundary against a hostile local model and runs every skill fixture[33m 6323[2mms[22m[39m
+ [32m✓[39m packages/storage/src/providers.test.ts [2m([22m[2m59 tests[22m[2m)[22m[33m 9205[2mms[22m[39m
+   [33m[2m✓[22m[39m bounds journal growth and poisons the connection at the limit[33m 6858[2mms[22m[39m
+ [32m✓[39m tests/faults/codex-controller.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 6116[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at codex.after_reserve without replay or acceptance[33m 464[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at codex.after_shutdown without replay or acceptance[33m 684[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at provider.result.before_commit without replay or acceptance[33m 630[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at codex.before_review without replay or acceptance[33m 737[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at native.prepare.before_commit without replay or acceptance[33m 799[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at provider.session.before_commit without replay or acceptance[33m 621[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at codex.after_session without replay or acceptance[33m 671[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at provider.interrupt.before_commit without replay or acceptance[33m 670[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at codex.after_interrupt_request without replay or acceptance[33m 835[2mms[22m[39m
+ [32m✓[39m tests/faults/claude-launch.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 3202[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude create crash at native.after_reserve without launch replay[33m 395[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude create crash at provider.send.before_commit without launch replay[33m 326[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude create crash at native.before_launch without launch replay[33m 364[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude create crash at native.after_launch without launch replay[33m 427[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude resume crash at native.after_reserve without launch replay[33m 441[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude resume crash at provider.send.before_commit without launch replay[33m 438[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude resume crash at native.before_launch without launch replay[33m 378[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude resume crash at native.after_launch without launch replay[33m 430[2mms[22m[39m
+ [32m✓[39m apps/controller/src/durable.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 6086[2mms[22m[39m
+   [33m[2m✓[22m[39m runs isolated simulation and trusted checks then accepts after restart[33m 515[2mms[22m[39m
+   [33m[2m✓[22m[39m persists normalized quota cause[33m 307[2mms[22m[39m
+   [33m[2m✓[22m[39m persists normalized failure cause[33m 321[2mms[22m[39m
+   [33m[2m✓[22m[39m persists normalized malformed cause[33m 311[2mms[22m[39m
+   [33m[2m✓[22m[39m persists normalized unknown cause[33m 308[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch again when an idempotent request is repeated[33m 502[2mms[22m[39m
+   [33m[2m✓[22m[39m records verifier failure without accepting worker claims[33m 374[2mms[22m[39m
+   [33m[2m✓[22m[39m kills a hanging verifier and persists attention[33m 2044[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers incomplete verification after restart[33m 419[2mms[22m[39m
+   [33m[2m✓[22m[39m renews a short lease while the controller is idle[33m 641[2mms[22m[39m
+ [32m✓[39m tests/faults/provider-crash.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 3539[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at provider.reserve.before_commit without replay[33m 464[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at provider.send.before_commit without replay[33m 469[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at before_write without replay[33m 421[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at after_write without replay[33m 432[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at provider.receive.before_commit without replay[33m 435[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at after_ack without replay[33m 426[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at provider.result.before_commit without replay[33m 447[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at after_result without replay[33m 442[2mms[22m[39m
+ [32m✓[39m tests/codex-process.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 5334[2mms[22m[39m
+   [32m✓[39m Codex offline stdio process [2m(6)[22m
+     [33m[2m✓[22m[39m runs success through real Node pipes with no provider[33m 662[2mms[22m[39m
+     [33m[2m✓[22m[39m runs approval through real Node pipes with no provider[33m 678[2mms[22m[39m
+     [33m[2m✓[22m[39m runs interrupt through real Node pipes with no provider[33m 640[2mms[22m[39m
+     [33m[2m✓[22m[39m retains uncertainty after disconnect and does not resend[33m 634[2mms[22m[39m
+     [33m[2m✓[22m[39m retains uncertainty after malformed and does not resend[33m 593[2mms[22m[39m
+     [33m[2m✓[22m[39m retains uncertainty after timeout and does not resend[33m 2122[2mms[22m[39m
+ [32m✓[39m apps/controller/src/native-verifier.test.ts [2m([22m[2m23 tests[22m[2m)[22m[33m 3214[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations after verifier timeout[33m 794[2mms[22m[39m
+   [33m[2m✓[22m[39m does not publish late evidence after ownership changes during a check[33m 569[2mms[22m[39m
+   [33m[2m✓[22m[39m restores verified receipts together with every referenced artifact[33m 344[2mms[22m[39m
+ [32m✓[39m tests/faults/native-verification.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 2317[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves native verification across process boundary provider.verify.before_commit[33m 463[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves native verification across process boundary provider.verified.before_commit[33m 616[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves native verification across process boundary after_verified[33m 650[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves native verification across process boundary success[33m 584[2mms[22m[39m
+ [32m✓[39m packages/tools/src/repository.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 3783[2mms[22m[39m
+   [32m✓[39m repo.search [2m(2)[22m
+     [33m[2m✓[22m[39m returns ranked files with matching lines[33m 376[2mms[22m[39m
+     [33m[2m✓[22m[39m bounds results[33m 506[2mms[22m[39m
+   [32m✓[39m git.inspect [2m(4)[22m
+     [33m[2m✓[22m[39m reports status without secret paths[33m 704[2mms[22m[39m
+     [33m[2m✓[22m[39m returns a diff that drops secret files and credential-bearing hunks[33m 501[2mms[22m[39m
+     [33m[2m✓[22m[39m reports head, branch and distance from the task base revision[33m 705[2mms[22m[39m
+     [33m[2m✓[22m[39m never runs repository-configured diff drivers or fsmonitor hooks[33m 988[2mms[22m[39m
+ [32m✓[39m tests/faults/opencode-http.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 4313[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers HTTP controller death at opencode.before_launch without replay, secrets or orphans[33m 700[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers HTTP controller death at provider.endpoint.before_commit without replay, secrets or orphans[33m 733[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers HTTP controller death at opencode.after_endpoint without replay, secrets or orphans[33m 723[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers HTTP controller death at opencode.after_setup without replay, secrets or orphans[33m 766[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers HTTP controller death at opencode.after_interrupt_request without replay, secrets or orphans[33m 702[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers HTTP controller death at provider.result.before_commit without replay, secrets or orphans[33m 682[2mms[22m[39m
+ [32m✓[39m packages/tools/src/process.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 1824[2mms[22m[39m
+   [32m✓[39m command.run [2m(10)[22m
+     [33m[2m✓[22m[39m stops at its deadline and redacts credential-shaped output[33m 1203[2mms[22m[39m
+ [32m✓[39m packages/skills/src/bundled.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 3176[2mms[22m[39m
+   [32m✓[39m bundled skills [2m(13)[22m
+     [33m[2m✓[22m[39m fixture diagnose-off-by-one fails untouched and passes with its reference solution[33m 437[2mms[22m[39m
+     [33m[2m✓[22m[39m fixture implement-clamp fails untouched and passes with its reference solution[33m 460[2mms[22m[39m
+     [33m[2m✓[22m[39m fixture integrate-two-patches fails untouched and passes with its reference solution[33m 418[2mms[22m[39m
+     [33m[2m✓[22m[39m fixture test-slugify fails untouched and passes with its reference solution[33m 587[2mms[22m[39m
+ [32m✓[39m packages/tools/src/browser.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 2877[2mms[22m[39m
+   [32m✓[39m browser.inspect [2m(8)[22m
+     [33m[2m✓[22m[39m captures page evidence in an isolated, deleted profile[33m 1261[2mms[22m[39m
+     [33m[2m✓[22m[39m stops the browser and removes the profile when the page never loads[33m 1495[2mms[22m[39m
+ [32m✓[39m tests/faults/native-acceptance.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 2095[2mms[22m[39m
+   [33m[2m✓[22m[39m atomically survives native acceptance crash at native.prepare.before_commit[33m 706[2mms[22m[39m
+   [33m[2m✓[22m[39m atomically survives native acceptance crash at native.accept.before_commit[33m 704[2mms[22m[39m
+   [33m[2m✓[22m[39m atomically survives native acceptance crash at after_accepted[33m 682[2mms[22m[39m
+ [32m✓[39m apps/controller/src/live-native.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 3206[2mms[22m[39m
+   [33m[2m✓[22m[39m accepts a change the model made through registry tools[33m 1733[2mms[22m[39m
+   [33m[2m✓[22m[39m reports a model that claims success without making the change[33m 1467[2mms[22m[39m
+ [32m✓[39m apps/controller/src/offline-roster.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 2112[2mms[22m[39m
+   [33m[2m✓[22m[39m routes ten concurrent named workers to their own sessions and outcomes[33m 2108[2mms[22m[39m
+ [32m✓[39m apps/controller/src/handoff-fixture.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 2525[2mms[22m[39m
+   [32m✓[39m offline handoff fixture [2m(3)[22m
+     [33m[2m✓[22m[39m lets a second worker finish the task from the packet alone[33m 935[2mms[22m[39m
+     [33m[2m✓[22m[39m fails when the handoff omits the continuation value[33m 763[2mms[22m[39m
+     [33m[2m✓[22m[39m makes the recipient refuse a tampered packet[33m 822[2mms[22m[39m
+ [32m✓[39m tests/faults/crash.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 2912[2mms[22m[39m
+   [33m[2m✓[22m[39m survives process death at create.before_commit without replay[33m 427[2mms[22m[39m
+   [33m[2m✓[22m[39m survives process death at dispatch.before_commit without replay[33m 426[2mms[22m[39m
+   [33m[2m✓[22m[39m survives process death at after_dispatch without replay[33m 410[2mms[22m[39m
+   [33m[2m✓[22m[39m survives process death at send.before_commit without replay[33m 407[2mms[22m[39m
+   [33m[2m✓[22m[39m survives process death at after_send without replay[33m 391[2mms[22m[39m
+   [33m[2m✓[22m[39m survives process death at after_ack without replay[33m 422[2mms[22m[39m
+   [33m[2m✓[22m[39m survives process death at after_result without replay[33m 424[2mms[22m[39m
+ [32m✓[39m packages/storage/src/artifacts.test.ts [2m([22m[2m20 tests[22m[2m)[22m[33m 1406[2mms[22m[39m
+ [32m✓[39m tests/probe.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 1467[2mms[22m[39m
+   [32m✓[39m provider probe boundary [2m(12)[22m
+     [33m[2m✓[22m[39m CLI rejects unsafe or malformed flags: [][33m 327[2mms[22m[39m
+ [32m✓[39m apps/controller/src/native-review.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 1842[2mms[22m[39m
+ [32m✓[39m packages/context/src/retrieval.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 1209[2mms[22m[39m
+ [32m✓[39m packages/supervisor/src/interactive.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1632[2mms[22m[39m
+   [33m[2m✓[22m[39m bounds streamed output and stops callback failures[33m 1213[2mms[22m[39m
+ [32m✓[39m tests/faults/native-session.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 3191[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers OpenCode creation death at native.after_reserve without dispatch or recreation[33m 509[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers OpenCode creation death at provider.session.before_commit without dispatch or recreation[33m 874[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers OpenCode creation death at native.after_session without dispatch or recreation[33m 959[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers OpenCode creation death at native.after_setup without dispatch or recreation[33m 845[2mms[22m[39m
+ [32m✓[39m packages/storage/src/store.test.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 864[2mms[22m[39m
+ [32m✓[39m apps/controller/src/http/server.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 878[2mms[22m[39m
+   [33m[2m✓[22m[39m loads in the pinned Node strip-only runtime[33m 473[2mms[22m[39m
+ [32m✓[39m apps/controller/src/service.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 687[2mms[22m[39m
+   [33m[2m✓[22m[39m creates, queues, executes and accepts through authenticated HTTP[33m 633[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/opencode/endpoint.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 630[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps a quiet event stream open past the request timeout[33m 322[2mms[22m[39m
+ [32m✓[39m packages/tools/src/mcp.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 682[2mms[22m[39m
+ [32m✓[39m apps/controller/src/tools-fixture.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 546[2mms[22m[39m
+   [33m[2m✓[22m[39m holds every G05 boundary against a hostile worker behind the MCP bridge[33m 544[2mms[22m[39m
+ [32m✓[39m packages/storage/src/memory.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 516[2mms[22m[39m
+ [32m✓[39m packages/native-agent/src/local-endpoint.test.ts [2m([22m[2m20 tests[22m[2m)[22m[33m 473[2mms[22m[39m
+ [32m✓[39m packages/tools/src/controller.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 258[2mms[22m[39m
+ [32m✓[39m packages/storage/src/workspace.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 155[2mms[22m[39m
+ [32m✓[39m packages/tools/src/files.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 156[2mms[22m[39m
+ [32m✓[39m packages/skills/src/catalog.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 203[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/codex/transport.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 198[2mms[22m[39m
+ [32m✓[39m packages/native-agent/src/loop.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 142[2mms[22m[39m
+ [32m✓[39m tests/evidence-bundle.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 101[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/providers/conformance.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 137[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/live/discover.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 144[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/codex/thread.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 136[2mms[22m[39m
+ [32m✓[39m packages/core/src/graph.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 73[2mms[22m[39m
+ [32m✓[39m packages/context/src/packet.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 116[2mms[22m[39m
+ [32m✓[39m packages/tools/src/registry.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 101[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/codex/lifecycle.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 98[2mms[22m[39m
+ [32m✓[39m packages/context/src/transfer.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/opencode/cli-stream.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 81[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/simulated/simulated.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/providers/native-stream.test.ts [2m([22m[2m34 tests[22m[2m)[22m[32m 67[2mms[22m[39m
+ [32m✓[39m apps/controller/src/controller.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m packages/core/src/scheduler.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+ [32m✓[39m packages/skills/src/hooks.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/codex/profile.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m packages/core/src/task.test.ts [2m([22m[2m26 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+ [32m✓[39m packages/evaluation/src/ledger.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m packages/skills/src/compatibility.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m packages/context/src/handoff.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/providers/protocol.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/providers/native-lifecycle.test.ts [2m([22m[2m34 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/live/live-streams.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m packages/context/src/inspect.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/providers/failures.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m packages/core/src/native-acceptance.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/providers/claude-launch.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m packages/context/src/render.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m packages/memory/src/relevance.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m packages/contracts/src/contracts.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m packages/contracts/src/live.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/audit-policy.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/release-policy.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m packages/policy/src/runtimes.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/gate.test.ts [2m([22m[2m18 tests[22m[2m)[22m[33m 3538[2mms[22m[39m
+   [32m✓[39m bounded gate stage [2m(2)[22m
+     [33m[2m✓[22m[39m fails fast on timeout and stops descendants holding the output[33m 3372[2mms[22m[39m
+ [32m✓[39m packages/policy/src/index.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m98 passed[39m[22m[90m (98)[39m
+[2m      Tests [22m [1m[32m1169 passed[39m[22m[90m (1169)[39m
+[2m   Start at [22m 16:59:42
+[2m   Duration [22m 265.31s[2m (tests 96%, import 3%, transform 1%)[22m
+
+JSON report written to C:/Users/jiang/Downloads/xvant/xvant-agent/.artifacts/tests.json
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+[32;1mAll files         [0m | [32;1m  94.52[0m | [32;1m   90.09[0m | [32;1m  97.35[0m | [32;1m  95.79[0m | [31;1m                 [0m 
+[32;1m ...controller/src[0m | [32;1m   92.9[0m | [32;1m    90.6[0m | [32;1m  96.96[0m | [32;1m   94.6[0m | [31;1m                 [0m 
+[32;1m  codex-offline.ts[0m | [32;1m   93.5[0m | [32;1m      90[0m | [32;1m  94.73[0m | [32;1m  94.92[0m | [31;1m...19,133-136,309[0m 
+[32;1m  controller.ts   [0m | [32;1m  94.82[0m | [32;1m   90.47[0m | [32;1m    100[0m | [32;1m  94.59[0m | [31;1m...45,208,250,266[0m 
+[32;1m  durable.ts      [0m | [32;1m  82.66[0m | [33;1m   77.55[0m | [32;1m    100[0m | [32;1m  83.33[0m | [31;1m...19,133,161-169[0m 
+[32;1m  ...ve-offline.ts[0m | [32;1m   95.4[0m | [32;1m   96.09[0m | [32;1m  95.65[0m | [32;1m  96.22[0m | [31;1m...37,150-153,359[0m 
+[32;1m  ...e-verifier.ts[0m | [32;1m  96.87[0m | [32;1m   96.42[0m | [32;1m    100[0m | [32;1m  98.33[0m | [31;1m59               [0m 
+[32;1m  opencode-live.ts[0m | [32;1m  90.85[0m | [32;1m   89.09[0m | [32;1m  93.75[0m | [32;1m  95.56[0m | [31;1m...47,154,206-209[0m 
+[32;1m  service.ts      [0m | [32;1m  94.44[0m | [32;1m   83.33[0m | [32;1m    100[0m | [32;1m  97.05[0m | [31;1m37               [0m 
+[32;1m ...oller/src/http[0m | [32;1m  90.98[0m | [32;1m   86.34[0m | [32;1m  92.68[0m | [32;1m  92.13[0m | [31;1m                 [0m 
+[32;1m  app-server.ts   [0m | [32;1m  90.55[0m | [32;1m   84.31[0m | [32;1m   90.9[0m | [32;1m  91.52[0m | [31;1m...07,233,243,260[0m 
+[32;1m  server.ts       [0m | [32;1m  91.45[0m | [32;1m   88.34[0m | [32;1m  94.73[0m | [32;1m  92.79[0m | [31;1m...46,189,222,241[0m 
+[32;1m ...ters/src/codex[0m | [32;1m  93.15[0m | [32;1m   91.94[0m | [32;1m  95.34[0m | [32;1m  95.63[0m | [31;1m                 [0m 
+[32;1m  durable.ts      [0m | [32;1m  92.85[0m | [32;1m    87.5[0m | [32;1m    100[0m | [32;1m  92.85[0m | [31;1m25               [0m 
+[32;1m  lifecycle.ts    [0m | [32;1m   89.7[0m | [32;1m   90.47[0m | [32;1m  93.75[0m | [32;1m  94.21[0m | [31;1m...78,211,244,325[0m 
+[32;1m  transport.ts    [0m | [32;1m  95.86[0m | [32;1m   93.75[0m | [32;1m     95[0m | [32;1m  96.89[0m | [31;1m30,144,186,199   [0m 
+[32;1m ...pters/src/live[0m | [32;1m  97.08[0m | [32;1m   85.21[0m | [32;1m    100[0m | [32;1m  97.65[0m | [31;1m                 [0m 
+[32;1m  ...e-headless.ts[0m | [32;1m  98.27[0m | [32;1m   92.42[0m | [32;1m    100[0m | [32;1m  98.14[0m | [31;1m151              [0m 
+[32;1m  discover.ts     [0m | [32;1m  94.87[0m | [33;1m   74.41[0m | [32;1m    100[0m | [32;1m  97.22[0m | [31;1m67               [0m 
+[32;1m  opencode-run.ts [0m | [32;1m   97.5[0m | [32;1m   84.84[0m | [32;1m    100[0m | [32;1m  97.36[0m | [31;1m120              [0m 
+[32;1m ...s/src/opencode[0m | [32;1m  96.95[0m | [32;1m   94.59[0m | [32;1m   92.3[0m | [32;1m  99.28[0m | [31;1m                 [0m 
+[32;1m  cli-stream.ts   [0m | [32;1m  97.36[0m | [32;1m   96.15[0m | [32;1m  83.33[0m | [32;1m    100[0m | [33;1m100,113          [0m 
+[32;1m  endpoint.ts     [0m | [32;1m  96.59[0m | [32;1m   93.22[0m | [32;1m     95[0m | [32;1m  98.61[0m | [31;1m123              [0m 
+[32;1m .../src/providers[0m | [32;1m   97.9[0m | [32;1m   95.56[0m | [32;1m  98.48[0m | [32;1m   98.8[0m | [31;1m                 [0m 
+[32;1m  claude-launch.ts[0m | [32;1m     90[0m | [32;1m    87.5[0m | [32;1m    100[0m | [32;1m    100[0m | [33;1m31               [0m 
+[32;1m  failures.ts     [0m | [32;1m    100[0m | [32;1m   96.55[0m | [32;1m    100[0m | [32;1m    100[0m | [33;1m38,86            [0m 
+[32;1m  ...-lifecycle.ts[0m | [32;1m   98.8[0m | [32;1m     100[0m | [32;1m  92.85[0m | [32;1m  98.75[0m | [31;1m212              [0m 
+[32;1m  ...e-profiles.ts[0m | [32;1m  93.33[0m | [32;1m   83.33[0m | [32;1m    100[0m | [32;1m  92.85[0m | [31;1m23               [0m 
+[32;1m  native-stream.ts[0m | [32;1m  96.66[0m | [32;1m   92.61[0m | [32;1m    100[0m | [32;1m  98.66[0m | [31;1m161,311          [0m 
+[32;1m  protocol.ts     [0m | [32;1m    100[0m | [32;1m   95.45[0m | [32;1m    100[0m | [32;1m    100[0m | [33;1m90               [0m 
+[32;1m  registry.ts     [0m | [32;1m  98.87[0m | [32;1m   97.46[0m | [32;1m    100[0m | [32;1m  98.71[0m | [31;1m166              [0m 
+[32;1m .../src/simulated[0m | [32;1m  88.88[0m | [32;1m   86.66[0m | [32;1m    100[0m | [32;1m  91.17[0m | [31;1m                 [0m 
+[32;1m  index.ts        [0m | [32;1m  88.88[0m | [32;1m   86.66[0m | [32;1m    100[0m | [32;1m  91.17[0m | [31;1m45,64-65         [0m 
+[32;1m ...es/context/src[0m | [32;1m  93.71[0m | [32;1m   85.89[0m | [32;1m    100[0m | [32;1m  94.05[0m | [31;1m                 [0m 
+[32;1m  handoff.ts      [0m | [32;1m  96.29[0m | [32;1m   89.47[0m | [32;1m    100[0m | [32;1m  96.29[0m | [31;1m55               [0m 
+[32;1m  inspect.ts      [0m | [32;1m    100[0m | [33;1m      70[0m | [32;1m    100[0m | [32;1m    100[0m | [33;1m45-51,61-71,89   [0m 
+[32;1m  packet.ts       [0m | [32;1m    100[0m | [32;1m   95.23[0m | [32;1m    100[0m | [32;1m    100[0m | [33;1m28,69            [0m 
+[32;1m  render.ts       [0m | [32;1m   92.3[0m | [33;1m      50[0m | [32;1m    100[0m | [32;1m    100[0m | [33;1m42-50            [0m 
+[32;1m  retrieval.ts    [0m | [32;1m  90.27[0m | [32;1m   82.41[0m | [32;1m    100[0m | [32;1m  90.29[0m | [31;1m...08,220-221,276[0m 
+[32;1m  transfer.ts     [0m | [32;1m  92.72[0m | [32;1m   90.38[0m | [32;1m    100[0m | [32;1m  92.59[0m | [31;1m72,109,153,158   [0m 
+[32;1m .../contracts/src[0m | [32;1m  99.27[0m | [32;1m   98.61[0m | [32;1m    100[0m | [32;1m  99.23[0m | [31;1m                 [0m 
+[32;1m  live.ts         [0m | [32;1m  97.43[0m | [32;1m   97.67[0m | [32;1m    100[0m | [32;1m  97.14[0m | [31;1m115              [0m 
+[32;1m packages/core/src[0m | [32;1m  98.57[0m | [32;1m   96.51[0m | [32;1m    100[0m | [32;1m  98.95[0m | [31;1m                 [0m 
+[32;1m  plan.ts         [0m | [32;1m  98.03[0m | [32;1m   96.15[0m | [32;1m    100[0m | [32;1m  97.72[0m | [31;1m49               [0m 
+[32;1m  router.ts       [0m | [32;1m  96.36[0m | [32;1m   93.44[0m | [32;1m    100[0m | [32;1m  97.87[0m | [31;1m56               [0m 
+[32;1m  task.ts         [0m | [32;1m    100[0m | [32;1m   96.77[0m | [32;1m    100[0m | [32;1m    100[0m | [33;1m147              [0m 
+[32;1m ...evaluation/src[0m | [32;1m  97.03[0m | [32;1m   86.98[0m | [32;1m    100[0m | [32;1m  97.87[0m | [31;1m                 [0m 
+[32;1m  ledger.ts       [0m | [32;1m  96.55[0m | [32;1m    90.9[0m | [32;1m    100[0m | [32;1m    100[0m | [33;1m56,73            [0m 
+[32;1m  reference.ts    [0m | [32;1m  94.11[0m | [33;1m   66.66[0m | [32;1m    100[0m | [32;1m  93.75[0m | [31;1m31               [0m 
+[32;1m  report.ts       [0m | [32;1m   95.6[0m | [32;1m   82.75[0m | [32;1m    100[0m | [32;1m  97.29[0m | [31;1m178,184          [0m 
+[32;1m  runner.ts       [0m | [32;1m    100[0m | [32;1m   95.23[0m | [32;1m    100[0m | [32;1m    100[0m | [33;1m213,230          [0m 
+[32;1m  suite.ts        [0m | [32;1m  96.61[0m | [32;1m   83.33[0m | [32;1m    100[0m | [32;1m  96.15[0m | [31;1m83,152           [0m 
+[32;1m ...tive-agent/src[0m | [32;1m   96.2[0m | [32;1m   90.39[0m | [32;1m  91.89[0m | [32;1m  96.31[0m | [31;1m                 [0m 
+[32;1m  ...l-endpoint.ts[0m | [32;1m  91.86[0m | [32;1m   89.36[0m | [33;1m  76.92[0m | [32;1m  92.68[0m | [31;1m...48,167-169,216[0m 
+[32;1m  loop.ts         [0m | [32;1m  98.46[0m | [32;1m   91.33[0m | [32;1m    100[0m | [32;1m  98.29[0m | [31;1m284,321          [0m 
+[32;1m  scripted.ts     [0m | [32;1m    100[0m | [32;1m   85.71[0m | [32;1m    100[0m | [32;1m    100[0m | [33;1m61               [0m 
+[32;1m ...ges/policy/src[0m | [32;1m  96.49[0m | [32;1m   95.83[0m | [32;1m    100[0m | [32;1m  96.36[0m | [31;1m                 [0m 
+[32;1m  index.ts        [0m | [32;1m     90[0m | [32;1m    87.5[0m | [32;1m    100[0m | [32;1m     90[0m | [31;1m39               [0m 
+[32;1m  tools.ts        [0m | [32;1m  96.15[0m | [32;1m   96.42[0m | [32;1m    100[0m | [32;1m  95.83[0m | [31;1m49               [0m 
+[32;1m ...ges/skills/src[0m | [32;1m     90[0m | [32;1m   85.18[0m | [32;1m    100[0m | [32;1m  92.07[0m | [31;1m                 [0m 
+[32;1m  catalog.ts      [0m | [32;1m     84[0m | [33;1m   75.51[0m | [32;1m    100[0m | [32;1m  86.95[0m | [31;1m...96,100,177,207[0m 
+[32;1m  compatibility.ts[0m | [32;1m   91.3[0m | [32;1m    87.5[0m | [32;1m    100[0m | [32;1m  95.23[0m | [31;1m42               [0m 
+[32;1m  hooks.ts        [0m | [32;1m    100[0m | [32;1m   97.14[0m | [32;1m    100[0m | [32;1m    100[0m | [33;1m80               [0m 
+[32;1m ...es/storage/src[0m | [32;1m  93.53[0m | [32;1m   88.77[0m | [32;1m  98.65[0m | [32;1m  95.78[0m | [31;1m                 [0m 
+[32;1m  artifacts.ts    [0m | [32;1m  92.34[0m | [32;1m   88.57[0m | [32;1m    100[0m | [32;1m  95.26[0m | [31;1m...96,112,319,375[0m 
+[32;1m  git-workspace.ts[0m | [32;1m  87.23[0m | [33;1m   76.92[0m | [32;1m   87.5[0m | [32;1m  92.68[0m | [31;1m43,56,77         [0m 
+[32;1m  integration.ts  [0m | [32;1m  88.37[0m | [33;1m   73.68[0m | [32;1m    100[0m | [32;1m  94.87[0m | [31;1m30,93            [0m 
+[32;1m  memory.ts       [0m | [32;1m  97.53[0m | [32;1m   93.24[0m | [32;1m    100[0m | [32;1m  97.29[0m | [31;1m157,188          [0m 
+[32;1m  providers.ts    [0m | [32;1m  95.12[0m | [32;1m   89.88[0m | [32;1m    100[0m | [32;1m  96.55[0m | [31;1m...61,699,727,760[0m 
+[32;1m  store.ts        [0m | [32;1m  95.13[0m | [32;1m   92.52[0m | [32;1m  97.18[0m | [32;1m  95.63[0m | [31;1m...69-473,480,660[0m 
+[32;1m  work-graphs.ts  [0m | [32;1m  97.36[0m | [32;1m   88.23[0m | [32;1m    100[0m | [32;1m    100[0m | [33;1m130-152          [0m 
+[32;1m  workspace.ts    [0m | [32;1m  87.62[0m | [32;1m   81.57[0m | [32;1m    100[0m | [32;1m  94.04[0m | [31;1m87,90,105,115,181[0m 
+[32;1m ...supervisor/src[0m | [32;1m   92.2[0m | [32;1m   92.92[0m | [32;1m  91.17[0m | [32;1m  91.91[0m | [31;1m                 [0m 
+[32;1m  index.ts        [0m | [32;1m   92.2[0m | [32;1m   92.92[0m | [32;1m  91.17[0m | [32;1m  91.91[0m | [31;1m...32-333,336-337[0m 
+[32;1m ...ages/tools/src[0m | [32;1m  94.11[0m | [32;1m   83.38[0m | [32;1m  95.45[0m | [32;1m  95.07[0m | [31;1m                 [0m 
+[32;1m  browser.ts      [0m | [32;1m  89.68[0m | [33;1m   71.42[0m | [32;1m     96[0m | [32;1m   92.5[0m | [31;1m...23,268-269,318[0m 
+[32;1m  controller.ts   [0m | [32;1m    100[0m | [32;1m   92.85[0m | [32;1m    100[0m | [32;1m    100[0m | [33;1m243              [0m 
+[32;1m  files.ts        [0m | [32;1m  93.58[0m | [32;1m   85.18[0m | [32;1m    100[0m | [32;1m  92.95[0m | [31;1m28,33,36,90,183  [0m 
+[32;1m  mcp.ts          [0m | [32;1m  95.61[0m | [32;1m   86.74[0m | [32;1m    100[0m | [32;1m  96.87[0m | [31;1m86,182,216       [0m 
+[32;1m  process.ts      [0m | [32;1m  96.55[0m | [32;1m    87.5[0m | [32;1m    100[0m | [32;1m  96.55[0m | [31;1m111              [0m 
+[32;1m  registry.ts     [0m | [32;1m    100[0m | [32;1m   97.29[0m | [32;1m    100[0m | [32;1m    100[0m | [33;1m114              [0m 
+[32;1m  repository.ts   [0m | [32;1m  91.66[0m | [33;1m   76.31[0m | [32;1m     80[0m | [32;1m  92.53[0m | [31;1m...21,228,234,238[0m 
+[32;1m  workspace.ts    [0m | [32;1m  95.83[0m | [32;1m   94.11[0m | [32;1m    100[0m | [32;1m  95.45[0m | [31;1m23               [0m 
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+[32;1mStatements   : 94.52% ( 5073/5367 )[0m
+[32;1mBranches     : 90.09% ( 3540/3929 )[0m
+[32;1mFunctions    : 97.35% ( 921/946 )[0m
+[32;1mLines        : 95.79% ( 4690/4896 )[0m
+================================================================================
