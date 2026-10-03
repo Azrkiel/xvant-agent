@@ -1,0 +1,341 @@
+{
+  "generatedAt": "2026-10-03T15:32:21.443Z",
+  "classification": "live",
+  "stateDirectory": "C:\\Users\\jiang\\downloads\\xvant\\xvant-agent\\.artifacts\\benchmark-smoke-haiku-criteria",
+  "runtimes": {
+    "claude": {
+      "runtimeKind": "claude",
+      "status": "qualified",
+      "executable": "C:\\Users\\jiang\\.local\\bin\\claude.exe",
+      "version": "2.1.288",
+      "expectedVersion": "2.1.285",
+      "candidates": 1
+    }
+  },
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "repeats": 1,
+  "suiteId": "smoke",
+  "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+  "complete": true,
+  "directional": true,
+  "configurations": {
+    "claude-haiku-criteria": {
+      "scheduled": 10,
+      "accepted": 10,
+      "failed": 0,
+      "incomplete": 0,
+      "excluded": 0,
+      "missing": 0,
+      "successRate": 1,
+      "tasksAlwaysAccepted": 10,
+      "medianElapsedMs": 54497,
+      "inputTokens": null,
+      "outputTokens": null,
+      "totalTokens": 21267,
+      "toolFailures": null,
+      "conflicts": null,
+      "versions": {
+        "runtime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    }
+  },
+  "bySplit": {
+    "tuning": {
+      "claude-haiku-criteria": {
+        "scheduled": 5,
+        "accepted": 5
+      }
+    },
+    "held-out": {
+      "claude-haiku-criteria": {
+        "scheduled": 5,
+        "accepted": 5
+      }
+    }
+  },
+  "exclusions": [],
+  "missing": [],
+  "limitations": [
+    "Small sample: results are directional evidence, not proof of general superiority.",
+    "Human rework was not measured."
+  ],
+  "suiteShapeProblems": [],
+  "records": [
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "diagnose-off-by-one",
+      "configuration": "claude-haiku-criteria",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T15:22:14.007Z",
+      "elapsedMs": 49543,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 1807
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "document-cli-flag",
+      "configuration": "claude-haiku-criteria",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T15:23:03.560Z",
+      "elapsedMs": 49646,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 1030
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "evaluate-candidate",
+      "configuration": "claude-haiku-criteria",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T15:23:53.217Z",
+      "elapsedMs": 55196,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 1431
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "explore-entrypoints",
+      "configuration": "claude-haiku-criteria",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T15:24:48.416Z",
+      "elapsedMs": 51278,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 1091
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "handoff-partial-feature",
+      "configuration": "claude-haiku-criteria",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T15:25:39.696Z",
+      "elapsedMs": 83682,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 2409
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "implement-clamp",
+      "configuration": "claude-haiku-criteria",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T15:27:03.381Z",
+      "elapsedMs": 53797,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 1350
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "integrate-two-patches",
+      "configuration": "claude-haiku-criteria",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T15:27:57.180Z",
+      "elapsedMs": 68463,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 2934
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "plan-rate-limit",
+      "configuration": "claude-haiku-criteria",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T15:29:05.646Z",
+      "elapsedMs": 61408,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 1914
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "review-unsafe-merge",
+      "configuration": "claude-haiku-criteria",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T15:30:07.056Z",
+      "elapsedMs": 44496,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 1140
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "test-slugify",
+      "configuration": "claude-haiku-criteria",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T15:30:51.555Z",
+      "elapsedMs": 89871,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": 6161
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "claude",
+        "runtimeVersion": "2.1.288",
+        "adapter": "claude-headless-v1",
+        "model": "haiku",
+        "instructions": "criteria"
+      }
+    }
+  ]
+}
