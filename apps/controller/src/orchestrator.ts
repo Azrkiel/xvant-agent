@@ -23,7 +23,7 @@ export interface Check {
 }
 export interface WorkerSpec {
   alias: string;
-  runtimeKind: 'codex' | 'claude' | 'opencode';
+  runtimeKind: 'codex' | 'claude' | 'opencode' | 'native-local';
   quotaGroupId: string;
   roles: readonly ('worker' | 'reviewer' | 'planner')[];
 }
@@ -34,6 +34,11 @@ export interface TurnRequest {
   prompt: string;
   workspace: { path: string; baseCommit: string };
   checks: Record<string, Check>;
+  /**
+   * Paths the turn may change; absent or empty means the whole worktree.
+   * External runtimes get them as prompt text; XVANT's own tools enforce them.
+   */
+  writablePaths?: string[];
 }
 export interface TurnOutcome {
   status:
@@ -121,8 +126,12 @@ export interface RootState {
 }
 const tail = (text: string, max = 3000) =>
   text.length > max ? '…' + text.slice(-max) : text;
+// The first line names the failure; check output below it varies run to run.
 const signature = (text: string) =>
-  createHash('sha256').update(text).digest('hex').slice(0, 16);
+  createHash('sha256')
+    .update(text.split('\n', 1)[0]!)
+    .digest('hex')
+    .slice(0, 16);
 
 /**
  * Coordinates one root task across named workers: plan, route, run nodes in
@@ -218,6 +227,7 @@ export class Orchestrator {
       label: string,
       prompt: string,
       checks: Record<string, Check>,
+      writablePaths: string[] = [],
     ) => {
       const taskId = turnId(label);
       const tree = worktree(taskId);
@@ -231,6 +241,7 @@ export class Orchestrator {
           prompt,
           workspace: tree,
           checks: Object.keys(checks).length ? checks : noop,
+          ...(writablePaths.length ? { writablePaths } : {}),
         });
         return { taskId, outcome };
       } finally {
@@ -393,7 +404,7 @@ export class Orchestrator {
             ? [
                 '',
                 '## Previous attempt failed',
-                tail(entry.lastFailure),
+                tail(entry.lastFailure, 9000),
                 'Fix the cause before finishing.',
               ]
             : []),
@@ -440,7 +451,13 @@ export class Orchestrator {
             const id = entry.node.id;
             inflight.set(
               id,
-              turn(alias, id, nodePrompt(entry), nodeChecks)
+              turn(
+                alias,
+                id,
+                nodePrompt(entry),
+                nodeChecks,
+                entry.node.writablePaths,
+              )
                 .then(({ taskId, outcome }) =>
                   settleNode(id, alias, taskId, outcome),
                 )

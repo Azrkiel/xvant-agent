@@ -79,6 +79,65 @@ describe('offline gate policy', () => {
     expect(() => validateTestReport(report(), { 'task.test.ts': 0 })).toThrow();
   });
 });
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { runBounded } from '../scripts/bounded-run.ts';
+describe('bounded gate stage', () => {
+  const alive = (pid: number) => {
+    try {
+      process.kill(pid, 0);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  it('returns the exit code and the logged output', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'xvant-bounded-'));
+    try {
+      const logPath = join(dir, 'stage.log');
+      const run = await runBounded(
+        process.execPath,
+        ['-e', 'console.log("out"); console.error("err"); process.exit(3)'],
+        { cwd: dir, timeoutMs: 15000, logPath },
+      );
+      expect(run).toMatchObject({ exitCode: 3, timedOut: false });
+      expect(run.output).toContain('out');
+      expect(run.output).toContain('err');
+      expect(readFileSync(logPath, 'utf8')).toBe(run.output);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 20000);
+  it('fails fast on timeout and stops descendants holding the output', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'xvant-bounded-'));
+    try {
+      const logPath = join(dir, 'stage.log');
+      const parent = [
+        'const { spawn } = require("node:child_process");',
+        'const c = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "inherit" });',
+        'console.log("grandchild " + c.pid);',
+        'setInterval(() => {}, 1000);',
+      ].join('\n');
+      const started = Date.now();
+      const run = await runBounded(process.execPath, ['-e', parent], {
+        cwd: dir,
+        timeoutMs: 3000,
+        logPath,
+      });
+      expect(Date.now() - started).toBeLessThan(15000);
+      expect(run).toMatchObject({ exitCode: 1, timedOut: true });
+      expect(run.output).toContain('Timed out after 3000 ms');
+      const pid = Number(/grandchild (\d+)/.exec(run.output)?.[1]);
+      expect(pid).toBeGreaterThan(0);
+      for (let i = 0; i < 50 && alive(pid); i += 1)
+        await new Promise((r) => setTimeout(r, 100));
+      expect(alive(pid)).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 30000);
+});
 import { phaseSuites } from '../scripts/gate-policy.ts';
 it('Phase 2 gate requires storage, process, auth, recovery and service suites', () => {
   const suites = phaseSuites('02');
@@ -93,7 +152,16 @@ it('Phase 2 gate requires storage, process, auth, recovery and service suites', 
     'tests/faults/crash.test.ts',
   ])
     expect(suites[file]).toBeGreaterThan(0);
-  expect(() => phaseSuites('08')).toThrow();
+  expect(() => phaseSuites('09')).toThrow();
+  const phase8 = phaseSuites('08');
+  for (const [file, minimum] of Object.entries(phaseSuites('07')))
+    expect(phase8[file]).toBe(minimum);
+  for (const file of [
+    'packages/native-agent/src/loop.test.ts',
+    'apps/controller/src/native-turn-runner.test.ts',
+    'apps/controller/src/native-loop-fixture.test.ts',
+  ])
+    expect(phase8[file]).toBeGreaterThan(0);
   const phase6 = phaseSuites('06');
   for (const [file, minimum] of Object.entries(phaseSuites('05')))
     expect(phase6[file]).toBe(minimum);

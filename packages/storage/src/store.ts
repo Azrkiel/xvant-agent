@@ -762,6 +762,24 @@ export class Store {
       payload: JSON.parse(row.payload) as unknown,
     }));
   }
+  /** The latest event of one kind for one task, however long the journal is. */
+  lastEvent(taskId: string, kind: string): JournalEvent | undefined {
+    const row = this.#db
+      .prepare(
+        'SELECT sequence,task_id,kind,payload FROM events WHERE task_id=? AND kind=? ORDER BY sequence DESC LIMIT 1',
+      )
+      .get(taskId, kind) as
+      | { sequence: number; task_id: string; kind: string; payload: string }
+      | undefined;
+    return row
+      ? {
+          sequence: row.sequence,
+          taskId: row.task_id,
+          kind: row.kind,
+          payload: JSON.parse(row.payload) as unknown,
+        }
+      : undefined;
+  }
   recordArtifact(
     taskId: string,
     artifacts: ArtifactStore,

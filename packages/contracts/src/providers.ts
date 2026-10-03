@@ -3,6 +3,12 @@ import { idSchema } from './index.ts';
 
 export const providerKindSchema = z.enum(['codex', 'claude', 'opencode']);
 export type ProviderKind = z.infer<typeof providerKindSchema>;
+/** Who can own provider work: an external runtime or XVANT's own native loop. */
+export const runtimeKindSchema = z.enum([
+  ...providerKindSchema.options,
+  'native-local',
+]);
+export type RuntimeKind = z.infer<typeof runtimeKindSchema>;
 // Native identifiers are opaque; never use them as filesystem paths.
 export const nativeIdSchema = z
   .string()
@@ -13,7 +19,7 @@ const versionSchema = z.string().min(1).max(128);
 export const providerWorkerSchema = z.strictObject({
   id: idSchema,
   alias: idSchema,
-  runtimeKind: providerKindSchema,
+  runtimeKind: runtimeKindSchema,
   hostId: idSchema,
   endpointId: idSchema,
   nativeSessionId: nativeIdSchema,

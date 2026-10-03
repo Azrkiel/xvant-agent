@@ -19,6 +19,7 @@
     "format:check": "prettier --check .",
     "gate": "node scripts/gate.mjs",
     "probe": "node scripts/probe.mjs",
+    "benchmark": "node scripts/benchmark.mjs",
     "probe:live:opencode": "node scripts/opencode-live.mjs",
     "demo": "node --experimental-strip-types apps/controller/src/demo.ts",
     "demo:durable": "node apps/controller/src/durable-demo.ts",

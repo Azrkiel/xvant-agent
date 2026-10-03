@@ -1,6 +1,7 @@
 // Live gates. Each one uses real subscription or free-model sessions, so it
 // runs only with --approve-live and never retries or falls back to an API key.
 // Usage: node scripts/live-gate.mjs --phase 03 --fixture roster --approve-live [--concurrency N]
+//        node scripts/live-gate.mjs --phase 08 --fixture native --approve-live --model <id> [--endpoint http://127.0.0.1:1234/v1]
 import { mkdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { hostname, platform, release } from 'node:os';
 import { join, relative, resolve } from 'node:path';
@@ -15,18 +16,25 @@ const FIXTURES = {
   '04': ['handoff'],
   '05': ['mcp'],
   '06': ['parallel-feature'],
+  '08': ['native'],
 };
 const phase = value('--phase');
 const fixture = value('--fixture');
 if (!args.includes('--approve-live') || !FIXTURES[phase]?.includes(fixture)) {
   console.error(
-    'Usage: node scripts/live-gate.mjs --phase 03|04|05 --fixture roster|handoff|mcp --approve-live [--concurrency N]. Uses real subscription and free-model sessions.',
+    'Usage: node scripts/live-gate.mjs --phase 03|04|05|06|08 --fixture roster|handoff|mcp|parallel-feature|native --approve-live [--concurrency N] [--model <id> --endpoint <loopback url>]. Uses real subscription, free-model and local-model sessions.',
   );
   process.exit(2);
 }
 const concurrency = Number(value('--concurrency') ?? 3);
 if (!Number.isSafeInteger(concurrency) || concurrency < 1 || concurrency > 10) {
   console.error('--concurrency must be 1-10');
+  process.exit(2);
+}
+const native = fixture === 'native';
+const model = value('--model');
+if (native && !model) {
+  console.error('--fixture native needs --model <id> (see `lms ls`)');
   process.exit(2);
 }
 const root = resolve('.');
@@ -42,14 +50,20 @@ const report = {
   nodeVersion: process.version,
   sourceHash: sourceHash(root),
   runtimes: {},
-  limitations: [
-    'Trusted-local: native runtime tools edit their own worktree and bypass XVANT approvals and receipts.',
-    'Qualifies this host and these runtime versions only; Linux is deferred by the operator.',
-    'Token counts are what each runtime reports; subscription usage has no per-call bill.',
-  ],
+  limitations: native
+    ? [
+        'Qualifies this host, this local model and one small change only; it says nothing about harder tasks.',
+        'Trusted-local: registry tools bound the worktree, but checks run as ordinary local processes.',
+        'Linux is deferred by the operator.',
+      ]
+    : [
+        'Trusted-local: native runtime tools edit their own worktree and bypass XVANT approvals and receipts.',
+        'Qualifies this host and these runtime versions only; Linux is deferred by the operator.',
+        'Token counts are what each runtime reports; subscription usage has no per-call bill.',
+      ],
 };
 const runtimes = {};
-for (const kind of ['codex', 'claude', 'opencode']) {
+for (const kind of native ? [] : ['codex', 'claude', 'opencode']) {
   const found = discoverRuntime(kind);
   report.runtimes[kind] = found;
   if (found.status === 'qualified')
@@ -80,7 +94,37 @@ try {
       );
   };
   let result;
-  if (fixture === 'roster') {
+  if (native) {
+    const { LocalEndpointProvider } =
+      await import('../packages/native-agent/src/local-endpoint.ts');
+    const { runLiveNative } =
+      await import('../apps/controller/src/live-native.ts');
+    // Loopback HTTP only and no credential: this cannot reach a paid API.
+    result = await runLiveNative(state, {
+      provider: new LocalEndpointProvider({
+        baseUrl: value('--endpoint') ?? 'http://127.0.0.1:1234/v1',
+        model,
+        server: 'lmstudio',
+      }),
+      classification: 'live',
+      onEvent: (alias, event) =>
+        console.log(
+          alias.padEnd(11),
+          event.kind.padEnd(8),
+          event.kind === 'tool'
+            ? event.tool +
+                ' ' +
+                event.status +
+                (event.code ? ' ' + event.code : '')
+            : event.kind === 'model'
+              ? event.toolCalls + ' call(s) ' + event.text.slice(0, 60)
+              : event.kind === 'malformed'
+                ? event.reason
+                : event.code,
+        ),
+    });
+    report.native = result;
+  } else if (fixture === 'roster') {
     const { runLiveRoster } =
       await import('../apps/controller/src/live-roster.ts');
     result = await runLiveRoster(state, {

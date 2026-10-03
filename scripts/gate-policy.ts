@@ -48,7 +48,7 @@ export function validateTestReport(
   return { total, suites };
 }
 export function phaseSuites(phase: string): Record<string, number> {
-  if (!['01', '02', '03', '04', '05', '06', '07'].includes(phase))
+  if (!['01', '02', '03', '04', '05', '06', '07', '08'].includes(phase))
     throw new Error('Unsupported gate phase');
   const baseline: Record<string, number> = {
     'packages/contracts/src/contracts.test.ts': 15,
@@ -56,7 +56,7 @@ export function phaseSuites(phase: string): Record<string, number> {
     'packages/core/src/graph.test.ts': 20,
     'packages/adapters/src/simulated/simulated.test.ts': 10,
     'apps/controller/src/controller.test.ts': 24,
-    'tests/gate.test.ts': 16,
+    'tests/gate.test.ts': 18,
     'tests/evidence-bundle.test.ts': 8,
   };
   return phase === '01'
@@ -84,7 +84,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/storage/src/providers.test.ts': 41,
               'tests/faults/provider-crash.test.ts': 8,
               'packages/storage/src/workspace.test.ts': 5,
-              'apps/controller/src/native-verifier.test.ts': 21,
+              'apps/controller/src/native-verifier.test.ts': 23,
               'tests/faults/native-verification.test.ts': 4,
               'packages/core/src/native-acceptance.test.ts': 8,
               'apps/controller/src/native-review.test.ts': 12,
@@ -134,7 +134,7 @@ export function phaseSuites(phase: string): Record<string, number> {
         ...(Number(phase) >= 5
           ? {
               'packages/tools/src/registry.test.ts': 10,
-              'packages/tools/src/files.test.ts': 18,
+              'packages/tools/src/files.test.ts': 19,
               'packages/tools/src/repository.test.ts': 6,
               'packages/tools/src/process.test.ts': 12,
               'packages/tools/src/controller.test.ts': 5,
@@ -152,14 +152,23 @@ export function phaseSuites(phase: string): Record<string, number> {
           ? {
               'packages/core/src/scheduler.test.ts': 12,
               'packages/storage/src/integration.test.ts': 4,
-              'apps/controller/src/orchestrator.test.ts': 6,
-              'apps/controller/src/turn-runner.test.ts': 2,
+              'apps/controller/src/orchestrator.test.ts': 7,
+              'apps/controller/src/turn-runner.test.ts': 3,
             }
           : {}),
         ...(Number(phase) >= 7
           ? {
               'apps/controller/src/app.test.ts': 4,
               'tests/e2e/ui.test.ts': 3,
+            }
+          : {}),
+        ...(Number(phase) >= 8
+          ? {
+              'packages/native-agent/src/local-endpoint.test.ts': 20,
+              'packages/native-agent/src/loop.test.ts': 14,
+              'apps/controller/src/native-turn-runner.test.ts': 10,
+              'apps/controller/src/native-loop-fixture.test.ts': 2,
+              'apps/controller/src/live-native.test.ts': 3,
             }
           : {}),
       };

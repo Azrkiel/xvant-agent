@@ -5,6 +5,7 @@ import { dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hostname, platform, release } from 'node:os';
 import { validateTestReport, phaseSuites } from './gate-policy.ts';
+import { runBounded } from './bounded-run.ts';
 import { archiveRun } from './evidence-bundle.ts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -12,11 +13,11 @@ const args = process.argv.slice(2);
 if (
   args.length !== 3 ||
   args[0] !== '--phase' ||
-  !['01', '02', '03', '04', '05', '06', '07'].includes(args[1]) ||
+  !['01', '02', '03', '04', '05', '06', '07', '08'].includes(args[1]) ||
   args[2] !== '--offline'
 ) {
   console.error(
-    'Usage: npm run gate -- --phase 01|02|03|04|05|06|07 --offline. Live gates run through scripts/live-gate.mjs.',
+    'Usage: npm run gate -- --phase 01|02|03|04|05|06|07|08 --offline. Live gates run through scripts/live-gate.mjs.',
   );
   process.exit(2);
 }
@@ -70,17 +71,19 @@ const report = {
   gitVersion: git(['--version']).stdout.trim(),
   classification: 'offline',
   qualificationScope:
-    phase === '07'
-      ? 'offline-local-app'
-      : phase === '06'
-        ? 'offline-orchestration'
-        : phase === '05'
-          ? 'offline-tools-skills'
-          : phase === '04'
-            ? 'offline-context-handoff'
-            : phase === '03'
-              ? 'offline-provider-transport-foundation'
-              : 'offline-simulation',
+    phase === '08'
+      ? 'offline-native-loop'
+      : phase === '07'
+        ? 'offline-local-app'
+        : phase === '06'
+          ? 'offline-orchestration'
+          : phase === '05'
+            ? 'offline-tools-skills'
+            : phase === '04'
+              ? 'offline-context-handoff'
+              : phase === '03'
+                ? 'offline-provider-transport-foundation'
+                : 'offline-simulation',
   runtimeKind: 'simulated',
   liveProvidersTested: [],
   checks: [],
@@ -95,31 +98,23 @@ const report = {
     'Keep the branch unmerged; no external service or data migration was changed.',
   lastKnownGoodVersion: null,
 };
-function check(id, args) {
+async function check(id, args) {
   const startedAt = new Date().toISOString();
-  const child = spawnSync(process.execPath, args, {
-    cwd: root,
-    encoding: 'utf8',
-    shell: false,
-    windowsHide: true,
-    // The full Windows coverage suite includes bounded process-death tests.
-    timeout: id === 'tests' ? 600000 : 180000,
-    maxBuffer: 16 * 1024 * 1024,
-  });
   const log = resolve(artifacts, id + '.log');
-  writeFileSync(
-    log,
-    (child.stdout ?? '') +
-      (child.stderr ?? '') +
-      (child.error ? '\n' + child.error.message : ''),
-  );
+  const child = await runBounded(process.execPath, args, {
+    cwd: root,
+    // The full Windows coverage suite includes bounded process-death tests.
+    timeoutMs: id === 'tests' ? 600000 : 180000,
+    logPath: log,
+  });
   const result = {
     id,
     command: [process.execPath, ...args],
     workingDirectory: root,
     startedAt,
     finishedAt: new Date().toISOString(),
-    exitCode: child.status ?? 1,
+    exitCode: child.exitCode,
+    ...(child.timedOut ? { timedOut: true } : {}),
   };
   report.checks.push(result);
   report.artifacts.push({
@@ -127,8 +122,7 @@ function check(id, args) {
     sha256: hash(readFileSync(log)),
   });
   console.log(id + ': ' + (result.exitCode === 0 ? 'passed' : 'FAILED'));
-  if (result.exitCode !== 0)
-    console.error((child.stdout ?? '') + (child.stderr ?? ''));
+  if (result.exitCode !== 0) console.error(child.output);
   return result;
 }
 try {
@@ -137,16 +131,20 @@ try {
   const pinned = readFileSync(resolve(root, '.node-version'), 'utf8').trim();
   if (process.version !== 'v' + pinned)
     throw new Error('Use pinned Node ' + pinned + '; found ' + process.version);
-  check('typecheck', ['node_modules/typescript/bin/tsc', '--noEmit']);
-  check('lint', [
+  await check('typecheck', ['node_modules/typescript/bin/tsc', '--noEmit']);
+  await check('lint', [
     'node_modules/eslint/bin/eslint.js',
     'packages',
     'apps',
     'scripts',
     'tests',
   ]);
-  check('format', ['node_modules/prettier/bin/prettier.cjs', '--check', '.']);
-  const tests = check('tests', [
+  await check('format', [
+    'node_modules/prettier/bin/prettier.cjs',
+    '--check',
+    '.',
+  ]);
+  const tests = await check('tests', [
     'node_modules/vitest/vitest.mjs',
     'run',
     '--coverage',
@@ -166,7 +164,7 @@ try {
     tests.observedCount = discovery.total;
     tests.suites = discovery.suites;
   }
-  check(
+  await check(
     'runtime',
     phase === '01'
       ? ['apps/controller/src/demo.ts', 'success']
@@ -198,7 +196,7 @@ try {
       });
   }
   if (Number(phase) >= 3) {
-    check('provider-fixtures', [
+    await check('provider-fixtures', [
       'scripts/probe.mjs',
       '--offline',
       '--runtime',
@@ -216,7 +214,7 @@ try {
       )
     )
       throw new Error('Provider fixture roster failed');
-    check('controller-roster', ['scripts/roster-fixture.mjs']);
+    await check('controller-roster', ['scripts/roster-fixture.mjs']);
     const roster = JSON.parse(
       readFileSync(resolve(artifacts, 'controller-roster.log'), 'utf8'),
     );
@@ -231,7 +229,7 @@ try {
       throw new Error('Controller roster failed');
     for (const scenario of ['permission', 'interrupt', 'no-auth']) {
       const checkId = 'opencode-http-' + scenario;
-      check(checkId, ['scripts/opencode-http-fixture.mjs', scenario]);
+      await check(checkId, ['scripts/opencode-http-fixture.mjs', scenario]);
       const http = JSON.parse(
         readFileSync(resolve(artifacts, checkId + '.log'), 'utf8'),
       );
@@ -258,7 +256,7 @@ try {
       if (!common || !specific)
         throw new Error('OpenCode HTTP fixture failed: ' + scenario);
     }
-    check('codex-transport', ['scripts/codex-fixture.mjs', 'success']);
+    await check('codex-transport', ['scripts/codex-fixture.mjs', 'success']);
     const transport = JSON.parse(
       readFileSync(resolve(artifacts, 'codex-transport.log'), 'utf8'),
     );
@@ -272,7 +270,7 @@ try {
     )
       throw new Error('Codex offline transport failed');
     for (const kind of ['claude', 'opencode']) {
-      check(kind + '-native-stream', [
+      await check(kind + '-native-stream', [
         'scripts/native-fixture.mjs',
         kind,
         'permission',
@@ -288,7 +286,7 @@ try {
         stream.activeCount !== 0
       )
         throw new Error('Native stream fixture failed');
-      check(kind + '-native-controller', [
+      await check(kind + '-native-controller', [
         'scripts/native-controller-fixture.mjs',
         kind,
       ]);
@@ -309,7 +307,7 @@ try {
         controller.accepted !== false
       )
         throw new Error('Native controller fixture failed');
-      check(kind + '-native-interrupt', [
+      await check(kind + '-native-interrupt', [
         'scripts/native-controller-fixture.mjs',
         kind,
         'interrupt',
@@ -332,7 +330,7 @@ try {
         interruption.accepted !== false
       )
         throw new Error('Native interrupt fixture failed');
-      check(kind + '-native-quota', [
+      await check(kind + '-native-quota', [
         'scripts/native-controller-fixture.mjs',
         kind,
         'quota-error',
@@ -355,7 +353,7 @@ try {
         throw new Error('Native quota fixture failed');
       for (const scenario of ['permission', 'interrupt']) {
         const checkId = kind + '-create-' + scenario;
-        check(checkId, [
+        await check(checkId, [
           'scripts/native-controller-fixture.mjs',
           kind,
           scenario,
@@ -387,7 +385,7 @@ try {
     }
   }
   if (Number(phase) >= 4) {
-    check('handoff-fixture', ['scripts/handoff-fixture.mjs']);
+    await check('handoff-fixture', ['scripts/handoff-fixture.mjs']);
     const handoff = JSON.parse(
       readFileSync(resolve(artifacts, 'handoff-fixture.log'), 'utf8'),
     );
@@ -403,7 +401,7 @@ try {
       throw new Error('Handoff fixture failed');
   }
   if (Number(phase) >= 5) {
-    check('tools-fixture', ['scripts/tools-fixture.mjs']);
+    await check('tools-fixture', ['scripts/tools-fixture.mjs']);
     const tools = JSON.parse(
       readFileSync(resolve(artifacts, 'tools-fixture.log'), 'utf8'),
     );
@@ -415,7 +413,7 @@ try {
       !Object.values(tools.checks).every((value) => value === true)
     )
       throw new Error('Tools fixture failed');
-    check('compatibility-report', ['scripts/compatibility-report.mjs']);
+    await check('compatibility-report', ['scripts/compatibility-report.mjs']);
     const compatibility = JSON.parse(
       readFileSync(resolve(artifacts, 'compatibility-report.log'), 'utf8'),
     );
@@ -431,7 +429,7 @@ try {
     )
       throw new Error('Compatibility report failed');
     // A missing browser exits 2 and fails the gate: unavailable is not a pass.
-    check('browser-fixture', ['scripts/browser-fixture.mjs']);
+    await check('browser-fixture', ['scripts/browser-fixture.mjs']);
     const browser = JSON.parse(
       readFileSync(resolve(artifacts, 'browser-fixture.log'), 'utf8'),
     );
@@ -446,7 +444,7 @@ try {
       throw new Error('Browser fixture failed');
   }
   if (Number(phase) >= 6) {
-    check('orchestration-fixture', ['scripts/orchestration-fixture.mjs']);
+    await check('orchestration-fixture', ['scripts/orchestration-fixture.mjs']);
     const run = JSON.parse(
       readFileSync(resolve(artifacts, 'orchestration-fixture.log'), 'utf8'),
     );
@@ -461,6 +459,23 @@ try {
       Object.values(run.nodes).some((node) => node.status !== 'integrated')
     )
       throw new Error('Orchestration fixture failed');
+  }
+  if (Number(phase) >= 8) {
+    await check('native-loop-fixture', ['scripts/native-loop-fixture.mjs']);
+    const native = JSON.parse(
+      readFileSync(resolve(artifacts, 'native-loop-fixture.log'), 'utf8'),
+    );
+    if (
+      native.classification !== 'offline' ||
+      native.liveProvidersTested.length !== 0 ||
+      native.runtimeKind !== 'native-local' ||
+      native.problems.length !== 0 ||
+      Object.keys(native.checks).length < 11 ||
+      !Object.values(native.checks).every((value) => value === true) ||
+      Object.keys(native.skills).length !== 10 ||
+      !Object.values(native.skills).every((value) => value === 'passed')
+    )
+      throw new Error('Native loop fixture failed');
   }
   const after = snapshot();
   if (after.sha256 !== before.sha256)

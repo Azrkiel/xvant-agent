@@ -323,3 +323,19 @@ it('retains reservations when verification shutdown is uncertain', () => {
     store.queue('retry', 'task', store.getTask('task').rowVersion).state,
   ).toBe('queued');
 });
+it('finds the latest event of a kind for a task beyond the first page', () => {
+  store.create('create', input);
+  for (let i = 0; i < 150; i++)
+    store.create('create-' + i, { ...input, id: 't' + i });
+  store.queue('queue', 'task', 0);
+  expect(store.events(0).length).toBe(100);
+  const last = store.lastEvent('task', 'task.state_changed');
+  expect(last?.taskId).toBe('task');
+  expect(
+    store
+      .events(0, 1000)
+      .filter((e) => e.taskId === 'task' && e.kind === 'task.state_changed')
+      .at(-1)?.sequence,
+  ).toBe(last?.sequence);
+  expect(store.lastEvent('task', 'never')).toBeUndefined();
+});

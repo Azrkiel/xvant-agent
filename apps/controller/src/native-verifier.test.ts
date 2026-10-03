@@ -153,6 +153,33 @@ it('fails checks without retaining their output as evidence', async () => {
   expect(result.evidence?.receipts[0]?.status).toBe('failed');
   expect(JSON.stringify(result)).not.toContain('secret');
 });
+it('keeps a redacted output tail of failing checks for repairs, outside evidence', async () => {
+  const connection = completed();
+  const v = host(
+    "console.log('x'.repeat(5000)); console.error('token sk-ant-' + 'a'.repeat(30) + ' expected 2 got 3'); process.exit(1)",
+  );
+  const result = await v.verify('connection', connection.token, {
+    stopped: true,
+  });
+  expect(result.status).toBe('failed');
+  const output = v.checkOutput('connection');
+  expect(Object.keys(output)).toEqual(['test']);
+  expect(output.test).toContain('expected 2 got 3');
+  expect(output.test).toContain('[REDACTED]');
+  expect(output.test).not.toContain('sk-ant-');
+  expect(output.test!.length).toBeLessThanOrEqual(4001);
+  expect(JSON.stringify(result)).not.toContain('expected 2 got 3');
+  expect(JSON.stringify(store.providers.get('connection'))).not.toContain(
+    'expected 2 got 3',
+  );
+});
+it('keeps no output tail for passing checks', async () => {
+  const connection = completed();
+  const v = host("console.log('fine'); process.exit(0)");
+  await v.verify('connection', connection.token, { stopped: true });
+  expect(v.checkOutput('connection')).toEqual({});
+  expect(v.checkOutput('unknown')).toEqual({});
+});
 it('rejects evidence if a check changes workspace bytes', async () => {
   const connection = completed();
   const result = await host(

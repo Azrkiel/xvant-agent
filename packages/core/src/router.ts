@@ -2,7 +2,7 @@ import type { PlanNode } from './plan.ts';
 
 export interface RoutableWorker {
   alias: string;
-  runtimeKind: 'codex' | 'claude' | 'opencode';
+  runtimeKind: 'codex' | 'claude' | 'opencode' | 'native-local';
   quotaGroupId: string;
   busy: boolean;
   healthy: boolean;

@@ -14,6 +14,7 @@ import type {
   WorkerSpec,
 } from './orchestrator.ts';
 
+type ExternalKind = Exclude<WorkerSpec['runtimeKind'], 'native-local'>;
 type Controller =
   LiveCodexController | LiveClaudeController | LiveOpenCodeController;
 /**
@@ -26,7 +27,8 @@ export class LiveTurnRunner implements TurnRunner {
   readonly #store: Store;
   readonly #objects: ArtifactStore;
   readonly #workers: Map<string, WorkerSpec>;
-  readonly #runtimes: Partial<Record<WorkerSpec['runtimeKind'], RosterRuntime>>;
+  readonly #runtimes: Partial<Record<ExternalKind, RosterRuntime>>;
+  readonly #native: TurnRunner | undefined;
   readonly #timeoutMs: number;
   readonly #onEvent: (alias: string, taskId: string, event: LiveEvent) => void;
   readonly #active = new Map<string, Controller>();
@@ -35,9 +37,11 @@ export class LiveTurnRunner implements TurnRunner {
     store: Store,
     objects: ArtifactStore,
     workers: WorkerSpec[],
-    runtimes: Partial<Record<WorkerSpec['runtimeKind'], RosterRuntime>>,
+    runtimes: Partial<Record<ExternalKind, RosterRuntime>>,
     options: {
       timeoutMs?: number;
+      /** Runs native-local workers' turns (XVANT's own loop). */
+      native?: TurnRunner;
       onEvent?: (alias: string, taskId: string, event: LiveEvent) => void;
     } = {},
   ) {
@@ -45,13 +49,14 @@ export class LiveTurnRunner implements TurnRunner {
     this.#objects = objects;
     this.#workers = new Map(workers.map((w) => [w.alias, w]));
     this.#runtimes = runtimes;
+    this.#native = options.native;
     this.#timeoutMs = options.timeoutMs ?? 60 * 60 * 1000;
     this.#onEvent = options.onEvent ?? (() => {});
     this.#review = new NativeReviewController(store, objects);
   }
   interrupt(taskId: string): boolean {
     const controller = this.#active.get(taskId);
-    if (!controller) return false;
+    if (!controller) return this.#native?.interrupt(taskId) ?? false;
     try {
       controller.interrupt(taskId, 'xvant-orchestrator');
       return true;
@@ -63,6 +68,10 @@ export class LiveTurnRunner implements TurnRunner {
   async run(request: TurnRequest): Promise<TurnOutcome> {
     const worker = this.#workers.get(request.alias);
     if (!worker) throw new Error('NOT_FOUND');
+    if (worker.runtimeKind === 'native-local') {
+      if (!this.#native) throw new Error('RUNTIME_UNAVAILABLE');
+      return this.#native.run(request);
+    }
     const runtime = this.#runtimes[worker.runtimeKind];
     if (!runtime) throw new Error('RUNTIME_UNAVAILABLE');
     const route = LIVE_ROUTES[worker.runtimeKind];
@@ -162,53 +171,89 @@ export class LiveTurnRunner implements TurnRunner {
     } finally {
       this.#active.delete(request.taskId);
     }
+    const checkOutput = controller.checkOutput(request.taskId);
     controller.stop();
-    const saved = store.providers.get(request.taskId);
-    const task = store.getTask(request.taskId);
-    let patch: Buffer | null = null;
-    let files: string[] = [];
-    if (saved.verification && saved.verification.status !== 'unknown') {
-      const manifest = JSON.parse(
-        this.#objects.get(saved.verification.evidence.treeHash).toString(),
-      ) as { patch: string; files: { path: string }[] };
-      patch = this.#objects.get(manifest.patch);
-      files = manifest.files.map((f) => f.path);
-    }
-    if (task.state === 'ready_for_acceptance') {
-      const prepared = store
-        .events(0)
-        .find(
-          (e) =>
-            e.kind === 'native.ready_for_acceptance' &&
-            (e.payload as { connectionId: string }).connectionId ===
-              request.taskId,
-        )?.payload as { rowVersion: number; evidenceHash: string };
-      this.#review.accept('accept-' + request.taskId, {
-        connectionId: request.taskId,
-        expectedVersion: prepared.rowVersion,
-        reviewedEvidenceHash: prepared.evidenceHash,
-        actorId: 'xvant-orchestrator',
-        classification: 'live',
-      });
-      return { status: 'accepted', finalText, patch, files };
-    }
-    const failure = saved.failure
-      ? saved.failure.code + ':' + saved.failure.native
-      : saved.verification?.status === 'failed'
-        ? 'Checks failed: ' +
-          saved.verification.evidence.receipts
-            .filter((r) => r.status === 'failed')
-            .map((r) => r.checkId)
-            .join(', ')
-        : undefined;
-    const status: TurnOutcome['status'] =
-      saved.outcome === 'cancelled'
-        ? 'cancelled'
-        : saved.verification?.status === 'failed'
-          ? 'verification_failed'
-          : saved.outcome === 'failed'
-            ? 'failed'
-            : 'unknown';
-    return { status, finalText, patch, files, ...(failure ? { failure } : {}) };
+    return settleTurn(
+      store,
+      this.#objects,
+      this.#review,
+      request.taskId,
+      finalText,
+      checkOutput,
+    );
   }
+}
+
+/**
+ * The host-verified outcome of a finished provider turn. A turn whose checks
+ * passed is accepted here by the orchestrator's host actor, recorded as such;
+ * the user accepts the combined root result separately.
+ */
+export function settleTurn(
+  store: Store,
+  objects: ArtifactStore,
+  review: NativeReviewController,
+  taskId: string,
+  finalText: string,
+  checkOutput: Record<string, string>,
+): TurnOutcome {
+  const saved = store.providers.get(taskId);
+  const task = store.getTask(taskId);
+  let patch: Buffer | null = null;
+  let files: string[] = [];
+  if (saved.verification && saved.verification.status !== 'unknown') {
+    const manifest = JSON.parse(
+      objects.get(saved.verification.evidence.treeHash).toString(),
+    ) as { patch: string; files: { path: string }[] };
+    patch = objects.get(manifest.patch);
+    files = manifest.files.map((f) => f.path);
+  }
+  if (task.state === 'ready_for_acceptance') {
+    const prepared = store.lastEvent(taskId, 'native.ready_for_acceptance')
+      ?.payload as
+      | { connectionId: string; rowVersion: number; evidenceHash: string }
+      | undefined;
+    if (prepared?.connectionId !== taskId) throw new Error('NOT_FOUND');
+    review.accept('accept-' + taskId, {
+      connectionId: taskId,
+      expectedVersion: prepared.rowVersion,
+      reviewedEvidenceHash: prepared.evidenceHash,
+      actorId: 'xvant-orchestrator',
+      classification: saved.classification,
+    });
+    return { status: 'accepted', finalText, patch, files };
+  }
+  const failure = saved.failure
+    ? saved.failure.code + ':' + saved.failure.native
+    : saved.verification?.status === 'failed'
+      ? [
+          'Checks failed: ' +
+            saved.verification.evidence.receipts
+              .filter((r) => r.status === 'failed')
+              .map((r) => r.checkId)
+              .join(', '),
+          ...Object.entries(checkOutput).flatMap(([id, output]) => [
+            '',
+            '### Output of ' + id,
+            output,
+          ]),
+        ].join('\n')
+      : undefined;
+  const status: TurnOutcome['status'] =
+    saved.outcome === 'cancelled'
+      ? 'cancelled'
+      : saved.verification?.status === 'failed'
+        ? 'verification_failed'
+        : saved.outcome === 'failed'
+          ? 'failed'
+          : 'unknown';
+  // The runner has stopped and awaited the turn's process, so a known
+  // terminal outcome is trusted evidence that the work stopped: release the
+  // worker, session and workspace for the repair. Unknown keeps them held.
+  if (
+    status !== 'unknown' &&
+    ['result_pending', 'verification_failed'].includes(saved.status)
+  )
+    store.providers.reconcile(taskId, 'stopped');
+  return { status, finalText, patch, files, ...(failure ? { failure } : {}) };
 }

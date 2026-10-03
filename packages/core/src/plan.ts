@@ -7,7 +7,7 @@ const text = z.string().trim().min(1).max(4000);
 /** A worker may be named by `@alias` or by a runtime preference. */
 export const assigneeSchema = z.union([
   z.string().regex(/^@[A-Za-z][A-Za-z0-9_-]{0,63}$/),
-  z.enum(['codex', 'claude', 'opencode', 'any']),
+  z.enum(['codex', 'claude', 'opencode', 'native-local', 'any']),
 ]);
 export const planNodeSchema = z.strictObject({
   id: idSchema,

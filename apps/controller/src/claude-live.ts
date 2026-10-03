@@ -348,6 +348,10 @@ export class LiveClaudeController {
     )
       throw new Error('VERSION_UNSUPPORTED');
   }
+  /** Redacted output tails of the checks that failed for a connection. */
+  checkOutput(connectionId: string): Record<string, string> {
+    return this.verifier.checkOutput(connectionId);
+  }
   stop(): void {
     this.stopped = true;
     this.supervisor.stopAll();

@@ -1,0 +1,57 @@
+{
+  "suiteId": "smoke",
+  "version": 1,
+  "tasks": {
+    "diagnose-off-by-one": {
+      "taskHash": "c6f5fd20160b27a0ff6a4b2c89fd8fc7f7e86c0fe0556521b1ad5df2576aaa7e",
+      "repoHash": "8234ab54a32e2c213d59d93f0d291d7d16e12ea8078c2beed2f60839a5092476",
+      "checkHash": "2e1bc34abbcf881295b593d21a1b84dfbce74ddef83352283adca5e260041404"
+    },
+    "document-cli-flag": {
+      "taskHash": "8cf184925a427d6f13badd94db8be47c10fb3140ee08a51f14519645705ee6b1",
+      "repoHash": "fa676c1c5e27d99065bdfd4a8b35633f021bbb70b3dde804a1dc3262a7eca148",
+      "checkHash": "050fab8184d5a8edf3a23f33e33c69dcb029f2546e40ec096204c7a832b44c97"
+    },
+    "evaluate-candidate": {
+      "taskHash": "a3c4f873eb487fc8b134186aaa57b4298f3af2559d8d3d6a3078ef63e74b8ed5",
+      "repoHash": "841558247461353fa047016694241a5f6404614033a3001b9fe60172211863bd",
+      "checkHash": "b00530fc8b8a87f1c797581098f0547eefc7b2ee971670525391297114822307"
+    },
+    "explore-entrypoints": {
+      "taskHash": "753e7dd933c40bb1bc4253710af309950e0ef8fafbdb86eb698a8f5a34666a96",
+      "repoHash": "2069ea3f7e68ac785fb350f3cbe20d2d316cf0e788feb34ae73b971000965404",
+      "checkHash": "88ca0f508b84a9562a33d186c759c5d57388330db9e86541efbee236a1eb89d6"
+    },
+    "handoff-partial-feature": {
+      "taskHash": "d4c054292cf293940ebc17223a2ac3eab8be6ac783be4e9abb28c7ef6b8fcff3",
+      "repoHash": "6ed325b8c7f7c2a8f8da26f9d5019d94a95c397636ca25768133501354d5cf29",
+      "checkHash": "ebf95208a8652446c8cac282b0ca3aee0fea3bdfed27d38a3f5bd4a8de4d552f"
+    },
+    "implement-clamp": {
+      "taskHash": "2df1435ce5a75b0f36184745314c674490a666aaa99b5c30f4c40630aa138c0d",
+      "repoHash": "c22cfcbbd1fc964bcfbeed5710579d88dc6eb994f785b001b4e8b927f3b0f465",
+      "checkHash": "ffffe9aead81b648d2a1ddb755ccba9012f6cd7fa8628cd6cd700748c7a3a38c"
+    },
+    "integrate-two-patches": {
+      "taskHash": "94add9606712b16e757b13e6a71e3f64b3ad26da36deb78141c6d0975a36183b",
+      "repoHash": "a0f5e56e7fe77c58ecfa6000d5d91d1992fcea199e46223f13dcb3174c478c3f",
+      "checkHash": "5f14fabbc85c0a51554c783cbb5715885c490f52f606cc87a7c2b1bc531a125e"
+    },
+    "plan-rate-limit": {
+      "taskHash": "211ac475283e30d9e912faeaa1b017cd9e48d9ddfaf0b922c223112abfd7f640",
+      "repoHash": "2e1c62dcfad061518c232e3d55e3730515adb86f058e59d6e1e17b26afbf1869",
+      "checkHash": "08de6348586aebd5a82f84969feeae1fb6f55ae7713a46f8090c2f7eb377aad0"
+    },
+    "review-unsafe-merge": {
+      "taskHash": "38d317e4a8c0f94b8431768edfb3c08283e81dbf68c1e3b832c70e9e39af8700",
+      "repoHash": "dee4c804bcb2b18fba34e8b89143502b130cb3e0322820cdc5ccc646dff3b92c",
+      "checkHash": "4d349148db340e862831876959208fb553d469d6640b00c05a51cc1c1b483a70"
+    },
+    "test-slugify": {
+      "taskHash": "4c4e57d84a1e269dc7e01d806ec8c632427899787b4b3f8485bb646b25c1a180",
+      "repoHash": "c25e88e03a90e54607952e43891826535536dfa09389ef497c2b183cae9a86f9",
+      "checkHash": "b878dce19ea6fe3c88b0677729f93056ef7ff9f18b2c824789a69b678d12a575"
+    }
+  },
+  "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c"
+}

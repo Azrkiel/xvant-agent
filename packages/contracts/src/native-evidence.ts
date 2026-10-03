@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { hashSchema, idSchema } from './index.ts';
-import { nativeIdSchema, providerKindSchema } from './providers.ts';
+import { nativeIdSchema, runtimeKindSchema } from './providers.ts';
 const binding = {
   taskId: idSchema,
   attemptId: idSchema,
@@ -9,7 +9,7 @@ const binding = {
   workRevision: z.number().int().nonnegative(),
   generation: z.number().int().positive(),
   hostId: idSchema,
-  runtimeKind: providerKindSchema,
+  runtimeKind: runtimeKindSchema,
   classification: z.enum(['offline', 'live']),
   nativeSessionId: nativeIdSchema,
   nativeRunId: nativeIdSchema,

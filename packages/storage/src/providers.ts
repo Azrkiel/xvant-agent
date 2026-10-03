@@ -17,6 +17,7 @@ import {
   liveApprovalSchema,
   liveRouteIssue,
 } from '../../contracts/src/live.ts';
+import { toolReceiptSchema } from '../../contracts/src/tools.ts';
 
 export const providerMigration = `
 CREATE TABLE provider_connections(id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id), body TEXT NOT NULL);
@@ -296,6 +297,36 @@ export class ProviderJournal {
           : {}),
       });
       this.host.fault('provider.receive.before_commit');
+    });
+  }
+  /**
+   * Journal one tool receipt as a task event, in the same fenced ownership
+   * as the connection. The result body is replaced by its digest and size:
+   * receipts record what happened, file contents stay in the workspace.
+   */
+  recordToolReceipt(id: string, token: string, input: unknown): void {
+    const receipt = toolReceiptSchema.parse(input);
+    this.host.transaction(() => {
+      this.assertWritable(id, token);
+      const connection = this.get(id);
+      if (
+        receipt.taskId !== connection.taskId ||
+        receipt.attemptId !== connection.attemptId ||
+        receipt.workerId !== connection.worker.id
+      )
+        fail('STALE_EVIDENCE');
+      const { result, ...rest } = receipt;
+      const body = result === undefined ? undefined : JSON.stringify(result);
+      this.host.event(connection.taskId, 'tool.receipt', {
+        connectionId: id,
+        ...rest,
+        ...(body === undefined
+          ? {}
+          : {
+              resultBytes: Buffer.byteLength(body),
+              resultSha256: createHash('sha256').update(body).digest('hex'),
+            }),
+      });
     });
   }
   entries(id: string): ProviderEntry[] {

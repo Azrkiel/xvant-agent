@@ -149,6 +149,20 @@ describe('file.apply_patch', () => {
     expect(read('src/new/b.ts')).toBe('new file\n');
     expect(existsSync(join(root, 'src/old.ts'))).toBe(false);
   });
+  it('lets "." own the whole workspace except metadata and secrets', async () => {
+    const { call } = setup(['.']);
+    expect(
+      await call('file.apply_patch', {
+        edits: [{ path: 'top.txt', expectedHash: null, content: 'x' }],
+      }),
+    ).toMatchObject({ status: 'succeeded' });
+    for (const path of ['.git/config', '.env', '../escape.txt'])
+      expect(
+        await call('file.apply_patch', {
+          edits: [{ path, expectedHash: null, content: 'x' }],
+        }),
+      ).toMatchObject({ status: 'failed', code: 'PATH_DENIED' });
+  });
   it('rejects the whole patch when any file is stale, leaving every file untouched', async () => {
     write('src/c.ts', 'c\n');
     const { call } = setup();

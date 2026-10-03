@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { LIVE_ROUTES, liveRouteIssue, versionAccepted } from './live.ts';
+import {
+  LIVE_ROUTES,
+  NATIVE_LOCAL_ROUTE,
+  liveRouteIssue,
+  versionAccepted,
+} from './live.ts';
 
 const uuid = '01a0f355-2260-71d2-bd32-9fd8718d9045';
 const approval = (over: Record<string, unknown> = {}) => ({
@@ -107,4 +112,71 @@ describe('runtime version compatibility', () => {
     expect(versionAccepted('codex', '0.158.0-alpha.2.2')).toBe(false);
     expect(versionAccepted('codex', '0.158.1')).toBe(false);
   });
+});
+
+describe('native-local route', () => {
+  const native = (over: Record<string, unknown> = {}) =>
+    worker({
+      runtimeKind: 'native-local',
+      runtimeVersion: NATIVE_LOCAL_ROUTE.runtimeVersion,
+      adapterVersion: NATIVE_LOCAL_ROUTE.adapterVersion,
+      ...over,
+    });
+  const local = (over: Record<string, unknown> = {}) =>
+    approval({
+      transport: 'loopback-http',
+      model: 'qwen2.5-coder-7b-instruct',
+      profile: 'workspace-write',
+      ...over,
+    });
+  it('admits an explicit local model over loopback HTTP', () => {
+    expect(liveRouteIssue(local(), native(), 'c1')).toBeUndefined();
+    expect(
+      liveRouteIssue(local(), native({ nativeSessionId: 'pending:c1' }), 'c1'),
+    ).toBeUndefined();
+  });
+  it.each([
+    [
+      'an implied model',
+      local({ model: 'default' }),
+      native(),
+      'LIVE_APPROVAL_REQUIRED',
+    ],
+    [
+      'a native bypass',
+      local({ acknowledgedNativeBypass: true }),
+      native(),
+      'POLICY_DENIED',
+    ],
+    [
+      'another transport',
+      local({ transport: 'cli' }),
+      native(),
+      'VERSION_UNSUPPORTED',
+    ],
+    [
+      'another loop version',
+      local(),
+      native({ runtimeVersion: '1.0.1' }),
+      'VERSION_UNSUPPORTED',
+    ],
+    [
+      'another adapter',
+      local(),
+      native({ adapterVersion: 'x' }),
+      'VERSION_UNSUPPORTED',
+    ],
+    [
+      'a foreign session',
+      local(),
+      native({ nativeSessionId: 'ses_1' }),
+      'SESSION_MISMATCH',
+    ],
+  ])('refuses %s', (_, a, w, code) =>
+    expect(liveRouteIssue(a, w, 'c1')).toBe(code),
+  );
+  it('keeps external runtimes off the loopback transport', () =>
+    expect(liveRouteIssue(local(), worker(), 'c1')).toBe(
+      'VERSION_UNSUPPORTED',
+    ));
 });
