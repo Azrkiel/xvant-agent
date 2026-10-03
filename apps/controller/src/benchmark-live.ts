@@ -22,7 +22,7 @@ import type { TurnRunner, WorkerSpec } from './orchestrator.ts';
 /** Account-level stops: the attempt is incomplete, not a failure of the work. */
 const ACCOUNT_BLOCKS = ['QUOTA_BLOCKED', 'AUTH_REQUIRED', 'MODEL_UNAVAILABLE'];
 
-/** Text put before the objective, e.g. an XVANT skill; absent for a bare baseline. */
+/** Text put before the objective, e.g. an XVANT skill or the acceptance criteria; absent for a bare baseline. */
 export type Instructions = (taskId: string) => string | undefined;
 
 /**
@@ -119,6 +119,8 @@ export function liveConfiguration(options: {
   /** Per-attempt controller state is created under this directory. */
   stateRoot: string;
   instructions?: Instructions;
+  /** Recorded with each attempt, e.g. `skill` or `criteria`. */
+  instructionsKind?: string;
   onEvent?: (taskId: string, event: LiveEvent) => void;
 }): Configuration {
   const { kind, runtime } = options;
@@ -128,7 +130,9 @@ export function liveConfiguration(options: {
       runtimeVersion: runtime.version ?? LIVE_ROUTES[kind].runtimeVersion,
       adapter: LIVE_ROUTES[kind].adapterVersion,
       model: runtime.model ?? 'default',
-      instructions: options.instructions ? 'skill' : 'none',
+      instructions: options.instructions
+        ? (options.instructionsKind ?? 'skill')
+        : 'none',
     },
     kind,
     options.stateRoot,
@@ -161,6 +165,8 @@ export function nativeConfiguration(options: {
   classification: 'offline' | 'live';
   stateRoot: string;
   instructions?: Instructions;
+  /** Recorded with each attempt, e.g. `skill` or `criteria`. */
+  instructionsKind?: string;
   maxSteps?: number;
 }): Configuration {
   return singleWorker(
@@ -169,7 +175,9 @@ export function nativeConfiguration(options: {
       runtimeVersion: NATIVE_LOCAL_ROUTE.runtimeVersion,
       adapter: NATIVE_LOCAL_ROUTE.adapterVersion,
       model: options.provider.id,
-      instructions: options.instructions ? 'skill' : 'none',
+      instructions: options.instructions
+        ? (options.instructionsKind ?? 'skill')
+        : 'none',
     },
     'native-local',
     options.stateRoot,

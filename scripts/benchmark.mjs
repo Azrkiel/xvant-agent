@@ -82,7 +82,20 @@ const skillFor = (taskId) => {
   const { skill } = JSON.parse(readFileSync(fixture, 'utf8'));
   return readFileSync(resolve('skills', skill, 'SKILL.md'), 'utf8');
 };
-const bare = (name) => name.replace(/-skills$/, '');
+// A `-criteria` suffix states the task's acceptance criteria, as XVANT does for its workers.
+const criteriaFor = (taskId) => {
+  const task = suite.tasks.find((t) => t.id === taskId);
+  const fixture = join(
+    dirname(suitePath(suiteDir, task.check)),
+    'fixture.json',
+  );
+  const { acceptanceCriteria } = JSON.parse(readFileSync(fixture, 'utf8'));
+  return [
+    'The result is accepted only if all of these hold:',
+    ...acceptanceCriteria.map((c) => '- ' + c),
+  ].join('\n');
+};
+const bare = (name) => name.replace(/-(skills|criteria)$/, '');
 const LIVE = {
   'claude-haiku': 'haiku',
   'claude-sonnet': 'sonnet',
@@ -99,7 +112,12 @@ if (unknown.length) {
   process.exit(2);
 }
 const live = names.filter((name) => Object.hasOwn(LIVE, bare(name)));
-const skills = (name) => (name.endsWith('-skills') ? skillFor : undefined);
+const extra = (name) =>
+  name.endsWith('-skills')
+    ? { instructions: skillFor, instructionsKind: 'skill' }
+    : name.endsWith('-criteria')
+      ? { instructions: criteriaFor, instructionsKind: 'criteria' }
+      : {};
 if (live.length && !args.includes('--approve-live')) {
   console.error(live.join(', ') + ' runs real model turns: add --approve-live');
   process.exit(2);
@@ -131,7 +149,7 @@ for (const name of live.filter((n) => bare(n) === 'native-local')) {
   }
   available[name] = nativeConfiguration({
     provider,
-    instructions: skills(name),
+    ...extra(name),
     classification: 'live',
     stateRoot: join(state, 'controllers'),
   });
@@ -150,7 +168,7 @@ for (const name of live.filter((n) => bare(n) !== 'native-local')) {
       version: found.version,
       model: LIVE[bare(name)],
     },
-    instructions: skills(name),
+    ...extra(name),
     stateRoot: join(state, 'controllers'),
   });
 }
