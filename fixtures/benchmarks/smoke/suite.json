@@ -1,0 +1,106 @@
+{
+  "id": "smoke",
+  "version": 1,
+  "tasks": [
+    {
+      "id": "diagnose-off-by-one",
+      "category": "debugging",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "test/range.test.mjs fails. Find the root cause, fix it in src/range.js, and write DIAGNOSIS.md with the symptom, the cause and the fix.",
+      "repo": "../../skills/diagnose-off-by-one/repo",
+      "check": "../../skills/diagnose-off-by-one/check.mjs",
+      "timeoutMs": 600000
+    },
+    {
+      "id": "document-cli-flag",
+      "category": "feature",
+      "split": "held-out",
+      "shape": "single",
+      "objective": "Document every option src/cli.js accepts in the Options section of README.md.",
+      "repo": "../../skills/document-cli-flag/repo",
+      "check": "../../skills/document-cli-flag/check.mjs",
+      "timeoutMs": 600000
+    },
+    {
+      "id": "evaluate-candidate",
+      "category": "test-review",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "Compare results/candidate.json with results/baseline.json under EVALUATION_RULES.md and write EVALUATION.json with wins, losses, regressions (task ids) and decision (promote or retain).",
+      "repo": "../../skills/evaluate-candidate/repo",
+      "check": "../../skills/evaluate-candidate/check.mjs",
+      "timeoutMs": 600000
+    },
+    {
+      "id": "explore-entrypoints",
+      "category": "cross-module",
+      "split": "held-out",
+      "shape": "single",
+      "objective": "Write docs/MAP.md: one line per module under src/ with its path and exported functions, and name the entry point.",
+      "repo": "../../skills/explore-entrypoints/repo",
+      "check": "../../skills/explore-entrypoints/check.mjs",
+      "timeoutMs": 600000
+    },
+    {
+      "id": "handoff-partial-feature",
+      "category": "cross-module",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "Stop here and hand off. Write HANDOFF.json with summary, completed, remaining, openQuestions and failedAttempts so another worker can finish without re-reading everything. Include every TODO(handoff) location in remaining.",
+      "repo": "../../skills/handoff-partial-feature/repo",
+      "check": "../../skills/handoff-partial-feature/check.mjs",
+      "timeoutMs": 600000
+    },
+    {
+      "id": "implement-clamp",
+      "category": "feature",
+      "split": "held-out",
+      "shape": "single",
+      "objective": "Add clamp(value, min, max) to src/math.js so test/math.test.mjs passes; throw RangeError when min > max.",
+      "repo": "../../skills/implement-clamp/repo",
+      "check": "../../skills/implement-clamp/check.mjs",
+      "timeoutMs": 600000
+    },
+    {
+      "id": "integrate-two-patches",
+      "category": "cross-module",
+      "split": "held-out",
+      "shape": "parallel",
+      "objective": "Integrate patches/a.json and patches/b.json into src/greet.js so both behaviors hold and test/greet.test.mjs passes. Record the conflict in INTEGRATION.md.",
+      "repo": "../../skills/integrate-two-patches/repo",
+      "check": "../../skills/integrate-two-patches/check.mjs",
+      "timeoutMs": 600000
+    },
+    {
+      "id": "plan-rate-limit",
+      "category": "feature",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "Write PLAN.md: an ordered plan to add per-client rate limiting (10 requests per minute) to src/server.js without changing /health.",
+      "repo": "../../skills/plan-rate-limit/repo",
+      "check": "../../skills/plan-rate-limit/check.mjs",
+      "timeoutMs": 600000
+    },
+    {
+      "id": "review-unsafe-merge",
+      "category": "test-review",
+      "split": "held-out",
+      "shape": "single",
+      "objective": "Review changes/proposed.diff. Write review/FINDINGS.json: an array of {file, severity, summary} findings, most severe first. Do not modify the source.",
+      "repo": "../../skills/review-unsafe-merge/repo",
+      "check": "../../skills/review-unsafe-merge/check.mjs",
+      "timeoutMs": 600000
+    },
+    {
+      "id": "test-slugify",
+      "category": "test-review",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "Add test/slugify.test.mjs that exits non-zero when slugify is wrong. Cover letter case, surrounding whitespace, runs of punctuation and leading or trailing separators.",
+      "repo": "../../skills/test-slugify/repo",
+      "check": "../../skills/test-slugify/check.mjs",
+      "timeoutMs": 600000
+    }
+  ]
+}
