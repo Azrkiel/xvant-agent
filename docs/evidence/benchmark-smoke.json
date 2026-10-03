@@ -1,0 +1,1492 @@
+{
+  "generatedAt": "2026-10-03T04:57:33.683Z",
+  "classification": "offline",
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "repeats": 3,
+  "suiteId": "smoke",
+  "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+  "complete": true,
+  "directional": false,
+  "configurations": {
+    "reference": {
+      "scheduled": 30,
+      "accepted": 30,
+      "failed": 0,
+      "incomplete": 0,
+      "excluded": 0,
+      "missing": 0,
+      "successRate": 1,
+      "tasksAlwaysAccepted": 10,
+      "medianElapsedMs": 593,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "toolFailures": 0,
+      "conflicts": 0,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    "noop": {
+      "scheduled": 30,
+      "accepted": 0,
+      "failed": 30,
+      "incomplete": 0,
+      "excluded": 0,
+      "missing": 0,
+      "successRate": 0,
+      "tasksAlwaysAccepted": 0,
+      "medianElapsedMs": 590,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "toolFailures": 0,
+      "conflicts": 0,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    }
+  },
+  "bySplit": {
+    "tuning": {
+      "reference": {
+        "scheduled": 15,
+        "accepted": 15
+      },
+      "noop": {
+        "scheduled": 15,
+        "accepted": 0
+      }
+    },
+    "held-out": {
+      "reference": {
+        "scheduled": 15,
+        "accepted": 15
+      },
+      "noop": {
+        "scheduled": 15,
+        "accepted": 0
+      }
+    }
+  },
+  "exclusions": [],
+  "missing": [],
+  "limitations": [
+    "Human rework was not measured."
+  ],
+  "suiteShapeProblems": [],
+  "records": [
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "diagnose-off-by-one",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:56:55.402Z",
+      "elapsedMs": 469,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "diagnose-off-by-one",
+      "configuration": "reference",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:56:55.874Z",
+      "elapsedMs": 425,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "diagnose-off-by-one",
+      "configuration": "reference",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:56:56.300Z",
+      "elapsedMs": 625,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "diagnose-off-by-one",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:56:56.926Z",
+      "elapsedMs": 677,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "diagnose-off-by-one",
+      "configuration": "noop",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:56:57.604Z",
+      "elapsedMs": 744,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "diagnose-off-by-one",
+      "configuration": "noop",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:56:58.349Z",
+      "elapsedMs": 637,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "document-cli-flag",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:56:58.988Z",
+      "elapsedMs": 576,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "document-cli-flag",
+      "configuration": "reference",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:56:59.565Z",
+      "elapsedMs": 571,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "document-cli-flag",
+      "configuration": "reference",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:00.138Z",
+      "elapsedMs": 549,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "document-cli-flag",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:00.689Z",
+      "elapsedMs": 560,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "document-cli-flag",
+      "configuration": "noop",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:01.250Z",
+      "elapsedMs": 582,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "document-cli-flag",
+      "configuration": "noop",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:01.834Z",
+      "elapsedMs": 586,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "evaluate-candidate",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:02.421Z",
+      "elapsedMs": 491,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "evaluate-candidate",
+      "configuration": "reference",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:02.914Z",
+      "elapsedMs": 534,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "evaluate-candidate",
+      "configuration": "reference",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:03.449Z",
+      "elapsedMs": 518,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "evaluate-candidate",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:03.968Z",
+      "elapsedMs": 522,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "evaluate-candidate",
+      "configuration": "noop",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:04.490Z",
+      "elapsedMs": 556,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "evaluate-candidate",
+      "configuration": "noop",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:05.047Z",
+      "elapsedMs": 583,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "explore-entrypoints",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:05.631Z",
+      "elapsedMs": 559,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "explore-entrypoints",
+      "configuration": "reference",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:06.191Z",
+      "elapsedMs": 551,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "explore-entrypoints",
+      "configuration": "reference",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:06.743Z",
+      "elapsedMs": 568,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "explore-entrypoints",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:07.313Z",
+      "elapsedMs": 650,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "explore-entrypoints",
+      "configuration": "noop",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:07.964Z",
+      "elapsedMs": 572,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "explore-entrypoints",
+      "configuration": "noop",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:08.537Z",
+      "elapsedMs": 588,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "handoff-partial-feature",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:09.126Z",
+      "elapsedMs": 675,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "handoff-partial-feature",
+      "configuration": "reference",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:09.802Z",
+      "elapsedMs": 528,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "handoff-partial-feature",
+      "configuration": "reference",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:10.331Z",
+      "elapsedMs": 581,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "handoff-partial-feature",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:10.913Z",
+      "elapsedMs": 541,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "handoff-partial-feature",
+      "configuration": "noop",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:11.455Z",
+      "elapsedMs": 549,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "handoff-partial-feature",
+      "configuration": "noop",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:12.006Z",
+      "elapsedMs": 654,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "implement-clamp",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:12.662Z",
+      "elapsedMs": 630,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "implement-clamp",
+      "configuration": "reference",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:13.293Z",
+      "elapsedMs": 700,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "implement-clamp",
+      "configuration": "reference",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:13.995Z",
+      "elapsedMs": 736,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "implement-clamp",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:14.731Z",
+      "elapsedMs": 765,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "implement-clamp",
+      "configuration": "noop",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:15.497Z",
+      "elapsedMs": 680,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "implement-clamp",
+      "configuration": "noop",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:16.178Z",
+      "elapsedMs": 656,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "integrate-two-patches",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:16.835Z",
+      "elapsedMs": 775,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "integrate-two-patches",
+      "configuration": "reference",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:17.611Z",
+      "elapsedMs": 672,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "integrate-two-patches",
+      "configuration": "reference",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:18.284Z",
+      "elapsedMs": 610,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "integrate-two-patches",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:18.895Z",
+      "elapsedMs": 724,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "integrate-two-patches",
+      "configuration": "noop",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:19.620Z",
+      "elapsedMs": 743,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "integrate-two-patches",
+      "configuration": "noop",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:20.364Z",
+      "elapsedMs": 698,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "plan-rate-limit",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:21.063Z",
+      "elapsedMs": 600,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "plan-rate-limit",
+      "configuration": "reference",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:21.664Z",
+      "elapsedMs": 585,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "plan-rate-limit",
+      "configuration": "reference",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:22.251Z",
+      "elapsedMs": 617,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "plan-rate-limit",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:22.869Z",
+      "elapsedMs": 564,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "plan-rate-limit",
+      "configuration": "noop",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:23.434Z",
+      "elapsedMs": 628,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "plan-rate-limit",
+      "configuration": "noop",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:24.064Z",
+      "elapsedMs": 603,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "review-unsafe-merge",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:24.668Z",
+      "elapsedMs": 752,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "review-unsafe-merge",
+      "configuration": "reference",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:25.421Z",
+      "elapsedMs": 536,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "review-unsafe-merge",
+      "configuration": "reference",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:25.957Z",
+      "elapsedMs": 636,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "review-unsafe-merge",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:26.595Z",
+      "elapsedMs": 526,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "review-unsafe-merge",
+      "configuration": "noop",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:27.122Z",
+      "elapsedMs": 591,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "review-unsafe-merge",
+      "configuration": "noop",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:27.714Z",
+      "elapsedMs": 558,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "test-slugify",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:28.274Z",
+      "elapsedMs": 1224,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "test-slugify",
+      "configuration": "reference",
+      "repeat": 2,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:29.499Z",
+      "elapsedMs": 1182,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "test-slugify",
+      "configuration": "reference",
+      "repeat": 3,
+      "status": "accepted",
+      "startedAt": "2026-10-03T04:57:30.683Z",
+      "elapsedMs": 1317,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "test-slugify",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:32.002Z",
+      "elapsedMs": 596,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "test-slugify",
+      "configuration": "noop",
+      "repeat": 2,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:32.599Z",
+      "elapsedMs": 546,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "test-slugify",
+      "configuration": "noop",
+      "repeat": 3,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T04:57:33.146Z",
+      "elapsedMs": 525,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    }
+  ]
+}
