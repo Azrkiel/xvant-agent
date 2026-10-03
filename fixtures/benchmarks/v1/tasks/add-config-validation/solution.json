@@ -1,0 +1,8 @@
+{
+  "edits": [
+    {
+      "path": "src/config.js",
+      "content": "export function loadConfig(input = {}) {\n  const host = input.host ?? 'localhost';\n  const raw = input.port ?? 8080;\n  const port = typeof raw === 'string' && /^\\d+$/.test(raw) ? Number(raw) : raw;\n  if (!Number.isInteger(port) || port < 1 || port > 65535)\n    throw new TypeError('port must be an integer from 1 to 65535');\n  return Object.freeze({ host, port });\n}\n"
+    }
+  ]
+}

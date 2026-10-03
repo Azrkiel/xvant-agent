@@ -1,0 +1,8 @@
+{
+  "edits": [
+    {
+      "path": "src/retry.js",
+      "content": "// Calls fn up to `attempts` times and resolves with its first successful result.\nexport async function retry(fn, attempts) {\n  if (attempts < 1) throw new RangeError('attempts must be at least 1');\n  let lastError;\n  for (let i = 1; i <= attempts; i += 1) {\n    try {\n      return await fn(i);\n    } catch (error) {\n      lastError = error;\n    }\n  }\n  throw lastError;\n}\n"
+    }
+  ]
+}

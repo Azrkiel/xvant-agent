@@ -64,7 +64,10 @@ export interface Configuration {
   /** Runtime, model and skill versions recorded with every attempt. */
   versions: Record<string, string>;
   run(input: {
-    task: Pick<BenchmarkTask, 'id' | 'objective' | 'timeoutMs'>;
+    task: Pick<
+      BenchmarkTask,
+      'id' | 'objective' | 'timeoutMs' | 'acceptanceCriteria' | 'visibleTests'
+    >;
     workspace: string;
     baseCommit: string;
     signal: AbortSignal;
@@ -191,6 +194,10 @@ export async function runBenchmark(options: {
             id: task.id,
             objective: task.objective,
             timeoutMs: task.timeoutMs,
+            ...(task.acceptanceCriteria
+              ? { acceptanceCriteria: task.acceptanceCriteria }
+              : {}),
+            ...(task.visibleTests ? { visibleTests: task.visibleTests } : {}),
           },
           workspace,
           baseCommit,

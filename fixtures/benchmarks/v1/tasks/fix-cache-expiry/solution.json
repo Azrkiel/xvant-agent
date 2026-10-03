@@ -1,0 +1,8 @@
+{
+  "edits": [
+    {
+      "path": "src/cache.js",
+      "content": "// A cache whose entries expire ttlMs milliseconds after they were set.\nexport function createCache(ttlMs, now = () => Date.now()) {\n  const entries = new Map();\n  const live = (key) => {\n    const entry = entries.get(key);\n    if (!entry) return undefined;\n    if (now() - entry.at >= ttlMs) {\n      entries.delete(key);\n      return undefined;\n    }\n    return entry;\n  };\n  return {\n    set(key, value) {\n      entries.set(key, { value, at: now() });\n    },\n    get(key) {\n      return live(key)?.value;\n    },\n    has(key) {\n      return live(key) !== undefined;\n    },\n    size() {\n      for (const key of [...entries.keys()]) live(key);\n      return entries.size;\n    },\n  };\n}\n"
+    }
+  ]
+}

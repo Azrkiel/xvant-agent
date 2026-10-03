@@ -1,0 +1,389 @@
+{
+  "id": "v1",
+  "version": 1,
+  "tasks": [
+    {
+      "id": "add-config-validation",
+      "category": "feature",
+      "split": "held-out",
+      "shape": "single",
+      "objective": "Give loadConfig in src/config.js defaults and validation so test/config.test.mjs passes. Do not change the test.",
+      "repo": "tasks/add-config-validation/repo",
+      "check": "tasks/add-config-validation/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "test/config.test.mjs passes unchanged",
+        "host defaults to 'localhost' and port to 8080; loadConfig() with no argument returns the defaults",
+        "port must be an integer from 1 to 65535, otherwise a TypeError is thrown",
+        "A port given as a string of digits, such as '3000', is accepted and returned as a number",
+        "The returned object is frozen"
+      ],
+      "visibleTests": ["test/config.test.mjs"]
+    },
+    {
+      "id": "add-event-hooks",
+      "category": "cross-module",
+      "split": "held-out",
+      "shape": "parallel",
+      "objective": "Add an optional onEvent callback to the queue (src/queue.js) and the worker (src/worker.js), and add createSystem to src/index.js that wires both to one callback. The queue and worker changes are independent of each other.",
+      "repo": "tasks/add-event-hooks/repo",
+      "check": "tasks/add-event-hooks/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "createQueue({ onEvent }) calls onEvent({ type: 'push', item }) on push and onEvent({ type: 'shift', item }) on shift; shift on an empty queue emits nothing",
+        "createWorker(handler, { onEvent }) calls onEvent({ type: 'done', item }) after the handler succeeds and onEvent({ type: 'error', item, error }) when it throws",
+        "A handler error no longer stops run: the worker continues with the next item, and run resolves with the number of items that succeeded",
+        "createSystem(handler, { onEvent }) in src/index.js returns { queue, worker } that both report to the same onEvent",
+        "onEvent is optional everywhere, and createQueue and createWorker stay exported from src/index.js"
+      ]
+    },
+    {
+      "id": "add-money-format",
+      "category": "cross-module",
+      "split": "held-out",
+      "shape": "parallel",
+      "objective": "Add money formatting across three modules. In src/format.js add and export formatMoney(cents, currency). In src/cart.js add and export summary(cart, currency). In src/report.js let report(carts, currency) print formatted totals. Keep every existing export working.",
+      "repo": "tasks/add-money-format/repo",
+      "check": "tasks/add-money-format/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "formatMoney(123456, 'USD') returns 'USD 1,234.56': currency, a space, the whole part with comma thousands separators, and always two decimals",
+        "formatMoney throws a RangeError unless cents is a non-negative integer",
+        "summary(cart, currency) returns { items, total }: items is the summed quantity, total is formatMoney of the cart total",
+        "report(carts, currency) returns one line per cart, '<id>: <formatted total>', joined by newlines",
+        "report(carts) without a currency keeps printing the raw total in cents, and total and formatCount are unchanged"
+      ]
+    },
+    {
+      "id": "add-store-limit",
+      "category": "feature",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "Add an optional maxEntries limit with least-recently-used eviction to createStore in src/store.js so test/store.test.mjs passes. Do not change the test.",
+      "repo": "tasks/add-store-limit/repo",
+      "check": "tasks/add-store-limit/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "test/store.test.mjs passes unchanged",
+        "createStore({ maxEntries }) evicts the least recently used key when a set would exceed the limit",
+        "Both get (of an existing key) and set count as a use",
+        "keys() lists keys from least to most recently used",
+        "createStore() with no options has no limit"
+      ],
+      "visibleTests": ["test/store.test.mjs"]
+    },
+    {
+      "id": "add-unique-slug",
+      "category": "feature",
+      "split": "held-out",
+      "shape": "single",
+      "objective": "Add and export uniqueSlug(title, taken) in src/slug.js so test/slug.test.mjs passes. `taken` is a Set of slugs already in use. Keep slugify unchanged and do not change the test.",
+      "repo": "tasks/add-unique-slug/repo",
+      "check": "tasks/add-unique-slug/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "test/slug.test.mjs passes unchanged",
+        "uniqueSlug returns slugify(title) when it is free, otherwise the first free of <slug>-2, <slug>-3, ...",
+        "The returned slug is added to `taken`",
+        "A title whose slug is empty uses 'untitled'"
+      ],
+      "visibleTests": ["test/slug.test.mjs"]
+    },
+    {
+      "id": "diagnose-off-by-one",
+      "category": "debugging",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "test/range.test.mjs fails. Find the root cause, fix it in src/range.js, and write DIAGNOSIS.md with the symptom, the cause and the fix.",
+      "repo": "../../skills/diagnose-off-by-one/repo",
+      "check": "../../skills/diagnose-off-by-one/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "test/range.test.mjs passes unchanged",
+        "DIAGNOSIS.md names src/range.js and the cause"
+      ]
+    },
+    {
+      "id": "document-cli-flag",
+      "category": "feature",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "Document every option src/cli.js accepts in the Options section of README.md.",
+      "repo": "../../skills/document-cli-flag/repo",
+      "check": "../../skills/document-cli-flag/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "The Options section documents --verbose and --dry-run",
+        "Other README sections are preserved"
+      ]
+    },
+    {
+      "id": "evaluate-candidate",
+      "category": "test-review",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "Compare results/candidate.json with results/baseline.json under EVALUATION_RULES.md and write EVALUATION.json with wins, losses, regressions (task ids) and decision (promote or retain).",
+      "repo": "../../skills/evaluate-candidate/repo",
+      "check": "../../skills/evaluate-candidate/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "EVALUATION.json counts wins and losses",
+        "regressions lists every baseline pass the candidate fails",
+        "decision follows the rules"
+      ]
+    },
+    {
+      "id": "explore-entrypoints",
+      "category": "cross-module",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "Write docs/MAP.md: one line per module under src/ with its path and exported functions, and name the entry point.",
+      "repo": "../../skills/explore-entrypoints/repo",
+      "check": "../../skills/explore-entrypoints/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "docs/MAP.md lists every module under src/ with its exported functions",
+        "docs/MAP.md names src/index.js as the entry point"
+      ]
+    },
+    {
+      "id": "fix-cache-expiry",
+      "category": "debugging",
+      "split": "held-out",
+      "shape": "single",
+      "objective": "test/cache.test.mjs fails. Entries in src/cache.js must expire ttlMs milliseconds after they were set. Find every cause and fix src/cache.js. Do not change the test.",
+      "repo": "tasks/fix-cache-expiry/repo",
+      "check": "tasks/fix-cache-expiry/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "test/cache.test.mjs passes unchanged",
+        "An entry is expired once now - setTime >= ttlMs; get returns undefined and has returns false for it",
+        "size() counts only entries that have not expired",
+        "Setting a key again restarts its time"
+      ],
+      "visibleTests": ["test/cache.test.mjs"]
+    },
+    {
+      "id": "fix-csv-quotes",
+      "category": "debugging",
+      "split": "held-out",
+      "shape": "single",
+      "objective": "test/csv.test.mjs fails: parseLine in src/csv.js does not understand quoted fields. Fix src/csv.js. Do not change the test.",
+      "repo": "tasks/fix-csv-quotes/repo",
+      "check": "tasks/fix-csv-quotes/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "test/csv.test.mjs passes unchanged",
+        "A field in double quotes may contain commas, and keeps its inner spaces",
+        "Two double quotes inside a quoted field are one literal quote",
+        "Unquoted fields are trimmed; empty fields are empty strings"
+      ],
+      "visibleTests": ["test/csv.test.mjs"]
+    },
+    {
+      "id": "fix-flaky-token-test",
+      "category": "test-review",
+      "split": "held-out",
+      "shape": "single",
+      "objective": "test/token.test.mjs passes on some runs and fails on others. Make it deterministic without changing src/token.js. It must still prove that a token is valid before it expires and invalid from the moment it expires.",
+      "repo": "tasks/fix-flaky-token-test/repo",
+      "check": "tasks/fix-flaky-token-test/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "test/token.test.mjs passes on every run, and src/token.js stays unchanged",
+        "The test does not read the real clock or use randomness: it passes explicit times to issue and isValid",
+        "The test checks a time before expiry, the exact expiry time, and a time after it",
+        "The test would fail if isValid treated the exact expiry time as valid, or if the lifetime were ignored"
+      ],
+      "visibleTests": ["test/token.test.mjs"]
+    },
+    {
+      "id": "fix-interval-merge",
+      "category": "debugging",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "test/intervals.test.mjs fails. Intervals in src/intervals.js are half-open, [start, end). Find every cause and fix src/intervals.js. Do not change the test.",
+      "repo": "tasks/fix-interval-merge/repo",
+      "check": "tasks/fix-interval-merge/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "test/intervals.test.mjs passes unchanged",
+        "overlaps is false for intervals that only touch (one ends where the other starts)",
+        "merge joins intervals that overlap or touch, keeps the furthest end, and returns them sorted by start",
+        "merge does not modify its input"
+      ],
+      "visibleTests": ["test/intervals.test.mjs"]
+    },
+    {
+      "id": "fix-pagination",
+      "category": "debugging",
+      "split": "held-out",
+      "shape": "single",
+      "objective": "test/paginate.test.mjs fails. Find the root cause in src/paginate.js and fix it. Pages are numbered from 1. Do not change the test.",
+      "repo": "tasks/fix-pagination/repo",
+      "check": "tasks/fix-pagination/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "test/paginate.test.mjs passes unchanged",
+        "paginate(items, page, size) returns page number `page`, counting from 1; a page past the end is an empty array",
+        "pageCount(items, size) rounds up and is 0 for no items"
+      ],
+      "visibleTests": ["test/paginate.test.mjs"]
+    },
+    {
+      "id": "fix-retry-attempts",
+      "category": "debugging",
+      "split": "held-out",
+      "shape": "single",
+      "objective": "test/retry.test.mjs fails. retry(fn, attempts) in src/retry.js must call fn at most `attempts` times and report failure properly. Fix src/retry.js. Do not change the test.",
+      "repo": "tasks/fix-retry-attempts/repo",
+      "check": "tasks/fix-retry-attempts/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "test/retry.test.mjs passes unchanged",
+        "fn is called at most `attempts` times and receives the attempt number, starting at 1",
+        "When every attempt fails, retry rejects with the last error",
+        "attempts below 1 rejects with a RangeError without calling fn"
+      ],
+      "visibleTests": ["test/retry.test.mjs"]
+    },
+    {
+      "id": "handoff-partial-feature",
+      "category": "cross-module",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "Stop here and hand off. Write HANDOFF.json with summary, completed, remaining, openQuestions and failedAttempts so another worker can finish without re-reading everything. Include every TODO(handoff) location in remaining.",
+      "repo": "../../skills/handoff-partial-feature/repo",
+      "check": "../../skills/handoff-partial-feature/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "HANDOFF.json has all five fields",
+        "remaining names src/export.js",
+        "failedAttempts records the chunking attempt"
+      ]
+    },
+    {
+      "id": "implement-clamp",
+      "category": "feature",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "Add clamp(value, min, max) to src/math.js so test/math.test.mjs passes; throw RangeError when min > max.",
+      "repo": "../../skills/implement-clamp/repo",
+      "check": "../../skills/implement-clamp/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "test/math.test.mjs passes",
+        "sum keeps its behavior"
+      ]
+    },
+    {
+      "id": "integrate-two-patches",
+      "category": "cross-module",
+      "split": "tuning",
+      "shape": "parallel",
+      "objective": "Integrate patches/a.json and patches/b.json into src/greet.js so both behaviors hold and test/greet.test.mjs passes. Record the conflict in INTEGRATION.md.",
+      "repo": "../../skills/integrate-two-patches/repo",
+      "check": "../../skills/integrate-two-patches/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "test/greet.test.mjs passes",
+        "INTEGRATION.md records the conflict in src/greet.js"
+      ]
+    },
+    {
+      "id": "plan-rate-limit",
+      "category": "feature",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "Write PLAN.md: an ordered plan to add per-client rate limiting (10 requests per minute) to src/server.js without changing /health.",
+      "repo": "../../skills/plan-rate-limit/repo",
+      "check": "../../skills/plan-rate-limit/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "PLAN.md has at least three numbered steps",
+        "The steps name src/limiter.js and src/server.js",
+        "A step says how the change is tested",
+        "PLAN.md lists at least one risk"
+      ]
+    },
+    {
+      "id": "rename-timeout-option",
+      "category": "cross-module",
+      "split": "held-out",
+      "shape": "parallel",
+      "objective": "Rename the `timeout` option to `timeoutMs` in src/client.js, src/server.js and src/config.js, keeping the old name working as a fallback.",
+      "repo": "tasks/rename-timeout-option/repo",
+      "check": "tasks/rename-timeout-option/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "createClient(options) and createServer(options) read `timeoutMs` and return an object with a `timeoutMs` property and no `timeout` property",
+        "The old `timeout` option is still accepted when `timeoutMs` is absent; `timeoutMs` wins when both are given",
+        "Defaults are unchanged: 1000 for the client, 5000 for the server; createServer still returns port (default 80)",
+        "DEFAULTS in src/config.js has timeoutMs: 1000 and no timeout key",
+        "describe(options) returns 'timeoutMs=<value>' using the same fallback rule and DEFAULTS.timeoutMs"
+      ]
+    },
+    {
+      "id": "review-unsafe-merge",
+      "category": "test-review",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "Review changes/proposed.diff. Write review/FINDINGS.json: an array of {file, severity, summary} findings, most severe first. Do not modify the source.",
+      "repo": "../../skills/review-unsafe-merge/repo",
+      "check": "../../skills/review-unsafe-merge/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "review/FINDINGS.json lists findings most severe first",
+        "src/transfer.js is unchanged"
+      ]
+    },
+    {
+      "id": "review-user-queries",
+      "category": "test-review",
+      "split": "held-out",
+      "shape": "single",
+      "objective": "Review src/users.js, which a colleague wants to merge. db.query(sql, params) returns a promise. Write your review to review/FINDINGS.json. Do not change src/users.js.",
+      "repo": "tasks/review-user-queries/repo",
+      "check": "tasks/review-user-queries/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "review/FINDINGS.json is a JSON object: { \"approve\": boolean, \"findings\": [ { \"file\": string, \"line\": number, \"severity\": \"high\" | \"medium\" | \"low\", \"issue\": string } ] }",
+        "Each finding gives the file path from the repository root and the 1-based line number of the problem",
+        "Every real defect in src/users.js is reported, the most dangerous one as \"high\"",
+        "approve is false when any high or medium finding exists",
+        "src/users.js stays unchanged"
+      ]
+    },
+    {
+      "id": "test-slugify",
+      "category": "test-review",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "Add test/slugify.test.mjs that exits non-zero when slugify is wrong. Cover letter case, surrounding whitespace, runs of punctuation and leading or trailing separators.",
+      "repo": "../../skills/test-slugify/repo",
+      "check": "../../skills/test-slugify/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "test/slugify.test.mjs passes on src/slugify.js",
+        "The tests fail on plausible bugs in slugify"
+      ]
+    },
+    {
+      "id": "write-duration-tests",
+      "category": "test-review",
+      "split": "held-out",
+      "shape": "single",
+      "objective": "Write test/duration.test.mjs for parseDuration in src/duration.js. It must be a plain Node script using node:assert that exits non-zero when an assertion fails. Do not change src/duration.js.",
+      "repo": "tasks/write-duration-tests/repo",
+      "check": "tasks/write-duration-tests/check.mjs",
+      "timeoutMs": 900000,
+      "acceptanceCriteria": [
+        "test/duration.test.mjs passes against the current src/duration.js, which stays unchanged",
+        "The test checks hours, minutes and seconds each on their own and combined, with values that would expose a wrong multiplier",
+        "The test checks that invalid input, including the empty string, throws",
+        "The test would fail if any one unit were converted wrongly or if invalid input stopped throwing"
+      ],
+      "visibleTests": ["test/duration.test.mjs"]
+    }
+  ]
+}

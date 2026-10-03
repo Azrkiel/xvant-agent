@@ -24,6 +24,20 @@ import {
   type WorkerSpec,
 } from './orchestrator.ts';
 
+/**
+ * The task's visible tests as registered checks. A runtime needs at least
+ * one, so a task without any gets a no-op; the real check stays hidden.
+ */
+const visibleChecks = (tests: string[] | undefined) =>
+  tests?.length
+    ? Object.fromEntries(
+        tests.map((file, i) => [
+          'test' + (i + 1),
+          { executable: process.execPath, args: [file] },
+        ]),
+      )
+    : { ready: { executable: process.execPath, args: ['-e', ''] } };
+
 /** Account-level stops: the attempt is incomplete, not a failure of the work. */
 const ACCOUNT_BLOCKS = ['QUOTA_BLOCKED', 'AUTH_REQUIRED', 'MODEL_UNAVAILABLE'];
 
@@ -87,10 +101,7 @@ function singleWorker(
               .filter(Boolean)
               .join('\n\n'),
             workspace: { path: workspace, baseCommit },
-            // The runtime needs one registered check; the real one stays hidden.
-            checks: {
-              ready: { executable: process.execPath, args: ['-e', ''] },
-            },
+            checks: visibleChecks(task.visibleTests),
           });
         } finally {
           signal.removeEventListener('abort', stop);
@@ -283,7 +294,9 @@ export function orchestratedConfiguration(options: {
             acceptanceCriteria: options.criteria?.(task.id) ?? [
               'The objective is met',
             ],
-            checks: {},
+            checks: task.visibleTests?.length
+              ? visibleChecks(task.visibleTests)
+              : {},
           });
         } finally {
           signal.removeEventListener('abort', stop);

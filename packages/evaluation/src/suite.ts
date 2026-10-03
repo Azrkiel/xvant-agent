@@ -23,6 +23,10 @@ export const taskSchema = z.strictObject({
   /** Acceptance check, relative to the suite directory. It is never copied into the workspace. */
   check: z.string().min(1).max(256),
   timeoutMs: z.number().int().positive().max(3_600_000),
+  /** What the worker is told the result must satisfy. The hidden check enforces at least this. */
+  acceptanceCriteria: z.array(z.string().min(1).max(500)).max(20).optional(),
+  /** Test files in the repository, run with Node, that the worker may see and run. */
+  visibleTests: z.array(z.string().min(1).max(256)).max(10).optional(),
 });
 export const suiteSchema = z.strictObject({
   id,

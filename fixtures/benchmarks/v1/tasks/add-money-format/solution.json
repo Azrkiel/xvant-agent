@@ -1,0 +1,16 @@
+{
+  "edits": [
+    {
+      "path": "src/format.js",
+      "content": "export function formatCount(n) {\n  return String(n);\n}\n\nexport function formatMoney(cents, currency) {\n  if (!Number.isInteger(cents) || cents < 0)\n    throw new RangeError('cents must be a non-negative integer');\n  const whole = String(Math.floor(cents / 100)).replace(\n    /\\B(?=(\\d{3})+(?!\\d))/g,\n    ',',\n  );\n  return currency + ' ' + whole + '.' + String(cents % 100).padStart(2, '0');\n}\n"
+    },
+    {
+      "path": "src/cart.js",
+      "content": "import { formatMoney } from './format.js';\n\nexport function total(cart) {\n  return cart.items.reduce(\n    (sum, item) => sum + item.priceCents * item.quantity,\n    0,\n  );\n}\n\nexport function summary(cart, currency) {\n  return {\n    items: cart.items.reduce((sum, item) => sum + item.quantity, 0),\n    total: formatMoney(total(cart), currency),\n  };\n}\n"
+    },
+    {
+      "path": "src/report.js",
+      "content": "import { total } from './cart.js';\nimport { formatMoney } from './format.js';\n\nexport function report(carts, currency) {\n  return carts\n    .map(\n      (cart) =>\n        cart.id +\n        ': ' +\n        (currency === undefined\n          ? total(cart)\n          : formatMoney(total(cart), currency)),\n    )\n    .join('\\n');\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { createCache } from '../src/cache.js';
+let t = 0;
+const cache = createCache(100, () => t);
+cache.set('a', 1);
+t = 50;
+assert.equal(cache.get('a'), 1);
+t = 100;
+assert.equal(cache.get('a'), undefined);
+assert.equal(cache.has('a'), false);

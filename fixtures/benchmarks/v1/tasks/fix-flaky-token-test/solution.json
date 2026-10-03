@@ -1,0 +1,8 @@
+{
+  "edits": [
+    {
+      "path": "test/token.test.mjs",
+      "content": "import assert from 'node:assert/strict';\nimport { issue, isValid } from '../src/token.js';\nconst token = issue(5, 1000);\nassert.equal(isValid(token, 1000), true);\nassert.equal(isValid(token, 1004), true);\nassert.equal(isValid(token, 1005), false);\nassert.equal(isValid(token, 2000), false);\n"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "edits": [
+    {
+      "path": "src/queue.js",
+      "content": "export function createQueue(options = {}) {\n  const { onEvent } = options;\n  const items = [];\n  return {\n    push(item) {\n      items.push(item);\n      onEvent?.({ type: 'push', item });\n    },\n    shift() {\n      if (items.length === 0) return undefined;\n      const item = items.shift();\n      onEvent?.({ type: 'shift', item });\n      return item;\n    },\n    size: () => items.length,\n  };\n}\n"
+    },
+    {
+      "path": "src/worker.js",
+      "content": "export function createWorker(handler, options = {}) {\n  const { onEvent } = options;\n  return {\n    async run(queue) {\n      let done = 0;\n      while (queue.size() > 0) {\n        const item = queue.shift();\n        try {\n          await handler(item);\n          done += 1;\n          onEvent?.({ type: 'done', item });\n        } catch (error) {\n          onEvent?.({ type: 'error', item, error });\n        }\n      }\n      return done;\n    },\n  };\n}\n"
+    },
+    {
+      "path": "src/index.js",
+      "content": "import { createQueue } from './queue.js';\nimport { createWorker } from './worker.js';\n\nexport { createQueue, createWorker };\n\nexport function createSystem(handler, options = {}) {\n  return {\n    queue: createQueue(options),\n    worker: createWorker(handler, options),\n  };\n}\n"
+    }
+  ]
+}

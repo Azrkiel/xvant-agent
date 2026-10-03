@@ -86,6 +86,8 @@ const skillFor = (taskId) => {
 // A `-criteria` suffix states the task's acceptance criteria, as XVANT does for its workers.
 const criteriaList = (taskId) => {
   const task = suite.tasks.find((t) => t.id === taskId);
+  if (task.acceptanceCriteria) return task.acceptanceCriteria;
+  // Suites built on the skill fixtures keep the criteria beside the check.
   const fixture = join(
     dirname(suitePath(suiteDir, task.check)),
     'fixture.json',
@@ -93,12 +95,7 @@ const criteriaList = (taskId) => {
   return JSON.parse(readFileSync(fixture, 'utf8')).acceptanceCriteria;
 };
 const criteriaFor = (taskId) => {
-  const task = suite.tasks.find((t) => t.id === taskId);
-  const fixture = join(
-    dirname(suitePath(suiteDir, task.check)),
-    'fixture.json',
-  );
-  const { acceptanceCriteria } = JSON.parse(readFileSync(fixture, 'utf8'));
+  const acceptanceCriteria = criteriaList(taskId);
   return [
     'The result is accepted only if all of these hold:',
     ...acceptanceCriteria.map((c) => '- ' + c),

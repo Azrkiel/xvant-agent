@@ -1,0 +1,8 @@
+{
+  "edits": [
+    {
+      "path": "src/store.js",
+      "content": "export function createStore(options = {}) {\n  const { maxEntries = Infinity } = options;\n  const data = new Map();\n  const touch = (key, value) => {\n    data.delete(key);\n    data.set(key, value);\n  };\n  return {\n    get(key) {\n      if (!data.has(key)) return undefined;\n      const value = data.get(key);\n      touch(key, value);\n      return value;\n    },\n    set(key, value) {\n      touch(key, value);\n      while (data.size > maxEntries) data.delete(data.keys().next().value);\n    },\n    keys: () => [...data.keys()],\n  };\n}\n"
+    }
+  ]
+}

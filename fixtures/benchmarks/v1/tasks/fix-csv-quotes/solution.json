@@ -1,0 +1,8 @@
+{
+  "edits": [
+    {
+      "path": "src/csv.js",
+      "content": "// Splits one CSV line into its fields.\nexport function parseLine(line) {\n  const fields = [];\n  let field = '';\n  let quoted = false;\n  let wasQuoted = false;\n  const end = () => {\n    fields.push(wasQuoted ? field : field.trim());\n    field = '';\n    wasQuoted = false;\n  };\n  for (let i = 0; i < line.length; i += 1) {\n    const ch = line[i];\n    if (quoted) {\n      if (ch === '\"' && line[i + 1] === '\"') {\n        field += '\"';\n        i += 1;\n      } else if (ch === '\"') quoted = false;\n      else field += ch;\n    } else if (ch === '\"') {\n      quoted = true;\n      wasQuoted = true;\n      field = '';\n    } else if (ch === ',') end();\n    else if (!wasQuoted) field += ch;\n  }\n  end();\n  return fields;\n}\n"
+    }
+  ]
+}
