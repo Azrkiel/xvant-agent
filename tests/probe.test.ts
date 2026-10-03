@@ -17,7 +17,7 @@ describe('provider probe boundary', () => {
     ])
       expect(suites[file]).toBeGreaterThan(0);
     expect(suites['tests/faults/crash.test.ts']).toBeGreaterThan(0);
-    expect(() => phaseSuites('09')).toThrow();
+    expect(() => phaseSuites('11')).toThrow();
   });
   it('runs only bounded version commands and never treats inventory as live support', () => {
     const calls: string[] = [];

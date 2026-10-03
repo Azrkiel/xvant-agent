@@ -5,7 +5,8 @@
 // `reference` and `noop` are offline and only check the harness. `claude-haiku`
 // and `claude-sonnet` run real turns on the Claude subscription login and need
 // --approve-live; nothing here can fall back to an API key.
-import { mkdirSync, realpathSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { spawn } from 'node:child_process';
 import { hostname, platform, release } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import {
@@ -24,6 +25,7 @@ import { discoverRuntime } from '../packages/adapters/src/live/discover.ts';
 import {
   liveConfiguration,
   nativeConfiguration,
+  orchestratedConfiguration,
 } from '../apps/controller/src/benchmark-live.ts';
 import { LocalEndpointProvider } from '../packages/native-agent/src/local-endpoint.ts';
 
@@ -71,20 +73,58 @@ const available = {
   noop: noopConfiguration,
 };
 // `native-local` is XVANT's own loop on a loopback model: --model <id> [--endpoint <url>].
+// A `-skills` suffix puts the task's XVANT skill (SKILL.md) before the objective.
+const skillFor = (taskId) => {
+  const task = suite.tasks.find((t) => t.id === taskId);
+  const fixture = join(
+    dirname(suitePath(suiteDir, task.check)),
+    'fixture.json',
+  );
+  const { skill } = JSON.parse(readFileSync(fixture, 'utf8'));
+  return readFileSync(resolve('skills', skill, 'SKILL.md'), 'utf8');
+};
+// A `-criteria` suffix states the task's acceptance criteria, as XVANT does for its workers.
+const criteriaList = (taskId) => {
+  const task = suite.tasks.find((t) => t.id === taskId);
+  if (task.acceptanceCriteria) return task.acceptanceCriteria;
+  // Suites built on the skill fixtures keep the criteria beside the check.
+  const fixture = join(
+    dirname(suitePath(suiteDir, task.check)),
+    'fixture.json',
+  );
+  return JSON.parse(readFileSync(fixture, 'utf8')).acceptanceCriteria;
+};
+const criteriaFor = (taskId) => {
+  const acceptanceCriteria = criteriaList(taskId);
+  return [
+    'The result is accepted only if all of these hold:',
+    ...acceptanceCriteria.map((c) => '- ' + c),
+  ].join('\n');
+};
+// A `-xvant` suffix runs XVANT's orchestration (plan, work, repair, review) on that runtime.
+const bare = (name) => name.replace(/-(skills|criteria|xvant)$/, '');
 const LIVE = {
   'claude-haiku': 'haiku',
   'claude-sonnet': 'sonnet',
+  // The runner pins OpenCode to its free model whatever is named here.
+  'opencode-free': 'opencode/big-pickle',
   'native-local': value('--model'),
 };
 const names = (value('--configurations') ?? 'reference,noop').split(',');
 const unknown = names.filter(
-  (name) => !available[name] && !Object.hasOwn(LIVE, name),
+  (name) => !available[name] && !Object.hasOwn(LIVE, bare(name)),
 );
 if (unknown.length) {
   console.error('Unknown configuration: ' + unknown.join(', '));
   process.exit(2);
 }
-const live = names.filter((name) => Object.hasOwn(LIVE, name));
+const live = names.filter((name) => Object.hasOwn(LIVE, bare(name)));
+const extra = (name) =>
+  name.endsWith('-skills')
+    ? { instructions: skillFor, instructionsKind: 'skill' }
+    : name.endsWith('-criteria')
+      ? { instructions: criteriaFor, instructionsKind: 'criteria' }
+      : {};
 if (live.length && !args.includes('--approve-live')) {
   console.error(live.join(', ') + ' runs real model turns: add --approve-live');
   process.exit(2);
@@ -99,7 +139,7 @@ const state = value('--resume')
     );
 mkdirSync(state, { recursive: true });
 const runtimes = {};
-if (live.includes('native-local')) {
+for (const name of live.filter((n) => bare(n) === 'native-local')) {
   if (!LIVE['native-local']) {
     console.error('native-local needs --model <id> (see `lms ls`)');
     process.exit(2);
@@ -109,36 +149,55 @@ if (live.includes('native-local')) {
     model: LIVE['native-local'],
     server: 'lmstudio',
   });
-  runtimes['native-local'] = await provider.probe();
+  runtimes['native-local'] ??= await provider.probe();
   if (!runtimes['native-local'].toolCalls) {
     console.error('The local model failed the tool-call probe');
     process.exit(1);
   }
-  available['native-local'] = nativeConfiguration({
+  available[name] = nativeConfiguration({
     provider,
+    ...extra(name),
     classification: 'live',
     stateRoot: join(state, 'controllers'),
   });
 }
-const claude = live.filter((name) => name.startsWith('claude-'));
-if (claude.length) {
-  const found = discoverRuntime('claude');
-  runtimes.claude = found;
+for (const name of live.filter((n) => bare(n) !== 'native-local')) {
+  const kind = name.split('-')[0];
+  const found = (runtimes[kind] ??= discoverRuntime(kind));
   if (found.status !== 'qualified') {
-    console.error('Claude runtime not qualified: ' + found.status);
+    console.error(kind + ' runtime not qualified: ' + found.status);
     process.exit(1);
   }
-  for (const name of claude)
-    available[name] = liveConfiguration({
-      kind: 'claude',
-      runtime: {
-        executable: found.executable,
-        version: found.version,
-        model: LIVE[name],
-      },
-      stateRoot: join(state, 'controllers'),
-    });
+  const runtime = {
+    executable: found.executable,
+    version: found.version,
+    model: LIVE[bare(name)],
+  };
+  const stateRoot = join(state, 'controllers');
+  available[name] = name.endsWith('-xvant')
+    ? orchestratedConfiguration({
+        kind,
+        runtime,
+        stateRoot,
+        criteria: criteriaList,
+      })
+    : liveConfiguration({ kind, runtime, ...extra(name), stateRoot });
 }
+// A live campaign asks Windows not to idle-sleep while it runs; a suspended
+// host loses the attempts in flight. Closing the lid still suspends.
+const awake =
+  live.length && process.platform === 'win32'
+    ? spawn(
+        'powershell',
+        [
+          '-NoProfile',
+          '-Command',
+          'Add-Type -Namespace Xvant -Name Power -MemberDefinition \'[DllImport("kernel32.dll")] public static extern uint SetThreadExecutionState(uint flags);\'; [void][Xvant.Power]::SetThreadExecutionState(0x80000001); [void][Console]::In.ReadLine()',
+        ],
+        { stdio: ['pipe', 'ignore', 'ignore'], windowsHide: true },
+      )
+    : undefined;
+process.on('exit', () => awake?.kill());
 const { schedule, records } = await runBenchmark({
   suiteDir,
   configurations: Object.fromEntries(names.map((n) => [n, available[n]])),
@@ -153,6 +212,7 @@ const { schedule, records } = await runBenchmark({
       r.status,
     ),
 });
+awake?.kill();
 const summary = summarize(suite, lock.frozenHash, schedule, records);
 const shape = suiteId === 'v1' ? v1ShapeProblems(suite) : [];
 const report = {

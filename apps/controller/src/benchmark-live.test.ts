@@ -15,7 +15,11 @@ import {
   ScriptedProvider,
   toolCall,
 } from '../../../packages/native-agent/src/scripted.ts';
-import { liveConfiguration, nativeConfiguration } from './benchmark-live.ts';
+import {
+  liveConfiguration,
+  nativeConfiguration,
+  orchestratedConfiguration,
+} from './benchmark-live.ts';
 
 const peer = fileURLToPath(
   new URL('../../../tests/fixtures/claude-live-peer.mjs', import.meta.url),
@@ -128,3 +132,34 @@ it('runs the native loop as a configuration with unknown usage', async () => {
     versions: { runtime: 'native-local', model: 'stub:scripted' },
   });
 }, 60000);
+
+it('runs XVANT orchestration and hands its combined result to the hidden check', async () => {
+  const { records } = await runBenchmark({
+    suiteDir,
+    configurations: {
+      xvant: orchestratedConfiguration({
+        kind: 'claude',
+        runtime: {
+          executable: process.execPath,
+          prefixArgs: [peer, 'write'],
+          model: 'haiku',
+        },
+        stateRoot: join(root, 'state'),
+        criteria: () => ['answer.txt holds alpha'],
+      }),
+    },
+    repeats: 1,
+    recordsPath: join(root, 'records.jsonl'),
+    workRoot: join(root, 'work'),
+  });
+  expect(records[0]).toMatchObject({
+    status: 'accepted',
+    checkPassed: true,
+    recovered: false,
+    versions: {
+      runtime: 'xvant-orchestrated',
+      workerRuntime: 'claude',
+      instructions: 'criteria',
+    },
+  });
+}, 120000);

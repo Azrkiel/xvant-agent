@@ -1,0 +1,8 @@
+{
+  "edits": [
+    {
+      "path": "review/FINDINGS.json",
+      "content": "{\n  \"approve\": false,\n  \"findings\": [\n    {\n      \"file\": \"src/users.js\",\n      \"line\": 6,\n      \"severity\": \"high\",\n      \"issue\": \"SQL injection: name is concatenated into the statement. Use a parameter placeholder.\"\n    },\n    {\n      \"file\": \"src/users.js\",\n      \"line\": 11,\n      \"severity\": \"medium\",\n      \"issue\": \"The delete is not awaited: remove resolves true before it finishes and a rejected promise is unhandled.\"\n    }\n  ]\n}\n"
+    }
+  ]
+}

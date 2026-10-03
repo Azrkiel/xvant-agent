@@ -1,0 +1,8 @@
+{
+  "edits": [
+    {
+      "path": "src/paginate.js",
+      "content": "// Pages are numbered from 1.\nexport function paginate(items, page, size) {\n  const start = (page - 1) * size;\n  return items.slice(start, start + size);\n}\n\nexport function pageCount(items, size) {\n  return Math.ceil(items.length / size);\n}\n"
+    }
+  ]
+}

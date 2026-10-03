@@ -1,0 +1,127 @@
+{
+  "suiteId": "v1",
+  "version": 1,
+  "tasks": {
+    "add-config-validation": {
+      "taskHash": "35965f08d116b26e7c889c07b9595c576fd516d471db94f15a1de577fd125a07",
+      "repoHash": "8679e3ee351e0ede7dc6102c305c39f5a6cc467451cd2de446188b9b24e875b7",
+      "checkHash": "17bf139ac920749033f91ee616cb84f9a8b4b1d3002df1e73b82376a8077fcbf"
+    },
+    "add-event-hooks": {
+      "taskHash": "d261ff43970122ebae310d81f4884bc21c65789b7fd0e9b29132e359938d20be",
+      "repoHash": "1fac51a017db7490b2ed38349fae9f143111c1754dc95129cff4cda949d60ba4",
+      "checkHash": "0c67315873cf533968434de6417ebd0c96fdf2e61fed314e4a58c6ded06f2a92"
+    },
+    "add-money-format": {
+      "taskHash": "ca72c9dbc46e81b5cdbf08423ba74d53a180a22a9d4184f3bf2eb6730283c00c",
+      "repoHash": "d5c3dd4b83f47f514e0b2cd5332eccba0f9dc0e48c9276c700b8a42cb46bf29d",
+      "checkHash": "d5c668e30b5942cd13d28c1752055e045b90c2ec75be1740b6ac5be4765b459c"
+    },
+    "add-store-limit": {
+      "taskHash": "e24ec5d42aa6794caf9ce349a8555945f31cd7e4d259309fa413f95dbd076303",
+      "repoHash": "cb5b7d76d4b630ecfebc9e6cab581c676e4b61a96dc03d3eb0860184999c3776",
+      "checkHash": "39d5b0b74545e5ce23f765302ce2e582bd8f14eccbd14ca6d40a716aba0178d7"
+    },
+    "add-unique-slug": {
+      "taskHash": "a7d5dae51d5b2d3e1173766434a2691a74d37767093556b0efe09bc6e73e8f3b",
+      "repoHash": "5a546fadcf6bd1f934e22f040f60758f86651b4c5936850f76ade03ee481e93a",
+      "checkHash": "03374ba44d25449186c5b1654a2c12d7fd0ea109f2dc8cbbb309b72c7c6d1b05"
+    },
+    "diagnose-off-by-one": {
+      "taskHash": "a9f0c66c4dec6b197ce1f5769a7fc43c4019b0a89d64f9b468fd01fcecd367a3",
+      "repoHash": "8234ab54a32e2c213d59d93f0d291d7d16e12ea8078c2beed2f60839a5092476",
+      "checkHash": "2e1bc34abbcf881295b593d21a1b84dfbce74ddef83352283adca5e260041404"
+    },
+    "document-cli-flag": {
+      "taskHash": "88c7f96426fbeb86a0aaa070947eff20b080fd0915c3d41f33ea3cb280cd98e2",
+      "repoHash": "fa676c1c5e27d99065bdfd4a8b35633f021bbb70b3dde804a1dc3262a7eca148",
+      "checkHash": "050fab8184d5a8edf3a23f33e33c69dcb029f2546e40ec096204c7a832b44c97"
+    },
+    "evaluate-candidate": {
+      "taskHash": "dbba4df4debbadd4aab38986d9bb950f1fdb1873ec1e30997e72f68e641953ef",
+      "repoHash": "841558247461353fa047016694241a5f6404614033a3001b9fe60172211863bd",
+      "checkHash": "b00530fc8b8a87f1c797581098f0547eefc7b2ee971670525391297114822307"
+    },
+    "explore-entrypoints": {
+      "taskHash": "3b2b27cd83936acfa435da52481677cb57bfe1be865c48a555a84c8d8259e23b",
+      "repoHash": "2069ea3f7e68ac785fb350f3cbe20d2d316cf0e788feb34ae73b971000965404",
+      "checkHash": "88ca0f508b84a9562a33d186c759c5d57388330db9e86541efbee236a1eb89d6"
+    },
+    "fix-cache-expiry": {
+      "taskHash": "5c0c906d85f28d5d637c0b6638f1ab50b987ee4689e94514a1d13baf4730b165",
+      "repoHash": "a0749d70f9e0d829838d725fcb2583c15dc39183269c0c01cb0cc9acf3ecd6b8",
+      "checkHash": "500d059b22c050d0ad26ac7c1313628f2dd8445b7b3d326a95362928b2d85b84"
+    },
+    "fix-csv-quotes": {
+      "taskHash": "2a23c95e87336e37fe82838e87a69f6390c61850b913297c5bea62fdd18a9610",
+      "repoHash": "c8982051e136fb5539a99a36ee785dc1c43ec2f23ee7b7c28ec7fa94eece7209",
+      "checkHash": "6fdf63fd7f880e1993a231d81ff6f204ea49baa469018b4b539152edbd06b85c"
+    },
+    "fix-flaky-token-test": {
+      "taskHash": "83c4de32f3edab3186a29aaefbe3c4b1b8cb94eec410643ac3ecb568398f419f",
+      "repoHash": "5ad81ffe745dc7b3fea3da59c7001dac3a2df6760b7efb23c122e6c2157ab40e",
+      "checkHash": "43a35618d8d1ad606377fdf8f3808747396ac4c8695906d7f79f0a0ded8be4f9"
+    },
+    "fix-interval-merge": {
+      "taskHash": "4802fad4d5ff3b4ef6fa2818655ef5c5681534ffb3f1e443124993c48e934f17",
+      "repoHash": "a95b1d386ff92e55d0327d0775343830cc6d113d2f2ff66d63fc8a70b4618732",
+      "checkHash": "80d87d083f1a37ce2cb223dc0ab86c67dd5e9835f4cf617ee09abece08f1dfe9"
+    },
+    "fix-pagination": {
+      "taskHash": "24332c75b41b1933700741f9a3d7b0b57bf0554e7bfcad8564b4f6f70140bf21",
+      "repoHash": "86494ac865d067a4bb66585e2ecb58d0ac27eeaff864a939f17af352cbf1f2e3",
+      "checkHash": "bd7ee35a6b832c97ae0e834b2701ee54cb27ed995f8e8081089f7e7e8cc9ca1f"
+    },
+    "fix-retry-attempts": {
+      "taskHash": "5c292ef20156670cc2c5d7e9c55a61ddbe5e29e687aae1acca13518481125509",
+      "repoHash": "11c0a1c217c037b6850a05a384068125fc9aa84238d3e37d90d8c57ba7871439",
+      "checkHash": "f7504170ca3660fb07877d7f47756af0709fb46701ddb721d2122f8139dbd8d7"
+    },
+    "handoff-partial-feature": {
+      "taskHash": "5c9bc9afeabc17ef6c2ace7c21ee8a5718ef5eec31d0c7108d6279592734f6dd",
+      "repoHash": "6ed325b8c7f7c2a8f8da26f9d5019d94a95c397636ca25768133501354d5cf29",
+      "checkHash": "ebf95208a8652446c8cac282b0ca3aee0fea3bdfed27d38a3f5bd4a8de4d552f"
+    },
+    "implement-clamp": {
+      "taskHash": "9a7025f78a2aa8b5651176a505bc2ae10da9a8460399d41adc84a5b279291853",
+      "repoHash": "c22cfcbbd1fc964bcfbeed5710579d88dc6eb994f785b001b4e8b927f3b0f465",
+      "checkHash": "ffffe9aead81b648d2a1ddb755ccba9012f6cd7fa8628cd6cd700748c7a3a38c"
+    },
+    "integrate-two-patches": {
+      "taskHash": "2b34aaabfead65746218917b511e5c1f740c68f20407bbc35acdc053f4cddeb4",
+      "repoHash": "a0f5e56e7fe77c58ecfa6000d5d91d1992fcea199e46223f13dcb3174c478c3f",
+      "checkHash": "5f14fabbc85c0a51554c783cbb5715885c490f52f606cc87a7c2b1bc531a125e"
+    },
+    "plan-rate-limit": {
+      "taskHash": "ce361fb08fddeb92b5a785ca2b452765ea0b1dceb4fdfb5d378d3e9edfd88ee7",
+      "repoHash": "2e1c62dcfad061518c232e3d55e3730515adb86f058e59d6e1e17b26afbf1869",
+      "checkHash": "08de6348586aebd5a82f84969feeae1fb6f55ae7713a46f8090c2f7eb377aad0"
+    },
+    "rename-timeout-option": {
+      "taskHash": "a06200c0053e46d39933ba80e65cd9eb9cc7a93212cedd1ae892d7e8f66b4a91",
+      "repoHash": "4e98fb01b2d517deb75ae9eb1963779602edc71f81a7c67578e35eeedcdc27ba",
+      "checkHash": "5c03d6775cedefbfa74d6073ad3652f77f7fb4bdd599ef29a6bf9f0464026693"
+    },
+    "review-unsafe-merge": {
+      "taskHash": "f71129ca5215aa3be8283a1e3cf7e989859377b8008041a0dfe6989c1ca21244",
+      "repoHash": "dee4c804bcb2b18fba34e8b89143502b130cb3e0322820cdc5ccc646dff3b92c",
+      "checkHash": "4d349148db340e862831876959208fb553d469d6640b00c05a51cc1c1b483a70"
+    },
+    "review-user-queries": {
+      "taskHash": "554d3c06627f6db4f73bd2c0e6d5f4b282cf21743b85cce4bb5b75f8139b8c53",
+      "repoHash": "3685678c64915a3e2fbdfd0d811977f9112a7e840f5376396f7ec9b734b89cb7",
+      "checkHash": "ed4e889b1caa542c4c0394a4b9c00d957c843024bba16e11c940d6c867f02847"
+    },
+    "test-slugify": {
+      "taskHash": "213d27114d2205bc38b0ad84210f36c702beccff8b7b2daecbac66b83bf1583d",
+      "repoHash": "c25e88e03a90e54607952e43891826535536dfa09389ef497c2b183cae9a86f9",
+      "checkHash": "b878dce19ea6fe3c88b0677729f93056ef7ff9f18b2c824789a69b678d12a575"
+    },
+    "write-duration-tests": {
+      "taskHash": "074a83defe711ac374228d941d117ff0c0e46abeccb8209a639297b9a96cc989",
+      "repoHash": "a5021ce52b4c0d275bf38b913b28ffd9d693ed87c530e8499b4ebb94a80c8df2",
+      "checkHash": "bd9f3db38c44ee860f695e6f051a3b86431a37be2f7e2410a76177a429f2fbf4"
+    }
+  },
+  "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7"
+}

@@ -1,0 +1,8 @@
+{
+  "edits": [
+    {
+      "path": "src/intervals.js",
+      "content": "// Intervals are half-open: [start, end).\nexport function overlaps(a, b) {\n  return a.start < b.end && b.start < a.end;\n}\n\nexport function merge(intervals) {\n  const sorted = [...intervals].sort((x, y) => x.start - y.start);\n  const out = [];\n  for (const current of sorted) {\n    const last = out.at(-1);\n    if (last && current.start <= last.end)\n      last.end = Math.max(last.end, current.end);\n    else out.push({ ...current });\n  }\n  return out;\n}\n"
+    }
+  ]
+}

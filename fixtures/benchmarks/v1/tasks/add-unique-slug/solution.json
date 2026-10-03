@@ -1,0 +1,8 @@
+{
+  "edits": [
+    {
+      "path": "src/slug.js",
+      "content": "export function slugify(title) {\n  return title\n    .toLowerCase()\n    .replace(/[^a-z0-9]+/g, '-')\n    .replace(/^-|-$/g, '');\n}\n\nexport function uniqueSlug(title, taken) {\n  const base = slugify(title) || 'untitled';\n  let slug = base;\n  for (let n = 2; taken.has(slug); n += 1) slug = base + '-' + n;\n  taken.add(slug);\n  return slug;\n}\n"
+    }
+  ]
+}
