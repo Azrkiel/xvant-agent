@@ -37,7 +37,7 @@ export function referenceConfiguration(
       }
       return {
         outcome: 'finished',
-        usage: { inputTokens: 0, outputTokens: 0 },
+        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
         toolFailures: 0,
         conflicts: 0,
       };
@@ -48,7 +48,7 @@ export const noopConfiguration: Configuration = {
   versions: { runtime: 'noop', model: 'none' },
   run: async () => ({
     outcome: 'finished',
-    usage: { inputTokens: 0, outputTokens: 0 },
+    usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
     toolFailures: 0,
     conflicts: 0,
   }),

@@ -19,6 +19,7 @@ export interface ConfigurationSummary {
   /** Null unless every finished attempt reported the figure. */
   inputTokens: number | null;
   outputTokens: number | null;
+  totalTokens: number | null;
   toolFailures: number | null;
   conflicts: number | null;
   versions: Record<string, string>;
@@ -89,6 +90,7 @@ export function summarize(
       medianElapsedMs: median(ran.map((r) => r.elapsedMs)),
       inputTokens: total(ran.map((r) => r.usage.inputTokens)),
       outputTokens: total(ran.map((r) => r.usage.outputTokens)),
+      totalTokens: total(ran.map((r) => r.usage.totalTokens)),
       toolFailures: total(ran.map((r) => r.toolFailures)),
       conflicts: total(ran.map((r) => r.conflicts)),
       versions: mine[0]?.versions ?? {},
@@ -107,7 +109,7 @@ export function summarize(
     limitations.push(
       'Small sample: results are directional evidence, not proof of general superiority.',
     );
-  if (summaries.some((c) => c.inputTokens === null || c.outputTokens === null))
+  if (summaries.some((c) => c.totalTokens === null))
     limitations.push(
       'Token usage is unknown for at least one configuration and is not estimated; no cost is derived.',
     );
@@ -180,11 +182,7 @@ export function evaluatePromotion(
     candidate.medianElapsedMs < base.medianElapsedMs
   )
     benefits.push('lower median elapsed time');
-  const usage = (c: ConfigurationSummary) =>
-    c.inputTokens !== null && c.outputTokens !== null
-      ? c.inputTokens + c.outputTokens
-      : null;
-  const [before, after] = [usage(base), usage(candidate)];
+  const [before, after] = [base.totalTokens, candidate.totalTokens];
   if (before !== null && after !== null && after < before)
     benefits.push('lower measured token usage');
   if (!benefits.length) blockers.push('no measured benefit');

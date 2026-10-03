@@ -78,7 +78,7 @@ const solver = (
   },
 });
 const right = solver((task) => task, {
-  usage: { inputTokens: 10, outputTokens: 5 },
+  usage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 },
 });
 const wrong = solver(() => 'nope');
 const campaign = (
@@ -301,6 +301,7 @@ describe('report and promotion', () => {
       tasksAlwaysAccepted: 2,
       inputTokens: 40,
       outputTokens: 20,
+      totalTokens: 60,
     });
     expect(report.configurations.wrong).toMatchObject({
       accepted: 0,
@@ -308,6 +309,7 @@ describe('report and promotion', () => {
       successRate: 0,
       inputTokens: null,
       outputTokens: null,
+      totalTokens: null,
     });
     expect(report.directional).toBe(true);
     expect(report.limitations.join(' ')).toMatch(/directional/);
@@ -319,7 +321,7 @@ describe('report and promotion', () => {
   }, 60000);
   it('blocks a candidate that accepts fewer held-out tasks, whatever else improves', async () => {
     const cheaper = solver((task) => (task === 'beta' ? 'nope' : task), {
-      usage: { inputTokens: 1, outputTokens: 1 },
+      usage: { inputTokens: null, outputTokens: null, totalTokens: 2 },
     });
     const report = await run({ right, cheaper });
     const verdict = evaluatePromotion(report, {
@@ -335,7 +337,7 @@ describe('report and promotion', () => {
   }, 60000);
   it('promotes only with a measured benefit and passing safety fixtures', async () => {
     const lean = solver((task) => task, {
-      usage: { inputTokens: 5, outputTokens: 5 },
+      usage: { inputTokens: 5, outputTokens: 5, totalTokens: 10 },
     });
     const report = await run({ right, lean, same: right });
     const options = { baseline: 'right', safetyFixturesPassed: true };

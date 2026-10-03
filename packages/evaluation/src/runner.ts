@@ -29,7 +29,12 @@ export const attemptRecordSchema = z.strictObject({
   elapsedMs: z.number().int().nonnegative(),
   checkPassed: z.boolean().nullable(),
   /** Unknown stays null; nothing here is estimated. */
-  usage: z.strictObject({ inputTokens: count, outputTokens: count }),
+  /** Some runtimes report only a total; each figure is recorded as given. */
+  usage: z.strictObject({
+    inputTokens: count,
+    outputTokens: count,
+    totalTokens: count,
+  }),
   toolFailures: count,
   conflicts: count,
   recovered: z.boolean().nullable(),
@@ -43,7 +48,11 @@ export interface AttemptResult {
   /** `gave_up` fails the attempt without running the check. */
   outcome: 'finished' | 'gave_up';
   reason?: string;
-  usage?: { inputTokens: number | null; outputTokens: number | null };
+  usage?: {
+    inputTokens: number | null;
+    outputTokens: number | null;
+    totalTokens: number | null;
+  };
   toolFailures?: number | null;
   conflicts?: number | null;
   recovered?: boolean | null;
@@ -146,7 +155,7 @@ export async function runBenchmark(options: {
       startedAt: startedAt.toISOString(),
       elapsedMs: 0,
       checkPassed: null,
-      usage: { inputTokens: null, outputTokens: null },
+      usage: { inputTokens: null, outputTokens: null, totalTokens: null },
       toolFailures: null,
       conflicts: null,
       recovered: null,
