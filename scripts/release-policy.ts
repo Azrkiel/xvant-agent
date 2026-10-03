@@ -18,7 +18,23 @@ export const PROFILES = ['local-beta', 'local-v1'] as const;
 export type Profile = (typeof PROFILES)[number];
 
 /** Offline gates are cumulative: a pass at a later phase reruns every earlier suite. */
-const CUMULATIVE = ['G01', 'G02', 'G03', 'G04', 'G05', 'G06', 'G07', 'G08'];
+const CUMULATIVE = [
+  'G01',
+  'G02',
+  'G03',
+  'G04',
+  'G05',
+  'G06',
+  'G07',
+  'G08',
+  'G09',
+  'G10',
+];
+/** local-beta leaves out the native loop (G08) and evaluation (G09). */
+const OFFLINE: Record<Profile, string[]> = {
+  'local-beta': CUMULATIVE.filter((id) => id !== 'G08' && id !== 'G09'),
+  'local-v1': CUMULATIVE,
+};
 const LIVE: Record<Profile, string[]> = {
   'local-beta': [
     'G03-live-roster',
@@ -72,14 +88,12 @@ export function evaluateRelease(
     );
 
   add('G00', passed('G00'), 'compatibility and billing scope recorded');
-  const last = profile === 'local-v1' ? 'G08' : 'G07';
-  const through = CUMULATIVE.slice(0, CUMULATIVE.indexOf(last) + 1);
   // The latest cumulative gate that is fresh covers the gates before it.
-  const covering = through.findLast((id) => fresh(id) === null);
-  for (const id of through)
+  const covering = CUMULATIVE.findLast((id) => fresh(id) === null);
+  for (const id of OFFLINE[profile])
     add(
       id + ' offline',
-      covering && through.indexOf(id) <= through.indexOf(covering)
+      covering && CUMULATIVE.indexOf(id) <= CUMULATIVE.indexOf(covering)
         ? null
         : fresh(id),
       id === covering
@@ -89,7 +103,6 @@ export function evaluateRelease(
   for (const id of LIVE[profile]) add(id, passed(id), 'passed live');
   add('G07 real-repository UI run', passed('G07-live-ui'), 'passed live');
   if (profile === 'local-v1') {
-    add('G09 offline', fresh('G09'), 'passed on the current source');
     const benchmark = input.receipts['benchmark-v1'];
     add(
       'benchmark-v1',
@@ -104,7 +117,6 @@ export function evaluateRelease(
       'complete campaign on the frozen v1 suite',
     );
   }
-  add('G10 offline', fresh('G10'), 'passed on the current source');
   for (const [id, reason] of Object.entries(input.deferred ?? {}))
     requirements.push({ id, state: 'deferred', detail: reason });
   return {

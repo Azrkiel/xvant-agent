@@ -39,7 +39,7 @@ describe('release policy', () => {
     expect(result.requirements.every((r) => r.state === 'met')).toBe(true);
     expect(
       result.requirements.find((r) => r.id === 'G03 offline')!.detail,
-    ).toBe('covered by G08');
+    ).toBe('covered by G10');
   });
   it('is not ready with no evidence at all', () => {
     const result = check({});
@@ -57,23 +57,28 @@ describe('release policy', () => {
   });
   it('rejects an offline gate that ran on a different source tree', () => {
     const receipts = complete();
-    receipts.G08 = ok('older');
+    for (const id of ['G08', 'G09', 'G10']) receipts[id] = ok('older');
     const problems = unmet(receipts);
     expect(Object.keys(problems)).toEqual(
-      ['G01', 'G02', 'G03', 'G04', 'G05', 'G06', 'G07', 'G08'].map(
-        (id) => id + ' offline',
+      ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10'].map(
+        (n) => 'G' + n + ' offline',
       ),
     );
-    expect(problems['G08 offline']).toMatch(/different source tree/);
+    expect(problems['G10 offline']).toMatch(/different source tree/);
     expect(problems['G01 offline']).toBe('no receipt');
   });
-  it('lets an earlier fresh gate cover only the gates up to it', () => {
+  it('lets the latest fresh gate cover the earlier ones, and only those', () => {
     const receipts = complete();
+    expect(unmet(receipts)).toEqual({});
+    receipts.G10 = { ...ok(), status: 'failed' };
+    delete receipts.G09;
     receipts.G08 = { ...ok(), status: 'failed' };
     receipts.G06 = ok();
     expect(unmet(receipts)).toEqual({
       'G07 offline': 'no receipt',
       'G08 offline': 'receipt is failed',
+      'G09 offline': 'no receipt',
+      'G10 offline': 'receipt is failed',
     });
   });
   it('rejects an incomplete or wrongly shaped benchmark', () => {

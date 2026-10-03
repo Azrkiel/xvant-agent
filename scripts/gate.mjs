@@ -13,11 +13,13 @@ const args = process.argv.slice(2);
 if (
   args.length !== 3 ||
   args[0] !== '--phase' ||
-  !['01', '02', '03', '04', '05', '06', '07', '08'].includes(args[1]) ||
+  !['01', '02', '03', '04', '05', '06', '07', '08', '09', '10'].includes(
+    args[1],
+  ) ||
   args[2] !== '--offline'
 ) {
   console.error(
-    'Usage: npm run gate -- --phase 01|02|03|04|05|06|07|08 --offline. Live gates run through scripts/live-gate.mjs.',
+    'Usage: npm run gate -- --phase 01|02|03|04|05|06|07|08|09|10 --offline. Live gates run through scripts/live-gate.mjs.',
   );
   process.exit(2);
 }
@@ -71,19 +73,23 @@ const report = {
   gitVersion: git(['--version']).stdout.trim(),
   classification: 'offline',
   qualificationScope:
-    phase === '08'
-      ? 'offline-native-loop'
-      : phase === '07'
-        ? 'offline-local-app'
-        : phase === '06'
-          ? 'offline-orchestration'
-          : phase === '05'
-            ? 'offline-tools-skills'
-            : phase === '04'
-              ? 'offline-context-handoff'
-              : phase === '03'
-                ? 'offline-provider-transport-foundation'
-                : 'offline-simulation',
+    phase === '10'
+      ? 'offline-release'
+      : phase === '09'
+        ? 'offline-evaluation'
+        : phase === '08'
+          ? 'offline-native-loop'
+          : phase === '07'
+            ? 'offline-local-app'
+            : phase === '06'
+              ? 'offline-orchestration'
+              : phase === '05'
+                ? 'offline-tools-skills'
+                : phase === '04'
+                  ? 'offline-context-handoff'
+                  : phase === '03'
+                    ? 'offline-provider-transport-foundation'
+                    : 'offline-simulation',
   runtimeKind: 'simulated',
   liveProvidersTested: [],
   checks: [],
@@ -476,6 +482,48 @@ try {
       !Object.values(native.skills).every((value) => value === 'passed')
     )
       throw new Error('Native loop fixture failed');
+  }
+  if (Number(phase) >= 9) {
+    // The harness itself: on the frozen v1 suite every reference solution is
+    // accepted and no change is accepted for none. No model runs here.
+    await check('benchmark-fixture', [
+      'scripts/benchmark.mjs',
+      '--suite',
+      'v1',
+      '--repeats',
+      '1',
+      '--report',
+      '.artifacts/benchmark-fixture.json',
+    ]);
+    const fixture = resolve(artifacts, 'benchmark-fixture.json');
+    const benchmark = JSON.parse(readFileSync(fixture, 'utf8'));
+    report.artifacts.push({
+      path: '.artifacts/benchmark-fixture.json',
+      sha256: hash(readFileSync(fixture)),
+    });
+    if (
+      benchmark.classification !== 'offline' ||
+      benchmark.complete !== true ||
+      benchmark.suiteShapeProblems.length !== 0 ||
+      benchmark.configurations.reference.accepted !== 24 ||
+      benchmark.configurations.noop.accepted !== 0 ||
+      benchmark.configurations.noop.failed !== 24
+    )
+      throw new Error('Benchmark fixture failed');
+  }
+  if (Number(phase) >= 10) {
+    await check('release-audit', [
+      'scripts/audit.mjs',
+      '--report',
+      '.artifacts/audit.json',
+    ]);
+    const audit = resolve(artifacts, 'audit.json');
+    report.artifacts.push({
+      path: '.artifacts/audit.json',
+      sha256: hash(readFileSync(audit)),
+    });
+    if (JSON.parse(readFileSync(audit, 'utf8')).status !== 'passed')
+      throw new Error('Release audit failed');
   }
   const after = snapshot();
   if (after.sha256 !== before.sha256)
