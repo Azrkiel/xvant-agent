@@ -22,9 +22,12 @@ import type { TurnRunner, WorkerSpec } from './orchestrator.ts';
 /** Account-level stops: the attempt is incomplete, not a failure of the work. */
 const ACCOUNT_BLOCKS = ['QUOTA_BLOCKED', 'AUTH_REQUIRED', 'MODEL_UNAVAILABLE'];
 
+/** Text put before the objective, e.g. an XVANT skill; absent for a bare baseline. */
+export type Instructions = (taskId: string) => string | undefined;
+
 /**
- * A single-worker baseline: one turn per attempt, given only the task
- * objective. Every attempt gets its own store, so attempts share nothing.
+ * A single-worker baseline: one turn per attempt, given the task objective
+ * and, when supplied, instructions before it. Every attempt gets its own store, so attempts share nothing.
  * The turn's own outcome only decides whether the work finished; the
  * benchmark's hidden check decides acceptance.
  */
@@ -32,6 +35,7 @@ function singleWorker(
   versions: Record<string, string>,
   runtimeKind: WorkerSpec['runtimeKind'],
   stateRoot: string,
+  instructions: Instructions | undefined,
   runner: (
     store: Store,
     objects: ArtifactStore,
@@ -74,7 +78,9 @@ function singleWorker(
             taskId,
             projectId: 'benchmark',
             alias: worker.alias,
-            prompt: task.objective,
+            prompt: [instructions?.(task.id), task.objective]
+              .filter(Boolean)
+              .join('\n\n'),
             workspace: { path: workspace, baseCommit },
             // The runtime needs one registered check; the real one stays hidden.
             checks: {
@@ -112,6 +118,7 @@ export function liveConfiguration(options: {
   runtime: RosterRuntime;
   /** Per-attempt controller state is created under this directory. */
   stateRoot: string;
+  instructions?: Instructions;
   onEvent?: (taskId: string, event: LiveEvent) => void;
 }): Configuration {
   const { kind, runtime } = options;
@@ -121,9 +128,11 @@ export function liveConfiguration(options: {
       runtimeVersion: runtime.version ?? LIVE_ROUTES[kind].runtimeVersion,
       adapter: LIVE_ROUTES[kind].adapterVersion,
       model: runtime.model ?? 'default',
+      instructions: options.instructions ? 'skill' : 'none',
     },
     kind,
     options.stateRoot,
+    options.instructions,
     (store, objects, worker, _state, timeoutMs, onTokens) =>
       new LiveTurnRunner(
         store,
@@ -151,6 +160,7 @@ export function nativeConfiguration(options: {
   provider: ModelProvider;
   classification: 'offline' | 'live';
   stateRoot: string;
+  instructions?: Instructions;
   maxSteps?: number;
 }): Configuration {
   return singleWorker(
@@ -159,9 +169,11 @@ export function nativeConfiguration(options: {
       runtimeVersion: NATIVE_LOCAL_ROUTE.runtimeVersion,
       adapter: NATIVE_LOCAL_ROUTE.adapterVersion,
       model: options.provider.id,
+      instructions: options.instructions ? 'skill' : 'none',
     },
     'native-local',
     options.stateRoot,
+    options.instructions,
     (store, objects, worker, state) =>
       new NativeTurnRunner(store, objects, [worker], options.provider, {
         classification: options.classification,
