@@ -97,7 +97,15 @@ function gitRepo(path: string): string {
   const git = (...args: string[]) =>
     execFileSync(
       'git',
-      ['-c', 'user.name=x', '-c', 'user.email=x@x', ...args],
+      [
+        '-c',
+        'user.name=x',
+        '-c',
+        'user.email=x@x',
+        '-c',
+        'core.autocrlf=false',
+        ...args,
+      ],
       { cwd: path },
     )
       .toString()

@@ -5,6 +5,7 @@ import { dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hostname, platform, release } from 'node:os';
 import { validateTestReport, phaseSuites } from './gate-policy.ts';
+import { runBounded } from './bounded-run.ts';
 import { archiveRun } from './evidence-bundle.ts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -97,31 +98,23 @@ const report = {
     'Keep the branch unmerged; no external service or data migration was changed.',
   lastKnownGoodVersion: null,
 };
-function check(id, args) {
+async function check(id, args) {
   const startedAt = new Date().toISOString();
-  const child = spawnSync(process.execPath, args, {
-    cwd: root,
-    encoding: 'utf8',
-    shell: false,
-    windowsHide: true,
-    // The full Windows coverage suite includes bounded process-death tests.
-    timeout: id === 'tests' ? 600000 : 180000,
-    maxBuffer: 16 * 1024 * 1024,
-  });
   const log = resolve(artifacts, id + '.log');
-  writeFileSync(
-    log,
-    (child.stdout ?? '') +
-      (child.stderr ?? '') +
-      (child.error ? '\n' + child.error.message : ''),
-  );
+  const child = await runBounded(process.execPath, args, {
+    cwd: root,
+    // The full Windows coverage suite includes bounded process-death tests.
+    timeoutMs: id === 'tests' ? 600000 : 180000,
+    logPath: log,
+  });
   const result = {
     id,
     command: [process.execPath, ...args],
     workingDirectory: root,
     startedAt,
     finishedAt: new Date().toISOString(),
-    exitCode: child.status ?? 1,
+    exitCode: child.exitCode,
+    ...(child.timedOut ? { timedOut: true } : {}),
   };
   report.checks.push(result);
   report.artifacts.push({
@@ -129,8 +122,7 @@ function check(id, args) {
     sha256: hash(readFileSync(log)),
   });
   console.log(id + ': ' + (result.exitCode === 0 ? 'passed' : 'FAILED'));
-  if (result.exitCode !== 0)
-    console.error((child.stdout ?? '') + (child.stderr ?? ''));
+  if (result.exitCode !== 0) console.error(child.output);
   return result;
 }
 try {
@@ -139,16 +131,20 @@ try {
   const pinned = readFileSync(resolve(root, '.node-version'), 'utf8').trim();
   if (process.version !== 'v' + pinned)
     throw new Error('Use pinned Node ' + pinned + '; found ' + process.version);
-  check('typecheck', ['node_modules/typescript/bin/tsc', '--noEmit']);
-  check('lint', [
+  await check('typecheck', ['node_modules/typescript/bin/tsc', '--noEmit']);
+  await check('lint', [
     'node_modules/eslint/bin/eslint.js',
     'packages',
     'apps',
     'scripts',
     'tests',
   ]);
-  check('format', ['node_modules/prettier/bin/prettier.cjs', '--check', '.']);
-  const tests = check('tests', [
+  await check('format', [
+    'node_modules/prettier/bin/prettier.cjs',
+    '--check',
+    '.',
+  ]);
+  const tests = await check('tests', [
     'node_modules/vitest/vitest.mjs',
     'run',
     '--coverage',
@@ -168,7 +164,7 @@ try {
     tests.observedCount = discovery.total;
     tests.suites = discovery.suites;
   }
-  check(
+  await check(
     'runtime',
     phase === '01'
       ? ['apps/controller/src/demo.ts', 'success']
@@ -200,7 +196,7 @@ try {
       });
   }
   if (Number(phase) >= 3) {
-    check('provider-fixtures', [
+    await check('provider-fixtures', [
       'scripts/probe.mjs',
       '--offline',
       '--runtime',
@@ -218,7 +214,7 @@ try {
       )
     )
       throw new Error('Provider fixture roster failed');
-    check('controller-roster', ['scripts/roster-fixture.mjs']);
+    await check('controller-roster', ['scripts/roster-fixture.mjs']);
     const roster = JSON.parse(
       readFileSync(resolve(artifacts, 'controller-roster.log'), 'utf8'),
     );
@@ -233,7 +229,7 @@ try {
       throw new Error('Controller roster failed');
     for (const scenario of ['permission', 'interrupt', 'no-auth']) {
       const checkId = 'opencode-http-' + scenario;
-      check(checkId, ['scripts/opencode-http-fixture.mjs', scenario]);
+      await check(checkId, ['scripts/opencode-http-fixture.mjs', scenario]);
       const http = JSON.parse(
         readFileSync(resolve(artifacts, checkId + '.log'), 'utf8'),
       );
@@ -260,7 +256,7 @@ try {
       if (!common || !specific)
         throw new Error('OpenCode HTTP fixture failed: ' + scenario);
     }
-    check('codex-transport', ['scripts/codex-fixture.mjs', 'success']);
+    await check('codex-transport', ['scripts/codex-fixture.mjs', 'success']);
     const transport = JSON.parse(
       readFileSync(resolve(artifacts, 'codex-transport.log'), 'utf8'),
     );
@@ -274,7 +270,7 @@ try {
     )
       throw new Error('Codex offline transport failed');
     for (const kind of ['claude', 'opencode']) {
-      check(kind + '-native-stream', [
+      await check(kind + '-native-stream', [
         'scripts/native-fixture.mjs',
         kind,
         'permission',
@@ -290,7 +286,7 @@ try {
         stream.activeCount !== 0
       )
         throw new Error('Native stream fixture failed');
-      check(kind + '-native-controller', [
+      await check(kind + '-native-controller', [
         'scripts/native-controller-fixture.mjs',
         kind,
       ]);
@@ -311,7 +307,7 @@ try {
         controller.accepted !== false
       )
         throw new Error('Native controller fixture failed');
-      check(kind + '-native-interrupt', [
+      await check(kind + '-native-interrupt', [
         'scripts/native-controller-fixture.mjs',
         kind,
         'interrupt',
@@ -334,7 +330,7 @@ try {
         interruption.accepted !== false
       )
         throw new Error('Native interrupt fixture failed');
-      check(kind + '-native-quota', [
+      await check(kind + '-native-quota', [
         'scripts/native-controller-fixture.mjs',
         kind,
         'quota-error',
@@ -357,7 +353,7 @@ try {
         throw new Error('Native quota fixture failed');
       for (const scenario of ['permission', 'interrupt']) {
         const checkId = kind + '-create-' + scenario;
-        check(checkId, [
+        await check(checkId, [
           'scripts/native-controller-fixture.mjs',
           kind,
           scenario,
@@ -389,7 +385,7 @@ try {
     }
   }
   if (Number(phase) >= 4) {
-    check('handoff-fixture', ['scripts/handoff-fixture.mjs']);
+    await check('handoff-fixture', ['scripts/handoff-fixture.mjs']);
     const handoff = JSON.parse(
       readFileSync(resolve(artifacts, 'handoff-fixture.log'), 'utf8'),
     );
@@ -405,7 +401,7 @@ try {
       throw new Error('Handoff fixture failed');
   }
   if (Number(phase) >= 5) {
-    check('tools-fixture', ['scripts/tools-fixture.mjs']);
+    await check('tools-fixture', ['scripts/tools-fixture.mjs']);
     const tools = JSON.parse(
       readFileSync(resolve(artifacts, 'tools-fixture.log'), 'utf8'),
     );
@@ -417,7 +413,7 @@ try {
       !Object.values(tools.checks).every((value) => value === true)
     )
       throw new Error('Tools fixture failed');
-    check('compatibility-report', ['scripts/compatibility-report.mjs']);
+    await check('compatibility-report', ['scripts/compatibility-report.mjs']);
     const compatibility = JSON.parse(
       readFileSync(resolve(artifacts, 'compatibility-report.log'), 'utf8'),
     );
@@ -433,7 +429,7 @@ try {
     )
       throw new Error('Compatibility report failed');
     // A missing browser exits 2 and fails the gate: unavailable is not a pass.
-    check('browser-fixture', ['scripts/browser-fixture.mjs']);
+    await check('browser-fixture', ['scripts/browser-fixture.mjs']);
     const browser = JSON.parse(
       readFileSync(resolve(artifacts, 'browser-fixture.log'), 'utf8'),
     );
@@ -448,7 +444,7 @@ try {
       throw new Error('Browser fixture failed');
   }
   if (Number(phase) >= 6) {
-    check('orchestration-fixture', ['scripts/orchestration-fixture.mjs']);
+    await check('orchestration-fixture', ['scripts/orchestration-fixture.mjs']);
     const run = JSON.parse(
       readFileSync(resolve(artifacts, 'orchestration-fixture.log'), 'utf8'),
     );
@@ -465,7 +461,7 @@ try {
       throw new Error('Orchestration fixture failed');
   }
   if (Number(phase) >= 8) {
-    check('native-loop-fixture', ['scripts/native-loop-fixture.mjs']);
+    await check('native-loop-fixture', ['scripts/native-loop-fixture.mjs']);
     const native = JSON.parse(
       readFileSync(resolve(artifacts, 'native-loop-fixture.log'), 'utf8'),
     );
