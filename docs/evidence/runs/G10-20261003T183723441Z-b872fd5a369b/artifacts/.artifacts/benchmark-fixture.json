@@ -1,0 +1,1263 @@
+{
+  "generatedAt": "2026-10-03T18:43:39.005Z",
+  "classification": "offline",
+  "stateDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent\\.artifacts\\benchmark-v1-1791052987261",
+  "runtimes": {},
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "repeats": 1,
+  "suiteId": "v1",
+  "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+  "complete": true,
+  "directional": true,
+  "configurations": {
+    "reference": {
+      "scheduled": 24,
+      "accepted": 24,
+      "failed": 0,
+      "incomplete": 0,
+      "excluded": 0,
+      "missing": 0,
+      "successRate": 1,
+      "tasksAlwaysAccepted": 24,
+      "medianElapsedMs": 594,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "totalTokens": 0,
+      "toolFailures": 0,
+      "conflicts": 0,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    "noop": {
+      "scheduled": 24,
+      "accepted": 0,
+      "failed": 24,
+      "incomplete": 0,
+      "excluded": 0,
+      "missing": 0,
+      "successRate": 0,
+      "tasksAlwaysAccepted": 0,
+      "medianElapsedMs": 592,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "totalTokens": 0,
+      "toolFailures": 0,
+      "conflicts": 0,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    }
+  },
+  "bySplit": {
+    "held-out": {
+      "reference": {
+        "scheduled": 12,
+        "accepted": 12
+      },
+      "noop": {
+        "scheduled": 12,
+        "accepted": 0
+      }
+    },
+    "tuning": {
+      "reference": {
+        "scheduled": 12,
+        "accepted": 12
+      },
+      "noop": {
+        "scheduled": 12,
+        "accepted": 0
+      }
+    }
+  },
+  "exclusions": [],
+  "missing": [],
+  "limitations": [
+    "Small sample: results are directional evidence, not proof of general superiority.",
+    "Human rework was not measured."
+  ],
+  "suiteShapeProblems": [],
+  "records": [
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-config-validation",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:07.282Z",
+      "elapsedMs": 487,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-config-validation",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:07.772Z",
+      "elapsedMs": 549,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-event-hooks",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:08.322Z",
+      "elapsedMs": 739,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-event-hooks",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:09.062Z",
+      "elapsedMs": 518,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-money-format",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:09.581Z",
+      "elapsedMs": 520,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-money-format",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:10.102Z",
+      "elapsedMs": 485,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-store-limit",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:10.589Z",
+      "elapsedMs": 632,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-store-limit",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:11.222Z",
+      "elapsedMs": 701,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-unique-slug",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:11.924Z",
+      "elapsedMs": 583,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "add-unique-slug",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:12.509Z",
+      "elapsedMs": 590,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "diagnose-off-by-one",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:13.100Z",
+      "elapsedMs": 716,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "diagnose-off-by-one",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:13.817Z",
+      "elapsedMs": 868,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "document-cli-flag",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:14.686Z",
+      "elapsedMs": 503,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "document-cli-flag",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:15.190Z",
+      "elapsedMs": 517,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "evaluate-candidate",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:15.708Z",
+      "elapsedMs": 603,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "evaluate-candidate",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:16.312Z",
+      "elapsedMs": 519,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "explore-entrypoints",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:16.832Z",
+      "elapsedMs": 562,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "explore-entrypoints",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:17.395Z",
+      "elapsedMs": 493,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-cache-expiry",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:17.888Z",
+      "elapsedMs": 585,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-cache-expiry",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:18.474Z",
+      "elapsedMs": 626,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-csv-quotes",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:19.101Z",
+      "elapsedMs": 811,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-csv-quotes",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:19.913Z",
+      "elapsedMs": 607,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-flaky-token-test",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:20.521Z",
+      "elapsedMs": 1984,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-flaky-token-test",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:22.506Z",
+      "elapsedMs": 499,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-interval-merge",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:23.006Z",
+      "elapsedMs": 786,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-interval-merge",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:23.793Z",
+      "elapsedMs": 641,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-pagination",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:24.435Z",
+      "elapsedMs": 903,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-pagination",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:25.339Z",
+      "elapsedMs": 583,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-retry-attempts",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:25.922Z",
+      "elapsedMs": 640,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "fix-retry-attempts",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:26.564Z",
+      "elapsedMs": 694,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "handoff-partial-feature",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:27.259Z",
+      "elapsedMs": 488,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "handoff-partial-feature",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:27.748Z",
+      "elapsedMs": 508,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "implement-clamp",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:28.257Z",
+      "elapsedMs": 578,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "implement-clamp",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:28.836Z",
+      "elapsedMs": 654,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "integrate-two-patches",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:29.491Z",
+      "elapsedMs": 916,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "integrate-two-patches",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:30.408Z",
+      "elapsedMs": 605,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "plan-rate-limit",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:31.013Z",
+      "elapsedMs": 527,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "plan-rate-limit",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:31.541Z",
+      "elapsedMs": 495,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "rename-timeout-option",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:32.036Z",
+      "elapsedMs": 539,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "rename-timeout-option",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:32.577Z",
+      "elapsedMs": 501,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "review-unsafe-merge",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:33.079Z",
+      "elapsedMs": 548,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "review-unsafe-merge",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:33.628Z",
+      "elapsedMs": 593,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "review-user-queries",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:34.221Z",
+      "elapsedMs": 535,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "review-user-queries",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:34.757Z",
+      "elapsedMs": 750,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "test-slugify",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:35.508Z",
+      "elapsedMs": 1330,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "test-slugify",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:36.839Z",
+      "elapsedMs": 611,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "write-duration-tests",
+      "configuration": "reference",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T18:43:37.451Z",
+      "elapsedMs": 950,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "reference-solution",
+        "model": "none"
+      }
+    },
+    {
+      "suiteId": "v1",
+      "frozenHash": "88a1a57810f97daf90abac4525c94642596a8b1c371f77c88011e643fedb40b7",
+      "taskId": "write-duration-tests",
+      "configuration": "noop",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T18:43:38.403Z",
+      "elapsedMs": 595,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0
+      },
+      "toolFailures": 0,
+      "conflicts": 0,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "noop",
+        "model": "none"
+      }
+    }
+  ]
+}
