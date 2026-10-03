@@ -56,7 +56,7 @@ export function phaseSuites(phase: string): Record<string, number> {
     'packages/core/src/graph.test.ts': 20,
     'packages/adapters/src/simulated/simulated.test.ts': 10,
     'apps/controller/src/controller.test.ts': 24,
-    'tests/gate.test.ts': 16,
+    'tests/gate.test.ts': 18,
     'tests/evidence-bundle.test.ts': 8,
   };
   return phase === '01'
@@ -168,6 +168,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/native-agent/src/loop.test.ts': 14,
               'apps/controller/src/native-turn-runner.test.ts': 10,
               'apps/controller/src/native-loop-fixture.test.ts': 2,
+              'apps/controller/src/live-native.test.ts': 3,
             }
           : {}),
       };
