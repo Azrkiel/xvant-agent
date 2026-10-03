@@ -1,0 +1,348 @@
+{
+  "generatedAt": "2026-10-03T14:20:52.466Z",
+  "classification": "live",
+  "stateDirectory": "C:\\Users\\jiang\\downloads\\xvant\\xvant-agent\\.artifacts\\benchmark-smoke-native-skills",
+  "runtimes": {
+    "native-local": {
+      "model": "qwen2.5-7b-instruct",
+      "toolCalls": true,
+      "contextTokens": null
+    }
+  },
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "repeats": 1,
+  "suiteId": "smoke",
+  "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+  "complete": true,
+  "directional": true,
+  "configurations": {
+    "native-local-skills": {
+      "scheduled": 10,
+      "accepted": 1,
+      "failed": 9,
+      "incomplete": 0,
+      "excluded": 0,
+      "missing": 0,
+      "successRate": 0.1,
+      "tasksAlwaysAccepted": 1,
+      "medianElapsedMs": 78751,
+      "inputTokens": null,
+      "outputTokens": null,
+      "totalTokens": null,
+      "toolFailures": null,
+      "conflicts": null,
+      "versions": {
+        "runtime": "native-local",
+        "runtimeVersion": "1.0.0",
+        "adapter": "xvant-native-v1",
+        "model": "lmstudio:qwen2.5-7b-instruct",
+        "instructions": "skill"
+      }
+    }
+  },
+  "bySplit": {
+    "tuning": {
+      "native-local-skills": {
+        "scheduled": 5,
+        "accepted": 0
+      }
+    },
+    "held-out": {
+      "native-local-skills": {
+        "scheduled": 5,
+        "accepted": 1
+      }
+    }
+  },
+  "exclusions": [],
+  "missing": [],
+  "limitations": [
+    "Small sample: results are directional evidence, not proof of general superiority.",
+    "Token usage is unknown for at least one configuration and is not estimated; no cost is derived.",
+    "Human rework was not measured."
+  ],
+  "suiteShapeProblems": [],
+  "records": [
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "diagnose-off-by-one",
+      "configuration": "native-local-skills",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T14:07:53.356Z",
+      "elapsedMs": 74980,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": null
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "native-local",
+        "runtimeVersion": "1.0.0",
+        "adapter": "xvant-native-v1",
+        "model": "lmstudio:qwen2.5-7b-instruct",
+        "instructions": "skill"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "document-cli-flag",
+      "configuration": "native-local-skills",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T14:09:08.340Z",
+      "elapsedMs": 24838,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": null
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "native-local",
+        "runtimeVersion": "1.0.0",
+        "adapter": "xvant-native-v1",
+        "model": "lmstudio:qwen2.5-7b-instruct",
+        "instructions": "skill"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "evaluate-candidate",
+      "configuration": "native-local-skills",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T14:09:33.179Z",
+      "elapsedMs": 29596,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": null
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "native-local",
+        "runtimeVersion": "1.0.0",
+        "adapter": "xvant-native-v1",
+        "model": "lmstudio:qwen2.5-7b-instruct",
+        "instructions": "skill"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "explore-entrypoints",
+      "configuration": "native-local-skills",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T14:10:02.777Z",
+      "elapsedMs": 43294,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": null
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "native-local",
+        "runtimeVersion": "1.0.0",
+        "adapter": "xvant-native-v1",
+        "model": "lmstudio:qwen2.5-7b-instruct",
+        "instructions": "skill"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "handoff-partial-feature",
+      "configuration": "native-local-skills",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "failed: WORKER_FAILED:step_limit",
+      "startedAt": "2026-10-03T14:10:46.072Z",
+      "elapsedMs": 139875,
+      "checkPassed": null,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": null
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "native-local",
+        "runtimeVersion": "1.0.0",
+        "adapter": "xvant-native-v1",
+        "model": "lmstudio:qwen2.5-7b-instruct",
+        "instructions": "skill"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "implement-clamp",
+      "configuration": "native-local-skills",
+      "repeat": 1,
+      "status": "accepted",
+      "startedAt": "2026-10-03T14:13:05.949Z",
+      "elapsedMs": 90980,
+      "checkPassed": true,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": null
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "native-local",
+        "runtimeVersion": "1.0.0",
+        "adapter": "xvant-native-v1",
+        "model": "lmstudio:qwen2.5-7b-instruct",
+        "instructions": "skill"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "integrate-two-patches",
+      "configuration": "native-local-skills",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T14:14:36.930Z",
+      "elapsedMs": 82522,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": null
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "native-local",
+        "runtimeVersion": "1.0.0",
+        "adapter": "xvant-native-v1",
+        "model": "lmstudio:qwen2.5-7b-instruct",
+        "instructions": "skill"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "plan-rate-limit",
+      "configuration": "native-local-skills",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T14:15:59.454Z",
+      "elapsedMs": 134207,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": null
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "native-local",
+        "runtimeVersion": "1.0.0",
+        "adapter": "xvant-native-v1",
+        "model": "lmstudio:qwen2.5-7b-instruct",
+        "instructions": "skill"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "review-unsafe-merge",
+      "configuration": "native-local-skills",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T14:18:13.662Z",
+      "elapsedMs": 125117,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": null
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "native-local",
+        "runtimeVersion": "1.0.0",
+        "adapter": "xvant-native-v1",
+        "model": "lmstudio:qwen2.5-7b-instruct",
+        "instructions": "skill"
+      }
+    },
+    {
+      "suiteId": "smoke",
+      "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
+      "taskId": "test-slugify",
+      "configuration": "native-local-skills",
+      "repeat": 1,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-03T14:20:18.781Z",
+      "elapsedMs": 33677,
+      "checkPassed": false,
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": null
+      },
+      "toolFailures": null,
+      "conflicts": null,
+      "recovered": null,
+      "humanRework": null,
+      "versions": {
+        "runtime": "native-local",
+        "runtimeVersion": "1.0.0",
+        "adapter": "xvant-native-v1",
+        "model": "lmstudio:qwen2.5-7b-instruct",
+        "instructions": "skill"
+      }
+    }
+  ]
+}
