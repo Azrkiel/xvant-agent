@@ -8,6 +8,8 @@ export interface ReceiptFacts {
   /** Benchmark reports only. */
   complete?: boolean;
   suiteShapeProblems?: string[];
+  /** The `runtime` each benchmarked configuration recorded. */
+  runtimes?: string[];
 }
 export interface Requirement {
   id: string;
@@ -113,8 +115,17 @@ export function evaluateRelease(
           : benchmark.suiteShapeProblems?.length
             ? 'suite is not the v1 benchmark: ' +
               benchmark.suiteShapeProblems.join('; ')
-            : null,
-      'complete campaign on the frozen v1 suite',
+            : // A comparison needs XVANT itself and something to compare it with.
+              !benchmark.runtimes?.includes('xvant-orchestrated')
+              ? 'no XVANT-orchestrated configuration was benchmarked'
+              : !benchmark.runtimes.some(
+                    (r) =>
+                      !['xvant-orchestrated', 'noop'].includes(r) &&
+                      !r.startsWith('reference'),
+                  )
+                ? 'no single-runtime baseline was benchmarked'
+                : null,
+      'complete campaign on the frozen v1 suite with XVANT and a baseline',
     );
   }
   for (const [id, reason] of Object.entries(input.deferred ?? {}))

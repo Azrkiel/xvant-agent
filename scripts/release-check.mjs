@@ -52,6 +52,9 @@ for (const file of existsSync(evidence) ? readdirSync(evidence) : []) {
         'missing',
       complete: receipt.complete,
       suiteShapeProblems: receipt.suiteShapeProblems,
+      runtimes: Object.values(receipt.configurations ?? {}).map(
+        (c) => c?.versions?.runtime,
+      ),
     };
   } catch {
     /* An unreadable receipt is a missing receipt. */

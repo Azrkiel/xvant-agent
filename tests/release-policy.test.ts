@@ -21,7 +21,12 @@ const complete = (): Record<string, ReceiptFacts> => ({
   'G06-live-parallel-feature': ok('older'),
   'G08-live-native': ok('older'),
   'G07-live-ui': ok('older'),
-  'benchmark-v1': { ...ok(), complete: true, suiteShapeProblems: [] },
+  'benchmark-v1': {
+    ...ok(),
+    complete: true,
+    suiteShapeProblems: [],
+    runtimes: ['claude', 'xvant-orchestrated'],
+  },
 });
 const check = (receipts: Record<string, ReceiptFacts | undefined>) =>
   evaluateRelease('local-v1', { receipts, currentSourceHash: NOW });
@@ -93,6 +98,18 @@ describe('release policy', () => {
       suiteShapeProblems: ['needs 24 tasks, has 10'],
     };
     expect(unmet(receipts)['benchmark-v1']).toMatch(/needs 24 tasks/);
+    const full = { ...ok(), complete: true, suiteShapeProblems: [] };
+    receipts['benchmark-v1'] = { ...full, runtimes: ['claude'] };
+    expect(unmet(receipts)['benchmark-v1']).toBe(
+      'no XVANT-orchestrated configuration was benchmarked',
+    );
+    receipts['benchmark-v1'] = {
+      ...full,
+      runtimes: ['xvant-orchestrated', 'reference-solution', 'noop'],
+    };
+    expect(unmet(receipts)['benchmark-v1']).toBe(
+      'no single-runtime baseline was benchmarked',
+    );
   });
   it('lists deferred requirements without letting them hide unmet ones', () => {
     const deferred = { Linux: 'deferred by the operator' };
