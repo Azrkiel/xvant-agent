@@ -1,0 +1,49 @@
+{
+  "gateId": "G00",
+  "status": "passed",
+  "generatedAt": "2026-10-03T15:26:44.843Z",
+  "classification": "offline",
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "pinnedNodeVersion": "24.21.0",
+  "gitVersion": "git version 2.55.0.windows.3",
+  "sqliteVersion": "3.53.4",
+  "sourceHash": "cf547f9b17e121f8e3fbce5156f6021012a23857b1cb8d2e5941680fe1f97877",
+  "runtimes": {
+    "codex": {
+      "runtimeKind": "codex",
+      "status": "version_mismatch",
+      "executable": "C:\\Users\\jiang\\AppData\\Local\\OpenAI\\Codex\\bin\\be3fd7e5c1969ff6\\codex.exe",
+      "version": "0.159.0-alpha.12.1",
+      "expectedVersion": "0.158.0-alpha.2.1",
+      "candidates": 1
+    },
+    "claude": {
+      "runtimeKind": "claude",
+      "status": "qualified",
+      "executable": "C:\\Users\\jiang\\.local\\bin\\claude.exe",
+      "version": "2.1.288",
+      "expectedVersion": "2.1.285",
+      "candidates": 1
+    },
+    "opencode": {
+      "runtimeKind": "opencode",
+      "status": "qualified",
+      "executable": "C:\\Users\\jiang\\AppData\\Local\\hermes\\node\\node_modules\\@opencode\\cli\\bin\\opencode.exe",
+      "version": "2.0.19",
+      "expectedVersion": "2.0.19",
+      "candidates": 1
+    }
+  },
+  "billing": {
+    "meteredKeysPresent": [],
+    "scope": "No metered-API key is visible to XVANT. Account type and plan are not read here; the live G03 receipts record what each runtime reported."
+  },
+  "problems": [],
+  "limitations": [
+    "A runtime that is not qualified is recorded, not fixed: its workers stay disabled until its version is re-qualified.",
+    "Version discovery does not prove a runtime can run a turn; the live gates do.",
+    "Windows only; Linux is deferred by the operator."
+  ]
+}

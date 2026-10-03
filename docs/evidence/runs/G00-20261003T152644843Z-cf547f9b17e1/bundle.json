@@ -1,0 +1,13 @@
+{
+  "bundleId": "G00-20261003T152644843Z-cf547f9b17e1",
+  "archivedAt": "2026-10-03T15:26:45.415Z",
+  "sourceRoot": "C:/Users/jiang/downloads/xvant/xvant-agent",
+  "receipt": {
+    "file": "C:/Users/jiang/downloads/xvant/xvant-agent/docs/evidence/G00.json",
+    "sha256": "c3d2ec7a633313b09ecd6aa6048e92b72f2dbf2b2a09b92c29c4c5f36be3c2e9",
+    "status": "passed"
+  },
+  "artifacts": [],
+  "extras": [],
+  "integrity": "complete"
+}
