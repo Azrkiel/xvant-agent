@@ -26,6 +26,9 @@ import {
   type WorkerSpec,
 } from './orchestrator.ts';
 
+/** Names the orchestration behaviour in benchmark records; bumped when it changes. Version 2 added the repair after a rejecting review. */
+export const ORCHESTRATION_VERSION = '2';
+
 /**
  * The task's visible tests as registered checks. A runtime needs at least
  * one, so a task without any gets a no-op; the real check stays hidden.
@@ -275,8 +278,7 @@ export function orchestratedConfiguration(options: {
       model: runtime.model ?? 'default',
       ...(plannerModel ? { plannerModel } : {}),
       instructions: options.criteria ? 'criteria' : 'none',
-      // Bumped when orchestration behaviour changes: 2 repairs after a rejecting review.
-      orchestration: '2',
+      orchestration: ORCHESTRATION_VERSION,
     },
     async run({ task, workspace, baseCommit, signal }) {
       const state = join(

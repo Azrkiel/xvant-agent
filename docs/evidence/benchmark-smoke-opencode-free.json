@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-03T05:23:12.792Z",
+  "generatedAt": "2026-10-08T15:56:31.442Z",
   "classification": "live",
-  "stateDirectory": "C:\\Users\\jiang\\downloads\\xvant\\xvant-agent\\.artifacts\\benchmark-smoke-opencode",
+  "stateDirectory": "C:\\Users\\jiang\\downloads\\xvant\\xvant-agent\\.artifacts\\benchmark-smoke-opencode-2",
   "runtimes": {
     "opencode": {
       "runtimeKind": "opencode",
@@ -18,19 +18,19 @@
   "repeats": 1,
   "suiteId": "smoke",
   "frozenHash": "9c5b2f08b1475a438d045b289e4ab7b1c5251f0fa0dc5ddf44d29d3d5e01ad0c",
-  "complete": false,
+  "complete": true,
   "directional": true,
   "configurations": {
     "opencode-free": {
       "scheduled": 10,
-      "accepted": 0,
-      "failed": 0,
-      "incomplete": 10,
+      "accepted": 8,
+      "failed": 2,
+      "incomplete": 0,
       "excluded": 0,
       "missing": 0,
-      "successRate": 0,
-      "tasksAlwaysAccepted": 0,
-      "medianElapsedMs": null,
+      "successRate": 0.8,
+      "tasksAlwaysAccepted": 8,
+      "medianElapsedMs": 47288,
       "inputTokens": null,
       "outputTokens": null,
       "totalTokens": null,
@@ -40,7 +40,8 @@
         "runtime": "opencode",
         "runtimeVersion": "2.0.19",
         "adapter": "opencode-cli-v2",
-        "model": "opencode/big-pickle"
+        "model": "opencode/big-pickle",
+        "instructions": "none"
       }
     }
   },
@@ -48,13 +49,13 @@
     "tuning": {
       "opencode-free": {
         "scheduled": 5,
-        "accepted": 0
+        "accepted": 3
       }
     },
     "held-out": {
       "opencode-free": {
         "scheduled": 5,
-        "accepted": 0
+        "accepted": 5
       }
     }
   },
@@ -63,7 +64,6 @@
   "limitations": [
     "Small sample: results are directional evidence, not proof of general superiority.",
     "Token usage is unknown for at least one configuration and is not estimated; no cost is derived.",
-    "The campaign is incomplete: missing and quota-interrupted attempts count against the success rate.",
     "Human rework was not measured."
   ],
   "suiteShapeProblems": [],
@@ -74,11 +74,10 @@
       "taskId": "diagnose-off-by-one",
       "configuration": "opencode-free",
       "repeat": 1,
-      "status": "incomplete",
-      "reason": "quota: AUTH_REQUIRED:provider.auth",
-      "startedAt": "2026-10-03T05:22:23.745Z",
-      "elapsedMs": 5727,
-      "checkPassed": null,
+      "status": "accepted",
+      "startedAt": "2026-10-08T15:40:06.798Z",
+      "elapsedMs": 43479,
+      "checkPassed": true,
       "usage": {
         "inputTokens": null,
         "outputTokens": null,
@@ -92,7 +91,8 @@
         "runtime": "opencode",
         "runtimeVersion": "2.0.19",
         "adapter": "opencode-cli-v2",
-        "model": "opencode/big-pickle"
+        "model": "opencode/big-pickle",
+        "instructions": "none"
       }
     },
     {
@@ -101,11 +101,10 @@
       "taskId": "document-cli-flag",
       "configuration": "opencode-free",
       "repeat": 1,
-      "status": "incomplete",
-      "reason": "quota: AUTH_REQUIRED:provider.auth",
-      "startedAt": "2026-10-03T05:22:29.474Z",
-      "elapsedMs": 4904,
-      "checkPassed": null,
+      "status": "accepted",
+      "startedAt": "2026-10-08T15:40:50.280Z",
+      "elapsedMs": 19888,
+      "checkPassed": true,
       "usage": {
         "inputTokens": null,
         "outputTokens": null,
@@ -119,7 +118,8 @@
         "runtime": "opencode",
         "runtimeVersion": "2.0.19",
         "adapter": "opencode-cli-v2",
-        "model": "opencode/big-pickle"
+        "model": "opencode/big-pickle",
+        "instructions": "none"
       }
     },
     {
@@ -128,11 +128,11 @@
       "taskId": "evaluate-candidate",
       "configuration": "opencode-free",
       "repeat": 1,
-      "status": "incomplete",
-      "reason": "quota: AUTH_REQUIRED:provider.auth",
-      "startedAt": "2026-10-03T05:22:34.379Z",
-      "elapsedMs": 4287,
-      "checkPassed": null,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-08T15:41:10.170Z",
+      "elapsedMs": 81968,
+      "checkPassed": false,
       "usage": {
         "inputTokens": null,
         "outputTokens": null,
@@ -146,7 +146,8 @@
         "runtime": "opencode",
         "runtimeVersion": "2.0.19",
         "adapter": "opencode-cli-v2",
-        "model": "opencode/big-pickle"
+        "model": "opencode/big-pickle",
+        "instructions": "none"
       }
     },
     {
@@ -155,11 +156,10 @@
       "taskId": "explore-entrypoints",
       "configuration": "opencode-free",
       "repeat": 1,
-      "status": "incomplete",
-      "reason": "quota: AUTH_REQUIRED:provider.auth",
-      "startedAt": "2026-10-03T05:22:38.666Z",
-      "elapsedMs": 4401,
-      "checkPassed": null,
+      "status": "accepted",
+      "startedAt": "2026-10-08T15:42:32.139Z",
+      "elapsedMs": 132644,
+      "checkPassed": true,
       "usage": {
         "inputTokens": null,
         "outputTokens": null,
@@ -173,7 +173,8 @@
         "runtime": "opencode",
         "runtimeVersion": "2.0.19",
         "adapter": "opencode-cli-v2",
-        "model": "opencode/big-pickle"
+        "model": "opencode/big-pickle",
+        "instructions": "none"
       }
     },
     {
@@ -182,11 +183,10 @@
       "taskId": "handoff-partial-feature",
       "configuration": "opencode-free",
       "repeat": 1,
-      "status": "incomplete",
-      "reason": "quota: AUTH_REQUIRED:provider.auth",
-      "startedAt": "2026-10-03T05:22:43.068Z",
-      "elapsedMs": 4558,
-      "checkPassed": null,
+      "status": "accepted",
+      "startedAt": "2026-10-08T15:44:44.784Z",
+      "elapsedMs": 454060,
+      "checkPassed": true,
       "usage": {
         "inputTokens": null,
         "outputTokens": null,
@@ -200,7 +200,8 @@
         "runtime": "opencode",
         "runtimeVersion": "2.0.19",
         "adapter": "opencode-cli-v2",
-        "model": "opencode/big-pickle"
+        "model": "opencode/big-pickle",
+        "instructions": "none"
       }
     },
     {
@@ -209,11 +210,10 @@
       "taskId": "implement-clamp",
       "configuration": "opencode-free",
       "repeat": 1,
-      "status": "incomplete",
-      "reason": "quota: AUTH_REQUIRED:provider.auth",
-      "startedAt": "2026-10-03T05:22:47.627Z",
-      "elapsedMs": 4469,
-      "checkPassed": null,
+      "status": "accepted",
+      "startedAt": "2026-10-08T15:52:18.846Z",
+      "elapsedMs": 29319,
+      "checkPassed": true,
       "usage": {
         "inputTokens": null,
         "outputTokens": null,
@@ -227,7 +227,8 @@
         "runtime": "opencode",
         "runtimeVersion": "2.0.19",
         "adapter": "opencode-cli-v2",
-        "model": "opencode/big-pickle"
+        "model": "opencode/big-pickle",
+        "instructions": "none"
       }
     },
     {
@@ -236,11 +237,10 @@
       "taskId": "integrate-two-patches",
       "configuration": "opencode-free",
       "repeat": 1,
-      "status": "incomplete",
-      "reason": "quota: AUTH_REQUIRED:provider.auth",
-      "startedAt": "2026-10-03T05:22:52.096Z",
-      "elapsedMs": 5009,
-      "checkPassed": null,
+      "status": "accepted",
+      "startedAt": "2026-10-08T15:52:48.165Z",
+      "elapsedMs": 29148,
+      "checkPassed": true,
       "usage": {
         "inputTokens": null,
         "outputTokens": null,
@@ -254,7 +254,8 @@
         "runtime": "opencode",
         "runtimeVersion": "2.0.19",
         "adapter": "opencode-cli-v2",
-        "model": "opencode/big-pickle"
+        "model": "opencode/big-pickle",
+        "instructions": "none"
       }
     },
     {
@@ -263,11 +264,11 @@
       "taskId": "plan-rate-limit",
       "configuration": "opencode-free",
       "repeat": 1,
-      "status": "incomplete",
-      "reason": "quota: AUTH_REQUIRED:provider.auth",
-      "startedAt": "2026-10-03T05:22:57.106Z",
-      "elapsedMs": 4616,
-      "checkPassed": null,
+      "status": "failed",
+      "reason": "acceptance check failed",
+      "startedAt": "2026-10-08T15:53:17.315Z",
+      "elapsedMs": 112314,
+      "checkPassed": false,
       "usage": {
         "inputTokens": null,
         "outputTokens": null,
@@ -281,7 +282,8 @@
         "runtime": "opencode",
         "runtimeVersion": "2.0.19",
         "adapter": "opencode-cli-v2",
-        "model": "opencode/big-pickle"
+        "model": "opencode/big-pickle",
+        "instructions": "none"
       }
     },
     {
@@ -290,11 +292,10 @@
       "taskId": "review-unsafe-merge",
       "configuration": "opencode-free",
       "repeat": 1,
-      "status": "incomplete",
-      "reason": "quota: AUTH_REQUIRED:provider.auth",
-      "startedAt": "2026-10-03T05:23:01.723Z",
-      "elapsedMs": 5306,
-      "checkPassed": null,
+      "status": "accepted",
+      "startedAt": "2026-10-08T15:55:09.630Z",
+      "elapsedMs": 30706,
+      "checkPassed": true,
       "usage": {
         "inputTokens": null,
         "outputTokens": null,
@@ -308,7 +309,8 @@
         "runtime": "opencode",
         "runtimeVersion": "2.0.19",
         "adapter": "opencode-cli-v2",
-        "model": "opencode/big-pickle"
+        "model": "opencode/big-pickle",
+        "instructions": "none"
       }
     },
     {
@@ -317,11 +319,10 @@
       "taskId": "test-slugify",
       "configuration": "opencode-free",
       "repeat": 1,
-      "status": "incomplete",
-      "reason": "quota: AUTH_REQUIRED:provider.auth",
-      "startedAt": "2026-10-03T05:23:07.030Z",
-      "elapsedMs": 5758,
-      "checkPassed": null,
+      "status": "accepted",
+      "startedAt": "2026-10-08T15:55:40.338Z",
+      "elapsedMs": 51096,
+      "checkPassed": true,
       "usage": {
         "inputTokens": null,
         "outputTokens": null,
@@ -335,7 +336,8 @@
         "runtime": "opencode",
         "runtimeVersion": "2.0.19",
         "adapter": "opencode-cli-v2",
-        "model": "opencode/big-pickle"
+        "model": "opencode/big-pickle",
+        "instructions": "none"
       }
     }
   ]

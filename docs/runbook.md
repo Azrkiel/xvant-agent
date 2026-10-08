@@ -67,6 +67,22 @@ A runtime that updates itself can stop being qualified without any change in thi
 
 An offline gate receipt counts only for the exact source tree it ran on. After any source change, rerun the phase 10 gate before a release.
 
+## Release checks
+
+These are not part of `npm run gate`. Each writes a receipt under `docs/evidence/` and a bundle under `docs/evidence/runs/`, and each fails with "Source changed during the run" if a tracked or untracked file outside `docs/evidence/` changes while it runs.
+
+| Check | Command | Receipt |
+| --- | --- | --- |
+| Clean install | `node scripts/clean-install-check.mjs [--include-working-tree]` | `P10-clean-install.json` |
+| Offline soak | `node scripts/soak.mjs --minutes N [--seed S]` | `P10-soak.json` |
+| Package | `node scripts/package-release.mjs [--allow-dirty]` | `P10-package.json` |
+
+**Clean install.** Clones HEAD (without `docs/`, so Windows path lengths stay short) into a temp directory, then runs `npm ci`, `tsc --noEmit`, `xvant runtimes` (exit 0 and three runtime lines, qualified or not), `status` on an empty `XVANT_HOME`, and a backup and restore round trip with a seeded task and object. Needs the network for `npm ci` (the npm registry; nothing paid). Without `--include-working-tree` it tests only what is committed and fails if there are uncommitted changes; with it, it copies your working tree over the clone and the receipt says so. Proves: the committed tree installs and starts from nothing on this host. Does not prove: a different machine, a runtime login, Linux, or an upgrade from an earlier version.
+
+**Soak.** Runs orchestrated objectives against throwaway Git repositories for N minutes. The real orchestrator, store, worktrees, integration and checks run; every turn is a fake that injects faults from a seeded generator (turn failure, unknown outcome, conflicting patches, failing check, rejecting review). After each iteration it checks: the run ended in the phase that fault calls for, an unknown outcome was never retried, the user's checkout (HEAD, branch, status, other branches, files) is unchanged, only the run's own worktrees and `xvant/` branches exist, no temp directory or patch file is left, and process rss has not grown past 1.5 times its post-warm-up level (and 64 MB). The seed is in the receipt; the same seed replays the same fault sequence. Proves: the orchestration invariants hold under those five faults for the time run. Does not prove: anything about a live runtime, quota, or a crash and resume; there is no live soak. `tests/faults/soak.test.ts` runs six iterations as a regression test.
+
+**Package.** Writes `.artifacts/release/xvant-<version>-<commit>-win-x64.zip` (the committed tree from `git archive`, without `docs/` and `.Codex/`), `SHA256SUMS`, and `support-matrix.json` and `.md` built from `package.json`, `.node-version`, the pinned routes in `packages/contracts/src/live.ts` and the receipts in `docs/evidence`. It refuses a dirty tree unless `--allow-dirty` (the archive then still holds only HEAD, and the receipt says so), re-hashes its output and compares the archive's file list with HEAD. The archive is not committed; the receipt records names, sizes and hashes. Proves: the archive matches HEAD and its checksums. Does not prove: that it installs (run the clean-install check), or who made it (nothing is signed).
+
 ## Benchmark
 
 ```bash
@@ -86,12 +102,24 @@ npm run benchmark -- --suite v1 --repeats 1 --report docs/evidence/benchmark-v1-
 
 ## Backup and restore
 
-There is no backup command yet. With XVANT stopped (no `xvant ui` or `xvant run` process):
+| Task | Command |
+| --- | --- |
+| Back up the state directory | `npm run xvant -- backup [--out DIR]`. Default `DIR` is `%USERPROFILE%\.xvant-backups\<timestamp>` (next to the state directory, never inside it) |
+| Restore into an empty or new state directory | `npm run xvant -- restore --from DIR` |
+| Restore over existing state | `npm run xvant -- restore --from DIR --force` |
 
-1. Copy the whole state directory (`%USERPROFILE%\.xvant`): `state.sqlite` with any `-wal` and `-shm` files beside it, `objects\` and `runs\`.
-2. To restore, stop XVANT, replace the directory with the copy, and start again.
+Both commands honour `XVANT_HOME`. Rules:
 
-Copying `state.sqlite` while XVANT is running can produce a torn copy. Worktrees under `runs\` belong to the repositories they were created from; a restored state directory on another machine will not have those repositories.
+- A backup holds `state.sqlite`, written as one consistent snapshot (`VACUUM INTO`, not a file copy), the files in `objects\`, and `manifest.json` with the format version, creation time, XVANT version, schema version and the SHA-256 and size of every file. `DIR` must be empty or new.
+- `runs\` is not backed up. Its worktrees belong to the repositories they were created from, and a restored state directory on another machine will not have those repositories. The manifest and the command output say so.
+- Both commands refuse while another live XVANT process (`xvant ui`, `xvant run`) owns the state. A backup takes the same lease the app takes, so it also waits out the 30 seconds a crashed process leaves behind; a restore reads the lease and refuses while it is unexpired.
+- Restore checks the manifest version and every hash before it touches anything. A missing or altered file, or a format it does not know, is refused and the target is left as it was.
+- Restore refuses a state directory that already has content unless you pass `--force`. With `--force` the existing directory is moved, not deleted, to `<state directory>.before-restore-<timestamp>` beside it, including its `runs\`. Delete it yourself once you are sure.
+- After the restore XVANT opens the database and runs `PRAGMA integrity_check`; anything but `ok` fails the command.
+
+Do not copy `state.sqlite` by hand while XVANT is running: it can produce a torn copy.
+
+Proves: the backup and restore round trip keeps the same rows and object bytes, and each refusal above (`packages/storage/src/backup.test.ts`). Does not prove: restoring a backup made by another XVANT version (only format 1 exists, and schema upgrades are not tested on restored data), or recovery from a damaged disk.
 
 ## Recovery
 
@@ -109,4 +137,4 @@ Copying `state.sqlite` while XVANT is running can produce a torn copy. Worktrees
 - Windows only. Linux is deferred by the operator and has no observed run.
 - Trusted-local execution is not a sandbox: checks and runtime tools run as ordinary local processes.
 - Attached or imported sessions (P03.5) are not implemented; XVANT only controls sessions it started.
-- No installer or packaged artifact exists yet (P10.6).
+- There is no installer. The packaged artifact is a source archive: unzip it, install Node 24.21.0 and run `npm ci --ignore-scripts` as under Install.

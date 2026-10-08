@@ -10,7 +10,9 @@
 //                        [--model KIND=MODEL]... [--planner-model MODEL]
 //   npm run xvant -- status [ID]
 //   npm run xvant -- accept ID
-import { mkdirSync, realpathSync } from 'node:fs';
+//   npm run xvant -- backup [--out DIR]
+//   npm run xvant -- restore --from DIR [--force]
+import { mkdirSync, readFileSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
@@ -20,6 +22,10 @@ import { discoverRuntime } from '../packages/adapters/src/live/discover.ts';
 import { Orchestrator } from '../apps/controller/src/orchestrator.ts';
 import { LiveTurnRunner } from '../apps/controller/src/turn-runner.ts';
 import { shellCheck } from '../apps/controller/src/app.ts';
+import {
+  activeRouting,
+  applyRouting,
+} from '../apps/controller/src/routing-default.ts';
 
 const home = resolve(process.env.XVANT_HOME ?? join(homedir(), '.xvant'));
 const [command, ...rest] = process.argv.slice(2);
@@ -139,6 +145,18 @@ if (command === 'ui') {
     console.error('No qualified runtime. Run: npm run xvant -- runtimes');
     process.exit(1);
   }
+  if (!workers.some((w) => w.roles.includes('planner')))
+    workers[0].roles = ['planner', ...workers[0].roles];
+  // The promoted routing default applies first; the flags below override it.
+  const routing = activeRouting(home);
+  if (routing)
+    console.log(
+      'Routing default ' +
+        routing.version +
+        ': ' +
+        (applyRouting(workers, runtimes, routing.settings).join('; ') ||
+          'nothing to apply'),
+    );
   // --model claude=haiku sets that runtime's model; unset means its own default.
   for (const pair of values('--model')) {
     const [kind, model] = pair.split('=');
@@ -148,8 +166,6 @@ if (command === 'ui') {
     }
     if (runtimes[kind]) runtimes[kind].model = model;
   }
-  if (!workers.some((w) => w.roles.includes('planner')))
-    workers[0].roles = ['planner', ...workers[0].roles];
   // --planner-model: one worker plans and reviews on that model and implements nothing.
   const plannerModel = value('--planner-model');
   if (plannerModel) {
@@ -323,7 +339,58 @@ if (command === 'ui') {
   } finally {
     store.close();
   }
+} else if (command === 'backup') {
+  // state.sqlite (a consistent snapshot) and objects/; never runs/.
+  const { backupState, describeBackup } =
+    await import('../packages/storage/src/backup.ts');
+  const version = JSON.parse(
+    readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+  ).version;
+  const out = resolve(
+    value('--out') ??
+      join(home + '-backups', new Date().toISOString().replace(/[:.]/g, '-')),
+  );
+  try {
+    const { directory, manifest } = backupState({
+      home,
+      out,
+      xvantVersion: version,
+    });
+    console.log('Backup written to ' + directory);
+    console.log(describeBackup(manifest));
+    console.log(
+      'Not included: runs/ (worktrees belong to their repositories).',
+    );
+  } catch (error) {
+    console.error('Backup failed: ' + error.message);
+    process.exit(1);
+  }
+} else if (command === 'restore') {
+  const { restoreState, describeBackup } =
+    await import('../packages/storage/src/backup.ts');
+  const from = value('--from');
+  if (!from) {
+    console.error('restore needs --from DIR [--force]');
+    process.exit(2);
+  }
+  try {
+    const result = restoreState({
+      from: resolve(from),
+      home,
+      force: rest.includes('--force'),
+    });
+    console.log('Restored ' + describeBackup(result.manifest));
+    console.log('Database integrity: ' + result.integrity);
+    if (result.movedAside)
+      console.log('Previous state moved to ' + result.movedAside);
+    console.log('State directory: ' + result.home);
+  } catch (error) {
+    console.error('Restore failed: ' + error.message);
+    process.exit(1);
+  }
 } else {
-  console.error('Commands: ui | runtimes | run | status [ID] | accept ID');
+  console.error(
+    'Commands: ui | runtimes | run | status [ID] | accept ID | backup | restore',
+  );
   process.exit(2);
 }

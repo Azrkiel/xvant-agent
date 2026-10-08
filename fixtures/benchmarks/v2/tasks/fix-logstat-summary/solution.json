@@ -1,0 +1,20 @@
+{
+  "edits": [
+    {
+      "path": "src/aggregate/stats.js",
+      "content": "// Nearest-rank percentile: the smallest value that at least p percent of the\n// values are less than or equal to. Returns 0 for no values.\nexport function percentile(values, p) {\n  if (values.length === 0) return 0;\n  const sorted = [...values].sort((a, b) => a - b);\n  const rank = Math.ceil((p / 100) * sorted.length);\n  return sorted[Math.min(Math.max(rank, 1), sorted.length) - 1];\n}\n"
+    },
+    {
+      "path": "src/cli/cli.js",
+      "content": "import { readFileSync } from 'node:fs';\nimport { summarize } from '../aggregate/summary.js';\nimport { parseLog } from '../parse/line.js';\nimport { renderSummary } from '../report/render.js';\nimport { parseArgs } from './args.js';\n\n// logstat summary <file> [--level LEVEL] [--service NAME]\n// Prints one row per hour and service and returns the exit code.\nexport function main(argv, { out, readFile = (path) => readFileSync(path, 'utf8') }) {\n  try {\n    const [command, ...rest] = argv;\n    if (command !== 'summary') {\n      out('usage: logstat summary <file> [--level LEVEL] [--service NAME]');\n      return 1;\n    }\n    const { positional, flags } = parseArgs(rest, ['level', 'service']);\n    if (positional.length !== 1) throw new TypeError('expected one log file');\n    let entries = parseLog(readFile(positional[0]));\n    if (flags.level !== undefined) {\n      const level = flags.level.toUpperCase();\n      entries = entries.filter((entry) => entry.level === level);\n    }\n    if (flags.service !== undefined)\n      entries = entries.filter((entry) => entry.service === flags.service);\n    out(renderSummary(summarize(entries)));\n    return 0;\n  } catch (error) {\n    out('error: ' + error.message);\n    return 1;\n  }\n}\n"
+    },
+    {
+      "path": "src/parse/timestamp.js",
+      "content": "const PATTERN = /^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})(Z|[+-]\\d{2}:\\d{2})$/;\n\n// Parses an ISO 8601 timestamp with a Z or +HH:MM / -HH:MM zone into epoch\n// milliseconds. Returns null when the text is not such a timestamp.\nexport function parseTimestamp(text) {\n  const match = PATTERN.exec(text);\n  if (!match) return null;\n  const [year, month, day, hour, minute, second] = match.slice(1, 7).map(Number);\n  let ms = Date.UTC(year, month - 1, day, hour, minute, second);\n  if (match[7] !== 'Z') {\n    const sign = match[7][0] === '-' ? -1 : 1;\n    const [offsetHours, offsetMinutes] = match[7].slice(1).split(':').map(Number);\n    ms -= sign * (offsetHours * 60 + offsetMinutes) * 60_000;\n  }\n  return ms;\n}\n"
+    },
+    {
+      "path": "src/report/table.js",
+      "content": "// Renders a plain-text table: a header row, a dashed rule and one line per\n// row. Every column is as wide as its widest cell, columns are separated by two\n// spaces and lines carry no trailing spaces.\nexport function renderTable(headers, rows) {\n  const widths = headers.map((header, i) =>\n    Math.max(header.length, ...rows.map((row) => String(row[i]).length)),\n  );\n  const line = (cells) =>\n    cells\n      .map((cell, i) => String(cell).padEnd(widths[i]))\n      .join('  ')\n      .trimEnd();\n  return [\n    line(headers),\n    line(widths.map((width) => '-'.repeat(width))),\n    ...rows.map(line),\n  ].join('\\n');\n}\n"
+    }
+  ]
+}
