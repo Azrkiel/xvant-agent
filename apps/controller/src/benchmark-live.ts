@@ -349,7 +349,8 @@ export function orchestratedConfiguration(options: {
         const usage = {
           inputTokens: null,
           outputTokens: null,
-          // Planner and reviewer turns report no usage through this path.
+          // Input plus output tokens of every turn, planner and reviewer
+          // included; cached tokens are not counted.
           totalTokens: reported ? tokens : null,
         };
         hostStopped ??= hostStop(root.reason);
