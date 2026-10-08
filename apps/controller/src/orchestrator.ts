@@ -26,6 +26,8 @@ export interface WorkerSpec {
   runtimeKind: 'codex' | 'claude' | 'opencode' | 'native-local';
   quotaGroupId: string;
   roles: readonly ('worker' | 'reviewer' | 'planner')[];
+  /** Model for this worker's turns; absent means its runtime's model. */
+  model?: string;
 }
 export interface TurnRequest {
   taskId: string;

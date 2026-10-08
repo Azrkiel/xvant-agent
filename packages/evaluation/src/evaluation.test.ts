@@ -18,6 +18,8 @@ import {
   type Suite,
 } from './suite.ts';
 import {
+  CampaignStopped,
+  HostInterrupted,
   QuotaInterrupted,
   readRecords,
   runBenchmark,
@@ -192,6 +194,44 @@ describe('campaign', () => {
     );
     expect(report.complete).toBe(false);
     expect(report.configurations.limited!.successRate).toBe(0);
+  }, 60000);
+  it('records a host-interrupted attempt as incomplete', async () => {
+    const { records, stopped } = await campaign({
+      stalled: {
+        versions: {},
+        async run() {
+          throw new HostInterrupted('lease lost');
+        },
+      },
+    });
+    expect(stopped).toBeUndefined();
+    expect(records.map((r) => [r.status, r.reason])).toEqual([
+      ['incomplete', 'host: lease lost'],
+      ['incomplete', 'host: lease lost'],
+    ]);
+  }, 60000);
+  it('ends the campaign with no record when a configuration can run nothing, and resumes', async () => {
+    let usable = false;
+    let calls = 0;
+    const drifting: Configuration = {
+      versions: {},
+      async run(input) {
+        calls += 1;
+        if (!usable) throw new CampaignStopped('runtime changed');
+        return right.run(input);
+      },
+    };
+    const first = await campaign({ drifting });
+    expect(first.stopped).toBe('runtime changed');
+    expect(first.records).toEqual([]);
+    expect(calls).toBe(1);
+    usable = true;
+    const second = await campaign({ drifting });
+    expect(second.stopped).toBeUndefined();
+    expect(second.records.map((r) => r.status)).toEqual([
+      'accepted',
+      'accepted',
+    ]);
   }, 60000);
   it('resumes a stopped campaign without rerunning recorded attempts', async () => {
     const stop = new AbortController();

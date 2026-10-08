@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, it } from 'vitest';
 import {
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   realpathSync,
   rmSync,
   writeFileSync,
@@ -9,6 +10,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Store } from '../../../packages/storage/src/store.ts';
 import { computeLock } from '../../../packages/evaluation/src/suite.ts';
 import { runBenchmark } from '../../../packages/evaluation/src/runner.ts';
 import {
@@ -163,3 +165,75 @@ it('runs XVANT orchestration and hands its combined result to the hidden check',
     },
   });
 }, 120000);
+
+it('plans and reviews on the planner model while workers keep the runtime model', async () => {
+  const { records } = await runBenchmark({
+    suiteDir,
+    configurations: {
+      xvant: orchestratedConfiguration({
+        kind: 'claude',
+        runtime: {
+          executable: process.execPath,
+          prefixArgs: [peer, 'write'],
+          model: 'haiku',
+        },
+        stateRoot: join(root, 'state'),
+        criteria: () => ['answer.txt holds alpha'],
+        plannerModel: 'opus',
+      }),
+    },
+    repeats: 1,
+    recordsPath: join(root, 'records.jsonl'),
+    workRoot: join(root, 'work'),
+  });
+  expect(records[0]).toMatchObject({
+    status: 'accepted',
+    versions: { model: 'haiku', plannerModel: 'opus' },
+  });
+  const [attempt] = readdirSync(join(root, 'state'));
+  const store = new Store(join(root, 'state', attempt!, 'state.sqlite'), {
+    owner: 'test',
+  });
+  try {
+    const turn = (taskId: string) => {
+      const saved = store.providers.get(taskId);
+      return [saved.worker.alias, saved.liveApproval!.model];
+    };
+    expect(turn('bench-plan-1')).toEqual(['claude-bench-1', 'opus']);
+    expect(turn('bench-work-2')).toEqual(['claude-bench-2', 'haiku']);
+    expect(turn('bench-review-3')).toEqual(['claude-bench-1', 'opus']);
+  } finally {
+    store.close();
+  }
+}, 120000);
+
+it.each([
+  ['a single worker', liveConfiguration],
+  ['XVANT orchestration', orchestratedConfiguration],
+])(
+  'ends the campaign with no record when the runtime changed under %s',
+  async (_name, configuration) => {
+    const { records, stopped } = await runBenchmark({
+      suiteDir,
+      configurations: {
+        claude: configuration({
+          kind: 'claude',
+          runtime: {
+            executable: process.execPath,
+            prefixArgs: [peer, 'write'],
+            model: 'haiku',
+            // The campaign recorded this version; the peer reports 2.1.285.
+            version: '2.1.286',
+          },
+          stateRoot: join(root, 'state'),
+        }),
+      },
+      repeats: 1,
+      recordsPath: join(root, 'records.jsonl'),
+      workRoot: join(root, 'work'),
+    });
+    expect(stopped).toMatch(/installed runtime/);
+    expect(records).toEqual([]);
+  },
+  60000,
+);

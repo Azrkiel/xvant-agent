@@ -21,7 +21,8 @@ export const attemptRecordSchema = z.strictObject({
    * `accepted`: the hidden check passed. `failed`: it did not, or the
    * configuration gave up. `incomplete`: a quota or availability limit
    * stopped the attempt; it is never counted as a success and never retried
-   * automatically; so does an attempt the host was suspended under.
+   * automatically; so does an attempt the host was suspended or stalled
+   * under.
    * `excluded`: declared up front with a reason.
    */
   status: z.enum(['accepted', 'failed', 'incomplete', 'excluded']),
@@ -60,6 +61,14 @@ export interface AttemptResult {
 }
 /** Thrown by a configuration when a subscription or model limit stops it. */
 export class QuotaInterrupted extends Error {}
+/** Thrown by a configuration when the host, not the work, stopped the attempt. */
+export class HostInterrupted extends Error {}
+/**
+ * Thrown by a configuration when no further attempt can run, e.g. the
+ * installed runtime changed under the campaign. The attempt gets no record,
+ * so a resumed campaign runs it.
+ */
+export class CampaignStopped extends Error {}
 export interface Configuration {
   /** Runtime, model and skill versions recorded with every attempt. */
   versions: Record<string, string>;
@@ -132,7 +141,12 @@ export async function runBenchmark(options: {
   /** Wall clock; tests replace it. */
   now?: () => number;
   onRecord?: (record: AttemptRecord) => void;
-}): Promise<{ schedule: Scheduled[]; records: AttemptRecord[] }> {
+}): Promise<{
+  schedule: Scheduled[];
+  records: AttemptRecord[];
+  /** Why the campaign ended before its schedule did. */
+  stopped?: string;
+}> {
   const { suite, lock } = verifyFrozen(options.suiteDir);
   const schedule: Scheduled[] = [];
   for (const task of suite.tasks)
@@ -147,6 +161,7 @@ export async function runBenchmark(options: {
     (options.exclusions ?? []).map((e) => [attemptKey(e), e.reason]),
   );
   mkdirSync(options.workRoot, { recursive: true });
+  let stopped: string | undefined;
   for (const attempt of schedule) {
     if (done.has(attemptKey(attempt))) continue;
     if (options.signal?.aborted) break;
@@ -222,9 +237,14 @@ export async function runBenchmark(options: {
           if (!record.checkPassed) record.reason = 'acceptance check failed';
         }
       } catch (error) {
-        if (error instanceof QuotaInterrupted) {
+        if (error instanceof CampaignStopped) {
+          stopped = error.message;
+        } else if (error instanceof QuotaInterrupted) {
           record.status = 'incomplete';
           record.reason = ('quota: ' + error.message).slice(0, 500);
+        } else if (error instanceof HostInterrupted) {
+          record.status = 'incomplete';
+          record.reason = ('host: ' + error.message).slice(0, 500);
         } else {
           record.reason = (
             timeout.aborted
@@ -233,6 +253,7 @@ export async function runBenchmark(options: {
           ).slice(0, 500);
         }
       }
+      if (stopped !== undefined) break;
       record.elapsedMs = now() - startedAt.getTime();
       // An attempt cannot outlive its timeout unless the host was suspended
       // under it. Whatever it reported, its result and timing are not evidence.
@@ -246,5 +267,9 @@ export async function runBenchmark(options: {
     done.add(attemptKey(attempt));
     options.onRecord?.(record);
   }
-  return { schedule, records: readRecords(options.recordsPath) };
+  return {
+    schedule,
+    records: readRecords(options.recordsPath),
+    ...(stopped !== undefined ? { stopped } : {}),
+  };
 }

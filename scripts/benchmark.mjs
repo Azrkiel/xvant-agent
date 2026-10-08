@@ -106,10 +106,14 @@ const bare = (name) => name.replace(/-(skills|criteria|xvant)$/, '');
 const LIVE = {
   'claude-haiku': 'haiku',
   'claude-sonnet': 'sonnet',
+  // Haiku works; with `-xvant`, Opus plans and reviews (see PLANNER).
+  'claude-opus-haiku': 'haiku',
   // The runner pins OpenCode to its free model whatever is named here.
   'opencode-free': 'opencode/big-pickle',
   'native-local': value('--model'),
 };
+// Orchestrated configurations whose planner and reviewer run on another model.
+const PLANNER = { 'claude-opus-haiku': 'opus' };
 const names = (value('--configurations') ?? 'reference,noop').split(',');
 const unknown = names.filter(
   (name) => !available[name] && !Object.hasOwn(LIVE, bare(name)),
@@ -180,6 +184,7 @@ for (const name of live.filter((n) => bare(n) !== 'native-local')) {
         runtime,
         stateRoot,
         criteria: criteriaList,
+        ...(PLANNER[bare(name)] ? { plannerModel: PLANNER[bare(name)] } : {}),
       })
     : liveConfiguration({ kind, runtime, ...extra(name), stateRoot });
 }
@@ -198,7 +203,7 @@ const awake =
       )
     : undefined;
 process.on('exit', () => awake?.kill());
-const { schedule, records } = await runBenchmark({
+const { schedule, records, stopped } = await runBenchmark({
   suiteDir,
   configurations: Object.fromEntries(names.map((n) => [n, available[n]])),
   repeats,
@@ -244,6 +249,10 @@ for (const [name, c] of Object.entries(summary.configurations))
       ' incomplete, ' +
       c.missing +
       ' missing',
+  );
+if (stopped)
+  console.log(
+    'stopped early: ' + stopped + '; resume with the same --resume directory',
   );
 console.log(
   'complete: ' +
