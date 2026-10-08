@@ -1,0 +1,45 @@
+diff --git a/scripts/xvant.mjs b/scripts/xvant.mjs
+index 5c7e017cade616782b1610ce894b8facd087fe23..a7a73069f3164280f8686ca3e016122aecafcf54 100644
+--- a/scripts/xvant.mjs
++++ b/scripts/xvant.mjs
+@@ -3,7 +3,7 @@
+ // `xvant/<id>` branch; your checkout and branches are never changed.
+ //
+ //   npm run xvant -- ui [--no-open] [--port N]
+-//   npm run xvant -- runtimes
++//   npm run xvant -- runtimes [--json]
+ //   npm run xvant -- run --repo PATH --objective TEXT [--criterion TEXT]...
+ //                        [--check "COMMAND"]... [--max-active N] [--no-review]
+ //                        [--only codex,claude,opencode]
+@@ -92,13 +92,26 @@ if (command === 'ui') {
+   process.on('SIGINT', stop);
+   process.on('SIGTERM', stop);
+ } else if (command === 'runtimes') {
+-  for (const found of discover(['codex', 'claude', 'opencode']).table)
++  const { table } = discover(['codex', 'claude', 'opencode']);
++  if (rest.includes('--json'))
+     console.log(
+-      found.runtimeKind.padEnd(9),
+-      found.status.padEnd(17),
+-      (found.version ?? '-').padEnd(20),
+-      found.executable ?? '',
++      JSON.stringify(
++        table.map((found) => ({
++          runtimeKind: found.runtimeKind,
++          status: found.status,
++          version: found.version ?? null,
++          executable: found.executable ?? null,
++        })),
++      ),
+     );
++  else
++    for (const found of table)
++      console.log(
++        found.runtimeKind.padEnd(9),
++        found.status.padEnd(17),
++        (found.version ?? '-').padEnd(20),
++        found.executable ?? '',
++      );
+ } else if (command === 'run') {
+   const repo = value('--repo');
+   const objective = value('--objective');

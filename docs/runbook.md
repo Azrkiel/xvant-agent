@@ -25,10 +25,14 @@ Current status lives in the [verification register](plans/2026-09-30-verificatio
 | See which runtimes are qualified | `npm run xvant -- runtimes` |
 | Open the local app | `npm run xvant -- ui` |
 | Run one objective from the terminal | `npm run xvant -- run --repo PATH --objective "TEXT" --criterion "TEXT" --check "COMMAND" --only claude` |
+| Same, with a stronger model planning and reviewing | add `--model claude=haiku --planner-model opus`: one worker plans and reviews on the planner model and implements nothing; the others work on the runtime's model |
+| Run one objective and write the real-repository receipt | `node scripts/real-repo-run.mjs --approve-live --repo CLONE --objective "TEXT" --check "COMMAND"` plus any `xvant run` option. Use a throwaway clone. Writes `docs/evidence/G07-live-ui.json`; change no tracked file while it runs |
 | List runs, or inspect one | `npm run xvant -- status [ID]` |
 | Accept a ready result | `npm run xvant -- accept ID`, then `git merge xvant/<id>` in your repository |
 
 XVANT works in its own worktrees and puts the combined result on an `xvant/<id>` branch. It never changes your checkout or your branches. State is in `%USERPROFILE%\.xvant` (override with `XVANT_HOME`).
+
+When the review rejects the combined result and names defects, XVANT runs one repair turn, then verifies and reviews again. A result that is still rejected is handed over as `ready` with the findings; read the review before accepting.
 
 State acceptance criteria explicitly with `--criterion`. On the benchmark, a small model given explicit criteria passed far more often than the same model given only the objective.
 
@@ -36,7 +40,7 @@ State acceptance criteria explicitly with `--criterion`. On the benchmark, a sma
 
 | Runtime | State on 2026-10-03 | What to do |
 | --- | --- | --- |
-| Claude Code | qualified (2.1.288) | Nothing. Patch updates within the qualified minor version are accepted. |
+| Claude Code | qualified (2.1.288; 2.1.294 on 2026-10-08) | Nothing. Patch updates within the qualified minor version are accepted. |
 | Codex | `version_mismatch`: the installed 0.159.0-alpha.12.1 is not the pinned version | XVANT skips Codex workers. Re-qualify by updating the pinned version in `packages/contracts/src/live.ts` and rerunning `node scripts/live-gate.mjs --phase 03 --fixture roster --approve-live`. |
 | OpenCode | version qualified, but every turn fails with `AUTH_REQUIRED` | The provider answers "OpenCode's free tier can only be used from within OpenCode" to `opencode run`. Do not work around it. Pass `--only claude` so no work is routed to OpenCode. |
 | Native local model | `qwen2.5-7b-instruct` in LM Studio qualifies | `lms server start`, then `lms load qwen2.5-7b-instruct -c 16384 -y`. Models that answer tool calls as text (for example `qwen2.5-coder-7b-instruct`) fail the probe and cannot be used. |

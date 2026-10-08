@@ -1,0 +1,62 @@
+{
+  "bundleId": "G07-live-ui-20261008T150907390Z-fec60bb5a938",
+  "archivedAt": "2026-10-08T15:11:15.844Z",
+  "sourceRoot": "C:/Users/jiang/downloads/xvant/xvant-agent",
+  "receipt": {
+    "file": "C:/Users/jiang/downloads/xvant/xvant-agent/docs/evidence/G07-live-ui.json",
+    "sha256": "278da84069a6058be7bcbad910630c1b671835cf2942fdde09458b344ce45704",
+    "status": "passed"
+  },
+  "artifacts": [],
+  "extras": [
+    {
+      "path": ".artifacts/real-repo-1791472149084/objects/001d4866dc825c928ffcf71db3d475b59231e68d366d637be9c02de7e435af3d",
+      "sha256": "001d4866dc825c928ffcf71db3d475b59231e68d366d637be9c02de7e435af3d"
+    },
+    {
+      "path": ".artifacts/real-repo-1791472149084/objects/09ce4a3b7498d240c739f8d4253377bdec4b9d24c09a764251e81efd6919e0bc",
+      "sha256": "09ce4a3b7498d240c739f8d4253377bdec4b9d24c09a764251e81efd6919e0bc"
+    },
+    {
+      "path": ".artifacts/real-repo-1791472149084/objects/30d47237a5272bc0e0a90974af1a57785b07d8295ad14ce00a96b4a386ab4895",
+      "sha256": "30d47237a5272bc0e0a90974af1a57785b07d8295ad14ce00a96b4a386ab4895"
+    },
+    {
+      "path": ".artifacts/real-repo-1791472149084/objects/3919d175c7b80621ff9cd1c080c29993474bc094a43e01462ba791a943e1411a",
+      "sha256": "3919d175c7b80621ff9cd1c080c29993474bc094a43e01462ba791a943e1411a"
+    },
+    {
+      "path": ".artifacts/real-repo-1791472149084/objects/40b5e08f338b91fa974ad1960b674a62585ed51c6fe4ba963263ba9d1d4bda88",
+      "sha256": "40b5e08f338b91fa974ad1960b674a62585ed51c6fe4ba963263ba9d1d4bda88"
+    },
+    {
+      "path": ".artifacts/real-repo-1791472149084/objects/879deaf7ba9498d818be5d7bbe34772afd0f596757148d8d740f3f8f183bb9d7",
+      "sha256": "879deaf7ba9498d818be5d7bbe34772afd0f596757148d8d740f3f8f183bb9d7"
+    },
+    {
+      "path": ".artifacts/real-repo-1791472149084/objects/dbc1ff33406799199e877cfd82eaa6ade39494355e19cc174d24e094d4630499",
+      "sha256": "dbc1ff33406799199e877cfd82eaa6ade39494355e19cc174d24e094d4630499"
+    },
+    {
+      "path": ".artifacts/real-repo-1791472149084/objects/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".artifacts/real-repo-1791472149084/objects/f17865bb2342aa02b399c1c7c217700775ef73b976a1e09629ba1f092511fb58",
+      "sha256": "f17865bb2342aa02b399c1c7c217700775ef73b976a1e09629ba1f092511fb58"
+    },
+    {
+      "path": ".artifacts/real-repo-1791472149084/objects/f69c46b472788ab87cb537a4de95f8628efcc6261aea7b48a0a4fec565f507b2",
+      "sha256": "f69c46b472788ab87cb537a4de95f8628efcc6261aea7b48a0a4fec565f507b2"
+    },
+    {
+      "path": ".artifacts/real-repo-1791472149084/objects/f7509678a6b32756c989581a9401b34b4b9931c94c167a4124e6035362ee5776",
+      "sha256": "f7509678a6b32756c989581a9401b34b4b9931c94c167a4124e6035362ee5776"
+    },
+    {
+      "path": ".artifacts/real-repo-1791472149084/state.sqlite",
+      "sha256": "76e81f55a1cdff6132b460f75cdd63ae94069f96fc6eac7966fb544b7189b084"
+    }
+  ],
+  "integrity": "complete"
+}

@@ -1,0 +1,20 @@
+diff --git a/README.md b/README.md
+index ba6b4648f863bf1bac5a20655a1c76759e709793..3e933c841e324fdd3e033a0446cd7e1888cefca1 100644
+--- a/README.md
++++ b/README.md
+@@ -24,6 +24,15 @@ npm run gate -- --phase 02 --offline
+ 
+ The local `.tools` directory is ignored and is not required on another machine. Use the pinned Node version there. If a managed Windows trust store is needed for package installation, set `NODE_USE_SYSTEM_CA=1`; certificate verification stays enabled.
+ 
++To check which agent runtimes are installed, run the `runtimes` command of the xvant CLI:
++
++```sh
++npm run xvant -- runtimes
++npm run xvant -- runtimes --json
++```
++
++Without `--json`, it prints one plain-text line per runtime (codex, claude, opencode). With `--json`, it prints a single JSON array to stdout with one object per runtime (codex, claude, opencode). Each object has the keys `runtimeKind`, `status`, `version` and `executable`; `version` and `executable` are a string or `null`.
++
+ ## What Phase 1 does
+ 
+ - Validates task, attempt, worker, event, and evidence contracts with Zod.

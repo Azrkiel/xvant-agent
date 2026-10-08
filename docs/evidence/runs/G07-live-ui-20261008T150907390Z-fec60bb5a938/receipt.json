@@ -1,0 +1,127 @@
+{
+  "gateId": "G07-live-ui",
+  "status": "passed",
+  "generatedAt": "2026-10-08T15:09:07.390Z",
+  "classification": "live",
+  "surface": "cli",
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "sourceHash": "fec60bb5a9387c02fe2b6f89a5a8ec8eb4775b84109fc68bc5630304276de08d",
+  "repository": {
+    "path": "C:\\Users\\jiang\\downloads\\xvant\\xvant-agent\\.artifacts\\real-repo-clone",
+    "origin": "C:/Users/jiang/Downloads/xvant/xvant-agent/.",
+    "before": {
+      "head": "1e793d20bb86f419f6f30b67e81044ce1d9ba454",
+      "branch": "main",
+      "status": ""
+    },
+    "after": {
+      "head": "1e793d20bb86f419f6f30b67e81044ce1d9ba454",
+      "branch": "main",
+      "status": ""
+    }
+  },
+  "objective": "Add a --json flag to the 'runtimes' command of scripts/xvant.mjs. With --json it prints one JSON array to stdout, one object per runtime (codex, claude, opencode) with the keys runtimeKind, status, version and executable, where version and executable are a string or null. Without --json the output stays exactly as it is now.",
+  "acceptanceCriteria": [
+    "node scripts/xvant.mjs runtimes --json prints a single JSON array with one object per runtime (codex, claude, opencode), each with runtimeKind, status, version and executable; version and executable are strings or null",
+    "node scripts/xvant.mjs runtimes without --json prints the same three plain-text lines as before",
+    "The usage comment at the top of scripts/xvant.mjs shows the --json option on the runtimes line",
+    "README.md mentions the --json option of the runtimes command"
+  ],
+  "checks": [
+    "node C:/Users/jiang/downloads/xvant/xvant-agent/.artifacts/real-repo-check.mjs"
+  ],
+  "models": {
+    "runtime": [
+      "claude=haiku"
+    ],
+    "planner": "opus"
+  },
+  "runtimes": {
+    "claude": {
+      "runtimeKind": "claude",
+      "status": "qualified",
+      "executable": "C:\\Users\\jiang\\.local\\bin\\claude.exe",
+      "version": "2.1.294",
+      "expectedVersion": "2.1.285",
+      "candidates": 1
+    }
+  },
+  "limitations": [
+    "One objective on one repository, run from the command line rather than the UI.",
+    "Trusted-local: native runtime tools edit their own worktree and bypass XVANT approvals and receipts.",
+    "Qualifies this host and these runtime versions only; Linux is deferred by the operator."
+  ],
+  "problems": [],
+  "elapsedMs": 126337,
+  "exitCode": 0,
+  "run": {
+    "id": "x261008150910-add-a-json-flag-to-the-r",
+    "phase": "ready",
+    "reason": null,
+    "nodes": [
+      {
+        "id": "cli",
+        "title": "Add --json to the runtimes command",
+        "status": "integrated",
+        "repairs": 0,
+        "attempts": [
+          {
+            "alias": "claude-3",
+            "status": "accepted",
+            "files": [
+              "scripts/xvant.mjs"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "docs",
+        "title": "Document runtimes --json in README",
+        "status": "integrated",
+        "repairs": 0,
+        "attempts": [
+          {
+            "alias": "claude-2",
+            "status": "accepted",
+            "files": [
+              "README.md"
+            ]
+          }
+        ]
+      }
+    ],
+    "checks": [
+      {
+        "id": "check1",
+        "status": "passed",
+        "head": "b62ff81616b2600810753408b252f046ae7bb8e0"
+      }
+    ],
+    "review": {
+      "alias": "claude-1",
+      "approve": true,
+      "findings": [],
+      "independent": true,
+      "sameRuntime": true
+    },
+    "reviewRepairs": 0,
+    "integration": {
+      "branch": "xvant/x261008150910-add-a-json-flag-to-the-r",
+      "baseCommit": "1e793d20bb86f419f6f30b67e81044ce1d9ba454",
+      "head": "b62ff81616b2600810753408b252f046ae7bb8e0"
+    },
+    "events": [
+      "graph.created",
+      "graph.planned",
+      "node.dispatched",
+      "node.dispatched",
+      "node.integrated",
+      "node.integrated",
+      "graph.checked",
+      "graph.reviewed",
+      "graph.ready"
+    ]
+  }
+}
