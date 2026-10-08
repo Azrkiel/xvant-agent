@@ -15,7 +15,7 @@ import {
 import { durableCodexChannel } from '../../../packages/adapters/src/codex/durable.ts';
 import { CodexLifecycle } from '../../../packages/adapters/src/codex/lifecycle.ts';
 import {
-  CODEX_VERSION,
+  codexVersionAccepted,
   validateNative,
 } from '../../../packages/adapters/src/codex/profile.ts';
 import { LIVE_ROUTES } from '../../../packages/contracts/src/live.ts';
@@ -127,7 +127,7 @@ export class LiveCodexController {
     if (
       input.classification !== 'live' ||
       input.worker.runtimeKind !== 'codex' ||
-      input.worker.runtimeVersion !== LIVE_ROUTES.codex.runtimeVersion ||
+      !codexVersionAccepted(input.worker.runtimeVersion) ||
       input.worker.adapterVersion !== LIVE_ROUTES.codex.adapterVersion ||
       !['create', 'resume'].includes(mode)
     )
@@ -187,7 +187,8 @@ export class LiveCodexController {
     if (
       probe.reason !== 'exited' ||
       probe.exitCode !== 0 ||
-      probe.stdout.trim() !== 'codex-cli ' + CODEX_VERSION
+      !codexVersionAccepted(input.worker.runtimeVersion) ||
+      probe.stdout.trim() !== 'codex-cli ' + input.worker.runtimeVersion
     )
       throw new Error('VERSION_UNSUPPORTED');
   }
@@ -199,7 +200,7 @@ export class LiveCodexController {
   ): Promise<LiveRunResult> {
     const approval = connection.liveApproval!;
     const life = new CodexLifecycle(
-      CODEX_VERSION,
+      connection.worker.runtimeVersion,
       mode === 'resume' ? connection.worker.nativeSessionId : undefined,
       {
         profile:

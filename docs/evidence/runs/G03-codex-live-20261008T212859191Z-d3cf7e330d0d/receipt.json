@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-10-08T21:28:59.191Z",
+  "classification": "live",
+  "scope": "codex-workspace-write-smoke",
+  "runtimeVersion": "0.160.1",
+  "adapterVersion": "codex-app-server-v1",
+  "stateDirectory": "C:\\Users\\jiang\\xt\\.artifacts/live-codex-1791494938444",
+  "sourceHash": "d3cf7e330d0dfaba85c81713ac831b0e19e308780e2d628171fb1055f3da2da7",
+  "events": 2,
+  "state": "needs_attention",
+  "finalText": "",
+  "tokens": null,
+  "auth": {
+    "mode": "chatgpt",
+    "plan": "plus"
+  },
+  "sessionId": "01a11d6b-6a08-72b1-87bc-70075a8d1aef",
+  "runId": "01a11d6b-6d7e-7523-8e85-46ac41ce5187",
+  "outcome": null,
+  "failure": {
+    "code": "QUOTA_BLOCKED",
+    "scope": "quota_group",
+    "native": "usageLimitExceeded"
+  },
+  "activeCount": 0,
+  "status": "failed"
+}

@@ -2,7 +2,7 @@ import type { Store } from '../../../storage/src/store.ts';
 import type { ProviderConnection } from '../../../storage/src/providers.ts';
 import { RpcChannel } from './transport.ts';
 import type { ChannelOptions } from './transport.ts';
-import { CODEX_VERSION } from './profile.ts';
+import { codexVersionAccepted } from './profile.ts';
 
 /** Host-driven offline channel. The writer must target an owned synthetic peer. */
 export function durableCodexChannel(
@@ -20,7 +20,7 @@ export function durableCodexChannel(
   const saved = store.providers.get(connection.connectionId);
   if (
     saved.worker.runtimeKind !== 'codex' ||
-    saved.worker.runtimeVersion !== CODEX_VERSION
+    !codexVersionAccepted(saved.worker.runtimeVersion)
   )
     throw new Error('VERSION_UNSUPPORTED');
   const id = saved.connectionId;

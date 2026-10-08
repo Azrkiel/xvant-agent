@@ -112,6 +112,14 @@ describe('runtime version compatibility', () => {
     expect(versionAccepted('codex', '0.158.0-alpha.2.2')).toBe(false);
     expect(versionAccepted('codex', '0.158.1')).toBe(false);
   });
+  it('accepts an additionally qualified version and its later patches', () => {
+    expect(versionAccepted('codex', '0.160.1')).toBe(true);
+    expect(versionAccepted('codex', '0.160.4')).toBe(true);
+    expect(versionAccepted('codex', '0.160.0')).toBe(false);
+    expect(versionAccepted('codex', '0.161.0')).toBe(false);
+    expect(versionAccepted('codex', '0.160.1-alpha.1')).toBe(false);
+    expect(versionAccepted('claude', '0.160.1')).toBe(false);
+  });
 });
 
 describe('native-local route', () => {
