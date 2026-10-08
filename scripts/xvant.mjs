@@ -7,6 +7,7 @@
 //   npm run xvant -- run --repo PATH --objective TEXT [--criterion TEXT]...
 //                        [--check "COMMAND"]... [--max-active N] [--no-review]
 //                        [--only codex,claude,opencode]
+//                        [--model KIND=MODEL]... [--planner-model MODEL]
 //   npm run xvant -- status [ID]
 //   npm run xvant -- accept ID
 import { mkdirSync, realpathSync } from 'node:fs';
@@ -138,8 +139,28 @@ if (command === 'ui') {
     console.error('No qualified runtime. Run: npm run xvant -- runtimes');
     process.exit(1);
   }
+  // --model claude=haiku sets that runtime's model; unset means its own default.
+  for (const pair of values('--model')) {
+    const [kind, model] = pair.split('=');
+    if (!model || !POOL[kind]) {
+      console.error('--model needs KIND=MODEL, e.g. claude=haiku');
+      process.exit(2);
+    }
+    if (runtimes[kind]) runtimes[kind].model = model;
+  }
   if (!workers.some((w) => w.roles.includes('planner')))
     workers[0].roles = ['planner', ...workers[0].roles];
+  // --planner-model: one worker plans and reviews on that model and implements nothing.
+  const plannerModel = value('--planner-model');
+  if (plannerModel) {
+    const planner = workers.find((w) => w.roles.includes('planner'));
+    planner.roles = ['planner', 'reviewer'];
+    planner.model = plannerModel;
+    if (!workers.some((w) => w.roles.includes('worker'))) {
+      console.error('--planner-model leaves no worker to implement');
+      process.exit(1);
+    }
+  }
   const checks = Object.fromEntries(
     values('--check').map((c, i) => ['check' + (i + 1), shellCheck(c)]),
   );
