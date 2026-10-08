@@ -59,7 +59,7 @@ A runtime that updates itself can stop being qualified without any change in thi
 | Purpose | Command | Notes |
 | --- | --- | --- |
 | Environment and runtime matrix | `node scripts/g00.mjs` | No model turn |
-| Everything offline, cumulative | `npm run gate -- --phase 10 --offline` | About 8 minutes; needs 3 GB of free memory. Fails with "Source changed during verification" if any file changes while it runs |
+| Everything offline, cumulative | `npm run gate -- --phase 10 --offline` | About 8 minutes with 3 GB of free memory, 15 or more without; the test stage is stopped after 20. Fails with "Source changed during verification" if any file changes while it runs |
 | Live gates | `node scripts/live-gate.mjs --phase 03\|04\|05\|06\|08 --fixture ... --approve-live` | Uses real sessions |
 | Release audit | `npm run audit:release` | Lockfile, licences, tracked secrets, loopback binding |
 | What a release still lacks | `npm run release:check -- --profile local-v1` | Exits 0 only when every requirement is met |

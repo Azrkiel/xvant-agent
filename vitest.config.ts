@@ -6,7 +6,8 @@ export default defineConfig({
       'apps/**/*.test.ts',
       'tests/**/*.test.ts',
     ],
-    testTimeout: 5000,
+    // Tests that spawn Git or child processes take several seconds on a loaded Windows host.
+    testTimeout: 15000,
     // Bound concurrent process-heavy suites; Windows startup otherwise exhausts deadlines.
     maxWorkers: 2,
     coverage: {

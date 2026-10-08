@@ -110,7 +110,8 @@ async function check(id, args) {
   const child = await runBounded(process.execPath, args, {
     cwd: root,
     // The full Windows coverage suite includes bounded process-death tests.
-    timeoutMs: id === 'tests' ? 600000 : 180000,
+    // The suite alone takes about ten minutes on a loaded host.
+    timeoutMs: id === 'tests' ? 1200000 : 180000,
     logPath: log,
   });
   const result = {
