@@ -307,6 +307,12 @@ export async function runSoak(options: {
   const started = Date.now();
   const deadline = started + (options.minutes ?? 0) * 60000;
   const master = realpathSync(mkdtempSync(join(tmpdir(), 'xvant-soak-')));
+  // A temp directory of its own, so leftovers are this run's and nobody else's:
+  // other XVANT processes on the host write patch files to the shared one.
+  const sharedTemp = { TEMP: process.env.TEMP, TMP: process.env.TMP };
+  const ownTemp = join(master, 'tmp');
+  mkdirSync(ownTemp);
+  process.env.TEMP = process.env.TMP = ownTemp;
   const store = new Store(join(master, 'state.sqlite'), { owner: 'soak' });
   // The orchestrator renews the store lease while it runs. Between runs the
   // soak holds it the way the app does, with its own timer. The timer also
@@ -562,6 +568,9 @@ export async function runSoak(options: {
   } finally {
     clearInterval(beat);
     store.close();
+    for (const [key, value] of Object.entries(sharedTemp))
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
     rmSync(master, {
       recursive: true,
       force: true,
