@@ -8,8 +8,12 @@
 //                        [--check "COMMAND"]... [--max-active N] [--no-review]
 //                        [--only codex,claude,opencode]
 //                        [--model KIND=MODEL]... [--planner-model MODEL]
+//                        [--tier light=MODEL] [--tier standard=MODEL]
+//                        [--tandem opus|sol]
 //   npm run xvant -- status [ID]
 //   npm run xvant -- accept ID
+//   npm run xvant -- share --repo PATH --branch NAME [--remote origin]
+//                          [--interval SECONDS] [--once]
 //   npm run xvant -- backup [--out DIR]
 //   npm run xvant -- restore --from DIR [--force]
 import { mkdirSync, readFileSync, realpathSync } from 'node:fs';
@@ -25,6 +29,7 @@ import { defaultWorkers, shellCheck } from '../apps/controller/src/app.ts';
 import {
   activeRouting,
   applyRouting,
+  applyTiers,
 } from '../apps/controller/src/routing-default.ts';
 
 const home = resolve(process.env.XVANT_HOME ?? join(homedir(), '.xvant'));
@@ -40,6 +45,12 @@ const open = () => {
   };
 };
 const KINDS = ['codex', 'claude', 'opencode'];
+// --tandem: Codex and Claude in one pool. The named model plans and reviews;
+// Claude's other workers split into sonnet (standard) and haiku (light).
+const TANDEM = {
+  opus: { kind: 'claude', plannerModel: 'opus' },
+  sol: { kind: 'codex', plannerModel: 'gpt-6.1-sol' },
+};
 
 function discover(only) {
   const runtimes = {};
@@ -106,7 +117,14 @@ if (command === 'ui') {
     console.error('Not a Git repository: ' + repository);
     process.exit(2);
   }
-  const only = (value('--only') ?? 'codex,claude,opencode').split(',');
+  const tandem = rest.includes('--tandem') ? TANDEM[value('--tandem')] : null;
+  if (tandem === undefined) {
+    console.error('--tandem needs opus or sol (the model that plans)');
+    process.exit(2);
+  }
+  const only = (
+    value('--only') ?? (tandem ? 'codex,claude' : 'codex,claude,opencode')
+  ).split(',');
   const { runtimes, table } = discover(only);
   for (const found of table)
     if (found.status !== 'qualified')
@@ -138,8 +156,14 @@ if (command === 'ui') {
     }
     settings.models[kind] = model;
   }
+  if (tandem) {
+    // Tandem names its planner's runtime only, so the planner model is unambiguous.
+    for (const kind of Object.keys(settings.models))
+      if (kind !== tandem.kind) delete settings.models[kind];
+    settings.models[tandem.kind] ??= 'default';
+  }
   // --planner-model: one worker plans and reviews on that model and implements nothing.
-  const plannerModel = value('--planner-model');
+  const plannerModel = value('--planner-model') ?? tandem?.plannerModel;
   if (plannerModel) {
     settings.plannerModel = plannerModel;
     // A model belongs to one runtime. With one runtime in play it is that one.
@@ -148,6 +172,18 @@ if (command === 'ui') {
       settings.models[kinds[0]] = 'default';
   }
   const applied = applyRouting(workers, runtimes, settings);
+  // --tier: Claude's implementers split into standard and light, each on its model.
+  const tiers = tandem ? { light: 'haiku', standard: 'sonnet' } : {};
+  for (const pair of values('--tier')) {
+    const [tier, model] = pair.split('=');
+    if (!model || !['light', 'standard'].includes(tier)) {
+      console.error('--tier needs light=MODEL or standard=MODEL');
+      process.exit(2);
+    }
+    tiers[tier] = model;
+  }
+  if (Object.keys(tiers).length && runtimes.claude)
+    applied.push(...applyTiers(workers, 'claude', tiers));
   if (applied.length)
     console.log(
       'Routing' +
@@ -372,9 +408,74 @@ if (command === 'ui') {
     console.error('Restore failed: ' + error.message);
     process.exit(1);
   }
+} else if (command === 'share') {
+  // Keeps one branch of a checkout in step with its remote, so several
+  // accounts on several devices edit the same files. Git is the store.
+  const { syncOnce, describeSync } =
+    await import('../apps/controller/src/share.ts');
+  const repo = value('--repo');
+  const branch = value('--branch');
+  if (!repo || !branch) {
+    console.error(
+      'share needs --repo PATH and --branch NAME [--remote origin] [--interval SECONDS] [--once]',
+    );
+    process.exit(2);
+  }
+  const options = {
+    repository: realpathSync(resolve(repo)),
+    branch,
+    ...(value('--remote') ? { remote: value('--remote') } : {}),
+  };
+  const seconds = Number(value('--interval') ?? 5);
+  if (!(seconds >= 1 && seconds <= 3600)) {
+    console.error('--interval must be 1 to 3600 seconds');
+    process.exit(2);
+  }
+  const cycle = () => {
+    const stamp = new Date().toTimeString().slice(0, 8);
+    for (const line of describeSync(syncOnce(options)))
+      console.log(stamp + '  ' + line);
+  };
+  try {
+    cycle();
+  } catch (error) {
+    // The first cycle's failure is a setup problem: say so and stop.
+    console.error('Share failed: ' + error.message);
+    if (error.message.startsWith('WRONG_BRANCH'))
+      console.error(
+        'Switch first: git -C "' +
+          options.repository +
+          '" switch ' +
+          branch +
+          '   (add -c to create it)',
+      );
+    process.exit(1);
+  }
+  if (!rest.includes('--once')) {
+    console.log(
+      'Sharing ' +
+        options.repository +
+        ' on ' +
+        branch +
+        ' every ' +
+        seconds +
+        ' s (Ctrl+C to stop).',
+    );
+    const timer = setInterval(() => {
+      try {
+        cycle();
+      } catch (error) {
+        console.error('Cycle failed, retrying: ' + error.message);
+      }
+    }, seconds * 1000);
+    process.on('SIGINT', () => {
+      clearInterval(timer);
+      console.log('Stopped sharing. Nothing is lost; run it again to resume.');
+    });
+  }
 } else {
   console.error(
-    'Commands: ui | runtimes | run | status [ID] | accept ID | backup | restore',
+    'Commands: ui | runtimes | run | status [ID] | accept ID | share | backup | restore',
   );
   process.exit(2);
 }

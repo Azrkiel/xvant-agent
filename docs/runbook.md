@@ -27,6 +27,8 @@ Current status lives in the [verification register](plans/2026-09-30-verificatio
 | Run one objective from the terminal | `npm run xvant -- run --repo PATH --objective "TEXT" --criterion "TEXT" --check "COMMAND" --only claude` |
 | Same, with a stronger model planning and reviewing | add `--model claude=haiku --planner-model opus`: one worker plans and reviews on the planner model and implements nothing; the others work on the runtime's model |
 | Run one objective and write the real-repository receipt | `node scripts/real-repo-run.mjs --approve-live --repo CLONE --objective "TEXT" --check "COMMAND"` plus any `xvant run` option. Use a throwaway clone. Writes `docs/evidence/G07-live-ui.json`; change no tracked file while it runs |
+| Codex and Claude together, with cheap models doing the work | add `--tandem opus` or `--tandem sol`. The pool is Codex and Claude only. `opus`: one Claude worker plans and reviews on Opus. `sol`: one Codex worker plans and reviews on `gpt-6.1-sol`. Either way Claude's other workers split into tiers: those that can review run on `sonnet` (standard), the plain worker on `haiku` (light). The planner labels each task `light` or `standard` and the router sends it to a worker of that tier. A runtime that is not qualified is skipped, so `--tandem opus` still runs on Claude alone |
+| Same split with other models, or without `--tandem` | `--tier light=MODEL --tier standard=MODEL` (Claude workers only) |
 | List runs, or inspect one | `npm run xvant -- status [ID]` |
 | Accept a ready result | `npm run xvant -- accept ID`, then `git merge xvant/<id>` in your repository |
 
@@ -34,14 +36,45 @@ XVANT works in its own worktrees and puts the combined result on an `xvant/<id>`
 
 When the review rejects the combined result and names defects, XVANT runs one repair turn, then verifies and reviews again. A result that is still rejected is handed over as `ready` with the findings; read the review before accepting.
 
+Tier rules: light work goes to a light worker first, and to a standard one when the light worker is busy. Standard work never goes to a light worker while a usable standard worker exists; it waits. A light task that fails is retried as standard, so a stronger worker takes it with the failure in its prompt.
+
 State acceptance criteria explicitly with `--criterion`. On the benchmark, a small model given explicit criteria passed far more often than the same model given only the objective.
+
+## Shared files across accounts and devices
+
+`xvant share` keeps one branch of a checkout in step with its remote, so several people on several machines edit the same files and see each other's changes within a few seconds. Git is the store: there is no server to run, every version stays in history, and access is whoever can push to the remote.
+
+Set up once:
+
+1. Put the project in a private repository on a host every account can reach (GitHub: add each person as a collaborator).
+2. On the first machine: `git switch -c team` in the checkout, then `npm run xvant -- share --repo PATH --branch team`. The first cycle publishes the branch.
+3. On every other machine: clone, `git switch team`, and run the same command with its own path.
+
+| Task | Command |
+| --- | --- |
+| Share continuously | `npm run xvant -- share --repo PATH --branch NAME [--interval SECONDS] [--remote origin]` (default 5 seconds; Ctrl+C to stop) |
+| Sync one time | add `--once` |
+
+Each cycle commits local changes, merges what the others pushed, and pushes. Rules:
+
+- It shares only the branch that is checked out, and refuses if the checkout is on another one. It never forces a push and never rewrites history.
+- Edits to different files, or different lines of one file, merge on their own.
+- When two people change the same lines, nobody's work is lost and the loop keeps going: this machine's version stays in the file, and the other version is written beside it as `name.conflict-<commit>.ext`. Someone reconciles the two and deletes the copy.
+- A file changed on one machine and deleted on another is kept.
+- Files that look like credentials (`.env`, keys, `.npmrc`, text holding a token) are never committed; the output names each one skipped. Files already in `.gitignore` are not shared.
+- If the remote cannot be reached, changes are committed locally and sent when it can.
+- Each machine signs in to the remote with its own account, through Git's usual credentials. A sign-in prompt is not shown by the loop: run `git push` once by hand first.
+
+To put XVANT's work in front of everyone: `xvant run --repo PATH`, accept it, `git merge xvant/<id>` on the shared branch, and the next cycle publishes it.
+
+This is not character-by-character editing in one document, as an online editor gives. People see each other's saved changes after one interval, and two people typing in the same paragraph get a conflict copy.
 
 ## Runtimes and compatibility
 
 | Runtime | State on 2026-10-03 | What to do |
 | --- | --- | --- |
 | Claude Code | qualified (2.1.288; 2.1.294 on 2026-10-08) | Nothing. Patch updates within the qualified minor version are accepted. |
-| Codex | `version_mismatch`: the installed version (0.160.1 on 2026-10-08) is not the pinned one | XVANT skips Codex workers. Re-qualify by updating the pinned version in `packages/contracts/src/live.ts` and rerunning `node scripts/live-gate.mjs --phase 03 --fixture roster --approve-live`. |
+| Codex | 0.160.1 admitted on 2026-10-08 (`QUALIFIED_ALSO` in `packages/contracts/src/live.ts`; the pin stays at 0.158.0-alpha.2.1 for the offline fixtures). A live turn got through initialize, thread start, login and turn start, then stopped with `usageLimitExceeded`: the ChatGPT Plus usage limit was reached. No turn has completed on 0.160.1 | When the limit resets, run `node scripts/live-worker-smoke.mjs --approve-live --runtime codex --executable PATH`. Until it passes, treat Codex as unproven: a Codex turn that hits the limit fails as `QUOTA_BLOCKED` and its account is blocked for routing. Use `--only claude` to leave it out. A later minor version shows `version_mismatch` again and needs its own entry and probe. |
 | OpenCode | qualified (2.0.19); usable again on 2026-10-08 | The provider-side block seen on 2026-10-03 ("OpenCode's free tier can only be used from within OpenCode", `AUTH_REQUIRED`) has cleared: the smoke suite ran 8/10 on `opencode/big-pickle`. If it returns, do not work around it; pass `--only claude`. |
 | Native local model | `qwen2.5-7b-instruct` in LM Studio qualifies | `lms server start`, then `lms load qwen2.5-7b-instruct -c 16384 -y`. Models that answer tool calls as text (for example `qwen2.5-coder-7b-instruct`) fail the probe and cannot be used. |
 
