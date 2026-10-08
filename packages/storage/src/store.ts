@@ -213,10 +213,19 @@ export class Store {
         "SELECT owner,generation,expires FROM ownership WHERE resource='controller'",
       )
       .get() as { owner: string; generation: number; expires: number };
+    if (row.owner !== this.#owner || row.generation !== this.#generation)
+      throw new StorageError('STALE_FENCE');
+    // Expired but not taken over: this process stalled past its lease and is
+    // still the only writer, since a takeover would have changed the
+    // generation. It resumes instead of failing every later write.
     if (
-      row.owner !== this.#owner ||
-      row.generation !== this.#generation ||
-      row.expires <= this.#now()
+      row.expires <= this.#now() &&
+      this.#db
+        .prepare(
+          "UPDATE ownership SET expires=? WHERE resource='controller' AND owner=? AND generation=?",
+        )
+        .run(this.#now() + this.#ttl, this.#owner, this.#generation).changes !==
+        1
     )
       throw new StorageError('STALE_FENCE');
   }

@@ -308,15 +308,21 @@ export async function runSoak(options: {
   const deadline = started + (options.minutes ?? 0) * 60000;
   const master = realpathSync(mkdtempSync(join(tmpdir(), 'xvant-soak-')));
   const store = new Store(join(master, 'state.sqlite'), { owner: 'soak' });
-  // The orchestrator renews the store lease itself. This timer only measures
-  // how long the process went without running timers: a gap longer than the
-  // lease means the host or a blocking call stalled it, and the lease is lost.
+  // The orchestrator renews the store lease while it runs. Between runs the
+  // soak holds it the way the app does, with its own timer. The timer also
+  // measures how long the process went without running timers: a gap longer
+  // than the lease means the host or a blocking call stalled it.
   let lastBeat = Date.now();
   let maxTimerGapMs = 0;
   const beat = setInterval(() => {
     const now = Date.now();
     maxTimerGapMs = Math.max(maxTimerGapMs, now - lastBeat);
     lastBeat = now;
+    try {
+      store.heartbeat();
+    } catch {
+      /* A lost lease surfaces as a failed iteration. */
+    }
   }, 1000);
   const objects = new ArtifactStore(join(master, 'objects'));
   const violations: string[] = [];

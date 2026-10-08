@@ -95,6 +95,15 @@ describe('durable store', () => {
     now += 900;
     expect(store.create('create', input).id).toBe('task');
   });
+  it('lets a stalled owner resume if nobody took the lease over', () => {
+    now += 5000;
+    expect(store.create('create', input).id).toBe('task');
+    // The lease is live again, so a second controller is still refused.
+    expect(() => open('second')).toThrow('LEASE_BUSY');
+    now += 5000;
+    store.heartbeat();
+    expect(() => open('second')).toThrow('LEASE_BUSY');
+  });
   it('rejects reuse of occupied workspace, session or worker', () => {
     prepared();
     store.create('create2', { ...input, id: 'task2' });
