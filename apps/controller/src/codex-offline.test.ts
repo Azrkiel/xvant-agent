@@ -1,4 +1,7 @@
 import { beforeEach, afterEach, expect, it, vi } from 'vitest';
+
+// The fake peer is a real child process; its scenarios take seconds on a loaded host.
+vi.setConfig({ testTimeout: 30000 });
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

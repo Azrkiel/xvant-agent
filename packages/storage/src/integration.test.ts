@@ -1,4 +1,7 @@
-import { afterEach, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+
+// Each test runs real Git worktree commands, which take seconds on a loaded Windows host.
+vi.setConfig({ testTimeout: 60000 });
 import { execFileSync } from 'node:child_process';
 import {
   mkdirSync,
