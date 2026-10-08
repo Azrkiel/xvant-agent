@@ -40,10 +40,9 @@ export const LIVE_ROUTES = {
  * Versions admitted without moving the pin, which the offline fixtures
  * speak. Each is treated like a pin: later patches of a plain version pass.
  *
- * Codex 0.160.1 (2026-10-08): a live turn passed the pinned schema through
- * initialize, thread start, login and turn start, then stopped on the
- * account's usage limit. No turn has completed on it yet; rerun
- * `scripts/live-worker-smoke.mjs --runtime codex` when the limit resets.
+ * Codex 0.160.1 (2026-10-08): `scripts/live-worker-smoke.mjs --runtime codex`
+ * passed against the pinned schema: one workspace-write turn, host check,
+ * acceptance after a restart. Resume and interrupt were not exercised on it.
  */
 export const QUALIFIED_ALSO: Partial<Record<ProviderKind, readonly string[]>> =
   { codex: ['0.160.1'] };

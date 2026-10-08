@@ -36,6 +36,8 @@ XVANT works in its own worktrees and puts the combined result on an `xvant/<id>`
 
 When the review rejects the combined result and names defects, XVANT runs one repair turn, then verifies and reviews again. A result that is still rejected is handed over as `ready` with the findings; read the review before accepting.
 
+The planner always plans. The review goes to whichever idle reviewer wrote none of the work, preferring a runtime that implemented nothing, so with `--tandem sol` it can land on a Claude worker on `sonnet` instead of the planner.
+
 Tier rules: light work goes to a light worker first, and to a standard one when the light worker is busy. Standard work never goes to a light worker while a usable standard worker exists; it waits. A light task that fails is retried as standard, so a stronger worker takes it with the failure in its prompt.
 
 State acceptance criteria explicitly with `--criterion`. On the benchmark, a small model given explicit criteria passed far more often than the same model given only the objective.
@@ -74,7 +76,7 @@ This is not character-by-character editing in one document, as an online editor 
 | Runtime | State on 2026-10-03 | What to do |
 | --- | --- | --- |
 | Claude Code | qualified (2.1.288; 2.1.294 on 2026-10-08) | Nothing. Patch updates within the qualified minor version are accepted. |
-| Codex | 0.160.1 admitted on 2026-10-08 (`QUALIFIED_ALSO` in `packages/contracts/src/live.ts`; the pin stays at 0.158.0-alpha.2.1 for the offline fixtures). A live turn got through initialize, thread start, login and turn start, then stopped with `usageLimitExceeded`: the ChatGPT Plus usage limit was reached. No turn has completed on 0.160.1 | When the limit resets, run `node scripts/live-worker-smoke.mjs --approve-live --runtime codex --executable PATH`. Until it passes, treat Codex as unproven: a Codex turn that hits the limit fails as `QUOTA_BLOCKED` and its account is blocked for routing. Use `--only claude` to leave it out. A later minor version shows `version_mismatch` again and needs its own entry and probe. |
+| Codex | 0.160.1 admitted on 2026-10-08 (`QUALIFIED_ALSO` in `packages/contracts/src/live.ts`; the pin stays at 0.158.0-alpha.2.1 for the offline fixtures). The single-worker live smoke passed on it (one workspace-write turn, host check, acceptance after a restart), and one `--tandem sol` run finished `ready` with Codex planning and implementing beside Claude. Resume and interrupt were not exercised on 0.160.1 | Nothing. A Codex turn that hits the ChatGPT usage limit fails as `QUOTA_BLOCKED` and its account is blocked for routing; use `--only claude` to leave Codex out. To re-check: `node scripts/live-worker-smoke.mjs --approve-live --runtime codex --executable PATH`. A later minor version shows `version_mismatch` again and needs its own entry and probe. |
 | OpenCode | qualified (2.0.19); usable again on 2026-10-08 | The provider-side block seen on 2026-10-03 ("OpenCode's free tier can only be used from within OpenCode", `AUTH_REQUIRED`) has cleared: the smoke suite ran 8/10 on `opencode/big-pickle`. If it returns, do not work around it; pass `--only claude`. |
 | Native local model | `qwen2.5-7b-instruct` in LM Studio qualifies | `lms server start`, then `lms load qwen2.5-7b-instruct -c 16384 -y`. Models that answer tool calls as text (for example `qwen2.5-coder-7b-instruct`) fail the probe and cannot be used. |
 
