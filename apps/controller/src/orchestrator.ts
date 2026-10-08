@@ -28,6 +28,8 @@ export interface WorkerSpec {
   roles: readonly ('worker' | 'reviewer' | 'planner')[];
   /** Model for this worker's turns; absent means its runtime's model. */
   model?: string;
+  /** The strongest work this worker should implement; absent means `standard`. */
+  tier?: 'light' | 'standard';
 }
 export interface TurnRequest {
   taskId: string;
@@ -289,6 +291,7 @@ export class Orchestrator {
         roles: w.roles.filter(
           (r): r is 'worker' | 'reviewer' => r !== 'planner',
         ),
+        ...(w.tier ? { tier: w.tier } : {}),
       }));
     try {
       // 1. Plan.
@@ -403,10 +406,18 @@ export class Orchestrator {
         } else {
           entry.repairs++;
           entry.status = 'pending';
+          // A light node that failed goes to a stronger worker, which gets the
+          // failure in its prompt as the first worker's handoff.
+          const escalated = entry.node.tier === 'light';
+          if (escalated) {
+            entry.node = { ...entry.node, tier: 'standard' };
+            entry.notes.push('Escalated to the standard tier after ' + alias);
+          }
           save('node.repair', {
             id,
             repairs: entry.repairs,
             reason: entry.lastFailure,
+            ...(escalated ? { escalated: true } : {}),
           });
         }
       };
