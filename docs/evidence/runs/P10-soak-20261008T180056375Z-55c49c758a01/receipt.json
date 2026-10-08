@@ -1,0 +1,58 @@
+{
+  "gateId": "P10-soak",
+  "status": "passed",
+  "generatedAt": "2026-10-08T18:00:56.375Z",
+  "classification": "offline",
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "sourceHash": "55c49c758a01cf0b100d2a89c57bdcabe918ce8dcf4131b57131c5029f6254dc",
+  "limitations": [
+    "Offline simulator only: the orchestrator, store, worktrees and checks are real, but every turn is a scripted fake. There is no live soak and no model, runtime or quota behavior is exercised.",
+    "Faults are the five classes the fake injects (turn failure, unknown outcome, conflicting patches, failing check, rejecting review); anything else is not covered.",
+    "One process and one orchestrator at a time; concurrent roots, a crash mid-run and a restart with resume are covered by other tests, not by this run.",
+    "Memory is process rss of this run only, sampled once per iteration; the short git and check child processes are not included, and rss growth below the stated floor is not flagged.",
+    "The invariant checks look at the run, its branches and worktrees, and the temp directory; they cannot see a process that leaked outside this one."
+  ],
+  "problems": [],
+  "seed": 20261009,
+  "requestedMinutes": 9,
+  "durationMs": 540486,
+  "iterations": 63,
+  "scenarioCounts": {
+    "turn_failure_transient": 13,
+    "check_failure_unfixed": 5,
+    "review_reject_fixed": 5,
+    "check_failure_fixed": 3,
+    "conflicting_patches": 7,
+    "unknown_outcome": 7,
+    "clean": 11,
+    "review_fix_unknown": 3,
+    "turn_failure_persistent": 6,
+    "review_reject_standing": 3
+  },
+  "faultCounts": {
+    "turn_failure": 25,
+    "unknown_outcome": 10,
+    "integration_conflict": 7,
+    "check_failure": 18,
+    "review_rejection": 11
+  },
+  "phaseCounts": {
+    "ready": 42,
+    "failed": 11,
+    "needs_attention": 10
+  },
+  "memory": {
+    "firstRss": 90185728,
+    "lastRss": 87310336,
+    "maxRss": 90185728,
+    "warmupIterations": 7,
+    "baselineRss": 79646720,
+    "maxFactorAfterWarmup": 1.106,
+    "allowedFactor": 1.5,
+    "floorBytes": 67108864
+  },
+  "maxTimerGapMs": 5676,
+  "violations": []
+}
