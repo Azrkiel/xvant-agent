@@ -41,8 +41,8 @@ State acceptance criteria explicitly with `--criterion`. On the benchmark, a sma
 | Runtime | State on 2026-10-03 | What to do |
 | --- | --- | --- |
 | Claude Code | qualified (2.1.288; 2.1.294 on 2026-10-08) | Nothing. Patch updates within the qualified minor version are accepted. |
-| Codex | `version_mismatch`: the installed 0.159.0-alpha.12.1 is not the pinned version | XVANT skips Codex workers. Re-qualify by updating the pinned version in `packages/contracts/src/live.ts` and rerunning `node scripts/live-gate.mjs --phase 03 --fixture roster --approve-live`. |
-| OpenCode | version qualified, but every turn fails with `AUTH_REQUIRED` | The provider answers "OpenCode's free tier can only be used from within OpenCode" to `opencode run`. Do not work around it. Pass `--only claude` so no work is routed to OpenCode. |
+| Codex | `version_mismatch`: the installed version (0.160.1 on 2026-10-08) is not the pinned one | XVANT skips Codex workers. Re-qualify by updating the pinned version in `packages/contracts/src/live.ts` and rerunning `node scripts/live-gate.mjs --phase 03 --fixture roster --approve-live`. |
+| OpenCode | qualified (2.0.19); usable again on 2026-10-08 | The provider-side block seen on 2026-10-03 ("OpenCode's free tier can only be used from within OpenCode", `AUTH_REQUIRED`) has cleared: the smoke suite ran 8/10 on `opencode/big-pickle`. If it returns, do not work around it; pass `--only claude`. |
 | Native local model | `qwen2.5-7b-instruct` in LM Studio qualifies | `lms server start`, then `lms load qwen2.5-7b-instruct -c 16384 -y`. Models that answer tool calls as text (for example `qwen2.5-coder-7b-instruct`) fail the probe and cannot be used. |
 
 A runtime that updates itself can stop being qualified without any change in this repository. `npm run xvant -- runtimes` is the quick check.
@@ -83,6 +83,23 @@ These are not part of `npm run gate`. Each writes a receipt under `docs/evidence
 
 **Package.** Writes `.artifacts/release/xvant-<version>-<commit>-win-x64.zip` (the committed tree from `git archive`, without `docs/` and `.Codex/`), `SHA256SUMS`, and `support-matrix.json` and `.md` built from `package.json`, `.node-version`, the pinned routes in `packages/contracts/src/live.ts` and the receipts in `docs/evidence`. It refuses a dirty tree unless `--allow-dirty` (the archive then still holds only HEAD, and the receipt says so), re-hashes its output and compares the archive's file list with HEAD. The archive is not committed; the receipt records names, sizes and hashes. Proves: the archive matches HEAD and its checksums. Does not prove: that it installs (run the clean-install check), or who made it (nothing is signed).
 
+## Routing default
+
+Which model each role runs on is a versioned default in the state directory (the `routing` folder under `XVANT_HOME`). `xvant run` and the app apply it; `--model` and `--planner-model` override it for one run. With no default recorded, each runtime uses its own model.
+
+| Task | Command |
+| --- | --- |
+| Show the default, earlier versions and candidates | `npm run routing -- status` |
+| Record the first default | `npm run routing -- init --version NAME --model claude=haiku [--planner-model opus]` |
+| Propose candidates from a benchmark report | `npm run routing -- candidates --report docs/evidence/REPORT.json` |
+| Make a candidate the default | `npm run routing -- promote --candidate VERSION --report docs/evidence/REPORT.json` |
+| Go back to the previous default | `npm run routing -- rollback` |
+
+- A candidate is a file nothing reads until it is promoted. Candidates come from the report's tuning tasks only.
+- Promotion is refused unless the same report benchmarked the current default too, both on the current orchestration behaviour, with the same number of held-out attempts; the candidate accepted at least as many held-out attempts and shows a measured benefit; and the offline phase 10 gate passed on the current source.
+- A planner model applies only to a runtime the default names. If that runtime is absent, or no other worker could implement, planning stays as it was and the run says so.
+- Skill versions are not covered: the ledger governs routing only.
+
 ## Benchmark
 
 ```bash
@@ -94,6 +111,7 @@ npm run benchmark -- --suite v1 --repeats 1 --report docs/evidence/benchmark-v1-
   --configurations claude-opus-haiku-xvant --approve-live --resume .artifacts/benchmark-v1
 ```
 
+- `v2` is a second frozen suite: eight larger tasks (9 to 15 source files each, 4 to 7 files changed by the reference solution), six of them shaped for parallel work, all with visible tests. No live campaign has run on it yet.
 - The suite is frozen by hash. Changing a task, its repository or its check stops every run until the suite gets a new version and lock.
 - `--resume` continues a campaign; recorded attempts never rerun.
 - If a runtime updates itself mid-campaign, its turns are refused (`VERSION_UNSUPPORTED`). The campaign then prints `stopped early`, writes no record for that attempt and exits; rerun the same command with the same `--resume` directory.
@@ -130,7 +148,8 @@ Proves: the backup and restore round trip keeps the same rows and object bytes, 
 | "Source changed during verification" | A file changed during the gate | Rerun with nothing else writing to the checkout; use a separate Git worktree for other work |
 | `LEASE_BUSY` on a repair | A previous turn still holds the worker | Should not occur since the 2026-10-01 fix; if it does, the earlier turn's outcome is unknown: treat as `needs_attention` |
 | Live gate fails at the probe with a local model | The model does not emit structured tool calls | Load a model that does |
-| Every OpenCode turn fails | Provider-side block (see above) | `--only claude` |
+| Every OpenCode turn fails with `AUTH_REQUIRED` | Provider-side block (see above) | `--only claude` |
+| `STALE_FENCE` | Another XVANT process took over the state directory while this one was still running | Only one controller may own a state directory. Stop the other process, or let it finish; the fenced one cannot write again. A stall alone no longer causes this: since 2026-10-08 a controller that outlived its lease resumes if nobody took over |
 
 ## Known limits
 

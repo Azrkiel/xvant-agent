@@ -1,0 +1,49 @@
+{
+  "gateId": "P10-package",
+  "status": "passed",
+  "generatedAt": "2026-10-08T17:42:14.414Z",
+  "classification": "offline",
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "sourceHash": "99836445bd2b26cc408cb7a78b26fa8c289a869db55b1ef2c92960e8923324e1",
+  "version": "0.1.0",
+  "commit": "d42d4ecb47a6709f460091ccdc5df5e37b9b0ac1",
+  "tree": "15d0d6546c1f10008786787bdb5983ac8589a155",
+  "excluded": [
+    "docs",
+    ".Codex"
+  ],
+  "dirty": false,
+  "dirtyFiles": [],
+  "outputs": [
+    {
+      "name": "xvant-0.1.0-d42d4ecb47-win-x64.zip",
+      "size": 911343,
+      "sha256": "8e95c3e58d4bf3c781f4fd5808d242fe23342ce5af3e2a0bc45e969390258010"
+    },
+    {
+      "name": "support-matrix.json",
+      "size": 3276,
+      "sha256": "c0b2fb5122fbd82f7848f2c646dc1d313798bc202746e1a4ffe12ca2faf05f14"
+    },
+    {
+      "name": "support-matrix.md",
+      "size": 1291,
+      "sha256": "31f7d94d358b8f5bf0071fe383672e376ad9c2089860c287f13ecf61ce963452"
+    }
+  ],
+  "limitations": [
+    "The archive is the committed tree (git archive HEAD) without docs/ and .Codex/. It holds source, not node_modules or a build: install with Node 24.21.x and `npm ci`.",
+    "The win-x64 name states the platform it was qualified on; the archive itself has no native binaries.",
+    "Not signed. SHA256SUMS detects corruption, not a malicious replacement of both files.",
+    "The support matrix lists what was qualified on this host at the receipts named in it; it is not a promise for other versions or systems. Linux is deferred by the operator."
+  ],
+  "problems": [],
+  "entries": 588,
+  "archive": {
+    "name": "xvant-0.1.0-d42d4ecb47-win-x64.zip",
+    "bytes": 911343
+  },
+  "supportMatrix": "support-matrix.json"
+}

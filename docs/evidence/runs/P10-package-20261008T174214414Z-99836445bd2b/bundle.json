@@ -1,0 +1,13 @@
+{
+  "bundleId": "P10-package-20261008T174214414Z-99836445bd2b",
+  "archivedAt": "2026-10-08T17:42:23.426Z",
+  "sourceRoot": "C:/Users/jiang/downloads/xvant/xvant-agent",
+  "receipt": {
+    "file": "C:/Users/jiang/downloads/xvant/xvant-agent/docs/evidence/P10-package.json",
+    "sha256": "200e8ed077ce34972eff7f1a92875612ea90a05eabfc8ac57196c3011218e059",
+    "status": "passed"
+  },
+  "artifacts": [],
+  "extras": [],
+  "integrity": "complete"
+}
