@@ -159,8 +159,10 @@ Run `npm test`, `npm run typecheck`, `npm run lint`, or `npm run format:check` f
 Run the opt-in qualification with the installed executable:
 
 ```powershell
-npm run probe:live:opencode -- --approve-live --executable "C:\Users\jiang\AppData\Local\hermes\node\node_modules\@opencode\cli\bin\opencode.exe"
+npm run probe:live:opencode -- --approve-live --executable "<path-to-opencode.exe>"
 ```
+
+Replace `<path-to-opencode.exe>` with the full path to your installed OpenCode CLI binary.
 
 This runs two real model turns, checks token recall on the same native session, reopens SQLite before each explicit fixture acceptance, and writes `docs/evidence/G03-opencode-live.json`. State and workspace artifacts remain under `.artifacts/opencode-live-*`. No paid fallback is configured. This provider-specific receipt does not complete the mixed-provider live G03 milestone.
 

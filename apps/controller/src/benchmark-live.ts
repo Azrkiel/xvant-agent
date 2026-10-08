@@ -11,6 +11,8 @@ import {
 import type { ProviderKind } from '../../../packages/contracts/src/providers.ts';
 import type { ModelProvider } from '../../../packages/native-agent/src/model.ts';
 import {
+  CampaignStopped,
+  HostInterrupted,
   QuotaInterrupted,
   type Configuration,
 } from '../../../packages/evaluation/src/runner.ts';
@@ -40,6 +42,26 @@ const visibleChecks = (tests: string[] | undefined) =>
 
 /** Account-level stops: the attempt is incomplete, not a failure of the work. */
 const ACCOUNT_BLOCKS = ['QUOTA_BLOCKED', 'AUTH_REQUIRED', 'MODEL_UNAVAILABLE'];
+
+/**
+ * An attempt's store has one owner and is never contended, so its lease
+ * outlasts a host stall instead of fencing the attempt off after 30 s.
+ */
+const ATTEMPT_LEASE_MS = 5 * 60 * 1000;
+
+/**
+ * Stops that say nothing about the work. A runtime that is no longer the
+ * version the campaign recorded refuses every turn, so the campaign ends and
+ * the attempt keeps no record; a lost store lease means the host stalled.
+ */
+const hostStop = (message: string | undefined): Error | undefined =>
+  message === 'VERSION_UNSUPPORTED'
+    ? new CampaignStopped(
+        'the installed runtime is not the version this campaign recorded',
+      )
+    : message === 'STALE_FENCE'
+      ? new HostInterrupted('the controller lost its store lease')
+      : undefined;
 
 /** Text put before the objective, e.g. an XVANT skill or the acceptance criteria; absent for a bare baseline. */
 export type Instructions = (taskId: string) => string | undefined;
@@ -77,6 +99,7 @@ function singleWorker(
       mkdirSync(state, { recursive: true });
       const store = new Store(join(state, 'state.sqlite'), {
         owner: 'benchmark',
+        leaseMs: ATTEMPT_LEASE_MS,
       });
       let tokens: number | null = null;
       try {
@@ -103,6 +126,8 @@ function singleWorker(
             workspace: { path: workspace, baseCommit },
             checks: visibleChecks(task.visibleTests),
           });
+        } catch (error) {
+          throw hostStop((error as Error).message) ?? error;
         } finally {
           signal.removeEventListener('abort', stop);
         }
@@ -220,16 +245,26 @@ export function orchestratedConfiguration(options: {
   stateRoot: string;
   /** Acceptance criteria XVANT states to its workers; absent means only the objective. */
   criteria?: (taskId: string) => string[] | undefined;
+  /**
+   * A separate model that plans and reviews but implements nothing; the
+   * runtime's model then only works. Absent means one model does everything.
+   */
+  plannerModel?: string;
 }): Configuration {
-  const { kind, runtime } = options;
-  const workers: WorkerSpec[] = [
-    ['planner', 'worker', 'reviewer'] as const,
-    ['worker', 'reviewer'] as const,
-  ].map((roles, i) => ({
+  const { kind, runtime, plannerModel } = options;
+  const workers: WorkerSpec[] = (
+    plannerModel
+      ? ([['planner', 'reviewer'], ['worker'], ['worker']] as const)
+      : ([
+          ['planner', 'worker', 'reviewer'],
+          ['worker', 'reviewer'],
+        ] as const)
+  ).map((roles, i) => ({
     alias: kind + '-bench-' + (i + 1),
     runtimeKind: kind,
     quotaGroupId: kind + '-benchmark',
     roles: [...roles],
+    ...(plannerModel && i === 0 ? { model: plannerModel } : {}),
   }));
   return {
     versions: {
@@ -238,7 +273,10 @@ export function orchestratedConfiguration(options: {
       runtimeVersion: runtime.version ?? LIVE_ROUTES[kind].runtimeVersion,
       adapter: LIVE_ROUTES[kind].adapterVersion,
       model: runtime.model ?? 'default',
+      ...(plannerModel ? { plannerModel } : {}),
       instructions: options.criteria ? 'criteria' : 'none',
+      // Bumped when orchestration behaviour changes: 2 repairs after a rejecting review.
+      orchestration: '2',
     },
     async run({ task, workspace, baseCommit, signal }) {
       const state = join(
@@ -248,10 +286,12 @@ export function orchestratedConfiguration(options: {
       mkdirSync(state, { recursive: true });
       const store = new Store(join(state, 'state.sqlite'), {
         owner: 'benchmark',
+        leaseMs: ATTEMPT_LEASE_MS,
       });
       let tokens = 0;
       let reported = false;
       let blocked: string | undefined;
+      let hostStopped: Error | undefined;
       try {
         const runner = new LiveTurnRunner(
           store,
@@ -268,11 +308,14 @@ export function orchestratedConfiguration(options: {
             },
           },
         );
-        // Account blocks surface on the turn, not on the root: watch for them.
+        // Account blocks and host stops surface on the turn, not on the root: watch for them.
         const turns: TurnRunner = {
           interrupt: (taskId) => runner.interrupt(taskId),
           async run(request) {
-            const outcome = await runner.run(request);
+            const outcome = await runner.run(request).catch((error) => {
+              hostStopped ??= hostStop((error as Error).message);
+              throw error;
+            });
             if (ACCOUNT_BLOCKS.some((c) => outcome.failure?.startsWith(c)))
               blocked ??= outcome.failure;
             return outcome;
@@ -307,6 +350,8 @@ export function orchestratedConfiguration(options: {
           // Planner and reviewer turns report no usage through this path.
           totalTokens: reported ? tokens : null,
         };
+        hostStopped ??= hostStop(root.reason);
+        if (hostStopped) throw hostStopped;
         if (blocked) throw new QuotaInterrupted(blocked);
         if (root.phase !== 'ready' || !root.integration)
           return {
@@ -323,7 +368,9 @@ export function orchestratedConfiguration(options: {
           outcome: 'finished',
           usage,
           conflicts: 0,
-          recovered: Object.values(root.nodes).some((n) => n.repairs > 0),
+          recovered:
+            Object.values(root.nodes).some((n) => n.repairs > 0) ||
+            (root.reviewRepairs ?? 0) > 0,
         };
       } finally {
         store.close();

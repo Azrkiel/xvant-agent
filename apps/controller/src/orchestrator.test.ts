@@ -342,9 +342,14 @@ it('re-plans once after an invalid plan and fixes a failing combined check', asy
     runner.calls.find((c) => c.prompt.includes('previous plan was rejected')),
   ).toBeDefined();
   expect(state.phase).toBe('ready');
-  expect(store.graphs.events('feature').map((e) => e.kind)).toContain(
-    'graph.fix',
-  );
+  const events = store.graphs.events('feature');
+  expect(events.map((e) => e.kind)).toContain('graph.fix');
+  expect(
+    events.find((e) => e.kind === 'graph.plan_rejected')!.payload,
+  ).toMatchObject({
+    tries: 1,
+    reason: 'INVALID_INPUT: Reply contains no JSON plan',
+  });
 });
 
 it('rejects duplicate worker aliases', () =>
@@ -359,3 +364,93 @@ it('rejects duplicate worker aliases', () =>
         },
       ),
   ).toThrow('DUPLICATE_IDENTITY'));
+
+const verdict = (approve: boolean, findings: string[] = []) => ({
+  finalText: '```json\n' + JSON.stringify({ approve, findings }) + '\n```',
+});
+const onlyApi = { summary: 's', nodes: [plan.nodes[0]!] };
+const apiCheck = {
+  api: {
+    executable: process.execPath,
+    args: ['-e', "require('node:fs').readFileSync('api.txt')"],
+  },
+};
+
+it('repairs once after a rejecting review, then verifies and reviews again', async () => {
+  let reviews = 0;
+  const runner = new FakeRunner((request) => {
+    const label = byLabel(request);
+    if (label === 'review')
+      return ++reviews === 1
+        ? verdict(false, ['api.txt must say fixed'])
+        : verdict(true);
+    if (label === 'review-fix') return { write: { 'api.txt': 'fixed\n' } };
+    return { write: { 'api.txt': 'first\n' } };
+  });
+  const state = await orchestrate(runner, { plan: onlyApi, checks: apiCheck });
+  expect(state.phase).toBe('ready');
+  expect(state.reviewRepairs).toBe(1);
+  expect(state.review).toMatchObject({ approve: true });
+  const fix = runner.calls.find((c) => c.taskId.includes('review-fix'))!;
+  expect(fix.prompt).toContain('- api.txt must say fixed');
+  // The fixer is not the reviewer, so the second review stays independent.
+  expect(fix.alias).not.toBe(state.review!.alias);
+  expect(state.review!.independent).toBe(true);
+  const kinds = store.graphs.events('feature').map((e) => e.kind);
+  expect(kinds.filter((k) => k === 'graph.reviewed')).toHaveLength(2);
+  expect(kinds.filter((k) => k === 'graph.checked')).toHaveLength(2);
+  expect(kinds).toContain('graph.review_fix');
+  // The reviewed head is the repaired one.
+  expect(state.checks[0]!.head).toBe(state.integration!.head);
+  expect(git(state.integration!.path, 'show', 'HEAD:api.txt')).toBe('fixed');
+});
+
+it('hands over a review that still rejects after its one repair', async () => {
+  let fixes = 0;
+  const runner = new FakeRunner((request) => {
+    const label = byLabel(request);
+    if (label === 'review') return verdict(false, ['still wrong']);
+    if (label === 'review-fix')
+      return { write: { 'api.txt': 'try ' + ++fixes + '\n' } };
+    return { write: { 'api.txt': 'first\n' } };
+  });
+  const state = await orchestrate(runner, { plan: onlyApi, checks: apiCheck });
+  expect(fixes).toBe(1);
+  expect(state.phase).toBe('ready');
+  expect(state.review).toMatchObject({
+    approve: false,
+    findings: ['still wrong'],
+  });
+});
+
+it('starts no repair for an approval, a rejection without findings, or a limit of zero', async () => {
+  for (const [reply, extra] of [
+    [verdict(true), {}],
+    [verdict(false), {}],
+    [verdict(false, ['wrong']), { maxReviewRepairs: 0 }],
+  ] as const) {
+    const runner = new FakeRunner((request) =>
+      byLabel(request) === 'review'
+        ? reply
+        : { write: { 'api.txt': 'first\n' } },
+    );
+    const state = await new Orchestrator(store, runner, workers, {
+      stateRoot: join(root, 'runs-' + runner.calls.length + Math.random()),
+    }).run({
+      id: 'r' + Math.random().toString(36).slice(2, 8),
+      projectId: 'p',
+      repository: repo,
+      baseRevision: 'main',
+      objective: 'Add api',
+      acceptanceCriteria: ['api.txt exists'],
+      checks: apiCheck,
+      plan: onlyApi,
+      ...extra,
+    });
+    expect(state.phase).toBe('ready');
+    expect(state.reviewRepairs).toBeUndefined();
+    expect(runner.calls.some((c) => c.taskId.includes('review-fix'))).toBe(
+      false,
+    );
+  }
+});

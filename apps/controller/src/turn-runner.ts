@@ -108,7 +108,7 @@ export class LiveTurnRunner implements TurnRunner {
         model:
           worker.runtimeKind === 'opencode'
             ? 'opencode/big-pickle'
-            : (runtime.model ?? 'default'),
+            : (worker.model ?? runtime.model ?? 'default'),
         transport: route.transport,
         userApprovedTrustedLocal: true as const,
         profile: 'workspace-write' as const,

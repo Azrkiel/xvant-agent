@@ -140,6 +140,7 @@ export function planningPrompt(input: {
     '## Instructions',
     'Split the objective into tasks that can each be done and verified on their own. Parts that change different files should be separate tasks so different workers can run them in parallel; follow any split the objective asks for. Use a single task only when the work cannot be separated.',
     'Tasks that can run in parallel must list disjoint writablePaths. Order tasks that touch the same files with dependsOn.',
+    'Every task must change files. Do not add tasks that only read, explore or analyse; a task with empty writablePaths may write anywhere, so it cannot run beside another task.',
     `Use at most ${input.maxNodes} tasks. Each task needs concrete acceptance criteria a reviewer can check.`,
     'Reply with one fenced json block matching:',
     '```json',
