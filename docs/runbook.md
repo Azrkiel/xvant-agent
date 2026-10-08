@@ -48,7 +48,7 @@ A runtime that updates itself can stop being qualified without any change in thi
 - Only subscription or free logins are used. There is no API fallback, and none may be added.
 - A quota or authentication stop is recorded as blocked or incomplete. XVANT does not retry it and does not move the work to a paid route.
 - When a runtime is out of quota, restrict the pool with `--only`. Work already accepted is unaffected.
-- Benchmark campaigns record a quota-stopped attempt as `incomplete`. It counts against the success rate and is never rerun in the same campaign.
+- Benchmark campaigns record a quota-stopped attempt as `incomplete`. It counts against the success rate and is never rerun in the same campaign. An attempt whose controller lost its store lease in a host stall is also `incomplete`, with a reason starting `host:`.
 
 ## Gates and evidence
 
@@ -69,10 +69,15 @@ An offline gate receipt counts only for the exact source tree it ran on. After a
 node scripts/benchmark.mjs --suite v1 --freeze     # only when the suite version changes
 npm run benchmark -- --suite v1 --repeats 3 --report docs/evidence/benchmark-v1.json \
   --configurations claude-haiku-criteria,claude-haiku-xvant --approve-live --resume .artifacts/benchmark-v1
+# Opus plans and reviews, Haiku works. Opus turns use far more of the subscription limit.
+npm run benchmark -- --suite v1 --repeats 1 --report docs/evidence/benchmark-v1-opus-haiku-r1.json \
+  --configurations claude-opus-haiku-xvant --approve-live --resume .artifacts/benchmark-v1
 ```
 
 - The suite is frozen by hash. Changing a task, its repository or its check stops every run until the suite gets a new version and lock.
 - `--resume` continues a campaign; recorded attempts never rerun.
+- If a runtime updates itself mid-campaign, its turns are refused (`VERSION_UNSUPPORTED`). The campaign then prints `stopped early`, writes no record for that attempt and exits; rerun the same command with the same `--resume` directory.
+- Each orchestrated attempt runs up to three Claude processes. With little free memory the host can stall or the run can be killed; nothing recorded is lost, so resume.
 - Keep the laptop awake and the lid open. A live campaign asks Windows not to idle-sleep, but closing the lid still suspends it, and an attempt the host slept through is recorded as incomplete.
 
 ## Backup and restore
