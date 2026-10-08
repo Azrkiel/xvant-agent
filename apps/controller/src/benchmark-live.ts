@@ -275,6 +275,8 @@ export function orchestratedConfiguration(options: {
       model: runtime.model ?? 'default',
       ...(plannerModel ? { plannerModel } : {}),
       instructions: options.criteria ? 'criteria' : 'none',
+      // Bumped when orchestration behaviour changes: 2 repairs after a rejecting review.
+      orchestration: '2',
     },
     async run({ task, workspace, baseCommit, signal }) {
       const state = join(
@@ -366,7 +368,9 @@ export function orchestratedConfiguration(options: {
           outcome: 'finished',
           usage,
           conflicts: 0,
-          recovered: Object.values(root.nodes).some((n) => n.repairs > 0),
+          recovered:
+            Object.values(root.nodes).some((n) => n.repairs > 0) ||
+            (root.reviewRepairs ?? 0) > 0,
         };
       } finally {
         store.close();

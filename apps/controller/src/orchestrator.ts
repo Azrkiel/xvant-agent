@@ -71,6 +71,8 @@ export interface RootSpec {
   maxActive?: number;
   maxRepairs?: number;
   review?: boolean;
+  /** Repair rounds a rejecting review may start before the result is handed over as it is. */
+  maxReviewRepairs?: number;
   checkTimeoutMs?: number;
 }
 type NodeStatus =
@@ -124,6 +126,8 @@ export interface RootState {
     /** Whether an implementer used the reviewer's runtime (a weaker check). */
     sameRuntime: boolean;
   } | null;
+  /** Repair rounds started by a rejecting review. */
+  reviewRepairs?: number;
   reason?: string;
 }
 const tail = (text: string, max = 3000) =>
@@ -290,6 +294,11 @@ export class Orchestrator {
           try {
             state.plan = validatePlan(extractJson(outcome.finalText)).plan;
           } catch (error) {
+            // The reply itself is not kept, so the reason is the only trace of it.
+            save('graph.plan_rejected', {
+              tries: tries + 1,
+              reason: (error as Error).message,
+            });
             feedback =
               '\n\nYour previous plan was rejected: ' +
               (error as Error).message +
@@ -497,51 +506,183 @@ export class Orchestrator {
         return state;
       }
 
-      // 3. Verify the combined revision, repairing within the budget.
-      for (let fixes = 0; ; fixes++) {
-        state.phase = 'verifying';
-        const head = integration.head();
-        const results = await this.#runChecks(
-          integration.path,
-          spec.checks,
-          spec.checkTimeoutMs ?? 10 * 60 * 1000,
-        );
-        state.checks = results.map((r) => ({
-          id: r.id,
-          status: r.status,
-          head,
-        }));
-        save('graph.checked', { head, checks: state.checks });
-        const failing = results.filter((r) => r.status === 'failed');
-        if (!failing.length) break;
-        if (fixes >= maxRepairs) {
-          state.phase = 'failed';
-          state.reason =
-            'Combined checks still fail: ' +
-            failing.map((f) => f.id).join(', ');
-          save('graph.failed', { reason: state.reason });
-          return state;
+      const maxReviewRepairs = spec.maxReviewRepairs ?? 1;
+      for (let reviewRepairs = 0; ; reviewRepairs++) {
+        // 3. Verify the combined revision, repairing within the budget.
+        for (let fixes = 0; ; fixes++) {
+          state.phase = 'verifying';
+          const head = integration.head();
+          const results = await this.#runChecks(
+            integration.path,
+            spec.checks,
+            spec.checkTimeoutMs ?? 10 * 60 * 1000,
+          );
+          state.checks = results.map((r) => ({
+            id: r.id,
+            status: r.status,
+            head,
+          }));
+          save('graph.checked', { head, checks: state.checks });
+          const failing = results.filter((r) => r.status === 'failed');
+          if (!failing.length) break;
+          if (fixes >= maxRepairs) {
+            state.phase = 'failed';
+            state.reason =
+              'Combined checks still fail: ' +
+              failing.map((f) => f.id).join(', ');
+            save('graph.failed', { reason: state.reason });
+            return state;
+          }
+          const fixer = routeNode(
+            { id: 'fix', role: 'worker', assignee: 'any', dependsOn: [] },
+            routable(),
+          );
+          if (!fixer.alias) throw new Error('ROUTING_STALLED');
+          const { taskId, outcome } = await turn(
+            fixer.alias,
+            'fix',
+            [
+              'The combined work for this objective fails its checks. Fix the code so they pass.',
+              '',
+              '## Objective',
+              spec.objective,
+              '',
+              ...failing.flatMap((f) => [
+                '## Failing check: ' + f.id,
+                tail(f.output),
+              ]),
+              '',
+              'Work only in the current directory. Do not commit.',
+            ].join('\n'),
+            nodeChecks,
+          );
+          const applied =
+            outcome.status === 'accepted'
+              ? integration.apply(
+                  outcome.patch ?? Buffer.alloc(0),
+                  'xvant: fix checks by ' + fixer.alias,
+                )
+              : null;
+          save('graph.fix', {
+            taskId,
+            alias: fixer.alias,
+            status: outcome.status,
+            applied: applied?.status ?? null,
+          });
+          if (outcome.status === 'unknown') {
+            state.phase = 'needs_attention';
+            state.reason = 'Fix turn ' + taskId + ' has an unknown outcome';
+            save('graph.needs_attention', { reason: state.reason });
+            return state;
+          }
         }
+
+        // 4. Independent review of the combined change.
+        if (spec.review === false) break;
+        {
+          state.phase = 'reviewing';
+          const reviewer = routeNode(
+            { id: 'review', role: 'reviewer', assignee: 'any', dependsOn: [] },
+            routable(),
+            { implementerRuntimes: [...implementers] },
+          );
+          if (reviewer.alias) {
+            const diff = integration.diff();
+            const { outcome } = await turn(
+              reviewer.alias,
+              'review',
+              [
+                'Review this change against the objective and criteria. Do not change any files.',
+                '',
+                '## Objective',
+                spec.objective,
+                '',
+                '## Acceptance criteria',
+                ...spec.acceptanceCriteria.map((c) => '- ' + c),
+                '',
+                '## Change',
+                '```diff',
+                tail(diff, 20000),
+                '```',
+                '',
+                'Reply with one fenced json block: {"approve": true|false, "findings": ["specific problem", ...]}. Only block approval for real defects.',
+              ].join('\n'),
+              {},
+            );
+            let verdict = {
+              approve: false,
+              findings: ['Reviewer reply was not a verdict'],
+            };
+            try {
+              const parsed = extractJson(outcome.finalText) as {
+                approve?: unknown;
+                findings?: unknown;
+              };
+              if (typeof parsed.approve === 'boolean')
+                verdict = {
+                  approve: parsed.approve,
+                  findings: Array.isArray(parsed.findings)
+                    ? parsed.findings
+                        .filter((f): f is string => typeof f === 'string')
+                        .slice(0, 20)
+                    : [],
+                };
+            } catch {
+              /* keep the non-verdict default */
+            }
+            const reviewerRuntime = this.#workers.find(
+              (w) => w.alias === reviewer.alias,
+            )!.runtimeKind;
+            state.review = {
+              alias: reviewer.alias,
+              ...verdict,
+              independent: !(completed.get(reviewer.alias) ?? []).length,
+              sameRuntime: implementers.has(reviewerRuntime),
+            };
+            save('graph.reviewed', state.review);
+          } else
+            state.review = {
+              alias: 'none',
+              approve: false,
+              findings: ['No reviewer available'],
+              independent: false,
+              sameRuntime: false,
+            };
+        }
+
+        // 5. A review that names defects gets a bounded repair, then the
+        // result is verified and reviewed again. A rejection that still stands
+        // is handed over with its findings; the user decides.
+        const review = state.review;
+        if (
+          review.approve ||
+          review.alias === 'none' ||
+          !review.findings.length ||
+          reviewRepairs >= maxReviewRepairs
+        )
+          break;
         const fixer = routeNode(
-          { id: 'fix', role: 'worker', assignee: 'any', dependsOn: [] },
+          { id: 'review-fix', role: 'worker', assignee: 'any', dependsOn: [] },
           routable(),
         );
-        if (!fixer.alias) throw new Error('ROUTING_STALLED');
+        if (!fixer.alias) break;
+        state.phase = 'running';
         const { taskId, outcome } = await turn(
           fixer.alias,
-          'fix',
+          'review-fix',
           [
-            'The combined work for this objective fails its checks. Fix the code so they pass.',
+            'A reviewer found defects in the combined work for this objective. Fix each one that is real; leave the rest of the work as it is.',
             '',
             '## Objective',
             spec.objective,
             '',
-            ...failing.flatMap((f) => [
-              '## Failing check: ' + f.id,
-              tail(f.output),
-            ]),
+            '## Acceptance criteria',
+            ...spec.acceptanceCriteria.map((c) => '- ' + c),
             '',
-            'Work only in the current directory. Do not commit.',
+            '## Review findings',
+            ...review.findings.map((f) => '- ' + f),
+            '',
+            'Work only in the current directory. Do not commit. Finish with a short summary.',
           ].join('\n'),
           nodeChecks,
         );
@@ -549,10 +690,11 @@ export class Orchestrator {
           outcome.status === 'accepted'
             ? integration.apply(
                 outcome.patch ?? Buffer.alloc(0),
-                'xvant: fix checks by ' + fixer.alias,
+                'xvant: fix review findings by ' + fixer.alias,
               )
             : null;
-        save('graph.fix', {
+        state.reviewRepairs = reviewRepairs + 1;
+        save('graph.review_fix', {
           taskId,
           alias: fixer.alias,
           status: outcome.status,
@@ -560,82 +702,22 @@ export class Orchestrator {
         });
         if (outcome.status === 'unknown') {
           state.phase = 'needs_attention';
-          state.reason = 'Fix turn ' + taskId + ' has an unknown outcome';
+          state.reason =
+            'Review fix turn ' + taskId + ' has an unknown outcome';
           save('graph.needs_attention', { reason: state.reason });
           return state;
         }
-      }
-
-      // 4. Independent review of the combined change.
-      if (spec.review !== false) {
-        state.phase = 'reviewing';
-        const reviewer = routeNode(
-          { id: 'review', role: 'reviewer', assignee: 'any', dependsOn: [] },
-          routable(),
-          { implementerRuntimes: [...implementers] },
+        // Nothing changed: the rejection stands as reviewed.
+        if (applied?.status !== 'applied') break;
+        state.integration!.head = integration.head();
+        // The fixer now wrote part of the result, which a later review must know.
+        completed.set(fixer.alias, [
+          ...(completed.get(fixer.alias) ?? []),
+          'review-fix',
+        ]);
+        implementers.add(
+          this.#workers.find((w) => w.alias === fixer.alias)!.runtimeKind,
         );
-        if (reviewer.alias) {
-          const diff = integration.diff();
-          const { outcome } = await turn(
-            reviewer.alias,
-            'review',
-            [
-              'Review this change against the objective and criteria. Do not change any files.',
-              '',
-              '## Objective',
-              spec.objective,
-              '',
-              '## Acceptance criteria',
-              ...spec.acceptanceCriteria.map((c) => '- ' + c),
-              '',
-              '## Change',
-              '```diff',
-              tail(diff, 20000),
-              '```',
-              '',
-              'Reply with one fenced json block: {"approve": true|false, "findings": ["specific problem", ...]}. Only block approval for real defects.',
-            ].join('\n'),
-            {},
-          );
-          let verdict = {
-            approve: false,
-            findings: ['Reviewer reply was not a verdict'],
-          };
-          try {
-            const parsed = extractJson(outcome.finalText) as {
-              approve?: unknown;
-              findings?: unknown;
-            };
-            if (typeof parsed.approve === 'boolean')
-              verdict = {
-                approve: parsed.approve,
-                findings: Array.isArray(parsed.findings)
-                  ? parsed.findings
-                      .filter((f): f is string => typeof f === 'string')
-                      .slice(0, 20)
-                  : [],
-              };
-          } catch {
-            /* keep the non-verdict default */
-          }
-          const reviewerRuntime = this.#workers.find(
-            (w) => w.alias === reviewer.alias,
-          )!.runtimeKind;
-          state.review = {
-            alias: reviewer.alias,
-            ...verdict,
-            independent: !(completed.get(reviewer.alias) ?? []).length,
-            sameRuntime: implementers.has(reviewerRuntime),
-          };
-          save('graph.reviewed', state.review);
-        } else
-          state.review = {
-            alias: 'none',
-            approve: false,
-            findings: ['No reviewer available'],
-            independent: false,
-            sameRuntime: false,
-          };
       }
       state.phase = 'ready';
       save('graph.ready', {
