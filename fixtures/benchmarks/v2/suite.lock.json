@@ -1,0 +1,47 @@
+{
+  "suiteId": "v2",
+  "version": 1,
+  "tasks": {
+    "fix-checkout-pricing-bugs": {
+      "taskHash": "99e6a1ac333d470da1edb958e0d31008f81bb8161632e6536375efd6a55d73a1",
+      "repoHash": "ae3d147e9546f5a508a55f2f842fa8bae909ff70c339bdd368659645f28f869f",
+      "checkHash": "e54e4c8e6ae906009b01dd8623fc6acdb960dc83326940d08cf54eea0b8465b6"
+    },
+    "add-note-tags": {
+      "taskHash": "3ca30a30a2ef0f2f71dc36159f9170d7cb5ef336d54dbf51b06eb9cbc8ab2c3e",
+      "repoHash": "b3bdf10b314333a2502626066cedcd79f80021412126c932ba9d146888eb92e0",
+      "checkHash": "dc6a38591c44f460cf925a13bdbbf68cfae123edf4bf9cecda4846c88273a2f3"
+    },
+    "promisify-account-storage": {
+      "taskHash": "1177f5bc589dd5537496a318d6b4a50515c5696671a37d3ecd7f5457e2531912",
+      "repoHash": "e3aae98202d977beaabd73bc829282e77c3c1db8535d96657c9b9d6da7f73b86",
+      "checkHash": "6d1b40af0a79a48255681899e810a4bb4f15921188cab4560024627a1ba61048"
+    },
+    "layer-booking-validation": {
+      "taskHash": "df63da78347937653545be8f6725d869fd1636fef105ff1538c6d79d2ecc9b89",
+      "repoHash": "ede35de876d536b5116299059fab80966f5c3e652d0b083bfe1539aa06e98f3e",
+      "checkHash": "1be1222e40cb3859bbb17d828529ef7b0f8cfbc86a512663eb0e7a12bbe146e6"
+    },
+    "fix-logstat-summary": {
+      "taskHash": "abe2c7ee5f54bc10c2e45e4c5a1d07c39ae45ffdbaac28663fd2d47163d4963b",
+      "repoHash": "033c8383ef06202f9863b591d0f2b6b261df38aaa1cb02b8fcf0b30bfb4a01ac",
+      "checkHash": "c955c27d6ff373158d945d57a6135c18bc2ce065da26659f267977c8769fe633"
+    },
+    "add-document-undo": {
+      "taskHash": "8e3e14f2fc89c5c373758ece55ddf7c01036e653bc1854c2ddc92aae6808c97a",
+      "repoHash": "016055613a6ac4357bf5b16d7615f6d1cb0cb93226358a287a7c9be84738f260",
+      "checkHash": "b7e41bf8cb79ba68c4eecdb02f0ebce109fb233232263a4a3761b4f2767a820c"
+    },
+    "write-strkit-tests": {
+      "taskHash": "b9d0e6faafabd35ab136e729a472372b9b0d478fea392e6bcf7024a280b53db3",
+      "repoHash": "f91c1c1d9090d9d10ec21893822d10c6465c579775a8bef360c1baaa649a7243",
+      "checkHash": "e6f5bf3e86d3fdccc785fc0a2d1426df0295733d01d303b79d59702ea6a762b2"
+    },
+    "repair-limiter-tests": {
+      "taskHash": "469d38ef325ceedf1b1b80e4bd1878c8a0a457e57c3f8a34cb644ec94f6e73c1",
+      "repoHash": "ef9ab5a078f52fcd057de4d18f606126447c2902600ac140eefe336f96db2408",
+      "checkHash": "9aafdc023695ff6fc1b250a9ed86828721306acaa13df7a09da3f75c04fec3d6"
+    }
+  },
+  "frozenHash": "f05352dea933990e032e873ec83744d7acfd882069547803e9afde42377590f7"
+}

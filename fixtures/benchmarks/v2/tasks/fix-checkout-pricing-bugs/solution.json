@@ -1,0 +1,20 @@
+{
+  "edits": [
+    {
+      "path": "src/inventory/stock.js",
+      "content": "export function createStock(initial = {}) {\n  const available = new Map(Object.entries(initial));\n  return {\n    available: (sku) => available.get(sku) ?? 0,\n    reserve(sku, qty) {\n      if (!Number.isInteger(qty) || qty <= 0)\n        throw new RangeError('qty must be a positive integer');\n      const have = available.get(sku) ?? 0;\n      if (qty > have) throw new RangeError('insufficient stock for ' + sku);\n      available.set(sku, have - qty);\n    },\n    release(sku, qty) {\n      available.set(sku, (available.get(sku) ?? 0) + qty);\n    },\n  };\n}\n"
+    },
+    {
+      "path": "src/pricing/discount.js",
+      "content": "// A discount is { type: 'percent', value } or { type: 'fixed', cents }.\nexport function discountCents(subtotalCents, discounts = []) {\n  let total = 0;\n  for (const discount of discounts) {\n    if (discount.type === 'percent')\n      total += Math.round((subtotalCents * discount.value) / 100);\n    else if (discount.type === 'fixed') total += discount.cents;\n    else throw new TypeError('unknown discount type: ' + discount.type);\n  }\n  return Math.min(total, subtotalCents);\n}\n\nexport function applyDiscounts(subtotalCents, discounts = []) {\n  return subtotalCents - discountCents(subtotalCents, discounts);\n}\n"
+    },
+    {
+      "path": "src/pricing/money.js",
+      "content": "// Converts between decimal amounts and integer cents.\nexport function toCents(amount) {\n  if (typeof amount !== 'number' || !Number.isFinite(amount))\n    throw new TypeError('amount must be a finite number');\n  return Math.round(amount * 100);\n}\n\nexport function fromCents(cents) {\n  return cents / 100;\n}\n\nexport function formatMoney(cents) {\n  const sign = cents < 0 ? '-' : '';\n  const abs = Math.abs(cents);\n  return sign + '$' + Math.floor(abs / 100) + '.' + String(abs % 100).padStart(2, '0');\n}\n"
+    },
+    {
+      "path": "src/pricing/tax.js",
+      "content": "// Tax on an amount in cents, for a rate such as 0.0825.\nexport function taxCents(amountCents, rate) {\n  if (typeof rate !== 'number' || rate < 0)\n    throw new RangeError('rate must be a non-negative number');\n  return Math.round(amountCents * rate);\n}\n"
+    }
+  ]
+}

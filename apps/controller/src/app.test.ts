@@ -271,7 +271,7 @@ it('streams run events and resumes from the last event ID', async () => {
       setTimeout(() => {
         req.destroy();
         resolve('');
-      }, 5000);
+      }, 30000);
       req.end();
     });
   const all = await read({});

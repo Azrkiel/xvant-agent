@@ -1,0 +1,189 @@
+{
+  "id": "v2",
+  "version": 1,
+  "tasks": [
+    {
+      "id": "fix-checkout-pricing-bugs",
+      "category": "debugging",
+      "split": "tuning",
+      "shape": "parallel",
+      "objective": "The shop team filed four independent bugs in BUGS.md for the shopcart library (money conversion, discounts, stock reservation, tax). Fix all four in the source under src/ so the library behaves as BUGS.md describes. Do not change public function names or signatures, and do not edit BUGS.md.",
+      "repo": "tasks/fix-checkout-pricing-bugs/repo",
+      "check": "tasks/fix-checkout-pricing-bugs/check.mjs",
+      "timeoutMs": 1800000,
+      "acceptanceCriteria": [
+        "toCents(19.99) returns 1999, toCents(0.57) returns 57 and toCents(0.29) returns 29: amounts are rounded to the nearest cent, not cut off",
+        "The total discount is capped at the subtotal: discountCents(1000, [{ type: 'fixed', cents: 1500 }]) is 1000 and applyDiscounts for that input is 0; capping applies to the sum of several discounts, and multiple percent discounts still add up (two 10% discounts on 1000 give 800)",
+        "createStock reserve(sku, qty) succeeds when qty equals the available quantity and leaves 0 available; reserving more than is available still throws a RangeError and leaves the stock unchanged",
+        "taxCents rounds to the nearest cent: taxCents(1999, 0.0825) is 165 and taxCents(1000, 0.1) is 100",
+        "checkout still prices an order end to end: 3 units at toCents(19.99) with a 10% discount, tax rate 0.0825 and weightGrams 800 against a stock of 3 gives subtotal 5997, discounted 5397, tax 445, shipping 899 and total 6741",
+        "test/money.test.mjs, test/stock.test.mjs and test/discount.test.mjs pass unchanged"
+      ],
+      "visibleTests": [
+        "test/money.test.mjs",
+        "test/stock.test.mjs",
+        "test/discount.test.mjs"
+      ]
+    },
+    {
+      "id": "add-note-tags",
+      "category": "feature",
+      "split": "held-out",
+      "shape": "parallel",
+      "objective": "Add tags to the notes tool. A word written as #name in a note becomes a tag: parse it out of the text (src/parse/line.js), keep it in the store and let the store filter and count by tag (src/store/store.js), show it in the listing format (src/cli/format.js), add a --tag option to the list command and a new tags command (src/cli/cli.js), and document the changes in README.md. Do not change the existing commands' output for notes without tags.",
+      "repo": "tasks/add-note-tags/repo",
+      "check": "tasks/add-note-tags/check.mjs",
+      "timeoutMs": 1800000,
+      "acceptanceCriteria": [
+        "parseNote(line) returns { text, tags, done: false }. A tag is a whole word that starts with # followed by one or more of letters, digits, underscore or hyphen. Tags are lowercased, each appears once in order of first appearance, and they are removed from text; the remaining words are joined with single spaces. A # inside a word (c#, a#b) or a lone # stays in the text",
+        "parseNote throws a TypeError when no words are left besides tags, and for blank input",
+        "store.add(note) saves note.tags (default []) and returns the saved note including tags; store.list() returns every note with a tags array",
+        "store.list({ tag }) returns only the notes that have that tag, compared case-insensitively; list({}) and list() return all notes",
+        "store.tags() returns [{ tag, count }] for tags in use, sorted by count descending and then by tag name ascending; it returns [] when there are none",
+        "formatNote shows a note with tags as '<id> [ ] <text>  #tag1 #tag2' (two spaces before the tags, tags joined by one space); a note without tags is formatted exactly as before",
+        "`list --tag <name>` prints only the notes that have the tag, in the new format; an unknown tag prints nothing and exits 0",
+        "A new `tags` command prints one '<tag> <count>' line per tag in the order of store.tags(), and nothing when there are no tags; `add` with tags prints 'added <id>' and stores the tags; `add` with only tags exits 1",
+        "README.md documents the --tag option and the tags command",
+        "test/parse.test.mjs and test/store.test.mjs pass unchanged"
+      ],
+      "visibleTests": ["test/parse.test.mjs", "test/store.test.mjs"]
+    },
+    {
+      "id": "promisify-account-storage",
+      "category": "cross-module",
+      "split": "tuning",
+      "shape": "parallel",
+      "objective": "Migrate the accounts project from node-style callbacks to promises. The key-value store (src/storage/kv.js) must return promises from get, set, delete and keys, and users.js, sessions.js, settings.js, the command line (src/cli/cli.js, bin/accounts.js) and README.md must follow, with no callback parameters left. Behaviour, messages and error types stay as they are today. The services only depend on the store's promise interface, so the pieces can be done independently.",
+      "repo": "tasks/promisify-account-storage/repo",
+      "check": "tasks/promisify-account-storage/check.mjs",
+      "timeoutMs": 1800000,
+      "acceptanceCriteria": [
+        "createKv(dir) returns an object whose get(key), set(key, value), delete(key) and keys() each return a promise and take no callback; get resolves to undefined for a missing key, delete of a missing key resolves, keys() resolves to the sorted decoded keys and to [] when the directory does not exist",
+        "createUsers(kv), createSessions(kv, options) and createSettings(kv) call the store only through that promise interface (get, set, delete, keys) and every method (create, get, rename, list; start, check, end; get, set, all) returns a promise with no callback parameter",
+        "Failures reject instead of calling back: users.create with a blank name rejects with a TypeError, users.rename of an unknown id rejects with the message 'user not found: <id>', settings.set with an invalid value rejects with a RangeError, and an unknown setting name rejects with the message 'unknown setting: <name>'",
+        "Results are otherwise as before: users.get resolves to undefined for an unknown id, users.list resolves to users in numeric id order (u2 before u10), sessions.check resolves to the user id or undefined and deletes an expired session, settings.get and all fall back to the defaults",
+        "main(argv, { dir, out, clock }) in src/cli/cli.js takes no done callback and returns a promise that resolves to the exit code (0 on success, 1 on any error or unknown command)",
+        "bin/accounts.js still runs every command with the same output and exit codes, using ACCOUNTS_DIR for the data directory",
+        "README.md no longer says the project is callback based",
+        "test/kv.test.mjs and test/users.test.mjs pass unchanged"
+      ],
+      "visibleTests": ["test/kv.test.mjs", "test/users.test.mjs"]
+    },
+    {
+      "id": "layer-booking-validation",
+      "category": "cross-module",
+      "split": "held-out",
+      "shape": "parallel",
+      "objective": "Add validation across the three layers of the booking project, using the error classes already defined in src/errors.js. The domain layer (src/domain/booking.js) must reject bad input with ValidationError. The service layer (src/service/bookings.js) must reject unknown rooms, overlapping stays and unknown bookings. The HTTP layer (src/http/router.js and src/http/handler.js) must turn every failure into a JSON error response. Document the error responses in README.md. The three layers only meet through the error classes and the documented method names, so they can be done independently.",
+      "repo": "tasks/layer-booking-validation/repo",
+      "check": "tasks/layer-booking-validation/check.mjs",
+      "timeoutMs": 1800000,
+      "acceptanceCriteria": [
+        "makeBooking(input) throws a ValidationError (code 'VALIDATION', with a field property) for the first failing rule, checked in this order: input that is not a plain object (field 'booking'); room not a non-blank string ('room'); guest not a string, blank after trimming, or longer than 80 characters after trimming ('guest')",
+        "Continuing that order: start not a real YYYY-MM-DD calendar date (field 'start'); end not a real YYYY-MM-DD date ('end'); end not after start ('end'); a stay of more than 30 nights ('end'). A valid input returns { room, guest, start, end } with guest trimmed",
+        "book(input) validates with makeBooking first, then throws NotFoundError (code 'NOT_FOUND') when the room is not known to rooms.has, then throws ConflictError (code 'CONFLICT') when the stay overlaps an existing booking of the same room; a stay may start on the day another one ends and may end on the day another one starts; other rooms and cancelled bookings never conflict",
+        "A failed book call does not use up an id: ids stay b1, b2, b3 ... in the order of successful bookings; list() returns bookings in creation order",
+        "cancel(id) throws NotFoundError for an unknown or already cancelled booking and returns the id otherwise",
+        "handle(request) answers every failure with { status, body: { error: { code, message } } }: ValidationError gives 400 with code VALIDATION and the error's field in body.error.field; a request body that is missing, not valid JSON, or not a JSON object gives 400 with code BAD_JSON; NotFoundError gives 404 NOT_FOUND; ConflictError gives 409 CONFLICT",
+        "An unknown path gives 404 NOT_FOUND; a known path (/bookings or /bookings/<id>) used with an unsupported method gives 405 METHOD_NOT_ALLOWED; any other thrown error gives 500 INTERNAL with a message that does not include the original error's message",
+        "Successful requests are unchanged: POST /bookings gives 201 { booking }, GET /bookings gives 200 { bookings } (filtered by query.room when given), DELETE /bookings/<id> gives 200 { id }",
+        "README.md documents the error codes VALIDATION, BAD_JSON, NOT_FOUND, CONFLICT, METHOD_NOT_ALLOWED and INTERNAL",
+        "test/booking.test.mjs, test/service.test.mjs and test/http.test.mjs pass unchanged"
+      ],
+      "visibleTests": [
+        "test/booking.test.mjs",
+        "test/service.test.mjs",
+        "test/http.test.mjs"
+      ]
+    },
+    {
+      "id": "fix-logstat-summary",
+      "category": "debugging",
+      "split": "held-out",
+      "shape": "single",
+      "objective": "`node bin/logstat.js summary samples/app.log` prints a wrong table. BUGS.md lists the symptoms users see and the expected output; the causes are somewhere in the pipeline from the timestamp parser to the table renderer to the command. Find and fix them in the source under src/ without changing the log format or the command line, and do not edit BUGS.md or samples/app.log.",
+      "repo": "tasks/fix-logstat-summary/repo",
+      "check": "tasks/fix-logstat-summary/check.mjs",
+      "timeoutMs": 1800000,
+      "acceptanceCriteria": [
+        "`node bin/logstat.js summary samples/app.log` prints exactly the table shown in BUGS.md",
+        "parseTimestamp converts zones of both signs to epoch milliseconds: 2025-03-04T10:15:30-05:00, 2025-03-04T17:15:30+02:00, 2025-03-04T20:45:30+05:30 and 2025-03-04T06:45:30-08:30 all equal 2025-03-04T15:15:30Z",
+        "percentile(values, p) is the nearest-rank percentile: the smallest value that at least p percent of the values are less than or equal to (for 120, 160, 200, 480 the p50 is 160 and the p95 is 480; for 20 values, p95 is the 19th smallest); it returns 0 for no values, does not change its argument and works for p from 1 to 100",
+        "renderTable makes every column as wide as its widest cell (header, rule or any row), separates columns by two spaces and leaves no trailing spaces on a line",
+        "--level matches level names without regard to case, so error, Error and ERROR select the same ERROR entries; --service still matches exactly",
+        "test/timestamp.test.mjs, test/stats.test.mjs and test/table.test.mjs pass unchanged"
+      ],
+      "visibleTests": [
+        "test/timestamp.test.mjs",
+        "test/stats.test.mjs",
+        "test/table.test.mjs"
+      ]
+    },
+    {
+      "id": "add-document-undo",
+      "category": "feature",
+      "split": "tuning",
+      "shape": "single",
+      "objective": "Add undo and redo to the texted line editor. The document (src/core/document.js) needs a bounded edit history, kept in a new module src/core/history.js, and exposes undo(), redo(), canUndo() and canRedo(). The script runner (src/cli/repl.js) gets `undo [count]` and `redo [count]` commands, and README.md documents them. The history module is used by the document and the document by the runner, so build them in that order.",
+      "repo": "tasks/add-document-undo/repo",
+      "check": "tasks/add-document-undo/check.mjs",
+      "timeoutMs": 1800000,
+      "acceptanceCriteria": [
+        "createDocument(lines, { historyLimit }) keeps the last historyLimit successful edits (insert, delete, replace); historyLimit defaults to 100 and 0 turns undo off. The initial lines are not an edit",
+        "doc.undo() reverts the latest recorded edit and returns true; it returns false and changes nothing when there is nothing to undo. doc.redo() reapplies the latest undone edit and returns true, or returns false when there is nothing to redo",
+        "doc.canUndo() and doc.canRedo() tell whether undo() or redo() would change anything",
+        "A successful edit after an undo makes redo unavailable (canRedo() false, redo() false)",
+        "An edit that throws a RangeError changes nothing, is not recorded, and does not clear the redo history",
+        "The history keeps its own copies: changing the array passed to createDocument or returned by lines() never changes what undo and redo restore",
+        "The runner command `undo [count]` undoes up to count edits (default 1), stopping early when there is nothing more to undo, and prints 'nothing to undo' only when not even one edit could be undone; `undo 0` does nothing. `redo [count]` behaves the same way and prints 'nothing to redo'",
+        "bin/texted.js runs undo and redo from standard input, and existing commands and error messages are unchanged",
+        "README.md documents undo, redo and historyLimit",
+        "test/document.test.mjs and test/repl.test.mjs pass unchanged"
+      ],
+      "visibleTests": ["test/document.test.mjs", "test/repl.test.mjs"]
+    },
+    {
+      "id": "write-strkit-tests",
+      "category": "test-review",
+      "split": "tuning",
+      "shape": "parallel",
+      "objective": "The strkit helpers have no tests. Write one plain Node test file per area, all under test/: test/slug.test.mjs for src/text/slug.js, test/wrap.test.mjs for src/text/wrap.js, test/semver.test.mjs for the three files in src/version/, and test/csv.test.mjs for src/data/csv.js and src/data/tsv.js. Each file must be a plain Node script using node:assert that exits non-zero when an assertion fails. Do not change anything under src/ and do not edit test/all.test.mjs, which runs the four files.",
+      "repo": "tasks/write-strkit-tests/repo",
+      "check": "tasks/write-strkit-tests/check.mjs",
+      "timeoutMs": 1800000,
+      "acceptanceCriteria": [
+        "All four test files exist, run with `node test/<name>.test.mjs` from the repository root and pass against the current, unchanged source; test/all.test.mjs passes",
+        "test/slug.test.mjs checks lowercasing, collapsing of runs of separators into one hyphen, trimming of leading and trailing hyphens, accent stripping, and maxLength (the slug is cut to that length and a hyphen left at the end of the cut is removed), with values that expose each of these going wrong",
+        "test/wrap.test.mjs checks greedy filling including a line that is exactly width long and one that is one character too long, a word longer than the width on its own line, extra and trailing whitespace ignored, paragraphs separated by line breaks with blank ones kept, and a RangeError for a width that is zero, negative, fractional or not a number",
+        "test/semver.test.mjs checks that parseVersion rejects text with a prefix, extra parts or a trailing hyphen with a SyntaxError and reads every part correctly; that compareVersions orders major, minor and patch separately and numerically, ranks a release above its prereleases, compares prerelease identifiers (numeric below text, numbers numerically, fewer identifiers lower); and that satisfiesCaret handles ^1.x.y, ^0.x.y and ^0.0.x including the base version itself",
+        "test/csv.test.mjs checks rows and empty fields, a final line break adding no row, CRLF line ends, quoted fields containing the delimiter, doubled quotes and line breaks, a SyntaxError for an unterminated quote, the delimiter option, and parseTsv",
+        "Each test file fails if its module is broken in any one of those ways, for example if one unit or rule is changed or an error stops being thrown"
+      ],
+      "visibleTests": ["test/all.test.mjs"]
+    },
+    {
+      "id": "repair-limiter-tests",
+      "category": "test-review",
+      "split": "held-out",
+      "shape": "parallel",
+      "objective": "TEST-REPORT.md lists problems found in the tests of the limits library: test/lru.test.mjs, test/ttl.test.mjs, test/window.test.mjs and test/bucket.test.mjs. The code under src/ is correct. Repair each of the four test files so that it passes and would catch real bugs in its module. Do not change anything under src/ and do not edit TEST-REPORT.md or test/format.test.mjs. Keep each file a plain Node script that exits non-zero when an assertion fails.",
+      "repo": "tasks/repair-limiter-tests/repo",
+      "check": "tasks/repair-limiter-tests/check.mjs",
+      "timeoutMs": 1800000,
+      "acceptanceCriteria": [
+        "All four test files pass with `node test/<name>.test.mjs` from the repository root, against the unchanged source",
+        "No test depends on the date it runs on: each file also passes when the system date is moved 64 years forward or 26 years back (a test must use its own fake clock, not a calendar date or the real clock)",
+        "test/lru.test.mjs checks that reading and rewriting a key make it most recent, that the least recently used entry is the one evicted, that the cache never holds more than capacity entries, and that an invalid capacity throws a RangeError",
+        "test/ttl.test.mjs checks the default ttl, a per-entry ttl and an absolute expiresAt, that an entry is gone at exactly its expiry instant and alive just before it, that size counts only live entries, and that setting a key again replaces its expiry",
+        "test/window.test.mjs sets up its own clock and limiter for each check, and checks the limit, the exact end of a window, remaining, retryAfterMs and separate windows per key",
+        "test/bucket.test.mjs checks that the bucket starts full, that take removes n tokens or nothing, that the last token can be taken, continuous refill at refillPerSec, and the capacity cap",
+        "Each of the four files fails if its module is broken in any one of those ways, for example if one comparison is off by one instant or a rule is dropped"
+      ],
+      "visibleTests": [
+        "test/lru.test.mjs",
+        "test/ttl.test.mjs",
+        "test/window.test.mjs"
+      ]
+    }
+  ]
+}

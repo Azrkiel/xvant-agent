@@ -167,6 +167,11 @@ export function evaluatePromotion(
   if (!report.complete) blockers.push('campaign is incomplete');
   if (!options.safetyFixturesPassed)
     blockers.push('safety or recovery fixtures regressed');
+  // Counts compare only over the same number of attempts.
+  if (heldCandidate.scheduled !== heldBase.scheduled)
+    blockers.push(
+      'baseline and candidate ran a different number of held-out attempts',
+    );
   if (heldCandidate.accepted < heldBase.accepted)
     blockers.push(
       'accepted held-out attempts fell from ' +

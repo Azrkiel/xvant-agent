@@ -177,6 +177,25 @@ export class Orchestrator {
     for (const taskId of this.#running.keys()) this.#runner.interrupt(taskId);
   }
   async run(spec: RootSpec): Promise<RootState> {
+    // Turn controllers renew the store lease only while a turn runs. Checks
+    // and integration run between turns and can outlast the lease.
+    const renew = () => {
+      try {
+        this.#store.heartbeat();
+      } catch {
+        /* A lost lease fails the next write, which reports it. */
+      }
+    };
+    // Once now: a run shorter than the interval would otherwise never renew.
+    renew();
+    const beat = setInterval(renew, this.#store.heartbeatIntervalMs);
+    try {
+      return await this.#run(spec);
+    } finally {
+      clearInterval(beat);
+    }
+  }
+  async #run(spec: RootSpec): Promise<RootState> {
     const maxActive = spec.maxActive ?? 3;
     const maxRepairs = spec.maxRepairs ?? 2;
     const state: RootState = {

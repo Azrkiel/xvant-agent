@@ -12,6 +12,7 @@ import { join, relative, resolve } from 'node:path';
 import { Store } from '../packages/storage/src/store.ts';
 import { discoverRuntime } from '../packages/adapters/src/live/discover.ts';
 import { archiveRun, sourceHash } from './evidence-bundle.ts';
+import { realRepoProblems } from './real-repo-policy.ts';
 
 const args = process.argv.slice(2);
 const values = (name) =>
@@ -96,11 +97,12 @@ const run = spawnSync(
 );
 report.elapsedMs = Date.now() - started;
 report.exitCode = run.status;
+let facts = null;
 try {
   const store = new Store(join(state, 'state.sqlite'), { owner: 'receipt' });
   try {
     const [graph] = store.graphs.list();
-    if (!graph) throw new Error('The run recorded no root task');
+    if (!graph) throw new Error('no root task');
     const { state: result } = store.graphs.get(graph.id);
     report.run = {
       id: graph.id,
@@ -127,25 +129,7 @@ try {
       },
       events: store.graphs.events(graph.id).map((e) => e.kind),
     };
-    if (result.phase !== 'ready')
-      report.problems.push(
-        'The run ended ' + result.phase + ': ' + (result.reason ?? 'no detail'),
-      );
-    if (!result.checks.length)
-      report.problems.push('No registered check ran on the combined result');
-    for (const c of result.checks)
-      if (c.status !== 'passed')
-        report.problems.push('Check ' + c.id + ' ' + c.status);
-    if (!result.review?.approve)
-      report.problems.push(
-        'The review did not approve: ' +
-          (result.review?.findings.join('; ') || 'no review'),
-      );
-    if (
-      result.integration &&
-      result.integration.head === result.integration.baseCommit
-    )
-      report.problems.push('The result changes nothing');
+    facts = result;
   } finally {
     store.close();
   }
@@ -153,13 +137,15 @@ try {
   report.problems.push('Cannot read the run: ' + error.message);
 }
 report.repository.after = checkout();
-if (
-  JSON.stringify(report.repository.after) !==
-  JSON.stringify(report.repository.before)
-)
-  report.problems.push("The repository's own checkout changed during the run");
-if (sourceHash(root) !== report.sourceHash)
-  report.problems.push('Source changed during the run');
+report.problems.push(
+  ...realRepoProblems({
+    run: facts,
+    before: report.repository.before,
+    after: report.repository.after,
+    sourceBefore: report.sourceHash,
+    sourceAfter: sourceHash(root),
+  }),
+);
 report.status = report.problems.length === 0 ? 'passed' : 'failed';
 mkdirSync('docs/evidence', { recursive: true });
 const receipt = 'docs/evidence/' + gateId + '.json';

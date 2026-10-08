@@ -19,6 +19,7 @@ import {
   type WorkerSpec,
 } from './orchestrator.ts';
 import { LiveTurnRunner } from './turn-runner.ts';
+import { activeRouting, applyRouting } from './routing-default.ts';
 import type { RosterRuntime } from './live-roster.ts';
 import { HttpError, startAppServer, type Asset } from './http/app-server.ts';
 
@@ -176,18 +177,22 @@ export async function startApp(options: {
     if (top.status !== 0) throw new HttpError(400, 'INVALID_REPOSITORY');
     const pool = workers();
     if (!pool.length) throw new HttpError(409, 'NO_RUNTIME');
-    const runtimes = Object.fromEntries(
-      discovered
-        .filter((d) => d.status === 'qualified')
-        .map((d) => [
-          d.runtimeKind,
-          {
-            executable: d.executable!,
-            version: d.version!,
-            ...(d.prefixArgs ? { prefixArgs: d.prefixArgs } : {}),
-          },
-        ]),
-    );
+    const runtimes: Partial<Record<ProviderKind, RosterRuntime>> =
+      Object.fromEntries(
+        discovered
+          .filter((d) => d.status === 'qualified')
+          .map((d) => [
+            d.runtimeKind,
+            {
+              executable: d.executable!,
+              version: d.version!,
+              ...(d.prefixArgs ? { prefixArgs: d.prefixArgs } : {}),
+            },
+          ]),
+      );
+    // The promoted routing default, if this state directory recorded one.
+    const routing = activeRouting(options.home);
+    if (routing) applyRouting(pool, runtimes, routing.settings);
     const runner = options.runner
       ? options.runner(store, objects, pool, runtimes)
       : new LiveTurnRunner(store, objects, pool, runtimes);

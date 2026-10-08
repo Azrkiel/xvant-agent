@@ -22,10 +22,14 @@
     "benchmark": "node scripts/benchmark.mjs",
     "release:check": "node scripts/release-check.mjs",
     "audit:release": "node scripts/audit.mjs",
+    "check:clean-install": "node scripts/clean-install-check.mjs",
+    "soak": "node scripts/soak.mjs",
+    "package:release": "node scripts/package-release.mjs",
     "probe:live:opencode": "node scripts/opencode-live.mjs",
     "demo": "node --experimental-strip-types apps/controller/src/demo.ts",
     "demo:durable": "node apps/controller/src/durable-demo.ts",
-    "xvant": "node scripts/xvant.mjs"
+    "xvant": "node scripts/xvant.mjs",
+    "routing": "node scripts/routing.mjs"
   },
   "dependencies": {
     "better-sqlite3": "13.0.3",
