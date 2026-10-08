@@ -53,6 +53,10 @@ const run = await runSoak({
 Object.assign(report, run);
 report.problems.push(...run.violations);
 if (run.iterations === 0) report.problems.push('No iteration ran');
+// A long run in which a fault class never occurred did not test it.
+if (run.iterations >= 30)
+  for (const [fault, count] of Object.entries(run.faultCounts))
+    if (!count) report.problems.push('fault never occurred: ' + fault);
 if (sourceHash(root) !== report.sourceHash)
   report.problems.push('Source changed during the run');
 report.status = report.problems.length === 0 ? 'passed' : 'failed';

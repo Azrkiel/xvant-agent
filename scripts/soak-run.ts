@@ -360,11 +360,14 @@ export async function runSoak(options: {
       const before = checkout(repo);
       const id = 'soak-' + n;
       const runner = new SoakRunner(scenario, id, objects, random);
+      const orchestrator = new Orchestrator(store, runner, workers, {
+        stateRoot: runs,
+      });
       let state: RootState | undefined;
       let timer: NodeJS.Timeout | undefined;
       try {
         state = await Promise.race([
-          new Orchestrator(store, runner, workers, { stateRoot: runs }).run({
+          orchestrator.run({
             id,
             projectId: 'soak',
             repository: repo,
@@ -383,6 +386,8 @@ export async function runSoak(options: {
         ]);
       } catch (error) {
         problems.push('run threw: ' + (error as Error).message);
+        // A run that timed out is still going; stop it before its directory goes.
+        orchestrator.cancel();
       } finally {
         clearTimeout(timer);
       }
@@ -434,6 +439,31 @@ export async function runSoak(options: {
         }
         if (unknown.length === 0 && scenario.includes('unknown'))
           problems.push('the unknown outcome was never injected');
+        // A scenario that ends ready proves nothing unless its fault happened.
+        type Seen = { checks?: { status: string }[]; approve?: boolean };
+        const saw = (
+          kind: string,
+          test: (payload: Seen) => unknown = () => true,
+        ) => events.some((e) => e.kind === kind && !!test(e.payload as Seen));
+        if (
+          scenario.startsWith('check_failure') &&
+          !saw('graph.checked', (p) =>
+            p.checks?.some((c) => c.status === 'failed'),
+          )
+        )
+          problems.push('the failing check was never seen');
+        if (
+          scenario.startsWith('turn_failure') &&
+          !runner.calls.some((c) => c.status === 'failed')
+        )
+          problems.push('the turn failure was never injected');
+        if (
+          scenario.startsWith('review_') &&
+          !saw('graph.reviewed', (p) => p.approve === false)
+        )
+          problems.push('the rejecting review was never seen');
+        if (scenario.startsWith('review_') && !saw('graph.review_fix'))
+          problems.push('the review repair never ran');
         // Faults as the orchestrator saw them.
         for (const call of runner.calls) {
           if (call.status === 'failed') faultCounts.turn_failure!++;
