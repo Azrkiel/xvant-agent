@@ -1,0 +1,99 @@
+{
+  "gateId": "P10-clean-install",
+  "status": "passed",
+  "generatedAt": "2026-10-08T19:03:47.476Z",
+  "classification": "offline",
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "sourceHash": "d4359351f7bcc4c0d36dd9b1458cb9500c2b2eb8231e785b2da9d58696a522c4",
+  "commit": "7e79fe053874287d94a9ca3b8260d84917eede2d",
+  "source": "HEAD",
+  "uncommittedOutsideDocs": 0,
+  "network": "npm registry (npm ci); nothing paid, no model",
+  "steps": [
+    {
+      "name": "npm-ci",
+      "command": "node C:\\Users\\jiang\\AppData\\Local\\hermes\\node\\node_modules\\npm\\bin\\npm-cli.js ci --ignore-scripts --no-audit --no-fund",
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 5911,
+      "passed": true,
+      "outputTail": "added 163 packages in 6s"
+    },
+    {
+      "name": "typecheck",
+      "command": "node node_modules/typescript/bin/tsc --noEmit",
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 8465,
+      "passed": true,
+      "outputTail": ""
+    },
+    {
+      "name": "runtimes",
+      "command": "node scripts/xvant.mjs runtimes",
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 2175,
+      "passed": true,
+      "outputTail": "codex     version_mismatch  0.160.1              C:\\Users\\jiang\\AppData\\Local\\OpenAI\\Codex\\bin\\5ea220ae823df3d7\\codex.exe\nclaude    qualified         2.1.294              C:\\Users\\jiang\\.local\\bin\\claude.exe\nopencode  qualified         2.0.19               C:\\Users\\jiang\\AppData\\Local\\hermes\\node\\node_modules\\@opencode\\cli\\bin\\opencode.exe"
+    },
+    {
+      "name": "status-empty-home",
+      "command": "node scripts/xvant.mjs status",
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 461,
+      "passed": true,
+      "outputTail": ""
+    },
+    {
+      "name": "seed-state",
+      "command": "node --experimental-strip-types --input-type=module -e import {Store} from './packages/storage/src/store.ts';import {ArtifactStore} from './packages/storage/src/artifacts.ts';const s=new Store(process.env.XVANT_HOME+'/state.sqlite',{owner:'seed'});s.create('c',{id:'seed-task',projectId:'p',objective:'o',requiredCheckIds:['t'],acceptanceCriteria:['a']});s.close();console.log(new ArtifactStore(process.env.XVANT_HOME+'/objects').put(Buffer.from('clean-install')))",
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 333,
+      "passed": true,
+      "outputTail": "c242c73efdf7150950dd72455887b12fb9ea14674dcd2ebbe224ac961c0191d4"
+    },
+    {
+      "name": "backup",
+      "command": "node scripts/xvant.mjs backup --out <tmp>\\backup",
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 408,
+      "passed": true,
+      "outputTail": "Backup written to <tmp>\\backup\n2 files (1 objects), schema 4, runs/ excluded\nNot included: runs/ (worktrees belong to their repositories)."
+    },
+    {
+      "name": "restore",
+      "command": "node scripts/xvant.mjs restore --from <tmp>\\backup",
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 390,
+      "passed": true,
+      "outputTail": "Restored 2 files (1 objects), schema 4, runs/ excluded\nDatabase integrity: ok\nState directory: <tmp>\\restored"
+    },
+    {
+      "name": "verify-restored",
+      "command": "node --experimental-strip-types --input-type=module -e import {Store} from './packages/storage/src/store.ts';import {ArtifactStore} from './packages/storage/src/artifacts.ts';const s=new Store(process.env.XVANT_HOME+'/state.sqlite',{owner:'verify'});if(s.getTask('seed-task').id!=='seed-task'||s.integrity()!=='ok')process.exit(1);s.close();if(new ArtifactStore(process.env.XVANT_HOME+'/objects').get(process.env.HASH).toString()!=='clean-install')process.exit(1)",
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 298,
+      "passed": true,
+      "outputTail": ""
+    }
+  ],
+  "limitations": [
+    "Same host, same Node, same git and npm cache as development: this is a clean checkout and a clean node_modules, not a fresh machine.",
+    "Needs the network for npm ci (prebuilt native binaries are downloaded).",
+    "The runtimes step needs three lines, not qualified runtimes: it does not prove a Codex, Claude or OpenCode login works.",
+    "Windows only; Linux is deferred by the operator. Upgrade and rollback between versions are not exercised.",
+    "Only HEAD is tested; uncommitted changes are not in the clone."
+  ],
+  "problems": [],
+  "docsInClone": false,
+  "npmVersion": "12.0.2",
+  "runtimeLines": 3
+}

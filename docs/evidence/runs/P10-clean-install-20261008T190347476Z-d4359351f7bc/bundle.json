@@ -1,0 +1,13 @@
+{
+  "bundleId": "P10-clean-install-20261008T190347476Z-d4359351f7bc",
+  "archivedAt": "2026-10-08T19:04:09.408Z",
+  "sourceRoot": "C:/Users/jiang/downloads/xvant/xvant-agent",
+  "receipt": {
+    "file": "C:/Users/jiang/downloads/xvant/xvant-agent/docs/evidence/P10-clean-install.json",
+    "sha256": "47d9840cce17894efc7dd73ad038b8f07814241f5a9d432150c27abe75ecc955",
+    "status": "passed"
+  },
+  "artifacts": [],
+  "extras": [],
+  "integrity": "complete"
+}
