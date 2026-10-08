@@ -161,6 +161,7 @@ export function backupState(options: {
           throw new BackupError('OBJECT_CORRUPT', name);
         write(join(staging, 'objects', name), bytes);
         record('objects/' + name, bytes);
+        store.heartbeat();
       }
     // The routing ledger, the defaults it names and the candidates.
     const routing = join(home, 'routing');
@@ -237,6 +238,8 @@ export function verifyBackup(from: string): BackupManifest {
   for (const file of manifest.files) {
     const path = join(directory, ...file.path.split('/'));
     if (!existsSync(path)) throw new BackupError('FILE_MISSING', file.path);
+    if (!lstatSync(path).isFile())
+      throw new BackupError('UNSAFE_FILE', file.path);
     const bytes = readFileSync(path);
     if (bytes.length !== file.size || sha256(bytes) !== file.sha256)
       throw new BackupError('FILE_CORRUPT', file.path);
@@ -246,20 +249,18 @@ export function verifyBackup(from: string): BackupManifest {
 
 /** True while another process holds an unexpired lease on the database. */
 function leaseHeld(database: string, now: number): boolean {
-  let db: Database.Database;
-  try {
-    db = new Database(database, { readonly: true, fileMustExist: true });
-  } catch {
-    return false;
-  }
+  if (!existsSync(database)) return false;
+  // A database that cannot be opened or read is not known to be free.
+  const db = new Database(database, { readonly: true, fileMustExist: true });
   try {
     const row = db
       .prepare("SELECT expires FROM ownership WHERE resource='controller'")
       .get() as { expires: number } | undefined;
     return !!row && row.expires > now;
-  } catch {
+  } catch (error) {
     // No ownership table: never opened by a Store, so nobody owns it.
-    return false;
+    if (/no such table/.test((error as Error).message)) return false;
+    throw error;
   } finally {
     db.close();
   }
@@ -317,6 +318,15 @@ export function restoreState(options: {
     }
     const staged = checkIntegrity(join(staging, DATABASE));
     if (staged !== 'ok') throw new BackupError('INTEGRITY_FAILED', staged);
+    // A backup from elsewhere could carry a live lease and lock everyone out.
+    const copy = new Database(join(staging, DATABASE));
+    try {
+      copy.prepare('UPDATE ownership SET expires=0').run();
+    } catch (error) {
+      if (!/no such table/.test((error as Error).message)) throw error;
+    } finally {
+      copy.close();
+    }
   } catch (error) {
     rmSync(staging, { recursive: true, force: true });
     throw error;

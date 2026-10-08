@@ -21,7 +21,7 @@ import { ArtifactStore } from '../packages/storage/src/artifacts.ts';
 import { discoverRuntime } from '../packages/adapters/src/live/discover.ts';
 import { Orchestrator } from '../apps/controller/src/orchestrator.ts';
 import { LiveTurnRunner } from '../apps/controller/src/turn-runner.ts';
-import { shellCheck } from '../apps/controller/src/app.ts';
+import { defaultWorkers, shellCheck } from '../apps/controller/src/app.ts';
 import {
   activeRouting,
   applyRouting,
@@ -39,23 +39,7 @@ const open = () => {
     objects: new ArtifactStore(join(home, 'objects')),
   };
 };
-const POOL = {
-  codex: [
-    ['codex-1', ['planner', 'worker', 'reviewer']],
-    ['codex-2', ['worker']],
-  ],
-  claude: [
-    ['claude-1', ['worker', 'reviewer']],
-    ['claude-2', ['worker', 'reviewer']],
-    ['claude-3', ['worker']],
-  ],
-  opencode: [1, 2, 3, 4, 5].map((i) => ['opencode-' + i, ['worker']]),
-};
-const QUOTA = {
-  codex: 'codex-subscription',
-  claude: 'claude-subscription',
-  opencode: 'opencode-free',
-};
+const KINDS = ['codex', 'claude', 'opencode'];
 
 function discover(only) {
   const runtimes = {};
@@ -133,49 +117,49 @@ if (command === 'ui') {
           found.status +
           (found.version ? ' ' + found.version : ''),
       );
-  const workers = Object.keys(runtimes).flatMap((kind) =>
-    POOL[kind].map(([alias, roles]) => ({
-      alias,
-      runtimeKind: kind,
-      quotaGroupId: QUOTA[kind],
-      roles,
-    })),
-  );
+  const workers = defaultWorkers(Object.keys(runtimes));
   if (!workers.length) {
     console.error('No qualified runtime. Run: npm run xvant -- runtimes');
     process.exit(1);
   }
-  if (!workers.some((w) => w.roles.includes('planner')))
-    workers[0].roles = ['planner', ...workers[0].roles];
-  // The promoted routing default applies first; the flags below override it.
+  // The promoted routing default, with --model and --planner-model over it.
   const routing = activeRouting(home);
-  if (routing)
-    console.log(
-      'Routing default ' +
-        routing.version +
-        ': ' +
-        (applyRouting(workers, runtimes, routing.settings).join('; ') ||
-          'nothing to apply'),
-    );
-  // --model claude=haiku sets that runtime's model; unset means its own default.
+  const settings = {
+    models: { ...routing?.settings.models },
+    ...(routing?.settings.plannerModel
+      ? { plannerModel: routing.settings.plannerModel }
+      : {}),
+  };
   for (const pair of values('--model')) {
     const [kind, model] = pair.split('=');
-    if (!model || !POOL[kind]) {
+    if (!model || !KINDS.includes(kind)) {
       console.error('--model needs KIND=MODEL, e.g. claude=haiku');
       process.exit(2);
     }
-    if (runtimes[kind]) runtimes[kind].model = model;
+    settings.models[kind] = model;
   }
   // --planner-model: one worker plans and reviews on that model and implements nothing.
   const plannerModel = value('--planner-model');
   if (plannerModel) {
-    const planner = workers.find((w) => w.roles.includes('planner'));
-    planner.roles = ['planner', 'reviewer'];
-    planner.model = plannerModel;
-    if (!workers.some((w) => w.roles.includes('worker'))) {
-      console.error('--planner-model leaves no worker to implement');
-      process.exit(1);
-    }
+    settings.plannerModel = plannerModel;
+    // A model belongs to one runtime. With one runtime in play it is that one.
+    const kinds = Object.keys(runtimes);
+    if (!Object.keys(settings.models).length && kinds.length === 1)
+      settings.models[kinds[0]] = 'default';
+  }
+  const applied = applyRouting(workers, runtimes, settings);
+  if (applied.length)
+    console.log(
+      'Routing' +
+        (routing ? ' (default ' + routing.version + ')' : '') +
+        ': ' +
+        applied.join('; '),
+    );
+  if (plannerModel && !workers.some((w) => w.model === plannerModel)) {
+    console.error(
+      "--planner-model was not applied. Name its runtime with --model KIND=MODEL (use KIND=default to keep that runtime's own model), and make sure another worker can implement.",
+    );
+    process.exit(2);
   }
   const checks = Object.fromEntries(
     values('--check').map((c, i) => ['check' + (i + 1), shellCheck(c)]),

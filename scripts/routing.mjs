@@ -17,8 +17,8 @@ import {
   generateCandidates,
 } from '../packages/evaluation/src/profile.ts';
 import { routingDir } from '../apps/controller/src/routing-default.ts';
-import { ORCHESTRATION_VERSION } from '../apps/controller/src/benchmark-live.ts';
-import { sourceHash } from './evidence-bundle.ts';
+import { spawnSync } from 'node:child_process';
+import { ORCHESTRATION_VERSION } from '../apps/controller/src/orchestrator.ts';
 
 const home = resolve(process.env.XVANT_HOME ?? join(homedir(), '.xvant'));
 const [command, ...rest] = process.argv.slice(2);
@@ -44,12 +44,17 @@ const readReport = () => {
   };
 };
 // The mandatory safety and recovery fixtures are the cumulative offline gate.
+// The release check decides whether it passed on this source, bundle included.
 const gatePassed = () => {
+  const check = spawnSync(
+    process.execPath,
+    ['scripts/release-check.mjs', '--profile', 'local-v1', '--json'],
+    { encoding: 'utf8', windowsHide: true },
+  );
   try {
-    const receipt = JSON.parse(readFileSync('docs/evidence/G10.json', 'utf8'));
     return (
-      receipt.status === 'passed' &&
-      (receipt.dirtyTreeHash ?? receipt.sourceHash) === sourceHash(resolve('.'))
+      JSON.parse(check.stdout).requirements.find((r) => r.id === 'G10 offline')
+        ?.state === 'met'
     );
   } catch {
     return false;

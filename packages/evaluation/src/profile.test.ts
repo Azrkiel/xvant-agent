@@ -218,3 +218,20 @@ it('refuses a default whose file no longer matches the ledger', () => {
   writeFileSync(file, JSON.stringify(edited));
   expect(() => profiles.active()).toThrow(/PROFILE_HASH_MISMATCH/);
 });
+
+it('accepts runtime model names with a path and refuses one that reads as a flag', () => {
+  expect(
+    settingsOf({
+      runtime: 'xvant-orchestrated',
+      workerRuntime: 'opencode',
+      model: 'opencode/big-pickle',
+    }),
+  ).toEqual({ models: { opencode: 'opencode/big-pickle' } });
+  expect(() =>
+    profiles.initialize({
+      version: 'flag',
+      settings: { models: { claude: '--dangerously-skip' } },
+    }),
+  ).toThrow();
+  expect(profiles.active()).toBeNull();
+});

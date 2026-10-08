@@ -331,3 +331,26 @@ it('carries the routing default, its history and candidates through a restore', 
     readFileSync(join(target, 'routing', 'profiles', 'default.json'), 'utf8'),
   ).toBe('{"p":1}\n');
 });
+
+it('a restored database never arrives owned, whatever the backup claimed', () => {
+  backupOf();
+  // A backup from elsewhere claims a lease far in the future.
+  const file = join(root, 'backup', 'state.sqlite');
+  const db = new Database(file);
+  db.prepare('UPDATE ownership SET expires=?').run(Date.now() + 3_600_000);
+  db.pragma('journal_mode=DELETE');
+  db.close();
+  const bytes = readFileSync(file);
+  const manifestFile = join(root, 'backup', 'manifest.json');
+  const manifest = JSON.parse(readFileSync(manifestFile, 'utf8'));
+  const entry = manifest.files.find(
+    (f: { path: string }) => f.path === 'state.sqlite',
+  );
+  entry.size = bytes.length;
+  entry.sha256 = createHash('sha256').update(bytes).digest('hex');
+  writeFileSync(manifestFile, JSON.stringify(manifest));
+  const target = join(root, 'restored');
+  restoreState({ from: join(root, 'backup'), home: target });
+  const store = new Store(join(target, 'state.sqlite'), { owner: 'next' });
+  store.close();
+});

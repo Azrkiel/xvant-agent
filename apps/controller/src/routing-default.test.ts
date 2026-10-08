@@ -79,3 +79,18 @@ it('leaves planning alone when the planner runtime is absent or nobody else coul
   ]);
   expect(one[0]!.model).toBeUndefined();
 });
+
+it('does not guess the planner runtime when several named runtimes are present', () => {
+  const workers = defaultWorkers(['codex', 'claude']);
+  const before = roles(workers);
+  expect(
+    applyRouting(
+      workers,
+      { codex: {}, claude: {} },
+      { models: { codex: 'gpt', claude: 'haiku' }, plannerModel: 'opus' },
+    ).at(-1),
+  ).toBe(
+    'planner model opus not applied: more than one named runtime is present',
+  );
+  expect(roles(workers)).toEqual(before);
+});

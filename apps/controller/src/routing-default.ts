@@ -34,9 +34,12 @@ export function applyRouting(
     notes.push(kind + ' model ' + model);
   }
   if (!settings.plannerModel) return notes;
-  const planner = workers.find(
-    (w) => w.runtimeKind in settings.models && runtimes[w.runtimeKind],
-  );
+  // With several runtimes named, nothing says which one the planner model belongs to.
+  const named = Object.keys(settings.models).filter((kind) => runtimes[kind]);
+  const planner =
+    named.length === 1
+      ? workers.find((w) => w.runtimeKind === named[0])
+      : undefined;
   if (
     !planner ||
     !workers.some((w) => w !== planner && w.roles.includes('worker'))
@@ -45,7 +48,11 @@ export function applyRouting(
       'planner model ' +
         settings.plannerModel +
         ' not applied: ' +
-        (planner ? 'no other worker to implement' : 'its runtime is absent'),
+        (planner
+          ? 'no other worker to implement'
+          : named.length
+            ? 'more than one named runtime is present'
+            : 'its runtime is absent'),
     );
     return notes;
   }

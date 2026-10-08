@@ -21,13 +21,11 @@ import { NativeTurnRunner } from './native-turn-runner.ts';
 import type { LiveEvent } from './codex-live.ts';
 import type { RosterRuntime } from './live-roster.ts';
 import {
+  ORCHESTRATION_VERSION,
   Orchestrator,
   type TurnRunner,
   type WorkerSpec,
 } from './orchestrator.ts';
-
-/** Names the orchestration behaviour in benchmark records; bumped when it changes. Version 2 added the repair after a rejecting review. */
-export const ORCHESTRATION_VERSION = '2';
 
 /**
  * The task's visible tests as registered checks. A runtime needs at least
