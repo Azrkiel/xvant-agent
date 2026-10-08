@@ -8,10 +8,11 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
-import { Store } from './store.ts';
+import { SCHEMA_VERSION, Store } from './store.ts';
 import { ArtifactStore } from './artifacts.ts';
 import {
   BackupError,
@@ -211,4 +212,122 @@ describe('backup and restore', () => {
       'MANIFEST_MISSING',
     );
   });
+});
+
+describe('upgrade rollback', () => {
+  const UPGRADE = [
+    { version: SCHEMA_VERSION + 1, sql: 'CREATE TABLE upgraded(x INTEGER)' },
+  ];
+  const schemaOf = (dir: string) => {
+    const db = new Database(join(dir, 'state.sqlite'), { readonly: true });
+    try {
+      return db.pragma('user_version', { simple: true });
+    } finally {
+      db.close();
+    }
+  };
+
+  it('restores the state from before an upgrade so the earlier version runs again', () => {
+    const before = rows(home());
+    backupOf();
+    // The upgrade migrates the schema and the new version writes to it.
+    const upgraded = new Store(join(home(), 'state.sqlite'), {
+      owner: 'new-version',
+      migrations: UPGRADE,
+    });
+    upgraded.create('c3', input('three'));
+    upgraded.close();
+    // The earlier version cannot open what the upgrade left behind.
+    expect(
+      () => new Store(join(home(), 'state.sqlite'), { owner: 'old-version' }),
+    ).toThrow('SCHEMA_UNSUPPORTED');
+
+    const restored = restoreState({
+      from: join(root, 'backup'),
+      home: home(),
+      force: true,
+    });
+    const old = new Store(join(home(), 'state.sqlite'), {
+      owner: 'old-version',
+    });
+    expect(old.schemaVersion()).toBe(SCHEMA_VERSION);
+    old.close();
+    expect(rows(home())).toEqual(before);
+    // The upgraded state is kept beside it, not deleted.
+    expect(schemaOf(restored.movedAside!)).toBe(SCHEMA_VERSION + 1);
+    expect(rows(restored.movedAside!)).toHaveLength(3);
+  });
+
+  it('refuses a backup taken after an upgrade and leaves the state alone', () => {
+    const upgraded = new Store(join(home(), 'state.sqlite'), {
+      owner: 'new-version',
+      migrations: UPGRADE,
+    });
+    upgraded.close();
+    // Only the upgraded version can read this state, so it makes the backup.
+    const out = join(root, 'newer');
+    mkdirSync(join(out, 'objects'), { recursive: true });
+    const db = new Database(join(home(), 'state.sqlite'));
+    db.exec(
+      "VACUUM INTO '" + join(out, 'state.sqlite').replace(/'/g, "''") + "'",
+    );
+    db.close();
+    const bytes = readFileSync(join(out, 'state.sqlite'));
+    writeFileSync(
+      join(out, 'manifest.json'),
+      JSON.stringify({
+        formatVersion: 1,
+        createdAt: new Date(0).toISOString(),
+        xvantVersion: '9.9.9',
+        schemaVersion: SCHEMA_VERSION + 1,
+        excluded: [],
+        files: [
+          {
+            path: 'state.sqlite',
+            size: bytes.length,
+            sha256: createHash('sha256').update(bytes).digest('hex'),
+          },
+        ],
+      }),
+    );
+    const target = join(root, 'fresh');
+    expect(capture(() => restoreState({ from: out, home: target })).code).toBe(
+      'SCHEMA_UNSUPPORTED',
+    );
+    expect(existsSync(target)).toBe(false);
+  });
+
+  it('names the schema the store really writes', () => {
+    expect(schemaOf(home())).toBe(SCHEMA_VERSION);
+  });
+});
+
+it('carries the routing default, its history and candidates through a restore', () => {
+  const routing = join(home(), 'routing');
+  mkdirSync(join(routing, 'profiles'), { recursive: true });
+  mkdirSync(join(routing, 'candidates'), { recursive: true });
+  writeFileSync(join(routing, 'ledger.json'), '{"current":"default"}\n');
+  writeFileSync(join(routing, 'profiles', 'default.json'), '{"p":1}\n');
+  writeFileSync(join(routing, 'candidates', 'opus-1.json'), '{"c":1}\n');
+  // An interrupted ledger write and a stray file are not content.
+  writeFileSync(join(routing, 'ledger.json.1234.tmp'), 'partial');
+  writeFileSync(join(routing, 'profiles', 'notes.txt'), 'x');
+  const { manifest } = backupOf();
+  expect(
+    manifest.files.map((f) => f.path).filter((p) => p.startsWith('routing/')),
+  ).toEqual([
+    'routing/ledger.json',
+    'routing/profiles/default.json',
+    'routing/candidates/opus-1.json',
+  ]);
+  const target = join(root, 'restored');
+  restoreState({ from: join(root, 'backup'), home: target });
+  expect(readdirSync(join(target, 'routing')).sort()).toEqual([
+    'candidates',
+    'ledger.json',
+    'profiles',
+  ]);
+  expect(
+    readFileSync(join(target, 'routing', 'profiles', 'default.json'), 'utf8'),
+  ).toBe('{"p":1}\n');
 });

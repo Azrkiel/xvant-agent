@@ -61,8 +61,12 @@ export function settingsOf(
   const runtime = kind.safeParse(versions.workerRuntime);
   if (versions.runtime !== 'xvant-orchestrated' || !runtime.success)
     return null;
+  // `default` is how a record says the runtime chose its own model. It is
+  // kept only beside a planner model, which needs to know its runtime.
+  const named =
+    versions.model && (versions.model !== 'default' || versions.plannerModel);
   return settingsSchema.parse({
-    models: versions.model ? { [runtime.data]: versions.model } : {},
+    models: named ? { [runtime.data]: versions.model } : {},
     ...(versions.plannerModel ? { plannerModel: versions.plannerModel } : {}),
   });
 }

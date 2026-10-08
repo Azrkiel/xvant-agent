@@ -92,6 +92,18 @@ it('reads routing settings from an orchestrated configuration only', () => {
     models: { claude: 'haiku' },
     plannerModel: 'opus',
   });
+  // A record says `default` when the runtime chose its own model.
+  expect(
+    settingsOf({
+      runtime: 'xvant-orchestrated',
+      workerRuntime: 'codex',
+      model: 'default',
+    }),
+  ).toEqual({ models: {} });
+  expect(settingsOf(orchestrated('default', 'opus'))).toEqual({
+    models: { claude: 'default' },
+    plannerModel: 'opus',
+  });
   expect(settingsOf({ runtime: 'claude', workerRuntime: 'claude' })).toBeNull();
   expect(
     settingsOf({ runtime: 'xvant-orchestrated', workerRuntime: 'native' }),

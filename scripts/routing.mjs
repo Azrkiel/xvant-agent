@@ -81,7 +81,12 @@ try {
       );
   } else if (command === 'init') {
     const models = Object.fromEntries(
-      values('--model').map((pair) => pair.split('=')),
+      values('--model').map((pair) => {
+        const [kind, model, more] = pair.split('=');
+        if (!kind || !model || more !== undefined)
+          throw new Error('--model needs KIND=MODEL, e.g. claude=haiku');
+        return [kind, model];
+      }),
     );
     const plannerModel = value('--planner-model');
     const profile = {

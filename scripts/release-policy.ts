@@ -53,6 +53,13 @@ const LIVE: Record<Profile, string[]> = {
   ],
 };
 
+/** Phase 10 checks outside the gate, each with its own receipt. */
+const RELEASE_CHECKS = [
+  ['P10-clean-install', 'installs and starts from a clean clone'],
+  ['P10-soak', 'offline soak held every invariant'],
+  ['P10-package', 'release archive matches its commit and checksums'],
+] as const;
+
 /**
  * Decides whether a release profile has complete evidence. A requirement is
  * met only by a receipt that passed and sits in an intact bundle; offline
@@ -127,6 +134,9 @@ export function evaluateRelease(
                 : null,
       'complete campaign on the frozen v1 suite with XVANT and a baseline',
     );
+    // Like the live gates, these count from any source tree: the gate proves
+    // the current one, and each receipt names the tree it ran on.
+    for (const [id, what] of RELEASE_CHECKS) add(id, passed(id), what);
   }
   for (const [id, reason] of Object.entries(input.deferred ?? {}))
     requirements.push({ id, state: 'deferred', detail: reason });
