@@ -291,6 +291,8 @@ export interface SoakReport {
     allowedFactor: number;
     floorBytes: number;
   };
+  /** Longest stretch in which no timer ran; at or above the store lease, the lease was lost. */
+  maxTimerGapMs: number;
   violations: string[];
 }
 
@@ -306,14 +308,16 @@ export async function runSoak(options: {
   const deadline = started + (options.minutes ?? 0) * 60000;
   const master = realpathSync(mkdtempSync(join(tmpdir(), 'xvant-soak-')));
   const store = new Store(join(master, 'state.sqlite'), { owner: 'soak' });
-  // The live runners keep the lease alive during a turn; the fake ones do not.
+  // The orchestrator renews the store lease itself. This timer only measures
+  // how long the process went without running timers: a gap longer than the
+  // lease means the host or a blocking call stalled it, and the lease is lost.
+  let lastBeat = Date.now();
+  let maxTimerGapMs = 0;
   const beat = setInterval(() => {
-    try {
-      store.heartbeat();
-    } catch {
-      /* a lost lease surfaces as a failed iteration */
-    }
-  }, store.heartbeatIntervalMs);
+    const now = Date.now();
+    maxTimerGapMs = Math.max(maxTimerGapMs, now - lastBeat);
+    lastBeat = now;
+  }, 1000);
   const objects = new ArtifactStore(join(master, 'objects'));
   const violations: string[] = [];
   const scenarioCounts: Record<string, number> = {};
@@ -514,7 +518,9 @@ export async function runSoak(options: {
           (problems.length ? ' VIOLATION ' + problems.join('; ') : '') +
           '  rss ' +
           Math.round(rss.at(-1)! / 1048576) +
-          ' MB',
+          ' MB  timer gap ' +
+          maxTimerGapMs +
+          ' ms',
       );
     }
   } finally {
@@ -566,6 +572,7 @@ export async function runSoak(options: {
       allowedFactor: RSS_FACTOR,
       floorBytes: RSS_FLOOR_BYTES,
     },
+    maxTimerGapMs,
     violations,
   };
 }

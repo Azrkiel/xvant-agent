@@ -454,3 +454,40 @@ it('starts no repair for an approval, a rejection without findings, or a limit o
     );
   }
 });
+
+it('keeps the store lease while a check outlasts it', async () => {
+  // No turn is running during verification, so nothing else renews the lease.
+  const short = new Store(join(root, 'short.sqlite'), {
+    owner: 'test',
+    leaseMs: 3000,
+  });
+  try {
+    const runner = new FakeRunner((request) =>
+      byLabel(request) === 'review'
+        ? { finalText: '```json\n{"approve":true,"findings":[]}\n```' }
+        : { write: { 'api.txt': 'api\n' } },
+    );
+    const state = await new Orchestrator(short, runner, workers, {
+      stateRoot: join(root, 'runs'),
+    }).run({
+      id: 'slow-check',
+      projectId: 'p',
+      repository: repo,
+      baseRevision: 'main',
+      objective: 'Add api',
+      acceptanceCriteria: ['api.txt exists'],
+      plan: onlyApi,
+      checks: {
+        slow: {
+          executable: process.execPath,
+          args: ['-e', 'setTimeout(() => {}, 6000)'],
+        },
+      },
+    });
+    expect(state.reason).toBeUndefined();
+    expect(state.phase).toBe('ready');
+    expect(state.checks.map((c) => c.status)).toEqual(['passed']);
+  } finally {
+    short.close();
+  }
+});
