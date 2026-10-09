@@ -191,7 +191,13 @@ export async function startApp(options: {
           ]),
       );
     // The promoted routing default, if this state directory recorded one.
-    const routing = activeRouting(options.home);
+    let routing: ReturnType<typeof activeRouting>;
+    try {
+      routing = activeRouting(options.home);
+    } catch {
+      // A default that no longer matches its ledger must be repaired, not ignored.
+      throw new HttpError(409, 'ROUTING_DEFAULT_INVALID');
+    }
     if (routing) applyRouting(pool, runtimes, routing.settings);
     const runner = options.runner
       ? options.runner(store, objects, pool, runtimes)

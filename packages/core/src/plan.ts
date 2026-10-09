@@ -17,6 +17,11 @@ export const planNodeSchema = z.strictObject({
   dependsOn: z.array(idSchema).max(19).default([]),
   role: z.enum(['worker', 'reviewer']).default('worker'),
   assignee: assigneeSchema.default('any'),
+  /**
+   * How strong a worker the node needs. `light` is small, mechanical work a
+   * cheaper model can do; absent means `standard`.
+   */
+  tier: z.enum(['light', 'standard']).optional(),
   /** Paths this node may change. Empty means "anything the objective needs". */
   writablePaths: z.array(relativePathSchema).max(64).default([]),
 });
@@ -109,10 +114,19 @@ export function planningPrompt(input: {
     alias: string;
     runtimeKind: string;
     roles?: readonly string[];
+    tier?: 'light' | 'standard';
+    model?: string;
   }[];
   repositorySummary: string;
   maxNodes: number;
 }): string {
+  // Tiers are mentioned only to a pool that has both, so other pools plan as before.
+  const implementers = input.workers.filter(
+    (w) => !w.roles || w.roles.includes('worker'),
+  );
+  const tiered =
+    implementers.some((w) => w.tier === 'light') &&
+    implementers.some((w) => w.tier !== 'light');
   return [
     'You are the planner for an XVANT task. Do not change any files.',
     '',
@@ -130,9 +144,20 @@ export function planningPrompt(input: {
         ' (' +
         w.runtimeKind +
         (w.roles?.length ? '; ' + w.roles.join(', ') : '') +
+        (tiered && w.roles?.includes('worker')
+          ? '; ' +
+            (w.tier ?? 'standard') +
+            ' tier' +
+            (w.model ? ' on ' + w.model : '')
+          : '') +
         ')',
     ),
     'Assign implementation only to workers with the worker role. Leave assignee as any unless a specific worker is needed.',
+    ...(tiered
+      ? [
+          'Give each task a "tier". Use "light" for small, mechanical work with little to decide: a rename, a config or text change, boilerplate, a simple test or script that follows an existing pattern. Use "standard" for anything that needs design, debugging, or changes across several files that must agree. Light tasks run on a cheaper, weaker model, so when unsure choose "standard", and give a light task exact file names and expected results.',
+        ]
+      : []),
     '',
     '## Repository',
     input.repositorySummary,

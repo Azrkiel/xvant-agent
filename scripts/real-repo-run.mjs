@@ -59,7 +59,12 @@ const report = {
   sourceHash: sourceHash(root),
   repository: {
     path: repository,
-    origin: git('config', '--get', 'remote.origin.url') || null,
+    // A remote URL may carry a token; the receipt keeps the URL without it.
+    origin:
+      git('config', '--get', 'remote.origin.url').replace(
+        /^([a-z][a-z0-9+.-]*:\/\/)[^/@]*@/i,
+        '$1',
+      ) || null,
     before: checkout(),
   },
   objective: values('--objective')[0],
@@ -70,6 +75,7 @@ const report = {
   limitations: [
     'One objective on one repository, run from the command line rather than the UI.',
     'Trusted-local: native runtime tools edit their own worktree and bypass XVANT approvals and receipts.',
+    'The evidence bundle holds the run state, including model transcripts and what the workers read from the repository. Do not use a repository with secrets in it.',
     'Qualifies this host and these runtime versions only; Linux is deferred by the operator.',
   ],
   problems: [],

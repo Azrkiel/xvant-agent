@@ -21,6 +21,9 @@ const complete = (): Record<string, ReceiptFacts> => ({
   'G06-live-parallel-feature': ok('older'),
   'G08-live-native': ok('older'),
   'G07-live-ui': ok('older'),
+  'P10-clean-install': ok('older'),
+  'P10-soak': ok('older'),
+  'P10-package': ok('older'),
   'benchmark-v1': {
     ...ok(),
     complete: true,
@@ -145,3 +148,20 @@ describe('release policy', () => {
     expect(check(receipts).ready).toBe(false);
   });
 });
+
+it.each(['P10-clean-install', 'P10-soak', 'P10-package'])(
+  'local-v1 needs a passing %s receipt, local-beta does not',
+  (id) => {
+    const receipts = complete();
+    delete receipts[id];
+    expect(unmet(receipts)).toEqual({ [id]: 'no receipt' });
+    receipts[id] = { ...ok('older'), status: 'failed' };
+    expect(unmet(receipts)).toEqual({ [id]: 'receipt is failed' });
+    expect(
+      evaluateRelease('local-beta', {
+        receipts,
+        currentSourceHash: NOW,
+      }).requirements.some((r) => r.id === id),
+    ).toBe(false);
+  },
+);

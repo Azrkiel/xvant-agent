@@ -29,7 +29,8 @@
     "demo": "node --experimental-strip-types apps/controller/src/demo.ts",
     "demo:durable": "node apps/controller/src/durable-demo.ts",
     "xvant": "node scripts/xvant.mjs",
-    "routing": "node scripts/routing.mjs"
+    "routing": "node scripts/routing.mjs",
+    "release:evidence": "node scripts/clean-install-check.mjs && node scripts/soak.mjs --minutes 9 && node scripts/package-release.mjs"
   },
   "dependencies": {
     "better-sqlite3": "13.0.3",

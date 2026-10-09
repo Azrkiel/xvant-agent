@@ -13,11 +13,11 @@ import {
 } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { z } from 'zod';
-import { Store } from './store.ts';
+import { SCHEMA_VERSION, Store } from './store.ts';
 
-// Backup and restore of a state directory: state.sqlite and objects/. The
-// runs/ directory holds git worktrees that belong to their repositories and is
-// deliberately left out.
+// Backup and restore of a state directory: state.sqlite, objects/ and the
+// routing default under routing/. The runs/ directory holds git worktrees
+// that belong to their repositories and is deliberately left out.
 //
 // Ownership: the store's lease lives in the database (the `ownership` row for
 // 'controller'; see Store). A backup opens a Store, so it takes that lease for
@@ -44,7 +44,13 @@ const sha256 = (bytes: Buffer) =>
 const objectName = /^[a-f0-9]{64}$/;
 const filePath = z
   .string()
-  .regex(new RegExp('^(' + DATABASE + '|objects/[a-f0-9]{64})$'));
+  .regex(
+    new RegExp(
+      '^(' +
+        DATABASE +
+        '|objects/[a-f0-9]{64}|routing/ledger[.]json|routing/(profiles|candidates)/[A-Za-z0-9._-]{1,64}[.]json)$',
+    ),
+  );
 const manifestSchema = z.strictObject({
   formatVersion: z.literal(BACKUP_FORMAT),
   createdAt: z.string(),
@@ -155,7 +161,31 @@ export function backupState(options: {
           throw new BackupError('OBJECT_CORRUPT', name);
         write(join(staging, 'objects', name), bytes);
         record('objects/' + name, bytes);
+        store.heartbeat();
       }
+    // The routing ledger, the defaults it names and the candidates.
+    const routing = join(home, 'routing');
+    const routed = [
+      'ledger.json',
+      ...['profiles', 'candidates'].flatMap((folder) =>
+        existsSync(join(routing, folder))
+          ? readdirSync(join(routing, folder))
+              .sort()
+              .map((name) => folder + '/' + name)
+          : [],
+      ),
+    ];
+    for (const name of routed) {
+      const item = join(routing, ...name.split('/'));
+      // Interrupted ledger writes (*.tmp) are not content.
+      if (!filePath.safeParse('routing/' + name).success) continue;
+      if (!existsSync(item)) continue;
+      if (!lstatSync(item).isFile())
+        throw new BackupError('UNSAFE_ROUTING_FILE', name);
+      const bytes = readFileSync(item);
+      write(join(staging, 'routing', ...name.split('/')), bytes);
+      record('routing/' + name, bytes);
+    }
     const manifest: BackupManifest = {
       formatVersion: BACKUP_FORMAT,
       createdAt: now().toISOString(),
@@ -208,6 +238,8 @@ export function verifyBackup(from: string): BackupManifest {
   for (const file of manifest.files) {
     const path = join(directory, ...file.path.split('/'));
     if (!existsSync(path)) throw new BackupError('FILE_MISSING', file.path);
+    if (!lstatSync(path).isFile())
+      throw new BackupError('UNSAFE_FILE', file.path);
     const bytes = readFileSync(path);
     if (bytes.length !== file.size || sha256(bytes) !== file.sha256)
       throw new BackupError('FILE_CORRUPT', file.path);
@@ -217,20 +249,18 @@ export function verifyBackup(from: string): BackupManifest {
 
 /** True while another process holds an unexpired lease on the database. */
 function leaseHeld(database: string, now: number): boolean {
-  let db: Database.Database;
-  try {
-    db = new Database(database, { readonly: true, fileMustExist: true });
-  } catch {
-    return false;
-  }
+  if (!existsSync(database)) return false;
+  // A database that cannot be opened or read is not known to be free.
+  const db = new Database(database, { readonly: true, fileMustExist: true });
   try {
     const row = db
       .prepare("SELECT expires FROM ownership WHERE resource='controller'")
       .get() as { expires: number } | undefined;
     return !!row && row.expires > now;
-  } catch {
+  } catch (error) {
     // No ownership table: never opened by a Store, so nobody owns it.
-    return false;
+    if (/no such table/.test((error as Error).message)) return false;
+    throw error;
   } finally {
     db.close();
   }
@@ -254,6 +284,15 @@ export function restoreState(options: {
   const now = options.now ?? (() => new Date());
   // Nothing below touches the target until the whole backup has verified.
   const manifest = verifyBackup(from);
+  // A backup taken after an upgrade cannot be opened by the version before it.
+  if (manifest.schemaVersion > SCHEMA_VERSION)
+    throw new BackupError(
+      'SCHEMA_UNSUPPORTED',
+      'backup has schema ' +
+        manifest.schemaVersion +
+        ', this XVANT reads up to ' +
+        SCHEMA_VERSION,
+    );
   const exists = existsSync(home);
   const occupied = exists && !isEmptyDirectory(home);
   if (occupied && !options.force)
@@ -279,6 +318,15 @@ export function restoreState(options: {
     }
     const staged = checkIntegrity(join(staging, DATABASE));
     if (staged !== 'ok') throw new BackupError('INTEGRITY_FAILED', staged);
+    // A backup from elsewhere could carry a live lease and lock everyone out.
+    const copy = new Database(join(staging, DATABASE));
+    try {
+      copy.prepare('UPDATE ownership SET expires=0').run();
+    } catch (error) {
+      if (!/no such table/.test((error as Error).message)) throw error;
+    } finally {
+      copy.close();
+    }
   } catch (error) {
     rmSync(staging, { recursive: true, force: true });
     throw error;
@@ -298,19 +346,26 @@ export function restoreState(options: {
     throw new BackupError('SWAP_FAILED', (error as Error).message);
   }
   const integrity = checkIntegrity(join(home, DATABASE));
-  if (integrity !== 'ok')
+  if (integrity !== 'ok') {
+    // The staged copy passed, so the move damaged it: put back what was there.
+    const failed = home + '.failed-restore-' + suffix;
+    renameSync(home, failed);
+    if (movedAside) renameSync(movedAside, home);
     throw new BackupError(
       'INTEGRITY_FAILED',
-      integrity + (movedAside ? '; previous state is at ' + movedAside : ''),
+      integrity + '; the restored copy is at ' + failed,
     );
+  }
   return { home, manifest, integrity, movedAside };
 }
 
 export const describeBackup = (manifest: BackupManifest): string =>
   manifest.files.length +
   ' files (' +
-  manifest.files.filter((f) => f.path !== DATABASE).length +
-  ' objects), schema ' +
+  manifest.files.filter((f) => f.path.startsWith('objects/')).length +
+  ' objects, ' +
+  manifest.files.filter((f) => f.path.startsWith('routing/')).length +
+  ' routing files), schema ' +
   manifest.schemaVersion +
   ', ' +
   manifest.excluded.map((e) => e.path + '/ excluded').join(', ');

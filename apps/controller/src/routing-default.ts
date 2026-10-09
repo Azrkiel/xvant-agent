@@ -14,6 +14,40 @@ export function activeRouting(home: string): RoutingProfile | null {
   return new RoutingProfiles(routingDir(home)).active();
 }
 
+export interface TierModels {
+  light?: string;
+  standard?: string;
+}
+/**
+ * Splits one runtime's implementers into tiers, in place, and says what it
+ * did. A worker that can also review is `standard`; a plain worker is
+ * `light`. Each tier runs on the model named for it, or the runtime's model
+ * when none is. Workers with a model of their own (the planner) are left
+ * alone. Call it after `applyRouting`.
+ */
+export function applyTiers(
+  workers: WorkerSpec[],
+  kind: WorkerSpec['runtimeKind'],
+  models: TierModels,
+): string[] {
+  const notes: string[] = [];
+  for (const worker of workers) {
+    if (
+      worker.runtimeKind !== kind ||
+      worker.model ||
+      !worker.roles.includes('worker')
+    )
+      continue;
+    worker.tier = worker.roles.includes('reviewer') ? 'standard' : 'light';
+    const model = models[worker.tier];
+    if (model) worker.model = model;
+    notes.push(
+      worker.alias + ' ' + worker.tier + (model ? ' on ' + model : ''),
+    );
+  }
+  return notes;
+}
+
 /**
  * Applies routing settings to a pool in place and says what it did. Models
  * go to the runtimes the settings name. A planner model applies only to a
@@ -34,9 +68,12 @@ export function applyRouting(
     notes.push(kind + ' model ' + model);
   }
   if (!settings.plannerModel) return notes;
-  const planner = workers.find(
-    (w) => w.runtimeKind in settings.models && runtimes[w.runtimeKind],
-  );
+  // With several runtimes named, nothing says which one the planner model belongs to.
+  const named = Object.keys(settings.models).filter((kind) => runtimes[kind]);
+  const planner =
+    named.length === 1
+      ? workers.find((w) => w.runtimeKind === named[0])
+      : undefined;
   if (
     !planner ||
     !workers.some((w) => w !== planner && w.roles.includes('worker'))
@@ -45,7 +82,11 @@ export function applyRouting(
       'planner model ' +
         settings.plannerModel +
         ' not applied: ' +
-        (planner ? 'no other worker to implement' : 'its runtime is absent'),
+        (planner
+          ? 'no other worker to implement'
+          : named.length
+            ? 'more than one named runtime is present'
+            : 'its runtime is absent'),
     );
     return notes;
   }

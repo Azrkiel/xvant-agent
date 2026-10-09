@@ -4,7 +4,7 @@ import {
   nativeIdSchema,
   type NativeFailure,
 } from '../../../contracts/src/providers.ts';
-import { CODEX_VERSION, validateNative } from './profile.ts';
+import { codexVersionAccepted, validateNative } from './profile.ts';
 import { classifyCodex } from '../providers/failures.ts';
 
 type Status =
@@ -47,6 +47,7 @@ export class CodexLifecycle {
   private runId: string | undefined;
   private terminal = false;
   private nativeFailure: NativeFailure | undefined;
+  private readonly version: string;
   private readonly write: boolean;
   private readonly model: string | undefined;
   /**
@@ -58,7 +59,8 @@ export class CodexLifecycle {
     threadId?: string,
     options: { profile?: 'read-only' | 'workspace-write'; model?: string } = {},
   ) {
-    if (version !== CODEX_VERSION) fail('VERSION_UNSUPPORTED');
+    if (!codexVersionAccepted(version)) fail('VERSION_UNSUPPORTED');
+    this.version = version;
     this.write = options.profile === 'workspace-write';
     this.model =
       options.model === undefined || options.model === 'default'
@@ -148,7 +150,7 @@ export class CodexLifecycle {
         value.approvalsReviewer !== 'user' ||
         value.sandbox.type !== (this.write ? 'workspaceWrite' : 'readOnly') ||
         value.sandbox.networkAccess === true ||
-        value.thread.cliVersion !== CODEX_VERSION ||
+        value.thread.cliVersion !== this.version ||
         value.thread.status.type !== 'idle' ||
         value.thread.turns.some((turn) => turn.status === 'inProgress')
       )

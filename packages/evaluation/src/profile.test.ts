@@ -92,6 +92,18 @@ it('reads routing settings from an orchestrated configuration only', () => {
     models: { claude: 'haiku' },
     plannerModel: 'opus',
   });
+  // A record says `default` when the runtime chose its own model.
+  expect(
+    settingsOf({
+      runtime: 'xvant-orchestrated',
+      workerRuntime: 'codex',
+      model: 'default',
+    }),
+  ).toEqual({ models: {} });
+  expect(settingsOf(orchestrated('default', 'opus'))).toEqual({
+    models: { claude: 'default' },
+    plannerModel: 'opus',
+  });
   expect(settingsOf({ runtime: 'claude', workerRuntime: 'claude' })).toBeNull();
   expect(
     settingsOf({ runtime: 'xvant-orchestrated', workerRuntime: 'native' }),
@@ -205,4 +217,21 @@ it('refuses a default whose file no longer matches the ledger', () => {
   edited.settings.plannerModel = 'opus';
   writeFileSync(file, JSON.stringify(edited));
   expect(() => profiles.active()).toThrow(/PROFILE_HASH_MISMATCH/);
+});
+
+it('accepts runtime model names with a path and refuses one that reads as a flag', () => {
+  expect(
+    settingsOf({
+      runtime: 'xvant-orchestrated',
+      workerRuntime: 'opencode',
+      model: 'opencode/big-pickle',
+    }),
+  ).toEqual({ models: { opencode: 'opencode/big-pickle' } });
+  expect(() =>
+    profiles.initialize({
+      version: 'flag',
+      settings: { models: { claude: '--dangerously-skip' } },
+    }),
+  ).toThrow();
+  expect(profiles.active()).toBeNull();
 });

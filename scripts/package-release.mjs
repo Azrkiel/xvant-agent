@@ -1,4 +1,4 @@
-// Release packaging for local-v1 (P10.6). Usage: node scripts/package-release.mjs [--allow-dirty]
+// Release packaging for local-v1 (P10.6). Usage: node scripts/package-release.mjs [--allow-dirty] [--sign-key PRIVATE_KEY]
 // Builds .artifacts/release/xvant-<version>-<short commit>-win-x64.zip from
 // `git archive HEAD` without docs/ and .Codex/, plus SHA256SUMS and
 // support-matrix.json/.md generated from package.json, the pinned routes in
@@ -7,6 +7,8 @@
 // Writes docs/evidence/P10-package.json (the archive itself is not committed).
 // The archive holds the committed tree, never uncommitted changes; a dirty
 // tree is refused unless --allow-dirty, and the receipt then says so.
+// --sign-key signs SHA256SUMS with an SSH key (PRIVATE_KEY.pub must exist) and
+// writes SHA256SUMS.sig; without it the release is unsigned and says so.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
@@ -17,6 +19,12 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
+import {
+  SIGNATURE_NAMESPACE,
+  fingerprint,
+  signFile,
+  verifyFile,
+} from './release-sign.ts';
 import { hostname, platform, release } from 'node:os';
 import { join, resolve } from 'node:path';
 import { archiveRun, sourceHash } from './evidence-bundle.ts';
@@ -27,6 +35,9 @@ import {
 } from '../packages/contracts/src/live.ts';
 
 const args = process.argv.slice(2);
+const signKey = args.includes('--sign-key')
+  ? args[args.indexOf('--sign-key') + 1]
+  : undefined;
 const root = resolve('.');
 const gateId = 'P10-package';
 // Not part of an install: planning documents, evidence and handoffs.
@@ -280,6 +291,28 @@ if (!report.problems.length) {
     if (sha256(bytes) !== m[1])
       report.problems.push('hash mismatch after writing: ' + m[2]);
     report.outputs.push({ name: m[2], size: bytes.length, sha256: m[1] });
+  }
+  if (signKey) {
+    try {
+      const sums = join(outDir, 'SHA256SUMS');
+      const signature = signFile(sums, signKey);
+      const publicKey = readFileSync(signKey + '.pub', 'utf8');
+      if (!verifyFile(sums, signature, publicKey))
+        report.problems.push('SHA256SUMS.sig does not verify');
+      report.signature = {
+        file: 'SHA256SUMS.sig',
+        namespace: SIGNATURE_NAMESPACE,
+        keyFingerprint: fingerprint(signKey + '.pub'),
+      };
+      report.limitations = report.limitations.filter(
+        (l) => !l.startsWith('Not signed.'),
+      );
+      report.limitations.push(
+        'Signed with an SSH key. The signature proves the holder of that key made these checksums; whether to trust the key is up to whoever verifies.',
+      );
+    } catch (error) {
+      report.problems.push('Signing failed: ' + error.message);
+    }
   }
   // The archive must hold exactly the committed files outside the excluded directories.
   const expected = gitOut('ls-tree', '-r', '--name-only', 'HEAD')
