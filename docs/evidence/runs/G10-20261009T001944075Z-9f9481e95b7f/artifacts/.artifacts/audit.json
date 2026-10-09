@@ -1,0 +1,22 @@
+{
+  "kind": "release-audit",
+  "generatedAt": "2026-10-09T00:29:30.627Z",
+  "status": "passed",
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "sourceHash": "9f9481e95b7f16844c4b35bb45d8cc8387d18ab17f398b4e439c8ae74f5b9b1f",
+  "trackedFiles": 1655,
+  "checks": {
+    "lockfile": [],
+    "licences": [],
+    "secrets": [],
+    "localApi": []
+  },
+  "limitations": [
+    "Secret scanning matches known credential shapes and file names only.",
+    "Licences are the ones recorded in package-lock.json; licence texts were not read.",
+    "Files over 2 MiB are not scanned for secrets: none",
+    "Executable hook boundaries are covered by tests, not by this audit."
+  ]
+}
