@@ -1,0 +1,62 @@
+{
+  "gateId": "P10-soak",
+  "status": "failed",
+  "generatedAt": "2026-10-08T19:39:29.120Z",
+  "classification": "offline",
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "sourceHash": "2835b926630e98c2f65e6fc5907ac17c84dbc4d60d9664cae81868999df40940",
+  "limitations": [
+    "Offline simulator only: the orchestrator, store, worktrees and checks are real, but every turn is a scripted fake. There is no live soak and no model, runtime or quota behavior is exercised.",
+    "Faults are the five classes the fake injects (turn failure, unknown outcome, conflicting patches, failing check, rejecting review); anything else is not covered.",
+    "One process and one orchestrator at a time; concurrent roots, a crash mid-run and a restart with resume are covered by other tests, not by this run.",
+    "Memory is process rss of this run only, sampled once per iteration; the short git and check child processes are not included, and rss growth below the stated floor is not flagged.",
+    "The invariant checks look at the run, its branches and worktrees, and the temp directory; they cannot see a process that leaked outside this one."
+  ],
+  "problems": [
+    "iteration 24 (review_reject_fixed): integration patch file left in the temp directory"
+  ],
+  "seed": 20261010,
+  "requestedMinutes": 4,
+  "durationMs": 245522,
+  "iterations": 40,
+  "scenarioCounts": {
+    "conflicting_patches": 8,
+    "turn_failure_transient": 5,
+    "check_failure_fixed": 3,
+    "review_reject_standing": 2,
+    "turn_failure_persistent": 5,
+    "check_failure_unfixed": 3,
+    "review_fix_unknown": 4,
+    "clean": 6,
+    "unknown_outcome": 2,
+    "review_reject_fixed": 2
+  },
+  "faultCounts": {
+    "turn_failure": 15,
+    "unknown_outcome": 6,
+    "integration_conflict": 8,
+    "check_failure": 12,
+    "review_rejection": 8
+  },
+  "phaseCounts": {
+    "ready": 26,
+    "failed": 8,
+    "needs_attention": 6
+  },
+  "memory": {
+    "firstRss": 92282880,
+    "lastRss": 90267648,
+    "maxRss": 92282880,
+    "warmupIterations": 4,
+    "baselineRss": 82685952,
+    "maxFactorAfterWarmup": 1.092,
+    "allowedFactor": 1.5,
+    "floorBytes": 67108864
+  },
+  "maxTimerGapMs": 3913,
+  "violations": [
+    "iteration 24 (review_reject_fixed): integration patch file left in the temp directory"
+  ]
+}
