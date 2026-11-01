@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Each test creates several real Git worktrees, which is slow on Windows.
 vi.setConfig({ testTimeout: 60000 });
@@ -492,6 +492,169 @@ it('keeps the store lease while a check outlasts it', async () => {
   }
 });
 
+describe('lesson graph', () => {
+  const unitFailure = (ms: number) =>
+    'Checks failed: unit\n\n### Output of unit\nAssertionError: expected 42, got 41 (' +
+    ms +
+    ' ms)';
+  /** The api node fails its unit check once, then a repair fixes it. */
+  const flaky = () => {
+    let tries = 0;
+    return new FakeRunner((request) => {
+      if (byLabel(request) !== 'api') return verdict(true);
+      return ++tries === 1
+        ? {
+            status: 'verification_failed',
+            failure: unitFailure(tries * 7),
+            write: { 'api.txt': '41\n' },
+          }
+        : {
+            write: { 'api.txt': '42\n' },
+            finalText: 'Return 42 instead of 41 in api',
+          };
+    });
+  };
+  const run = (runner: TurnRunner, id: string, extra = {}) =>
+    orchestrate(runner, {
+      id,
+      plan: onlyApi,
+      checks: apiCheck,
+      nodeChecks: ['api'],
+      review: false,
+      ...extra,
+    });
+  const repairPrompt = (runner: FakeRunner) =>
+    runner.calls.filter((c) => byLabel(c as TurnRequest) === 'api')[1]!.prompt;
+
+  it('learns a fix in one run and shows it to the repair of the same failure in the next', async () => {
+    const first = flaky();
+    const one = await run(first, 'learn1');
+    expect(one.phase).toBe('ready');
+    expect(one.lessons).toEqual({
+      challenges: 1,
+      solutions: 1,
+      hinted: 0,
+      errors: 0,
+    });
+    // Nothing was known yet, so the first repair worked it out alone.
+    expect(repairPrompt(first)).not.toContain('Lessons from earlier work');
+    const [challenge, solution] = store.lessons.nodes('p');
+    expect(challenge).toMatchObject({
+      kind: 'challenge',
+      source: 'node',
+      title: 'Checks failed: unit | AssertionError: expected 42, got 41 (7 ms)',
+      files: ['api.txt'],
+      context: 'API\napi',
+    });
+    expect(solution).toMatchObject({
+      kind: 'solution',
+      summary: 'Return 42 instead of 41 in api',
+      files: ['api.txt'],
+      checks: ['api'],
+      provenance: { graphId: 'learn1', alias: expect.any(String) },
+    });
+    expect(store.lessons.edges('p')).toMatchObject([
+      { from: challenge!.id, to: solution!.id, relation: 'solved_by' },
+    ]);
+
+    // The next run meets the same failure and its repair starts from the fix.
+    const second = flaky();
+    const two = await run(second, 'learn2');
+    expect(two.phase).toBe('ready');
+    expect(two.lessons).toMatchObject({ hinted: 1, errors: 0 });
+    const prompt = repairPrompt(second);
+    expect(prompt).toMatch(
+      /Previous attempt failed[\s\S]*## Lessons from earlier work[\s\S]*same failure[\s\S]*verified by checks: api[\s\S]*Return 42 instead of 41 in api/,
+    );
+    expect(prompt).toContain('+42');
+    expect(store.lessons.get('p', challenge!.id)).toMatchObject({
+      occurrences: 2,
+    });
+    // The suggestion helped, which ranks it higher for the next repair.
+    expect(store.lessons.get('p', solution!.id)).toMatchObject({
+      usage: { suggested: 1, succeeded: 1, failed: 0 },
+    });
+  });
+
+  it('records a repeated failure as a dead end and a failing fix as not working', async () => {
+    let tries = 0;
+    const runner = new FakeRunner((request) =>
+      byLabel(request) === 'api'
+        ? {
+            status: 'verification_failed',
+            failure: unitFailure(++tries),
+            write: { 'api.txt': 'attempt ' + tries + '\n' },
+            finalText: 'Attempt ' + tries,
+          }
+        : verdict(true),
+    );
+    const state = await run(runner, 'deadend');
+    expect(state.phase).toBe('failed');
+    const nodes = store.lessons.nodes('p');
+    expect(nodes.map((n) => n.kind)).toEqual(['challenge', 'solution']);
+    expect(store.lessons.edges('p')).toMatchObject([
+      { from: nodes[0]!.id, to: nodes[1]!.id, relation: 'not_solved_by' },
+    ]);
+    expect(nodes[1]).toMatchObject({ summary: 'Attempt 2', checks: [] });
+  });
+
+  it('learns from a combined-check fix and a review fix', async () => {
+    let reviews = 0;
+    const runner = new FakeRunner((request) => {
+      const label = byLabel(request);
+      if (label === 'fix')
+        return {
+          write: { 'web.txt': 'w', 'docs.txt': 'd' },
+          finalText: 'Added the missing web and docs files',
+        };
+      if (label === 'review')
+        return ++reviews === 1
+          ? verdict(false, ['api.txt must say fixed'])
+          : verdict(true);
+      if (label === 'review-fix')
+        return { write: { 'api.txt': 'fixed\n' }, finalText: 'Said fixed' };
+      return { write: { 'api.txt': 'x\n' } };
+    });
+    const state = await orchestrate(runner, { id: 'combined', plan: onlyApi });
+    expect(state.phase).toBe('ready');
+    const nodes = store.lessons.nodes('p');
+    const challenges = nodes.filter((n) => n.kind === 'challenge');
+    expect(challenges.map((c) => [c.source, c.title.split(' |')[0]])).toEqual([
+      ['checks', 'Combined check all failed'],
+      ['review', 'api.txt must say fixed'],
+    ]);
+    const solved = (id: string) =>
+      store.lessons
+        .edges('p', id)
+        .filter((e) => e.relation === 'solved_by')
+        .map((e) => store.lessons.get('p', e.to));
+    expect(solved(challenges[0]!.id)).toMatchObject([
+      {
+        summary: 'Added the missing web and docs files',
+        checks: ['all'],
+        files: ['docs.txt', 'web.txt'],
+      },
+    ]);
+    expect(solved(challenges[1]!.id)).toMatchObject([
+      { summary: 'Said fixed', checks: ['all'] },
+    ]);
+  });
+
+  it('records and shows nothing when lessons are off', async () => {
+    await run(flaky(), 'off1', { lessons: false });
+    const second = flaky();
+    const state = await run(second, 'off2', { lessons: false });
+    expect(store.lessons.nodes('p')).toEqual([]);
+    expect(state.lessons).toEqual({
+      challenges: 0,
+      solutions: 0,
+      hinted: 0,
+      errors: 0,
+    });
+    expect(repairPrompt(second)).not.toContain('Lessons');
+  });
+});
+
 it('does not repair on a review that gave no verdict or did not finish', async () => {
   // Run ids have no dash: the test reads a turn's label from its task id.
   const replies = [
@@ -523,6 +686,8 @@ it('does not repair on a review that gave no verdict or did not finish', async (
       false,
     );
   }
+  // No verdict was given, so nothing about the code enters the lesson graph.
+  expect(store.lessons.nodes('p')).toEqual([]);
 });
 
 it.each(['failed', 'unknown', 'cancelled', 'verification_failed'] as const)(

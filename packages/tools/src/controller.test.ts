@@ -244,3 +244,51 @@ describe('memory tools', () => {
     ).toEqual(['retry-rule']);
   });
 });
+
+describe('lessons.search', () => {
+  it("finds the task's own project's challenges and what fixed them", async () => {
+    const call = setup();
+    const learn = (projectId: string, summary: string) => {
+      const challenge = store.lessons.recordChallenge({
+        projectId,
+        failure: 'Checks failed: unit\nTypeError: parse is not a function',
+        source: 'node',
+        provenance: { graphId: 'g' },
+      });
+      const fix = store.lessons.recordSolution({
+        projectId,
+        summary,
+        files: ['src/parse.js'],
+        diff: '+export { parse };',
+        checks: ['unit'],
+        provenance: { graphId: 'g' },
+      });
+      store.lessons.link(projectId, challenge.id, fix.id, 'solved_by');
+    };
+    learn('project', 'Exported parse');
+    learn('other', 'Foreign fix');
+    // The caller's context names another project; the task record decides.
+    const receipt = await call(
+      'lessons.search',
+      { query: 'TypeError: parse is not a function' },
+      { projectId: 'other' },
+    );
+    expect(receipt.status).toBe('succeeded');
+    const { matches } = receipt.result as {
+      matches: {
+        challenge: { exact: boolean };
+        solved_by: { summary: string; verifiedBy: string[] }[];
+      }[];
+    };
+    expect(matches).toHaveLength(1);
+    expect(matches[0]!.solved_by).toMatchObject([
+      { summary: 'Exported parse', verifiedBy: ['unit'] },
+    ]);
+    expect(
+      (
+        (await call('lessons.search', { query: 'unrelated lint warning' }))
+          .result as { matches: unknown[] }
+      ).matches,
+    ).toEqual([]);
+  });
+});

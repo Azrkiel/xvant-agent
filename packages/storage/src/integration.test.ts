@@ -109,7 +109,7 @@ it('treats an empty patch as a no-op and reopens after a restart', () => {
 it('persists work graphs with optimistic versions and an event history', () => {
   const store = new Store(join(root, 'state.sqlite'), { owner: 'test' });
   try {
-    expect(store.schemaVersion()).toBe(4);
+    expect(store.schemaVersion()).toBe(5);
     const created = store.graphs.create(
       'root',
       'p',
