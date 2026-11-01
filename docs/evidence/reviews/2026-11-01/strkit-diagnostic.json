@@ -1,0 +1,29 @@
+[
+  {
+    "configuration": "claude-haiku-criteria",
+    "diagnosticOnly": true,
+    "addedAssertion": "compareVersions('1.0.0-alpha', '1.0.0-beta') === -1",
+    "exitCode": 1,
+    "stdout": "",
+    "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: test/semver.test.mjs must fail when ^0.x accepts other majors\n    at worker (file:///C:/Users/jiang/xfix/fixtures/benchmarks/v2/tasks/write-strkit-tests/check.mjs:109:14)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async Promise.all (index 2)\n    at async file:///C:/Users/jiang/xfix/fixtures/benchmarks/v2/tasks/write-strkit-tests/check.mjs:112:3 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 0,\n  expected: 0,\n  operator: 'notStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.21.0\n"
+  },
+  {
+    "configuration": "claude-haiku-xvant",
+    "diagnosticOnly": true,
+    "addedAssertion": "compareVersions('1.0.0-alpha', '1.0.0-beta') === -1",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "configuration": "claude-haiku-criteria",
+    "diagnosticOnly": true,
+    "addedAssertions": [
+      "lexical prerelease text order",
+      "reject major 1 for caret base 0.2.3"
+    ],
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]
