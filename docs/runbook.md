@@ -49,7 +49,7 @@ State acceptance criteria explicitly with `--criterion`. On the benchmark, a sma
 | Command | What it does |
 | --- | --- |
 | `/repo PATH` | Work in another Git repository |
-| `/tandem opus\|sol\|off` | Who plans: Opus, GPT-6.1-Sol, or the plain pool. Starts as `opus` |
+| `/tandem opus\|sol\|off` | Who plans: Opus, GPT-6.1-Sol, or the plain pool. New sessions start with tandem off; choose it explicitly |
 | `/only LIST\|all` | Limit runtimes, for example `/only claude` |
 | `/check COMMAND`, `/check clear` | Commands the result must pass |
 | `/criterion TEXT`, `/criterion clear` | Acceptance criteria |
@@ -57,12 +57,13 @@ State acceptance criteria explicitly with `--criterion`. On the benchmark, a sma
 | `/settings`, `/runtimes` | Show the settings, or which runtimes are usable |
 | `/status [ID]` | List runs, or show one (default: the last run of this session) |
 | `/diff` | What the last run changed |
-| `/accept [ID]`, `/merge` | Accept a ready result, then merge its branch into your checkout |
+| `/accept [ID]`, `/merge [ID]` | Accept a ready result, then merge its verified commit into the same checkout; defaults to the last run |
 | `/share BRANCH`, `/share stop` | Keep a branch in step with its remote while you work (see below) |
 | `/help`, `/quit` | |
 
 - The shell runs each action as the same `xvant` or `git` command line you could type yourself, so it behaves exactly as those do.
-- Settings are remembered per repository in `shell.json` in the state directory.
+- Settings are remembered per repository in `shell.json` in the state directory. Existing saved choices are retained.
+- Merge checks persisted acceptance, repository identity, integration worktree/branch and the verified HEAD before running Git. A moved branch or an unaccepted result is refused. Use `/merge ID` to select an earlier accepted run.
 - Ctrl+C during a run stops the run and its workers; at the prompt it leaves the shell.
 - `xvant.cmd` looks for Node in `XVANT_NODE`, then in this checkout's `.tools`, then on `PATH`. Put the checkout's folder on `PATH` to type `xvant` anywhere.
 - It is a command prompt, not a chat: each line is one objective or one command, and a run does not remember the previous one.
@@ -88,11 +89,11 @@ Each cycle commits local changes, merges what the others pushed, and pushes. Rul
 - Edits to different files, or different lines of one file, merge on their own.
 - When two people change the same lines, nobody's work is lost and the loop keeps going: this machine's version stays in the file, and the other version is written beside it as `name.conflict-<commit>.ext`. Someone reconciles the two and deletes the copy.
 - A file changed on one machine and deleted on another is kept.
-- Files that look like credentials (`.env`, keys, `.npmrc`, text holding a token) are never committed; the output names each one skipped. Files already in `.gitignore` are not shared.
-- If the remote cannot be reached, changes are committed locally and sent when it can.
+- Credential-like paths and recognized token patterns are filtered. Oversized (over 1 MiB) or unreadable working files are skipped rather than treated as scanned. The actual Git index is checked before and after staging; an unsafe pre-staged entry stops sharing without resetting your index. Review and unstage it yourself before retrying. This is not a scan of all history or a guarantee to detect every possible secret. Files already in `.gitignore` are not newly added.
+- If the remote cannot be reached, changes remain committed locally. Continuous mode retries; `--once` exits nonzero when remote access or publication fails.
 - Each machine signs in to the remote with its own account, through Git's usual credentials. A sign-in prompt is not shown by the loop: run `git push` once by hand first.
 
-To put XVANT's work in front of everyone: `xvant run --repo PATH`, accept it, `git merge xvant/<id>` on the shared branch, and the next cycle publishes it.
+To put XVANT's work in front of everyone: `xvant run --repo PATH`, accept it, run `xvant merge <id> --repo PATH` on the shared branch, and the next cycle publishes it.
 
 This is not character-by-character editing in one document, as an online editor gives. People see each other's saved changes after one interval, and two people typing in the same paragraph get a conflict copy.
 
