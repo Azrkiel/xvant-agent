@@ -3,8 +3,8 @@ import { CodexLifecycle } from './lifecycle.ts';
 import { CODEX_VERSION, validateNative } from './profile.ts';
 
 const cwd = process.cwd();
-function ready(id?: string) {
-  const life = new CodexLifecycle(CODEX_VERSION, id);
+function ready(id?: string, version = CODEX_VERSION) {
+  const life = new CodexLifecycle(version, id);
   life.initialize();
   life.initialized({
     userAgent: 'fixture',
@@ -74,6 +74,38 @@ it.each(['create', 'resume'] as const)(
     expect(() => life.openThread(mode, cwd)).toThrow();
   },
 );
+it('resumes an admitted older creation patch without changing executable admission', () => {
+  const life = ready('thread-1', '0.160.4');
+  life.openThread('resume', cwd);
+  const value = response();
+  value.thread.cliVersion = '0.160.1';
+  expect(() => life.threadOpened(value)).not.toThrow();
+  expect(life.status).toBe('ready');
+  expect(life.nativeSessionId).toBe('thread-1');
+  expect(() => new CodexLifecycle('0.165.0', 'thread-1')).toThrow(
+    'VERSION_UNSUPPORTED',
+  );
+});
+
+it.each([
+  ['create', '0.160.1'],
+  ['resume', '0.160.5'],
+  ['resume', '0.160.0'],
+  ['resume', CODEX_VERSION],
+  ['resume', '0.165.0'],
+  ['resume', 'other'],
+] as const)(
+  'refuses incompatible %s creation provenance %s',
+  (mode, created) => {
+    const life = ready(mode === 'resume' ? 'thread-1' : undefined, '0.160.4');
+    life.openThread(mode, cwd);
+    const value = response();
+    value.thread.cliVersion = created;
+    expect(() => life.threadOpened(value)).toThrow('INVALID_EVENT');
+    expect(life.status).toBe('needs_attention');
+  },
+);
+
 it('correlates thread-start notifications that precede the reply', () => {
   const life = ready();
   life.openThread('create', cwd);

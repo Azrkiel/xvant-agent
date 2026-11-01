@@ -141,6 +141,21 @@ it('checks staged credential bytes even when the working copy was sanitized', ()
   expect(read(b, 'config.txt')).toBe('safe\n');
 });
 
+it('skips oversized credential-bearing files instead of publishing unscanned content', () => {
+  writeFileSync(
+    join(b, 'dump.txt'),
+    'x'.repeat(1024 * 1024) + 'ghp_' + 'a'.repeat(36),
+  );
+  writeFileSync(join(b, 'ok.txt'), 'fine\n');
+  const result = sync(b);
+  expect(result.skipped).toContain('dump.txt');
+  expect(result.committed).toEqual(['ok.txt']);
+  expect(result.pushed).toBe(true);
+  sync(a);
+  expect(existsSync(join(a, 'dump.txt'))).toBe(false);
+  expect(existsSync(join(a, 'ok.txt'))).toBe(true);
+});
+
 it('refuses a checkout on another branch, and reports an unreachable remote', () => {
   git(b, 'switch', '-q', '-c', 'mine');
   expect(() => sync(b)).toThrow('WRONG_BRANCH');

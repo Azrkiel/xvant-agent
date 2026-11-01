@@ -61,10 +61,11 @@ function shareable(root: string, path: string): boolean {
   const file = join(root, path);
   try {
     const stat = statSync(file);
-    if (!stat.isFile() || stat.size > MAX_SCAN_BYTES) return true;
+    if (!stat.isFile() || stat.size > MAX_SCAN_BYTES) return false;
     return !containsSecret(readFileSync(file, 'utf8'));
-  } catch {
-    return true;
+  } catch (error) {
+    // A missing tracked path is a deletion; an unreadable path was not scanned.
+    return (error as NodeJS.ErrnoException).code === 'ENOENT';
   }
 }
 
@@ -261,7 +262,7 @@ export function describeSync(result: ShareResult): string[] {
         (c.copy ? ': the other version is in ' + c.copy : ''),
     );
   for (const path of result.skipped)
-    out.push('skipped  ' + path + ' (looks like a credential)');
+    out.push('skipped  ' + path + ' (credential or cannot be scanned safely)');
   if (result.note) out.push('note     ' + result.note);
   return out;
 }

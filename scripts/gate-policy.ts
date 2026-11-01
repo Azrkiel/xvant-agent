@@ -83,7 +83,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/adapters/src/codex/transport.test.ts': 20,
               'packages/adapters/src/codex/profile.test.ts': 5,
               'packages/adapters/src/codex/lifecycle.test.ts': 9,
-              'packages/adapters/src/codex/thread.test.ts': 15,
+              'packages/adapters/src/codex/thread.test.ts': 22,
               'tests/codex-process.test.ts': 6,
               'packages/storage/src/providers.test.ts': 41,
               'tests/faults/provider-crash.test.ts': 8,
