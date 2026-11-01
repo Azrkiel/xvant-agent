@@ -1,0 +1,1 @@
+{"classification":"offline","liveProvidersTested":[],"scenario":"interrupt","state":"needs_attention","status":"result_pending","outcome":"cancelled","endpointBound":true,"loopback":true,"interruptAdmission":"requested","methods":["opencode/serve","session/get","session/prompt","session/abort"],"activeCount":0,"accepted":false}

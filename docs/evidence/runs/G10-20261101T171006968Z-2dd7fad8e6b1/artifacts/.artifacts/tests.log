@@ -1,0 +1,154 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90mC:/Users/jiang/xt[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+ [32m✓[39m apps/controller/src/share.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 160798[2mms[22m[39m
+   [33m[2m✓[22m[39m publishes a new shared branch and carries edits between two accounts[33m 21681[2mms[22m[39m
+   [33m[2m✓[22m[39m merges edits to different files and to different lines of one file[33m 25883[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps both versions when two accounts change the same line[33m 26699[2mms[22m[39m
+   [33m[2m✓[22m[39m lets a change win over a deletion of the same file[33m 21786[2mms[22m[39m
+   [33m[2m✓[22m[39m never commits files that look like credentials[33m 18090[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses pre-staged credentials without committing or publishing them[33m 9337[2mms[22m[39m
+   [33m[2m✓[22m[39m checks staged credential bytes even when the working copy was sanitized[33m 8892[2mms[22m[39m
+   [33m[2m✓[22m[39m skips oversized credential-bearing files instead of publishing unscanned content[33m 17290[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses a checkout on another branch, and reports an unreachable remote[33m 11132[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+ [31m❯[39m apps/controller/src/native-offline.test.ts [2m([22m[2m98 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 544646[2mms[22m[39m
+   [32m✓[39m refuses live qualification on the fixed native controller[32m 221[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: performs setup before fixture dispatch[33m 1986[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: confirms interrupt without verifying or accepting[33m 1216[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: confirms interrupt-result-first without verifying or accepting[33m 1206[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after setup-error[33m 3012[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after setup-mismatch[33m 2935[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after setup-timeout[33m 3844[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-error[33m 3031[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-mismatch[33m 2845[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-timeout[33m 3891[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-partial[33m 1201[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-ack-only[33m 6281[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: does not dispatch after stop at the setup boundary[33m 3177[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: journals success through shutdown and review without acceptance[33m 1811[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: journals permission through shutdown and review without acceptance[33m 1892[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: retains reservations after wrong-session[33m 2946[2mms[22m[39m
+[31m   [31m×[31m claude: retains reservations after malformed[39m[33m 8417[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: retains reservations after partial[33m 1128[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: retains reservations after error[33m 1218[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: retains reservations after timeout[33m 3988[2mms[22m[39m
+   [32m✓[39m claude: fails closed at provider.send.before_commit[32m 98[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed at provider.receive.before_commit[33m 2953[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed at native.after_shutdown[33m 1230[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: stops an in-flight peer without verification[33m 1984[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: refuses result persistence after controller takeover[33m 1262[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: preserves verified evidence when stopped before review[33m 1595[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: performs setup before fixture dispatch[33m 1772[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: confirms interrupt without verifying or accepting[33m 1184[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: confirms interrupt-result-first without verifying or accepting[33m 1174[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after setup-error[33m 2989[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after setup-mismatch[33m 2915[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after setup-timeout[33m 3913[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-error[33m 3021[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-mismatch[33m 3063[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-timeout[33m 3798[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-partial[33m 1150[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-ack-only[33m 3881[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: does not dispatch after stop at the setup boundary[33m 2926[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: journals success through shutdown and review without acceptance[33m 1764[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: journals permission through shutdown and review without acceptance[33m 1699[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after wrong-session[33m 2989[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after malformed[33m 2964[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after partial[33m 1193[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after error[33m 3004[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after timeout[33m 3992[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed at provider.send.before_commit[33m 2021[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed at provider.receive.before_commit[33m 2795[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed at native.after_shutdown[33m 1165[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: stops an in-flight peer without verification[33m 2029[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: refuses result persistence after controller takeover[33m 1184[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: preserves verified evidence when stopped before review[33m 1647[2mms[22m[39m
+   [32m✓[39m does not dispatch when stopped after reservation[32m 90[2mms[22m[39m
+   [33m[2m✓[22m[39m does not prepare review when registered verification fails[33m 1688[2mms[22m[39m
+   [32m✓[39m rejects invalid admission before reservation[32m 96[2mms[22m[39m
+   [33m[2m✓[22m[39m creates and binds an OpenCode session before success[33m 1791[2mms[22m[39m
+   [33m[2m✓[22m[39m creates and binds an OpenCode session before permission[33m 1634[2mms[22m[39m
+   [33m[2m✓[22m[39m creates and binds an OpenCode session before interrupt[33m 1218[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation setup-error[33m 2844[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation setup-mismatch[33m 2975[2mms[22m[39m
+[31m   [31m×[31m does not dispatch after OpenCode creation setup-timeout[39m[33m 323088[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation create-malformed[33m 2430[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation create-reused[33m 5055[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation create-permission[33m 4198[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation create-partial[33m 3920[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps the provisional reservation when a returned session belongs to another connection[33m 3421[2mms[22m[39m
+   [33m[2m✓[22m[39m retains the newly bound session when stopped before dispatch[33m 3626[2mms[22m[39m
+   [32m✓[39m rejects an invalid Claude creation UUID before reservation[32m 72[2mms[22m[39m
+   [33m[2m✓[22m[39m launches a reserved Claude creation UUID through success[33m 1551[2mms[22m[39m
+   [33m[2m✓[22m[39m launches a reserved Claude creation UUID through permission[33m 1331[2mms[22m[39m
+   [33m[2m✓[22m[39m launches a reserved Claude creation UUID through interrupt[33m 1014[2mms[22m[39m
+   [33m[2m✓[22m[39m persists explicit Claude resume options instead of an implicit latest session[33m 1631[2mms[22m[39m
+   [33m[2m✓[22m[39m retains Claude UUID after launch-error without verification[33m 1103[2mms[22m[39m
+   [33m[2m✓[22m[39m retains Claude UUID after launch-timeout without verification[33m 4255[2mms[22m[39m
+   [33m[2m✓[22m[39m retains Claude UUID after wrong-session without verification[33m 3471[2mms[22m[39m
+   [32m✓[39m refuses a Claude UUID collision before persisting launch intent[32m 97[2mms[22m[39m
+   [32m✓[39m never starts a Claude peer when stopped after launch intent persistence[32m 92[2mms[22m[39m
+   [32m✓[39m fences a stale Claude owner between launch intent and process startup[32m 100[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: never interrupts a holding turn without host admission[33m 4430[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: makes repeated interrupt admission idempotent[33m 1247[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: rejects interrupt before dispatch and after a terminal result[33m 1940[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: leaves admission retryable after a failed commit[33m 1274[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fences interrupt admission after controller takeover[33m 3438[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: never interrupts a holding turn without host admission[33m 4580[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: makes repeated interrupt admission idempotent[33m 1189[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: rejects interrupt before dispatch and after a terminal result[33m 1426[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: leaves admission retryable after a failed commit[33m 913[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fences interrupt admission after controller takeover[33m 3290[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects Claude interrupt admission without advertised receipt capabilities[33m 3677[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: records auth-error and blocks the account group until cleared[33m 2718[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: records quota-error and blocks the account group until cleared[33m 2624[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: keeps model and worker failures attempt-scoped[33m 952[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: classifies an error result without leaking message text[33m 1107[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: never records an abort error after an admitted interrupt[33m 818[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: records auth-error and blocks the account group until cleared[33m 2322[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: records quota-error and blocks the account group until cleared[33m 2615[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: keeps model and worker failures attempt-scoped[33m 1260[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: classifies an error result without leaking message text[33m 3161[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: never records an abort error after an admitted interrupt[33m 1259[2mms[22m[39m
+
+Timed out after 1200000 ms
