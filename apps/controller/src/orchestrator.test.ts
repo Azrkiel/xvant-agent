@@ -525,6 +525,78 @@ it('does not repair on a review that gave no verdict or did not finish', async (
   }
 });
 
+it.each(['failed', 'unknown', 'cancelled', 'verification_failed'] as const)(
+  'does not trust an approval from a %s review turn',
+  async (status) => {
+    const runner = new FakeRunner((request) =>
+      byLabel(request) === 'review'
+        ? { ...verdict(true, ['untrusted finding']), status }
+        : { write: { 'api.txt': 'first\n' } },
+    );
+    const state = await orchestrate(runner, { plan: onlyApi, checks: {} });
+    expect(state.review).toMatchObject({ approve: false });
+    expect(state.review!.findings).not.toContain('untrusted finding');
+    expect(state.phase).toBe(
+      status === 'unknown' ? 'needs_attention' : 'ready',
+    );
+    expect(state.reviewRepairs ?? 0).toBe(0);
+    expect(runner.calls).toHaveLength(2);
+    const kinds = store.graphs.events('feature').map((e) => e.kind);
+    if (status === 'unknown') {
+      expect(kinds).toContain('graph.needs_attention');
+      expect(kinds).not.toContain('graph.ready');
+    }
+  },
+);
+
+it.each(
+  ['api', 'plan', 'fix', 'review', 'review-fix'].flatMap((label) =>
+    ['AUTH_REQUIRED', 'QUOTA_BLOCKED', 'MODEL_UNAVAILABLE'].map((code) => ({
+      label,
+      code,
+    })),
+  ),
+)(
+  'stops for operator attention on $code from $label',
+  async ({ label, code }) => {
+    const failure = code + ':native refusal';
+    const runner = new FakeRunner((request) => {
+      const current = byLabel(request);
+      if (current === label)
+        return { status: 'failed', failure, ...verdict(true) };
+      if (current === 'review') return verdict(false, ['api needs a fix']);
+      if (label === 'fix') return {};
+      return { write: { 'api.txt': 'first\n' } };
+    });
+    const state = await orchestrate(runner, {
+      plan:
+        label === 'plan'
+          ? undefined
+          : {
+              ...onlyApi,
+              nodes: [{ ...plan.nodes[0]!, tier: 'light' }],
+            },
+      checks: label === 'fix' ? apiCheck : {},
+    });
+    expect(state.phase).toBe('needs_attention');
+    expect(state.reason).toContain(failure);
+    expect(
+      runner.calls.filter((c) => byLabel(c as TurnRequest) === label),
+    ).toHaveLength(1);
+    expect(state.review?.approve).not.toBe(true);
+    const kinds = store.graphs.events('feature').map((e) => e.kind);
+    expect(kinds).toContain('graph.needs_attention');
+    expect(kinds).not.toContain('graph.ready');
+    expect(kinds).not.toContain('node.repair');
+    if (label === 'api') {
+      expect(state.nodes.api!.status).toBe('needs_attention');
+      expect(state.nodes.api!.repairs).toBe(0);
+      expect(state.nodes.api!.node.tier).toBe('light');
+      expect(runner.calls).toHaveLength(1);
+    }
+  },
+);
+
 it('ends cancelled when cancelled during a review repair, and quotes findings as data', async () => {
   const running: { orchestrator?: Orchestrator } = {};
   const runner = new FakeRunner((request) => {

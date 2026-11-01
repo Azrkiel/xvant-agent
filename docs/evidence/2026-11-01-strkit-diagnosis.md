@@ -30,6 +30,12 @@ The retained Haiku-planned graph ended `ready`, its registered visible check pas
 
 Do not change the frozen v2 task or feed its hidden mutants to production prompts. Do not reclassify or overwrite the campaign. No general orchestration fix is justified by this isolated coverage miss. A future separately frozen suite may make lexical prerelease ordering and zero-major cross-major rejection more explicit in its public criteria. Keep routing promotion/default selection unset pending the operator's decision and stronger comparative evidence.
 
+## Follow-up: `repair-limiter-tests`
+
+The single-Haiku record is an interruption/infrastructure failure, not demonstrated test-quality failure. The saved native transcript (`0475b4bf-0b68-4e43-ab00-5de1a90e4f7d.jsonl`, under the matching Claude project directory) records all four generated test files exiting 0 at line 53, then `getaddrinfo ENOTFOUND api.anthropic.com` at lines 58–61. The independent investigation found a controller interrupt and an unknown outcome without host verification. Visible tests passing is not a substitute for the missing acceptance result; the original record remains unchanged. No live retry was made to reclassify it.
+
+The independent investigation is retained in `reviews/2026-11-01/benchmark-independent.txt`. It independently reproduced two/one/zero surviving frozen mutations for criteria-Haiku/Haiku-orchestrated/Opus-orchestrated and found no modified source in the saved benchmark workspaces.
+
 ## Replay pitfall
 
 The controller's saved integration worktrees have different source bytes (line endings) from the retained benchmark work directories and fail the frozen source hash before evaluating tests. They are not interchangeable replay inputs. `benchmark-live.ts` checks out the integration commit into the benchmark work repository before the host check; use that retained work directory for this diagnosis.

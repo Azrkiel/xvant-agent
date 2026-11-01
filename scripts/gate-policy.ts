@@ -156,7 +156,7 @@ export function phaseSuites(phase: string): Record<string, number> {
           ? {
               'packages/core/src/scheduler.test.ts': 12,
               'packages/storage/src/integration.test.ts': 4,
-              'apps/controller/src/orchestrator.test.ts': 7,
+              'apps/controller/src/orchestrator.test.ts': 34,
               'apps/controller/src/turn-runner.test.ts': 3,
             }
           : {}),
