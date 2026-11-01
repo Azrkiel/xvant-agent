@@ -1,6 +1,6 @@
 // XVANT command line. Coordinates your Codex, Claude and OpenCode logins on
 // a Git repository. Work happens in XVANT-owned worktrees and lands on an
-// `xvant/<id>` branch; your checkout and branches are never changed.
+// `xvant/<id>` branch. Only an explicit, accepted `merge` changes your checkout.
 //
 //   npm run xvant                      (the interactive shell; also `shell`)
 //   npm run xvant -- ui [--no-open] [--port N]
@@ -13,6 +13,7 @@
 //                        [--tandem opus|sol]
 //   npm run xvant -- status [ID]
 //   npm run xvant -- accept ID
+//   npm run xvant -- merge ID [--repo PATH]
 //   npm run xvant -- share --repo PATH --branch NAME [--remote origin]
 //                          [--interval SECONDS] [--once]
 //   npm run xvant -- backup [--out DIR]
@@ -52,6 +53,63 @@ const TANDEM = {
   opus: { kind: 'claude', plannerModel: 'opus' },
   sol: { kind: 'codex', plannerModel: 'gpt-6.1-sol' },
 };
+
+// Bind the durable result to a real checkout, its integration worktree and
+// the exact verified revision. Read-only Git probes precede any merge.
+function checkedIntegration(state, repository) {
+  const changed = () => {
+    throw new Error(
+      'INTEGRATION_CHANGED: repository, branch or verified HEAD no longer matches',
+    );
+  };
+  const readGit = (cwd, args) => {
+    const result = spawnSync('git', args, {
+      cwd,
+      encoding: 'utf8',
+      windowsHide: true,
+    });
+    if (result.status !== 0) changed();
+    return result.stdout.trim();
+  };
+  try {
+    const integration = state.integration;
+    if (
+      !integration ||
+      typeof integration.branch !== 'string' ||
+      !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(integration.head)
+    )
+      changed();
+    const ref = 'refs/heads/' + integration.branch;
+    readGit(repository, ['check-ref-format', ref]);
+    const path = realpathSync(integration.path);
+    if (
+      realpathSync(readGit(repository, ['rev-parse', '--show-toplevel'])) !==
+        repository ||
+      realpathSync(readGit(path, ['rev-parse', '--show-toplevel'])) !== path ||
+      realpathSync(
+        readGit(repository, [
+          'rev-parse',
+          '--path-format=absolute',
+          '--git-common-dir',
+        ]),
+      ) !==
+        realpathSync(
+          readGit(path, [
+            'rev-parse',
+            '--path-format=absolute',
+            '--git-common-dir',
+          ]),
+        ) ||
+      readGit(path, ['symbolic-ref', '--quiet', 'HEAD']) !== ref ||
+      readGit(path, ['rev-parse', '--verify', 'HEAD']) !== integration.head ||
+      readGit(repository, ['rev-parse', '--verify', ref]) !== integration.head
+    )
+      changed();
+    return integration;
+  } catch {
+    changed();
+  }
+}
 
 function discover(only) {
   const runtimes = {};
@@ -357,6 +415,7 @@ if (command === undefined || command === 'shell') {
           record.state.phase +
           ')',
       );
+    checkedIntegration(record.state, realpathSync(record.state.repository));
     store.graphs.update(
       rest[0],
       record.rowVersion,
@@ -365,9 +424,51 @@ if (command === undefined || command === 'shell') {
       { actorId: 'user' },
     );
     console.log(
-      'Accepted. Merge when you are ready: git merge ' +
-        record.state.integration.branch,
+      'Accepted. Merge when you are ready: npm run xvant -- merge ' +
+        rest[0] +
+        ' --repo "' +
+        record.state.repository +
+        '"',
     );
+  } catch (error) {
+    console.error(
+      error.message === 'NOT_FOUND'
+        ? 'No run named ' + rest[0] + '. List them with: status'
+        : error.message,
+    );
+    process.exitCode = 1;
+  } finally {
+    store.close();
+  }
+} else if (command === 'merge') {
+  const { store } = open();
+  try {
+    const record = store.graphs.get(rest[0]);
+    if (record.state.phase !== 'accepted')
+      throw new Error(
+        'Only an accepted result can be merged (it is ' +
+          record.state.phase +
+          ')',
+      );
+    const repository = realpathSync(resolve(value('--repo') ?? process.cwd()));
+    if (
+      !record.state.repository ||
+      repository !== realpathSync(record.state.repository)
+    )
+      throw new Error(
+        "REPOSITORY_MISMATCH: merge must use the run's repository checkout",
+      );
+    const integration = checkedIntegration(record.state, repository);
+    // Merge the immutable verified commit, not a branch that can move after
+    // validation. Git still applies its ordinary dirty-tree/conflict checks.
+    const merged = spawnSync(
+      'git',
+      ['--no-pager', 'merge', '--no-edit', integration.head],
+      { cwd: repository, encoding: 'utf8', windowsHide: true },
+    );
+    if (merged.stdout) process.stdout.write(merged.stdout);
+    if (merged.stderr) process.stderr.write(merged.stderr);
+    process.exitCode = merged.status ?? 1;
   } catch (error) {
     console.error(
       error.message === 'NOT_FOUND'
@@ -452,11 +553,15 @@ if (command === undefined || command === 'shell') {
   }
   const cycle = () => {
     const stamp = new Date().toTimeString().slice(0, 8);
-    for (const line of describeSync(syncOnce(options)))
-      console.log(stamp + '  ' + line);
+    const result = syncOnce(options);
+    for (const line of describeSync(result)) console.log(stamp + '  ' + line);
+    return result;
   };
   try {
-    cycle();
+    const result = cycle();
+    // syncOnce reserves notes for unreachable remotes / rejected publication.
+    // Continuous sharing retries those races; a one-shot caller needs failure.
+    if (rest.includes('--once') && result.note) process.exitCode = 1;
   } catch (error) {
     // The first cycle's failure is a setup problem: say so and stop.
     console.error('Share failed: ' + error.message);
@@ -494,7 +599,7 @@ if (command === undefined || command === 'shell') {
   }
 } else {
   console.error(
-    'Commands: shell | ui | runtimes | run | status [ID] | accept ID | share | backup | restore',
+    'Commands: shell | ui | runtimes | run | status [ID] | accept ID | merge ID [--repo PATH] | share | backup | restore',
   );
   process.exit(2);
 }

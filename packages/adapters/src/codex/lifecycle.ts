@@ -38,6 +38,28 @@ function fail(code: string): never {
   throw new Error(code);
 }
 
+/** A resumed thread reports its creation version, not the serving binary. */
+function creationVersionAccepted(
+  current: string,
+  created: string,
+  resume: boolean,
+): boolean {
+  if (created === current) return true;
+  if (!resume || !codexVersionAccepted(created)) return false;
+  const plain = /^(\d+)\.(\d+)\.(\d+)$/;
+  const serving = plain.exec(current);
+  const historical = plain.exec(created);
+  // Admit only older qualified patches of this same release family. Different
+  // minors and prerelease histories still require separate compatibility proof.
+  return (
+    !!serving &&
+    !!historical &&
+    serving[1] === historical[1] &&
+    serving[2] === historical[2] &&
+    Number(historical[3]) <= Number(serving[3])
+  );
+}
+
 /** One host-owned, offline-tested attempt. No credentials, executable, automatic resume or acceptance. */
 export class CodexLifecycle {
   private state: Status = 'new';
@@ -150,7 +172,11 @@ export class CodexLifecycle {
         value.approvalsReviewer !== 'user' ||
         value.sandbox.type !== (this.write ? 'workspaceWrite' : 'readOnly') ||
         value.sandbox.networkAccess === true ||
-        value.thread.cliVersion !== this.version ||
+        !creationVersionAccepted(
+          this.version,
+          value.thread.cliVersion,
+          this.opening.mode === 'resume',
+        ) ||
         value.thread.status.type !== 'idle' ||
         value.thread.turns.some((turn) => turn.status === 'inProgress')
       )

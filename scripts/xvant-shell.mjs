@@ -9,6 +9,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   describe,
+  gitArgs,
   interpret,
   observe,
   restore,
@@ -181,16 +182,7 @@ export async function startShell({ home }) {
         console.log(line),
       );
     } else if (action.kind === 'git') {
-      await exec(
-        'git',
-        [
-          '--no-pager',
-          action.args[0],
-          ...(tty ? ['--color'] : []),
-          ...action.args.slice(1),
-        ],
-        (line) => console.log(line),
-      );
+      await exec('git', gitArgs(action.args, tty), (line) => console.log(line));
     } else if (action.kind === 'share') {
       const was = stopSharing();
       if (!action.branch)

@@ -30,7 +30,7 @@ export type Action =
 
 export const newSession = (repo: string): Session => ({
   repo,
-  tandem: 'opus',
+  tandem: null,
   only: null,
   checks: [],
   criteria: [],
@@ -54,7 +54,7 @@ export const HELP = [
   '  /status [ID]        list runs, or show one (default: the last)',
   '  /diff               what the last run changed',
   '  /accept [ID]        accept a ready result',
-  '  /merge              merge the last accepted branch into your checkout',
+  '  /merge [ID]         merge an accepted run (default: the last run)',
   '  /share BRANCH|stop  keep a branch in step with its remote',
   '  /help   /quit',
   '',
@@ -94,6 +94,11 @@ export function runArgs(session: Session, objective: string): string[] {
     ...(session.only ? ['--only', session.only] : []),
     ...(session.review ? [] : ['--no-review']),
   ];
+}
+
+/** Global Git coloring works for every subcommand, not just diff. */
+export function gitArgs(args: string[], tty: boolean): string[] {
+  return ['--no-pager', ...(tty ? ['-c', 'color.ui=always'] : []), ...args];
 }
 
 const KINDS = ['codex', 'claude', 'opencode'];
@@ -172,10 +177,12 @@ export function interpret(input: string, session: Session): Action {
       return session.lastBranch
         ? { kind: 'git', args: ['diff', 'HEAD...' + session.lastBranch] }
         : say('No run has produced a branch in this session.');
-    case '/merge':
-      return session.lastBranch
-        ? { kind: 'git', args: ['merge', '--no-edit', session.lastBranch] }
-        : say('No run has produced a branch in this session.');
+    case '/merge': {
+      const id = rest || session.lastId;
+      return id
+        ? { kind: 'xvant', args: ['merge', id, '--repo', session.repo] }
+        : say('No run yet. Give an accepted ID from /status.');
+    }
     case '/share':
       if (!rest) return say('Give the branch to share, or /share stop.');
       return { kind: 'share', branch: rest === 'stop' ? null : rest };

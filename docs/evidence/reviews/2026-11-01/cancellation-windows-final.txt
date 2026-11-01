@@ -1,0 +1,7 @@
+No patch-introduced Windows blockers found.
+
+Interrupt admission precedes prompt delivery. Cancelled outcomes require awaited shutdown with `reason === 'cancelled'`. Parser errors durably mark the connection unknown; subsequent `bindRun` fails its writable-state check, preserving reservations. `settleTurn` does not automatically release unknown outcomes.
+
+Windows approval covers local-v1 ordinary trusted descendants using existing `taskkill /T`, not hostile containment. The unchanged Linux group-shutdown gap remains a deferred-platform limitation: a SIGTERM-ignoring descendant with independent stdio may outlive root close. Linux remains unqualified. This review does not qualify any Codex version for XVANT.
+
+VERDICT: APPROVE

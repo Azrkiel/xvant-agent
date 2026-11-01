@@ -1,0 +1,5 @@
+- **Blocker: root shutdown does not prove the worker’s descendants stopped.** In `packages/supervisor/src/index.ts`, the `close` handler calls `finish(code)`, whose lines `clearTimeout(escalation);` and `resolveResult(...)` cancel forced termination and report `cancelled`. On Linux, a descendant with independent stdio can ignore SIGTERM while its root exits; root `close` then clears the scheduled SIGKILL. In `apps/controller/src/claude-live.ts`, `if (interrupted && !stream.finished && stopped.reason === 'cancelled')` treats that result as proof of shutdown. `settleTurn()` subsequently releases reservations through `reconcile(taskId, 'stopped')`, allowing another worker onto a workspace still being modified.
+
+  Preserve an unknown outcome unless ordinary descendant shutdown is established. Add a regression with a SIGTERM-ignoring descendant using independent stdio; the supplied descendant test covers only cooperative termination.
+
+VERDICT: CHANGES_REQUESTED

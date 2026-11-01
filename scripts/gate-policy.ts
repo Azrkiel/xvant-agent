@@ -83,7 +83,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/adapters/src/codex/transport.test.ts': 20,
               'packages/adapters/src/codex/profile.test.ts': 5,
               'packages/adapters/src/codex/lifecycle.test.ts': 9,
-              'packages/adapters/src/codex/thread.test.ts': 15,
+              'packages/adapters/src/codex/thread.test.ts': 22,
               'tests/codex-process.test.ts': 6,
               'packages/storage/src/providers.test.ts': 41,
               'tests/faults/provider-crash.test.ts': 8,
@@ -156,7 +156,7 @@ export function phaseSuites(phase: string): Record<string, number> {
           ? {
               'packages/core/src/scheduler.test.ts': 12,
               'packages/storage/src/integration.test.ts': 4,
-              'apps/controller/src/orchestrator.test.ts': 7,
+              'apps/controller/src/orchestrator.test.ts': 34,
               'apps/controller/src/turn-runner.test.ts': 3,
             }
           : {}),
@@ -188,6 +188,9 @@ export function phaseSuites(phase: string): Record<string, number> {
           ? {
               'tests/release-policy.test.ts': 10,
               'tests/audit-policy.test.ts': 6,
+              'apps/controller/src/share.test.ts': 9,
+              'apps/controller/src/shell.test.ts': 4,
+              'tests/shell-integration.test.ts': 20,
             }
           : {}),
       };

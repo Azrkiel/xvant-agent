@@ -134,6 +134,15 @@ export interface RootState {
 }
 const tail = (text: string, max = 3000) =>
   text.length > max ? '…' + text.slice(-max) : text;
+// TurnRunner prefixes native failures with a structured code. Never infer an
+// account refusal from arbitrary check output or retry it on another account.
+const needsOperator = (
+  outcome: TurnOutcome,
+): outcome is TurnOutcome & { failure: string } =>
+  outcome.status !== 'accepted' &&
+  ['AUTH_REQUIRED', 'QUOTA_BLOCKED', 'MODEL_UNAVAILABLE'].includes(
+    outcome.failure?.split(':', 1)[0] ?? '',
+  );
 // The first line names the failure; check output below it varies run to run.
 const signature = (text: string) =>
   createHash('sha256')
@@ -315,6 +324,7 @@ export class Orchestrator {
             }) + feedback,
             {},
           );
+          if (needsOperator(outcome)) throw new Error(outcome.failure);
           if (outcome.status === 'unknown') throw new Error('PLANNER_UNKNOWN');
           try {
             state.plan = validatePlan(extractJson(outcome.finalText)).plan;
@@ -363,6 +373,12 @@ export class Orchestrator {
           files: outcome.files,
           ...(outcome.failure ? { failure: outcome.failure } : {}),
         });
+        if (needsOperator(outcome)) {
+          entry.status = 'needs_attention';
+          entry.lastFailure = outcome.failure;
+          save('node.needs_attention', { id, alias, reason: outcome.failure });
+          return;
+        }
         if (outcome.status === 'accepted') {
           const applied = integration.apply(
             outcome.patch ?? Buffer.alloc(0),
@@ -603,6 +619,7 @@ export class Orchestrator {
             applied: applied?.status ?? null,
           });
           if (this.#cancelled) throw new Error('CANCELLED');
+          if (needsOperator(outcome)) throw new Error(outcome.failure);
           if (outcome.status === 'unknown') {
             state.phase = 'needs_attention';
             state.reason = 'Fix turn ' + taskId + ' has an unknown outcome';
@@ -658,10 +675,18 @@ export class Orchestrator {
             if (this.#cancelled) throw new Error('CANCELLED');
             let verdict = {
               approve: false,
-              findings: ['Reviewer reply was not a verdict'],
+              findings: [
+                outcome.status === 'accepted'
+                  ? 'Reviewer reply was not a verdict'
+                  : 'Reviewer turn did not finish: ' + outcome.status,
+              ],
             };
             try {
-              const parsed = extractJson(outcome.finalText) as {
+              const parsed = (
+                outcome.status === 'accepted'
+                  ? extractJson(outcome.finalText)
+                  : {}
+              ) as {
                 approve?: unknown;
                 findings?: unknown;
               };
@@ -689,6 +714,14 @@ export class Orchestrator {
               sameRuntime: implementers.has(reviewerRuntime),
             };
             save('graph.reviewed', state.review);
+            if (outcome.status === 'unknown' || needsOperator(outcome)) {
+              state.phase = 'needs_attention';
+              state.reason = needsOperator(outcome)
+                ? outcome.failure
+                : 'Review turn has an unknown outcome';
+              save('graph.needs_attention', { reason: state.reason });
+              return state;
+            }
           } else
             state.review = {
               alias: 'none',
@@ -751,6 +784,7 @@ export class Orchestrator {
           applied: applied?.status ?? null,
         });
         if (this.#cancelled) throw new Error('CANCELLED');
+        if (needsOperator(outcome)) throw new Error(outcome.failure);
         if (outcome.status === 'unknown') {
           state.phase = 'needs_attention';
           state.reason =

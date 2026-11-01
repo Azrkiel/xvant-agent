@@ -118,6 +118,44 @@ it('never commits files that look like credentials', () => {
   expect(existsSync(join(a, 'config.txt'))).toBe(false);
 });
 
+it('refuses pre-staged credentials without committing or publishing them', () => {
+  writeFileSync(join(b, '.env'), 'TOKEN=abc\n');
+  git(b, 'add', '--', '.env');
+  writeFileSync(join(b, 'ok.txt'), 'fine\n');
+  const before = git(b, 'rev-parse', 'HEAD');
+  expect(() => sync(b)).toThrow('SECRET_STAGED');
+  expect(git(b, 'rev-parse', 'HEAD')).toBe(before);
+  expect(git(b, 'diff', '--cached', '--name-only')).toBe('.env');
+  expect(
+    git(a, 'ls-remote', 'origin', 'refs/heads/shared').split(/\s+/)[0],
+  ).toBe(before);
+});
+
+it('checks staged credential bytes even when the working copy was sanitized', () => {
+  writeFileSync(join(b, 'config.txt'), 'key ghp_' + 'a'.repeat(36) + '\n');
+  git(b, 'add', '--', 'config.txt');
+  writeFileSync(join(b, 'config.txt'), 'safe\n');
+  expect(() => sync(b)).toThrow('SECRET_STAGED');
+  expect(git(b, 'show', ':config.txt')).toContain('ghp_');
+  expect(git(b, 'status', '--porcelain')).toContain('AM config.txt');
+  expect(read(b, 'config.txt')).toBe('safe\n');
+});
+
+it('skips oversized credential-bearing files instead of publishing unscanned content', () => {
+  writeFileSync(
+    join(b, 'dump.txt'),
+    'x'.repeat(1024 * 1024) + 'ghp_' + 'a'.repeat(36),
+  );
+  writeFileSync(join(b, 'ok.txt'), 'fine\n');
+  const result = sync(b);
+  expect(result.skipped).toContain('dump.txt');
+  expect(result.committed).toEqual(['ok.txt']);
+  expect(result.pushed).toBe(true);
+  sync(a);
+  expect(existsSync(join(a, 'dump.txt'))).toBe(false);
+  expect(existsSync(join(a, 'ok.txt'))).toBe(true);
+});
+
 it('refuses a checkout on another branch, and reports an unreachable remote', () => {
   git(b, 'switch', '-q', '-c', 'mine');
   expect(() => sync(b)).toThrow('WRONG_BRANCH');

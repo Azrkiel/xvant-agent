@@ -28,8 +28,6 @@ it('runs plain text as an objective under the current settings', () => {
       'C:/work/app',
       '--objective',
       'Add a health endpoint',
-      '--tandem',
-      'opus',
     ],
   });
   expect(
@@ -115,10 +113,16 @@ it('follows the last run for status, diff, accept and merge', () => {
     kind: 'git',
     args: ['diff', 'HEAD...xvant/x261008-add-api'],
   });
+  // Observed output is only a run selector, never authority to merge.
   expect(interpret('/merge', s)).toEqual({
-    kind: 'git',
-    args: ['merge', '--no-edit', 'xvant/x261008-add-api'],
+    kind: 'xvant',
+    args: ['merge', 'x261008-add-api', '--repo', 'C:/work/app'],
   });
+  expect(interpret('/merge accepted-earlier', s)).toEqual({
+    kind: 'xvant',
+    args: ['merge', 'accepted-earlier', '--repo', 'C:/work/app'],
+  });
+  expect(interpret('/merge', session()).kind).toBe('say');
   // A new run that produced no branch leaves nothing to diff.
   expect(observe(s, 'XVANT x2 on C:\\work\\app').lastBranch).toBeNull();
 });

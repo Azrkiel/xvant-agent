@@ -61,10 +61,11 @@ function shareable(root: string, path: string): boolean {
   const file = join(root, path);
   try {
     const stat = statSync(file);
-    if (!stat.isFile() || stat.size > MAX_SCAN_BYTES) return true;
+    if (!stat.isFile() || stat.size > MAX_SCAN_BYTES) return false;
     return !containsSecret(readFileSync(file, 'utf8'));
-  } catch {
-    return true;
+  } catch (error) {
+    // A missing tracked path is a deletion; an unreadable path was not scanned.
+    return (error as NodeJS.ErrnoException).code === 'ENOENT';
   }
 }
 
@@ -110,6 +111,38 @@ export function syncOnce(options: ShareOptions): ShareResult {
     skipped: [],
   };
 
+  // Never let an existing index entry bypass the worktree credential filter.
+  // Refuse without resetting the user's index; scan again after staging to
+  // check the actual bytes Git will commit, not only a prior worktree read.
+  const assertSafeIndex = () => {
+    const staged = run(root, [
+      'diff',
+      '--cached',
+      '--name-only',
+      '-z',
+      '--diff-filter=ACMRT',
+    ]);
+    if (!staged.ok) throw new Error('GIT_FAILED: inspect index');
+    for (const path of staged.stdout
+      .toString('utf8')
+      .split('\0')
+      .filter(Boolean)) {
+      const size = run(root, ['cat-file', '-s', ':' + path]);
+      if (!size.ok) throw new Error('SECRET_STAGED: cannot scan ' + path);
+      const bytes = Number(size.stdout.toString('utf8').trim());
+      if (
+        secretPath(path) ||
+        !Number.isSafeInteger(bytes) ||
+        bytes > MAX_SCAN_BYTES
+      )
+        throw new Error('SECRET_STAGED: cannot safely share ' + path);
+      const content = run(root, ['show', ':' + path]);
+      if (!content.ok || containsSecret(content.stdout.toString('utf8')))
+        throw new Error('SECRET_STAGED: cannot safely share ' + path);
+    }
+  };
+  assertSafeIndex();
+
   // 1. Commit local changes, leaving out anything that looks like a credential.
   const status = run(root, [
     'status',
@@ -129,6 +162,7 @@ export function syncOnce(options: ShareOptions): ShareResult {
     (shareable(root, path) ? staging : result.skipped).push(path);
   for (let i = 0; i < staging.length; i += 100)
     git(root, ['add', '-A', '--', ...staging.slice(i, i + 100)]);
+  assertSafeIndex();
   if (!run(root, ['diff', '--cached', '--quiet']).ok) {
     const who =
       options.author ??
@@ -228,7 +262,7 @@ export function describeSync(result: ShareResult): string[] {
         (c.copy ? ': the other version is in ' + c.copy : ''),
     );
   for (const path of result.skipped)
-    out.push('skipped  ' + path + ' (looks like a credential)');
+    out.push('skipped  ' + path + ' (credential or cannot be scanned safely)');
   if (result.note) out.push('note     ' + result.note);
   return out;
 }

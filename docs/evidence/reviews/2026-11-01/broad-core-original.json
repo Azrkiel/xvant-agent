@@ -1,0 +1,61 @@
+{
+  "passed": false,
+  "security_concerns": [],
+  "logic_errors": [
+    {
+      "priority": "P1",
+      "paths": [
+        "apps/controller/src/orchestrator.ts:663-691",
+        "apps/controller/src/orchestrator.ts:705-711",
+        "apps/controller/src/orchestrator.ts:773-777"
+      ],
+      "trigger": "A reviewer returns a failed or unknown outcome with parseable finalText containing {\"approve\":true,\"findings\":[]}.",
+      "description": "Only the rejection/repair flag checks outcome.status === 'accepted'. The recorded approval does not: failed and unknown reviewer turns can produce review.approve=true, followed by graph.ready. A partial verdict from an unsuccessful turn is therefore reported as an actual approval.",
+      "verification": "Read-only execution of the extracted verdict block recorded approve=true for accepted, failed, unknown and cancelled outcomes.",
+      "suggestion": "Only consume a verdict from an accepted turn. Record unsuccessful reviews as unavailable or incomplete; unknown reviews should remain needs_attention without automatic retry."
+    },
+    {
+      "priority": "P1",
+      "paths": [
+        "apps/controller/src/orchestrator.ts:390-420",
+        "apps/controller/src/orchestrator.ts:282-295",
+        "apps/controller/src/turn-runner.ts:226-258"
+      ],
+      "trigger": "A light implementation turn fails with AUTH_REQUIRED or QUOTA_BLOCKED while another runtime/account remains eligible.",
+      "description": "The generic repair path treats account refusals as repairable code failures, marks the node pending and escalates its tier. Routing can then select another runtime/account automatically. This contradicts the handoff invariant that quota/auth stops are reported rather than worked around. The generic retry behavior predates the tier addition, but the new escalation path preserves it.",
+      "verification": "Read-only execution of the extracted settleNode callback followed by routeNode turned AUTH_REQUIRED and QUOTA_BLOCKED failures into pending nodes routed from the blocked Claude group to an eligible Codex group. MODEL_UNAVAILABLE followed the same generic escalation path.",
+      "suggestion": "Preserve structured failure classifications in TurnOutcome and stop for operator attention on authentication/quota refusals instead of entering automatic repair or cross-account routing."
+    },
+    {
+      "priority": "P2",
+      "paths": [
+        "packages/adapters/src/codex/lifecycle.ts:145-155",
+        "packages/adapters/src/codex/schema.json:2770-2772",
+        "packages/contracts/src/live.ts:49-70"
+      ],
+      "trigger": "An admitted Codex patch resumes a thread created by another admitted version, for example executable 0.160.4 resuming a thread created by 0.160.1.",
+      "description": "threadOpened compares thread.cliVersion with the currently running version. The pinned schema explicitly defines cliVersion as the version that created the thread, not the version currently serving it. Consequently, valid historical thread metadata is rejected as INVALID_EVENT after an otherwise admitted update.",
+      "verification": "A read-only lifecycle probe using runtime 0.160.4 accepted a schema-valid resume response with creation version 0.160.4 but rejected the same response with creation version 0.160.1, entering needs_attention.",
+      "suggestion": "Separate thread-creation provenance from current executable admission. Keep the existing executable/version guard unchanged and validate historical thread metadata against an explicit resume-compatibility policy."
+    }
+  ],
+  "suggestions": [
+    {
+      "paths": [
+        "apps/controller/src/orchestrator.ts:409-420",
+        "packages/core/src/router.ts:77-102",
+        "apps/controller/src/orchestrator.test.ts:586-638"
+      ],
+      "description": "Resolve and test the interaction between explicit assignment and escalation. A failed light node assigned to @cheap retains that assignee when its tier becomes standard; routeNode still selects @cheap even with an idle standard worker. Explicit-assignment priority may be intentional, but the escalation event and documentation currently promise a stronger worker."
+    },
+    {
+      "paths": [
+        "packages/storage/src/store.ts:141-171",
+        "packages/storage/src/store.ts:213-251",
+        "packages/storage/src/store.test.ts:85-105"
+      ],
+      "description": "No concrete defect found in d42d4ec: takeover increments generation inside BEGIN IMMEDIATE, and renewal checks owner/generation within the same serialized write transaction. Add coverage for same-owner-string takeover, expired renewal rollback after a failing command, and provider-token fencing after takeover."
+    }
+  ],
+  "summary": "Reviewed the requested diff, d42d4ec, callers and relevant tests at 3496fac; lightweight read-only probes confirmed the findings. Subscription authentication checks remain present, and versionAccepted rejects Codex 0.165.0; no admission guard was changed. No files were created or modified by this review, and no live providers or heavy tests ran. Unrelated concurrent edits appeared in apps/controller/src/claude-live.test.ts and tests/fixtures/claude-live-peer.mjs."
+}
