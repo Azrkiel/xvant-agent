@@ -1,0 +1,281 @@
+{
+  "gateId": "P10-soak-live",
+  "status": "passed",
+  "generatedAt": "2026-11-01T17:51:36.266Z",
+  "classification": "live",
+  "operatingSystem": "win32 10.0.26200",
+  "executionHost": "kvn",
+  "nodeVersion": "v24.21.0",
+  "sourceHash": "2dd7fad8e6b1dad9c6324ad3ef2d3899dcee452a99b7e5e98b0038848007f791",
+  "limitations": [
+    "Haiku only: every role runs on the haiku model of one Claude Code version through a subscription login. Other models, Codex and OpenCode are not exercised.",
+    "Tiny objectives: one or two small plain-JavaScript files per iteration, with a plan supplied up front, so planning turns and larger changes are not exercised.",
+    "Minutes, not hours: the run is bounded by --minutes and --max-iterations; leaks and drift that need hours or hundreds of turns would not show.",
+    "One host and one process: this machine at the time of the run; no concurrent roots, no crash and resume, no other platform.",
+    "Faults come from the environment and the model, not from a script: a scenario can end without its fault having happened (the receipt records which), and a model may avoid a conflict or guess a hidden requirement.",
+    "Memory is process rss of the soak itself, sampled once per iteration; Claude child processes are not included. Child processes are tracked by sampling the process table (PowerShell Get-CimInstance Win32_Process) every few seconds and after each iteration; a process that starts and exits between samples is not seen, and one that exits is not a leak.",
+    "The Claude subscription and the host were shared with other work during the run."
+  ],
+  "problems": [],
+  "seed": 20261008,
+  "requestedMinutes": 12,
+  "durationMs": 763610,
+  "iterations": 13,
+  "scenarioCounts": {
+    "cancel_mid_run": 2,
+    "impossible_check": 3,
+    "clean": 3,
+    "check_fails_first": 3,
+    "conflicting_nodes": 2
+  },
+  "faultCounts": {
+    "turn_failure": 0,
+    "unknown_outcome": 0,
+    "integration_conflict": 2,
+    "check_failure": 12,
+    "review_rejection": 0,
+    "cancel_delivered": 2
+  },
+  "phaseCounts": {
+    "cancelled": 2,
+    "failed": 6,
+    "ready": 5
+  },
+  "outcomes": [
+    {
+      "iteration": 0,
+      "scenario": "cancel_mid_run",
+      "phase": "cancelled",
+      "reason": "CANCELLED",
+      "durationMs": 12125,
+      "notes": [
+        "cancel delivered"
+      ],
+      "violations": []
+    },
+    {
+      "iteration": 1,
+      "scenario": "impossible_check",
+      "phase": "failed",
+      "reason": "Combined checks still fail: check",
+      "durationMs": 75797,
+      "notes": [
+        "check failed as designed",
+        "runtime: claude-3: subscription/claude-haiku-5-5"
+      ],
+      "violations": []
+    },
+    {
+      "iteration": 2,
+      "scenario": "clean",
+      "phase": "ready",
+      "reason": null,
+      "durationMs": 55602,
+      "notes": [
+        "runtime: claude-3: subscription/claude-haiku-5-5",
+        "runtime: claude-1: subscription/claude-haiku-5-5"
+      ],
+      "violations": []
+    },
+    {
+      "iteration": 3,
+      "scenario": "check_fails_first",
+      "phase": "failed",
+      "reason": "Combined checks still fail: check",
+      "durationMs": 58548,
+      "notes": [
+        "repair budget ran out",
+        "runtime: claude-3: subscription/claude-haiku-5-5"
+      ],
+      "violations": []
+    },
+    {
+      "iteration": 4,
+      "scenario": "conflicting_nodes",
+      "phase": "ready",
+      "reason": null,
+      "durationMs": 103281,
+      "notes": [
+        "integration conflict observed",
+        "runtime: claude-1: subscription/claude-haiku-5-5",
+        "runtime: claude-3: subscription/claude-haiku-5-5",
+        "runtime: claude-2: subscription/claude-haiku-5-5"
+      ],
+      "violations": []
+    },
+    {
+      "iteration": 5,
+      "scenario": "check_fails_first",
+      "phase": "failed",
+      "reason": "Combined checks still fail: check",
+      "durationMs": 65971,
+      "notes": [
+        "repair budget ran out",
+        "runtime: claude-3: subscription/claude-haiku-5-5"
+      ],
+      "violations": []
+    },
+    {
+      "iteration": 6,
+      "scenario": "impossible_check",
+      "phase": "failed",
+      "reason": "Combined checks still fail: check",
+      "durationMs": 65603,
+      "notes": [
+        "check failed as designed",
+        "runtime: claude-3: subscription/claude-haiku-5-5"
+      ],
+      "violations": []
+    },
+    {
+      "iteration": 7,
+      "scenario": "conflicting_nodes",
+      "phase": "ready",
+      "reason": null,
+      "durationMs": 100430,
+      "notes": [
+        "integration conflict observed",
+        "runtime: claude-1: subscription/claude-haiku-5-5",
+        "runtime: claude-3: subscription/claude-haiku-5-5"
+      ],
+      "violations": []
+    },
+    {
+      "iteration": 8,
+      "scenario": "clean",
+      "phase": "ready",
+      "reason": null,
+      "durationMs": 52732,
+      "notes": [
+        "runtime: claude-3: subscription/claude-haiku-5-5",
+        "runtime: claude-1: subscription/claude-haiku-5-5"
+      ],
+      "violations": []
+    },
+    {
+      "iteration": 9,
+      "scenario": "cancel_mid_run",
+      "phase": "cancelled",
+      "reason": "CANCELLED",
+      "durationMs": 9985,
+      "notes": [
+        "cancel delivered"
+      ],
+      "violations": []
+    },
+    {
+      "iteration": 10,
+      "scenario": "check_fails_first",
+      "phase": "failed",
+      "reason": "Combined checks still fail: check",
+      "durationMs": 49543,
+      "notes": [
+        "repair budget ran out",
+        "runtime: claude-3: subscription/claude-haiku-5-5"
+      ],
+      "violations": []
+    },
+    {
+      "iteration": 11,
+      "scenario": "impossible_check",
+      "phase": "failed",
+      "reason": "Combined checks still fail: check",
+      "durationMs": 63146,
+      "notes": [
+        "check failed as designed",
+        "runtime: claude-3: subscription/claude-haiku-5-5"
+      ],
+      "violations": []
+    },
+    {
+      "iteration": 12,
+      "scenario": "clean",
+      "phase": "ready",
+      "reason": null,
+      "durationMs": 50759,
+      "notes": [
+        "runtime: claude-3: subscription/claude-haiku-5-5",
+        "runtime: claude-1: subscription/claude-haiku-5-5"
+      ],
+      "violations": []
+    }
+  ],
+  "memory": {
+    "firstRss": 85700608,
+    "lastRss": 93859840,
+    "maxRss": 98398208,
+    "warmupIterations": 3,
+    "baselineRss": 92164096,
+    "maxFactorAfterWarmup": 1.068,
+    "allowedFactor": 1.5,
+    "floorBytes": 67108864
+  },
+  "maxTimerGapMs": 10835,
+  "violations": [],
+  "minutes": 12,
+  "maxIterations": null,
+  "model": "haiku",
+  "runtime": {
+    "kind": "claude",
+    "executable": "C:\\Users\\jiang\\.local\\bin\\claude.exe",
+    "version": "2.1.316"
+  },
+  "scenarios": {
+    "cancel_mid_run": {
+      "runs": 2,
+      "phases": {
+        "cancelled": 2
+      },
+      "observed": {
+        "cancel delivered": 2
+      },
+      "violations": 0
+    },
+    "impossible_check": {
+      "runs": 3,
+      "phases": {
+        "failed": 3
+      },
+      "observed": {
+        "check failed as designed": 3,
+        "runtime: claude-3: subscription/claude-haiku-5-5": 3
+      },
+      "violations": 0
+    },
+    "clean": {
+      "runs": 3,
+      "phases": {
+        "ready": 3
+      },
+      "observed": {
+        "runtime: claude-3: subscription/claude-haiku-5-5": 3,
+        "runtime: claude-1: subscription/claude-haiku-5-5": 3
+      },
+      "violations": 0
+    },
+    "check_fails_first": {
+      "runs": 3,
+      "phases": {
+        "failed": 3
+      },
+      "observed": {
+        "repair budget ran out": 3,
+        "runtime: claude-3: subscription/claude-haiku-5-5": 3
+      },
+      "violations": 0
+    },
+    "conflicting_nodes": {
+      "runs": 2,
+      "phases": {
+        "ready": 2
+      },
+      "observed": {
+        "integration conflict observed": 2,
+        "runtime: claude-1: subscription/claude-haiku-5-5": 2,
+        "runtime: claude-3: subscription/claude-haiku-5-5": 2,
+        "runtime: claude-2: subscription/claude-haiku-5-5": 1
+      },
+      "violations": 0
+    }
+  }
+}
