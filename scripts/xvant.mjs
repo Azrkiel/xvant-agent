@@ -12,6 +12,8 @@
 //   npm run xvant -- accept ID
 //   npm run xvant -- backup [--out DIR]
 //   npm run xvant -- restore --from DIR [--force]
+//   npm run xvant -- lessons [list | show ID | search TEXT | export]
+//                            [--format md|mermaid|json] [--project ID]
 import { mkdirSync, readFileSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -388,9 +390,71 @@ if (command === 'ui') {
     console.error('Restore failed: ' + error.message);
     process.exit(1);
   }
+} else if (command === 'lessons') {
+  // The challenge/solution graph runs record: what went wrong and what fixed it.
+  const { lessonsToMarkdown, lessonsToMermaid, renderLessons } =
+    await import('../packages/memory/src/lessons.ts');
+  const { store } = open();
+  try {
+    const project = value('--project') ?? 'cli';
+    const format = value('--format') ?? 'md';
+    const flags = new Set(['--project', '--format']);
+    const words = rest.filter(
+      (arg, i) => !flags.has(arg) && !flags.has(rest[i - 1]),
+    );
+    const [action = 'list', ...args] = words;
+    const nodes = store.lessons.nodes(project);
+    const edges = store.lessons.edges(project);
+    if (action === 'list') {
+      const count = (id, relation) =>
+        edges.filter((e) => e.from === id && e.relation === relation).length;
+      const challenges = nodes.filter((n) => n.kind === 'challenge');
+      if (!challenges.length) console.log('No lessons recorded for ' + project);
+      for (const n of challenges.sort((a, b) => b.lastSeenAt - a.lastSeenAt))
+        console.log(
+          n.id.padEnd(20),
+          ('seen ' + n.occurrences + '×').padEnd(9),
+          ('fixes ' + count(n.id, 'solved_by')).padEnd(8),
+          ('dead ends ' + count(n.id, 'not_solved_by')).padEnd(12),
+          n.title.split('\n')[0].slice(0, 90),
+        );
+    } else if (action === 'show' && args[0]) {
+      const node = store.lessons.get(project, args[0]);
+      console.log(JSON.stringify(node, null, 2));
+      for (const e of edges.filter(
+        (e) => e.from === node.id || e.to === node.id,
+      ))
+        console.log(e.from, '--' + e.relation + ' ×' + e.count + '->', e.to);
+    } else if (action === 'search' && args.length) {
+      const matches = store.lessons.find(project, {
+        query: args.join(' '),
+        limit: 5,
+      });
+      console.log(
+        format === 'json'
+          ? JSON.stringify(matches, null, 2)
+          : renderLessons(matches, 20000) || 'No matching lessons.',
+      );
+    } else if (action === 'export') {
+      console.log(
+        format === 'json'
+          ? JSON.stringify({ project, nodes, edges }, null, 2)
+          : format === 'mermaid'
+            ? lessonsToMermaid(nodes, edges)
+            : lessonsToMarkdown(nodes, edges),
+      );
+    } else {
+      console.error(
+        'Usage: lessons [list | show ID | search TEXT | export] [--format md|mermaid|json] [--project ID]',
+      );
+      process.exitCode = 2;
+    }
+  } finally {
+    store.close();
+  }
 } else {
   console.error(
-    'Commands: ui | runtimes | run | status [ID] | accept ID | backup | restore',
+    'Commands: ui | runtimes | run | status [ID] | accept ID | backup | restore | lessons',
   );
   process.exit(2);
 }

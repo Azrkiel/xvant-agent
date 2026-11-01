@@ -19,6 +19,7 @@ import { createTask, transitionTask } from '../../core/src/task.ts';
 import { ProviderJournal, providerMigration } from './providers.ts';
 import { MemoryRecords, memoryMigration } from './memory.ts';
 import { WorkGraphs, workGraphMigration } from './work-graphs.ts';
+import { LessonGraph, lessonMigration } from './lessons.ts';
 import {
   nativeAcceptanceSchema,
   nativeEvidenceSchema,
@@ -107,6 +108,7 @@ export class Store {
   readonly providers: ProviderJournal;
   readonly memory: MemoryRecords;
   readonly graphs: WorkGraphs;
+  readonly lessons: LessonGraph;
   readonly #db: Database.Database;
   readonly #owner: string;
   readonly #now: () => number;
@@ -131,6 +133,7 @@ export class Store {
         { version: 2, sql: providerMigration },
         { version: 3, sql: memoryMigration },
         { version: 4, sql: workGraphMigration },
+        { version: 5, sql: lessonMigration },
         ...(options.migrations ?? []),
       ];
       if (this.schemaVersion() > migrations.at(-1)!.version)
@@ -172,6 +175,10 @@ export class Store {
     }
     this.graphs = new WorkGraphs(this.#db, {
       transaction: (fn) => this.#transaction(fn),
+    });
+    this.lessons = new LessonGraph(this.#db, {
+      transaction: (fn) => this.#transaction(fn),
+      now: () => this.#now(),
     });
     this.memory = new MemoryRecords(this.#db, {
       transaction: (fn) => this.#transaction(fn),

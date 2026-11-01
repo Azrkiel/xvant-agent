@@ -218,7 +218,7 @@ describe('durable store', () => {
           owner: 'next',
           migrations: [
             {
-              version: 5,
+              version: 6,
               sql: 'CREATE TABLE broken(id TEXT); THIS IS INVALID;',
             },
           ],
@@ -226,7 +226,7 @@ describe('durable store', () => {
     ).toThrow();
     store = open('next');
     expect(store.getTask('task').id).toBe('task');
-    expect(store.schemaVersion()).toBe(4);
+    expect(store.schemaVersion()).toBe(5);
     const db = new Database(join(root, 'state.sqlite'));
     expect(
       db.prepare("select name from sqlite_master where name='broken'").get(),
@@ -247,10 +247,10 @@ it('does not migrate a database owned by another live controller', () => {
       new Store(join(root, 'state.sqlite'), {
         owner: 'second',
         now: () => now,
-        migrations: [{ version: 5, sql: 'CREATE TABLE surprise(id TEXT);' }],
+        migrations: [{ version: 6, sql: 'CREATE TABLE surprise(id TEXT);' }],
       }),
   ).toThrow('LEASE_BUSY');
-  expect(store.schemaVersion()).toBe(4);
+  expect(store.schemaVersion()).toBe(5);
   const db = new Database(join(root, 'state.sqlite'));
   expect(
     db.prepare("select name from sqlite_master where name='surprise'").get(),

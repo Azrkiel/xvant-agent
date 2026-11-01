@@ -133,6 +133,45 @@ browser check as unavailable, which fails the gate rather than passing it.
   blocked through DevTools. This is defense in depth for trusted local pages, not
   a network sandbox.
 
+## Lessons: a challenge/solution graph
+
+Every orchestrated run records what went wrong and what fixed it, so later
+work starts from what is already known instead of trying fixes blindly.
+The graph lives in the same SQLite state (schema v5,
+`packages/storage/src/lessons.ts`), scoped per project.
+
+- **Nodes.** A _challenge_ is a failure XVANT met: a node's failing check or
+  integration conflict, a failing combined check, or a review finding. Its
+  identity is the failure's normalized first lines, so the same failure in a
+  later run (other numbers, paths, hashes) updates the same node. A
+  _solution_ is a change a worker made against one: its summary, files and a
+  diff excerpt.
+- **Edges.** `solved_by` when the host's checks passed on the change (or the
+  next review approved it), `not_solved_by` when the same failure came back,
+  and `followed_by` when fixing one challenge ran into another.
+- **Reuse.** Before a repair turn, XVANT looks up the failure in the graph
+  and adds a _Lessons from earlier work_ section to the prompt: fixes ranked
+  by how often they worked and were verified, and approaches that did not
+  work. Whether that repair then passes is fed back into the ranking, so
+  suggestions that help rise and ones that do not sink. Workers can also
+  query it themselves with the read-only `lessons.search` tool.
+- **Trust.** Only the host writes the graph. A solution counts as verified
+  only for checks the host ran; its summary is the worker's own account.
+  Lessons enter prompts marked as sourced data, not instructions, and stored
+  text has credential-shaped strings removed. Turn it off per run with
+  `lessons: false` in the root spec.
+
+Read it with the CLI (the `run` command records under project `cli`):
+
+```sh
+npm run xvant -- lessons                      # challenges, newest first
+npm run xvant -- lessons search "expected 42, got 41"
+npm run xvant -- lessons show ch_354d7a4a2e0a6dbe
+npm run xvant -- lessons export               # Markdown document
+npm run xvant -- lessons export --format mermaid   # paste into any Mermaid viewer
+npm run xvant -- lessons export --format json
+```
+
 ## Layout
 
 | Path                              | Responsibility                                      |
@@ -141,7 +180,7 @@ browser check as unavailable, which fails the gate rather than passing it.
 | `packages/core`                   | Pure transitions, evidence consistency, graph rules |
 | `packages/adapters/src/simulated` | Deterministic simulation and fault fixtures         |
 | `packages/context`                | Packets, retrieval, handoffs, inspection, transfer  |
-| `packages/memory`                 | Memory freshness and packet conversion              |
+| `packages/memory`                 | Memory freshness, packets, lesson rendering         |
 | `packages/tools`                  | Tool registry, tools, MCP bridge, browser           |
 | `packages/skills`                 | Skill catalog, pinning, hooks, compatibility        |
 | `skills`, `fixtures/skills`       | Original skills and their evaluation fixtures       |
