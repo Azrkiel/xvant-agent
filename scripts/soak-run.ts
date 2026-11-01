@@ -16,6 +16,7 @@ import { ArtifactStore } from '../packages/storage/src/artifacts.ts';
 import { captureGitWorkspace } from '../packages/storage/src/git-workspace.ts';
 import {
   Orchestrator,
+  type RootSpec,
   type RootState,
   type TurnOutcome,
   type TurnRequest,
@@ -23,9 +24,11 @@ import {
   type WorkerSpec,
 } from '../apps/controller/src/orchestrator.ts';
 
-// Offline soak: the real orchestrator, store, worktrees, integration branch
-// and host checks against throwaway Git repositories, with a fake turn runner
-// that injects faults from a seeded generator. No model is ever called.
+// Soak: the real orchestrator, store, worktrees, integration branch and host
+// checks against throwaway Git repositories, with faults from a seeded
+// generator. The offline driver (below) uses a fake turn runner and never
+// calls a model; the live driver (soak-live.ts) runs real turns and takes its
+// faults from the environment. Both run the same loop and the same invariants.
 
 export const SCENARIOS = [
   'clean',
@@ -52,7 +55,12 @@ const WEIGHTS: Record<Scenario, number> = {
   review_reject_standing: 1,
   review_fix_unknown: 1,
 };
-const TERMINAL = new Set(['ready', 'failed', 'needs_attention', 'cancelled']);
+export const TERMINAL = new Set([
+  'ready',
+  'failed',
+  'needs_attention',
+  'cancelled',
+]);
 // What the orchestrator must reach for each injected fault.
 const EXPECTED_PHASE: Record<Scenario, string> = {
   clean: 'ready',
@@ -82,14 +90,19 @@ export function seeded(seed: number): () => number {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-function pick(random: () => number): Scenario {
-  const total = Object.values(WEIGHTS).reduce((a, b) => a + b, 0);
+/** A weighted draw from a scenario table; the table's order and weights decide it. */
+export function pickWeighted<T extends string>(
+  random: () => number,
+  weights: Record<T, number>,
+): T {
+  const names = Object.keys(weights) as T[];
+  const total = Object.values<number>(weights).reduce((a, b) => a + b, 0);
   let n = random() * total;
-  for (const name of SCENARIOS) {
-    n -= WEIGHTS[name];
+  for (const name of names) {
+    n -= weights[name];
     if (n < 0) return name;
   }
-  return SCENARIOS[0];
+  return names[0]!;
 }
 
 const workers: WorkerSpec[] = [
@@ -136,10 +149,41 @@ const buildPlan = (scenario: Scenario) => ({
   nodes: [node('a'), node('b'), node('c', ['a', 'b'])],
 });
 
-interface Call {
+export interface Call {
   label: string;
   attempt: number;
   status: TurnOutcome['status'];
+}
+/** The turn label inside a task id: `<root id>-<label>-<n>`. */
+const labelOf = (prefix: string, taskId: string) =>
+  taskId.slice(prefix.length + 1, taskId.lastIndexOf('-'));
+/** Wraps a turn runner and records the status of every turn, as the fake does. */
+export class RecordingRunner implements TurnRunner {
+  readonly calls: Call[] = [];
+  readonly #inner: TurnRunner;
+  readonly #prefix: string;
+  readonly #count = new Map<string, number>();
+  constructor(inner: TurnRunner, prefix: string) {
+    this.#inner = inner;
+    this.#prefix = prefix;
+  }
+  interrupt(taskId: string) {
+    return this.#inner.interrupt(taskId);
+  }
+  async run(request: TurnRequest): Promise<TurnOutcome> {
+    const label = labelOf(this.#prefix, request.taskId);
+    const attempt = (this.#count.get(label) ?? 0) + 1;
+    this.#count.set(label, attempt);
+    try {
+      const outcome = await this.#inner.run(request);
+      this.calls.push({ label, attempt, status: outcome.status });
+      return outcome;
+    } catch (error) {
+      // The orchestrator reads a thrown turn as an unknown outcome.
+      this.calls.push({ label, attempt, status: 'unknown' });
+      throw error;
+    }
+  }
 }
 /** Edits the real worktree and returns its real patch, like a live runner. */
 class SoakRunner implements TurnRunner {
@@ -164,10 +208,7 @@ class SoakRunner implements TurnRunner {
     return true;
   }
   async run(request: TurnRequest): Promise<TurnOutcome> {
-    const label = request.taskId.slice(
-      this.prefix.length + 1,
-      request.taskId.lastIndexOf('-'),
-    );
+    const label = labelOf(this.prefix, request.taskId);
     const attempt = (this.count.get(label) ?? 0) + 1;
     this.count.set(label, attempt);
     await new Promise((r) => setTimeout(r, Math.floor(this.jitter() * 15)));
@@ -243,7 +284,7 @@ class SoakRunner implements TurnRunner {
   }
 }
 
-const gitIn = (cwd: string, ...args: string[]) =>
+export const gitIn = (cwd: string, ...args: string[]) =>
   execFileSync(
     'git',
     ['-c', 'user.name=soak', '-c', 'user.email=soak@local.invalid', ...args],
@@ -272,6 +313,145 @@ const samePath = (a: string, b: string) =>
 const patchLeftovers = () =>
   readdirSync(tmpdir()).filter((n) => n.startsWith('xvant-patch-')).length;
 
+type GraphEvent = { kind: string; payload: unknown };
+/** What a driver reports about one finished iteration, beyond the shared invariants. */
+export interface Findings {
+  problems: string[];
+  /** Observations that are not violations: what the model or the environment did. */
+  notes: string[];
+  /** The run-wide fault counters; a driver may add its own keys. */
+  faults: Record<string, number>;
+}
+export interface IterationContext {
+  n: number;
+  id: string;
+  /** The iteration's own directory; it is removed afterwards. */
+  dir: string;
+  store: Store;
+  objects: ArtifactStore;
+  random: () => number;
+}
+export interface IterationPlan {
+  workers: WorkerSpec[];
+  runner: TurnRunner;
+  /** Turns, in order, with their statuses; the shared invariants read it. */
+  calls: () => Call[];
+  /** Files committed in the base revision, besides the README. */
+  files?: Record<string, string>;
+  spec: Pick<RootSpec, 'objective' | 'acceptanceCriteria' | 'checks'> &
+    Partial<RootSpec>;
+  /** The terminal phases this scenario may legally end in. */
+  expected: () => readonly string[];
+  onChange?: (
+    state: RootState,
+    kind: string,
+    control: { cancel: () => void },
+  ) => void;
+  /** Scenario-specific invariants, observations and fault counts. */
+  inspect: (
+    state: RootState,
+    events: GraphEvent[],
+    calls: Call[],
+    out: Findings,
+  ) => void;
+  /** Called when the iteration is over, however it ended. */
+  dispose?: () => void;
+}
+export interface SoakDriver {
+  mode: 'offline' | 'live';
+  scenarios: readonly string[];
+  pick: (random: () => number) => string;
+  iterationTimeoutMs: number;
+  /** A reason to stop before the next iteration (quota or login trouble), if there is one. */
+  halt?: () => string | undefined;
+  plan: (scenario: string, context: IterationContext) => IterationPlan;
+  /** Starts watching an iteration; `finish` returns the violations it found. */
+  watch?: () => Promise<{ finish: () => Promise<string[]> }>;
+}
+
+const startsRepair = (e: GraphEvent) =>
+  e.kind === 'node.repair' &&
+  String((e.payload as { reason?: string }).reason).startsWith(
+    'Integration conflict',
+  );
+const failedCheck = (e: GraphEvent) =>
+  e.kind === 'graph.checked' &&
+  !!(e.payload as { checks?: { status: string }[] }).checks?.some(
+    (c) => c.status === 'failed',
+  );
+const rejectedReview = (e: GraphEvent) =>
+  e.kind === 'graph.reviewed' &&
+  (e.payload as { approve?: boolean }).approve === false;
+
+const offlineDriver: SoakDriver = {
+  mode: 'offline',
+  scenarios: SCENARIOS,
+  pick: (random) => pickWeighted(random, WEIGHTS),
+  iterationTimeoutMs: ITERATION_TIMEOUT_MS,
+  plan(name, context) {
+    const scenario = name as Scenario;
+    const runner = new SoakRunner(
+      scenario,
+      context.id,
+      context.objects,
+      context.random,
+    );
+    return {
+      workers,
+      runner,
+      calls: () => runner.calls,
+      spec: {
+        objective: 'soak ' + scenario,
+        acceptanceCriteria: ['a, b and c exist'],
+        checks: check,
+        plan: buildPlan(scenario),
+      },
+      expected: () => [EXPECTED_PHASE[scenario]],
+      inspect(state, events, calls, out) {
+        const { problems } = out;
+        if (
+          scenario === 'review_reject_standing' &&
+          (state.review?.approve ?? true)
+        )
+          problems.push('a standing rejection was recorded as approved');
+        if (scenario === 'review_reject_fixed' && !state.review?.approve)
+          problems.push('the repaired result was not approved');
+        if (
+          calls.every((c) => c.status !== 'unknown') &&
+          scenario.includes('unknown')
+        )
+          problems.push('the unknown outcome was never injected');
+        // A scenario that ends ready proves nothing unless its fault happened.
+        if (scenario.startsWith('check_failure') && !events.some(failedCheck))
+          problems.push('the failing check was never seen');
+        if (
+          scenario.startsWith('turn_failure') &&
+          !calls.some((c) => c.status === 'failed')
+        )
+          problems.push('the turn failure was never injected');
+        if (scenario.startsWith('review_') && !events.some(rejectedReview))
+          problems.push('the rejecting review was never seen');
+        if (
+          scenario.startsWith('review_') &&
+          !events.some((e) => e.kind === 'graph.review_fix')
+        )
+          problems.push('the review repair never ran');
+        if (scenario === 'conflicting_patches' && !events.some(startsRepair))
+          problems.push('no integration conflict was observed');
+      },
+    };
+  },
+};
+
+export interface SoakOutcome {
+  iteration: number;
+  scenario: string;
+  phase: string | null;
+  reason: string | null;
+  durationMs: number;
+  notes: string[];
+  violations: string[];
+}
 export interface SoakReport {
   seed: number;
   requestedMinutes: number | null;
@@ -281,6 +461,8 @@ export interface SoakReport {
   /** Faults seen by the orchestrator, counted from its own events. */
   faultCounts: Record<string, number>;
   phaseCounts: Record<string, number>;
+  /** One entry per iteration; only a live run keeps them. */
+  outcomes?: SoakOutcome[];
   memory: {
     firstRss: number;
     lastRss: number;
@@ -300,9 +482,11 @@ export async function runSoak(options: {
   seed: number;
   minutes?: number;
   maxIterations?: number;
+  driver?: SoakDriver;
   log?: (line: string) => void;
 }): Promise<SoakReport> {
   const log = options.log ?? (() => {});
+  const driver = options.driver ?? offlineDriver;
   const random = seeded(options.seed);
   const started = Date.now();
   const deadline = started + (options.minutes ?? 0) * 60000;
@@ -332,6 +516,7 @@ export async function runSoak(options: {
   }, 1000);
   const objects = new ArtifactStore(join(master, 'objects'));
   const violations: string[] = [];
+  const outcomes: SoakOutcome[] = [];
   const scenarioCounts: Record<string, number> = {};
   const faultCounts: Record<string, number> = {
     turn_failure: 0,
@@ -350,25 +535,57 @@ export async function runSoak(options: {
       (options.maxIterations === undefined ||
         iterations < options.maxIterations)
     ) {
+      const halted = driver.halt?.();
+      if (halted) {
+        violations.push(
+          'soak stopped before iteration ' + iterations + ': ' + halted,
+        );
+        break;
+      }
       const n = iterations++;
-      const scenario = pick(random);
+      const iterationStart = Date.now();
+      const scenario = driver.pick(random);
       scenarioCounts[scenario] = (scenarioCounts[scenario] ?? 0) + 1;
       const where = 'iteration ' + n + ' (' + scenario + '): ';
-      const problems: string[] = [];
+      const findings: Findings = {
+        problems: [],
+        notes: [],
+        faults: faultCounts,
+      };
+      const problems = findings.problems;
       const dir = join(master, 'i' + n);
       const repo = join(dir, 'repo');
       const runs = join(dir, 'runs');
       mkdirSync(repo, { recursive: true });
+      const id = 'soak-' + n;
+      const iteration = driver.plan(scenario, {
+        n,
+        id,
+        dir,
+        store,
+        objects,
+        random,
+      });
       gitIn(repo, 'init', '-q', '-b', 'main');
       writeFileSync(join(repo, 'README.md'), 'base\n');
+      for (const [file, text] of Object.entries(iteration.files ?? {}))
+        writeFileSync(join(repo, file), text);
       gitIn(repo, 'add', '.');
       gitIn(repo, 'commit', '-qm', 'base');
       const before = checkout(repo);
-      const id = 'soak-' + n;
-      const runner = new SoakRunner(scenario, id, objects, random);
-      const orchestrator = new Orchestrator(store, runner, workers, {
-        stateRoot: runs,
-      });
+      const orchestrator: Orchestrator = new Orchestrator(
+        store,
+        iteration.runner,
+        iteration.workers,
+        {
+          stateRoot: runs,
+          onChange: (state, kind) =>
+            iteration.onChange?.(state, kind, {
+              cancel: () => orchestrator.cancel(),
+            }),
+        },
+      );
+      const watcher = await driver.watch?.();
       let state: RootState | undefined;
       let timer: NodeJS.Timeout | undefined;
       try {
@@ -378,15 +595,12 @@ export async function runSoak(options: {
             projectId: 'soak',
             repository: repo,
             baseRevision: 'main',
-            objective: 'soak ' + scenario,
-            acceptanceCriteria: ['a, b and c exist'],
-            checks: check,
-            plan: buildPlan(scenario),
+            ...iteration.spec,
           }),
           new Promise<never>((_, reject) => {
             timer = setTimeout(
               () => reject(new Error('iteration timed out')),
-              ITERATION_TIMEOUT_MS,
+              driver.iterationTimeoutMs,
             );
           }),
         ]);
@@ -396,39 +610,35 @@ export async function runSoak(options: {
         orchestrator.cancel();
       } finally {
         clearTimeout(timer);
+        iteration.dispose?.();
       }
       if (state) {
         phaseCounts[state.phase] = (phaseCounts[state.phase] ?? 0) + 1;
         const events = store.graphs.events(id);
+        const calls = iteration.calls();
         // 1. A terminal phase, and the one the injected fault calls for.
+        const expected = iteration.expected();
         if (!TERMINAL.has(state.phase))
           problems.push('ended in non-terminal phase ' + state.phase);
-        else if (state.phase !== EXPECTED_PHASE[scenario])
+        else if (!expected.includes(state.phase))
           problems.push(
             'phase ' +
               state.phase +
               ', expected ' +
-              EXPECTED_PHASE[scenario] +
+              expected.join(' or ') +
               (state.reason ? ' (' + state.reason + ')' : ''),
           );
-        if (
-          scenario === 'review_reject_standing' &&
-          (state.review?.approve ?? true)
-        )
-          problems.push('a standing rejection was recorded as approved');
-        if (scenario === 'review_reject_fixed' && !state.review?.approve)
-          problems.push('the repaired result was not approved');
         // 2. An unknown outcome is never retried or re-dispatched.
-        const unknown = runner.calls.filter((c) => c.status === 'unknown');
+        const unknown = calls.filter((c) => c.status === 'unknown');
         for (const u of unknown) {
-          const later = runner.calls.filter(
+          const later = calls.filter(
             (c) => c.label === u.label && c.attempt > u.attempt,
           );
           if (later.length)
             problems.push('unknown outcome of ' + u.label + ' was retried');
           if (u.label === 'fix' || u.label === 'review-fix') {
-            const index = runner.calls.indexOf(u);
-            if (index !== runner.calls.length - 1)
+            const index = calls.indexOf(u);
+            if (index !== calls.length - 1)
               problems.push(
                 'a turn ran after the unknown ' + u.label + ' turn',
               );
@@ -443,69 +653,19 @@ export async function runSoak(options: {
               'node ' + nodeId + ' with unknown is ' + entry.status,
             );
         }
-        if (unknown.length === 0 && scenario.includes('unknown'))
-          problems.push('the unknown outcome was never injected');
-        // A scenario that ends ready proves nothing unless its fault happened.
-        type Seen = { checks?: { status: string }[]; approve?: boolean };
-        const saw = (
-          kind: string,
-          test: (payload: Seen) => unknown = () => true,
-        ) => events.some((e) => e.kind === kind && !!test(e.payload as Seen));
-        if (
-          scenario.startsWith('check_failure') &&
-          !saw('graph.checked', (p) =>
-            p.checks?.some((c) => c.status === 'failed'),
-          )
-        )
-          problems.push('the failing check was never seen');
-        if (
-          scenario.startsWith('turn_failure') &&
-          !runner.calls.some((c) => c.status === 'failed')
-        )
-          problems.push('the turn failure was never injected');
-        if (
-          scenario.startsWith('review_') &&
-          !saw('graph.reviewed', (p) => p.approve === false)
-        )
-          problems.push('the rejecting review was never seen');
-        if (scenario.startsWith('review_') && !saw('graph.review_fix'))
-          problems.push('the review repair never ran');
         // Faults as the orchestrator saw them.
-        for (const call of runner.calls) {
+        for (const call of calls) {
           if (call.status === 'failed') faultCounts.turn_failure!++;
           if (call.status === 'unknown') faultCounts.unknown_outcome!++;
         }
         for (const e of events) {
-          const payload = e.payload as {
-            reason?: string;
-            checks?: { status: string }[];
-            approve?: boolean;
-          };
-          if (
-            e.kind === 'node.repair' &&
-            payload.reason?.startsWith('Integration conflict')
-          )
-            faultCounts.integration_conflict!++;
-          if (
-            e.kind === 'graph.checked' &&
-            payload.checks?.some((c) => c.status === 'failed')
-          )
-            faultCounts.check_failure!++;
-          if (e.kind === 'graph.reviewed' && payload.approve === false)
-            faultCounts.review_rejection!++;
+          if (startsRepair(e)) faultCounts.integration_conflict!++;
+          if (failedCheck(e)) faultCounts.check_failure!++;
+          if (rejectedReview(e)) faultCounts.review_rejection!++;
         }
-        if (
-          scenario === 'conflicting_patches' &&
-          !events.some(
-            (e) =>
-              e.kind === 'node.repair' &&
-              String((e.payload as { reason?: string }).reason).startsWith(
-                'Integration conflict',
-              ),
-          )
-        )
-          problems.push('no integration conflict was observed');
+        iteration.inspect(state, events, calls, findings);
       }
+      if (watcher) problems.push(...(await watcher.finish()));
       // 3. The user's checkout is exactly as it was.
       const after = checkout(repo);
       for (const key of Object.keys(before) as (keyof typeof before)[])
@@ -554,9 +714,21 @@ export async function runSoak(options: {
         problems.push('integration patch file left in the temp directory');
       rss.push(process.memoryUsage().rss);
       for (const p of problems) violations.push(where + p);
+      outcomes.push({
+        iteration: n,
+        scenario,
+        phase: state?.phase ?? null,
+        reason: state?.reason ?? null,
+        durationMs: Date.now() - iterationStart,
+        notes: findings.notes,
+        violations: problems,
+      });
       log(
         where +
           (state?.phase ?? 'no result') +
+          (findings.notes.length
+            ? ' [' + findings.notes.join('; ') + ']'
+            : '') +
           (problems.length ? ' VIOLATION ' + problems.join('; ') : '') +
           '  rss ' +
           Math.round(rss.at(-1)! / 1048576) +
@@ -607,6 +779,7 @@ export async function runSoak(options: {
     scenarioCounts,
     faultCounts,
     phaseCounts,
+    ...(driver.mode === 'live' ? { outcomes } : {}),
     memory: {
       firstRss: rss[0] ?? 0,
       lastRss: rss.at(-1) ?? 0,
