@@ -1,4 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import childProcess from 'node:child_process';
+import { syncBuiltinESMExports } from 'node:module';
+import { EventEmitter } from 'node:events';
+import { PassThrough } from 'node:stream';
 import { WorkerSupervisor } from './index.ts';
 import { executionCapabilities } from '../../policy/src/index.ts';
 
@@ -197,6 +201,55 @@ it('retains ownership after uncertain shutdown so cancellation can be retried', 
   expect(supervisor.cancel(run.identity)).toBe(true);
   await expect.poll(() => supervisor.activeCount, { timeout: 2000 }).toBe(0);
 }, 10000);
+it.each([true, false])(
+  'waits for owned Windows close after taskkill failure: close=%s',
+  async (closes) => {
+    if (process.platform !== 'win32') return;
+    vi.useFakeTimers();
+    const child = Object.assign(new EventEmitter(), {
+      pid: 12345,
+      exitCode: null as number | null,
+      signalCode: null,
+      stdin: new PassThrough(),
+      stdout: new PassThrough(),
+      stderr: new PassThrough(),
+    });
+    const spawn = vi
+      .spyOn(childProcess, 'spawn')
+      .mockImplementation((executable) => {
+        if (String(executable).endsWith('taskkill.exe')) {
+          const killer = Object.assign(new EventEmitter(), {
+            kill: () => true,
+          });
+          setTimeout(() => killer.emit('close', 128), 1);
+          return killer as unknown as childProcess.ChildProcess;
+        }
+        return child as unknown as childProcess.ChildProcess;
+      });
+    syncBuiltinESMExports();
+    const supervisor = new WorkerSupervisor();
+    try {
+      const run = supervisor.start(command('unused mock executable'));
+      supervisor.cancel(run.identity);
+      await vi.advanceTimersByTimeAsync(200);
+      expect(spawn).toHaveBeenCalledTimes(3);
+      if (closes) {
+        child.exitCode = 1;
+        child.emit('exit', 1, null);
+        child.emit('close', 1, null);
+      } else await vi.advanceTimersByTimeAsync(7001);
+      expect((await run.result).reason).toBe(
+        closes ? 'cancelled' : 'needs_attention',
+      );
+      expect(supervisor.activeCount).toBe(closes ? 0 : 1);
+    } finally {
+      spawn.mockRestore();
+      syncBuiltinESMExports();
+      vi.useRealTimers();
+    }
+  },
+);
+
 it('layers validated extra environment variables over the inherited environment', async () => {
   const supervisor = new WorkerSupervisor();
   const run = supervisor.start({

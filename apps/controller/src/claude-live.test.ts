@@ -1,6 +1,8 @@
-import { afterEach, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import * as supervisor from '../../../packages/supervisor/src/index.ts';
 import { spawnSync } from 'node:child_process';
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
   realpathSync,
@@ -14,7 +16,10 @@ import { Store } from '../../../packages/storage/src/store.ts';
 import { ArtifactStore } from '../../../packages/storage/src/artifacts.ts';
 import { createWorktree } from '../../../packages/storage/src/git-workspace.ts';
 import { LIVE_ROUTES } from '../../../packages/contracts/src/live.ts';
-import { claudeArgs } from '../../../packages/adapters/src/live/claude-headless.ts';
+import {
+  claudeArgs,
+  ClaudeHeadlessStream,
+} from '../../../packages/adapters/src/live/claude-headless.ts';
 import { LiveClaudeController, claudeUnsetEnv } from './claude-live.ts';
 
 const SESSION = '6306ed11-5ca4-4c61-a177-5b64eddf5d5b';
@@ -184,6 +189,97 @@ it('records a classified account failure', async () => {
     code: 'QUOTA_BLOCKED',
     scope: 'quota_group',
   });
+});
+
+it('cancels an owned process before its init frame without an unknown outcome', async () => {
+  const c = setup('before-init', 20000);
+  const running = c.run(spec(), 'create');
+  try {
+    for (let i = 0; i < 400; i++) {
+      if (existsSync(join(worktree.path, 'before-init.started'))) break;
+      await new Promise((r) => setTimeout(r, 25));
+    }
+    expect(existsSync(join(worktree.path, 'before-init.started'))).toBe(true);
+    expect(c.interrupt('connection', 'operator')).toEqual({
+      status: 'requested',
+    });
+    await running;
+    const saved = store.providers.get('connection');
+    expect(saved.outcome).toBe('cancelled');
+    expect(saved.interrupt?.actorId).toBe('operator');
+    expect(saved.status).not.toBe('unknown');
+    expect(c.activeCount).toBe(0);
+  } finally {
+    c.stop();
+    await running;
+  }
+});
+
+it('cancels while prompt delivery is blocked without leaving an unknown lease', async () => {
+  const c = setup('blocked-input', 20000);
+  // Hold the write at its async boundary: pipe capacities vary across hosts.
+  const realWrite = supervisor.writeChunked;
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const writing = vi
+    .spyOn(supervisor, 'writeChunked')
+    .mockImplementation(async (...args) => {
+      await gate;
+      return realWrite(...args);
+    });
+  const running = c.run(spec(), 'create');
+  try {
+    for (let i = 0; i < 400; i++) {
+      if (existsSync(join(worktree.path, 'blocked-input.started'))) break;
+      await new Promise((r) => setTimeout(r, 25));
+    }
+    expect(existsSync(join(worktree.path, 'blocked-input.started'))).toBe(true);
+    expect(writing).toHaveBeenCalled();
+    expect(c.interrupt('connection', 'operator')).toEqual({
+      status: 'requested',
+    });
+    release();
+    await running;
+    expect(store.providers.get('connection').outcome).toBe('cancelled');
+    expect(store.providers.get('connection').status).not.toBe('unknown');
+    expect(c.activeCount).toBe(0);
+  } finally {
+    c.stop();
+    release();
+    await running;
+    writing.mockRestore();
+  }
+});
+
+it('retains the unknown lease when a rejected auth frame races an admitted cancel', async () => {
+  const c = setup('api-key', 20000);
+  const receive = ClaudeHeadlessStream.prototype.receive;
+  let cancelled = false;
+  const reading = vi
+    .spyOn(ClaudeHeadlessStream.prototype, 'receive')
+    .mockImplementation(function (this: ClaudeHeadlessStream, bytes) {
+      if (!cancelled) {
+        expect(c.interrupt('connection', 'operator')).toEqual({
+          status: 'requested',
+        });
+        cancelled = true;
+      }
+      // The real parser rejects the fixture's API-key init frame after admission.
+      return receive.call(this, bytes);
+    });
+  try {
+    await c.run(spec(), 'create');
+    expect(cancelled).toBe(true);
+    const saved = store.providers.get('connection');
+    expect(saved.status).toBe('unknown');
+    expect(saved.outcome).toBeNull();
+    expect(store.providers.occupied('worker:claude-1')).toBe(true);
+    expect(c.activeCount).toBe(0);
+  } finally {
+    reading.mockRestore();
+  }
 });
 
 it('cancels a running turn by stopping its owning process', async () => {

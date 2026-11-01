@@ -11,6 +11,8 @@ export interface RoutableWorker {
   completed: readonly string[];
   /** Roles this worker is configured for. */
   roles: readonly ('worker' | 'reviewer')[];
+  /** The strongest work this worker should implement; absent means `standard`. */
+  tier?: 'light' | 'standard';
 }
 export interface RouteDecision {
   alias: string | null;
@@ -25,15 +27,37 @@ export interface RouteDecision {
  * the context), then a reviewer on a runtime that wrote none of the work,
  * then the least recently loaded worker. Nothing here changes billing: an
  * unavailable preference waits instead of falling back to another account.
+ *
+ * In a pool with tiers, implementation goes to a worker of the node's tier
+ * first. A standard worker may take light work when the light ones are busy;
+ * a light worker takes standard work only when no usable standard worker
+ * could ever take it.
  */
 export function routeNode(
-  node: Pick<PlanNode, 'id' | 'role' | 'assignee' | 'dependsOn'>,
+  node: Pick<PlanNode, 'id' | 'role' | 'assignee' | 'dependsOn'> & {
+    tier?: PlanNode['tier'];
+  },
   workers: readonly RoutableWorker[],
   context: { implementerRuntimes?: readonly string[] } = {},
 ): RouteDecision {
   const excluded: RouteDecision['excluded'] = [];
   const exclude = (alias: string, reason: string) =>
     excluded.push({ alias, reason });
+  const tierOf = (w: RoutableWorker) => w.tier ?? 'standard';
+  const wants = node.tier ?? 'standard';
+  const tiered = node.role === 'worker' && workers.some((w) => w.tier);
+  // Busy passes; unhealthy or blocked does not, or the node would wait forever.
+  const strongerExists =
+    tiered &&
+    wants === 'standard' &&
+    workers.some(
+      (w) =>
+        tierOf(w) === 'standard' &&
+        w.roles.includes('worker') &&
+        w.healthy &&
+        !w.blocked &&
+        (node.assignee === 'any' || w.runtimeKind === node.assignee),
+    );
   const assigned = node.assignee.startsWith('@')
     ? workers.find(
         (w) => w.alias.toLowerCase() === node.assignee.slice(1).toLowerCase(),
@@ -84,6 +108,8 @@ export function routeNode(
     if (w.blocked) return (exclude(w.alias, 'account blocked'), false);
     if (node.assignee !== 'any' && w.runtimeKind !== node.assignee)
       return (exclude(w.alias, 'runtime is not ' + node.assignee), false);
+    if (strongerExists && tierOf(w) === 'light')
+      return (exclude(w.alias, 'light tier is below this node'), false);
     if (w.busy) return (exclude(w.alias, 'busy'), false);
     return true;
   });
@@ -106,6 +132,8 @@ export function routeNode(
     // Keep reviewers free of implementation when a plain worker can take it,
     // so an independent review stays possible.
     if (node.role === 'worker' && w.roles.includes('reviewer')) s -= 1;
+    // The tier outranks session continuity: it is what keeps cheap work cheap.
+    if (tiered && tierOf(w) === wants) s += 6;
     s -= w.completed.length * 0.01;
     return s;
   };
@@ -114,6 +142,12 @@ export function routeNode(
   );
   const chosen = ranked[0]!;
   const reasons = ['Idle and eligible for role ' + node.role];
+  if (tiered)
+    reasons.push(
+      tierOf(chosen) === wants
+        ? 'Matches the ' + wants + ' tier'
+        : 'No idle ' + wants + ' worker; taken by a ' + tierOf(chosen) + ' one',
+    );
   if (node.dependsOn.some((d) => chosen.completed.includes(d)))
     reasons.push('Continues its own dependency work');
   if (node.role === 'reviewer' && !chosen.completed.length)

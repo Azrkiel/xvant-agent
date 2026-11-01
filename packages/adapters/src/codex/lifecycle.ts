@@ -4,7 +4,7 @@ import {
   nativeIdSchema,
   type NativeFailure,
 } from '../../../contracts/src/providers.ts';
-import { CODEX_VERSION, validateNative } from './profile.ts';
+import { codexVersionAccepted, validateNative } from './profile.ts';
 import { classifyCodex } from '../providers/failures.ts';
 
 type Status =
@@ -38,6 +38,28 @@ function fail(code: string): never {
   throw new Error(code);
 }
 
+/** A resumed thread reports its creation version, not the serving binary. */
+function creationVersionAccepted(
+  current: string,
+  created: string,
+  resume: boolean,
+): boolean {
+  if (created === current) return true;
+  if (!resume || !codexVersionAccepted(created)) return false;
+  const plain = /^(\d+)\.(\d+)\.(\d+)$/;
+  const serving = plain.exec(current);
+  const historical = plain.exec(created);
+  // Admit only older qualified patches of this same release family. Different
+  // minors and prerelease histories still require separate compatibility proof.
+  return (
+    !!serving &&
+    !!historical &&
+    serving[1] === historical[1] &&
+    serving[2] === historical[2] &&
+    Number(historical[3]) <= Number(serving[3])
+  );
+}
+
 /** One host-owned, offline-tested attempt. No credentials, executable, automatic resume or acceptance. */
 export class CodexLifecycle {
   private state: Status = 'new';
@@ -47,6 +69,7 @@ export class CodexLifecycle {
   private runId: string | undefined;
   private terminal = false;
   private nativeFailure: NativeFailure | undefined;
+  private readonly version: string;
   private readonly write: boolean;
   private readonly model: string | undefined;
   /**
@@ -58,7 +81,8 @@ export class CodexLifecycle {
     threadId?: string,
     options: { profile?: 'read-only' | 'workspace-write'; model?: string } = {},
   ) {
-    if (version !== CODEX_VERSION) fail('VERSION_UNSUPPORTED');
+    if (!codexVersionAccepted(version)) fail('VERSION_UNSUPPORTED');
+    this.version = version;
     this.write = options.profile === 'workspace-write';
     this.model =
       options.model === undefined || options.model === 'default'
@@ -148,7 +172,11 @@ export class CodexLifecycle {
         value.approvalsReviewer !== 'user' ||
         value.sandbox.type !== (this.write ? 'workspaceWrite' : 'readOnly') ||
         value.sandbox.networkAccess === true ||
-        value.thread.cliVersion !== CODEX_VERSION ||
+        !creationVersionAccepted(
+          this.version,
+          value.thread.cliVersion,
+          this.opening.mode === 'resume',
+        ) ||
         value.thread.status.type !== 'idle' ||
         value.thread.turns.some((turn) => turn.status === 'inProgress')
       )
