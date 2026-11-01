@@ -188,6 +188,9 @@ export function phaseSuites(phase: string): Record<string, number> {
           ? {
               'tests/release-policy.test.ts': 10,
               'tests/audit-policy.test.ts': 6,
+              'apps/controller/src/share.test.ts': 9,
+              'apps/controller/src/shell.test.ts': 4,
+              'tests/shell-integration.test.ts': 20,
             }
           : {}),
       };
