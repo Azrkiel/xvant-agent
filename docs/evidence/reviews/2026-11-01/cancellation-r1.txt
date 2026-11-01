@@ -1,0 +1,5 @@
+- `apps/controller/src/claude-live.ts:265–266`: Interrupt admission is installed only after `await writeChunked(...)` and `run.endInput()`. Cancellation while prompt delivery awaits backpressure still hits `NOT_FOUND`; `LiveTurnRunner.interrupt()` calls `stop()`, producing `unknown` and retaining the lease. Register admission before awaiting prompt delivery, and test cancellation during blocked input delivery. The new fixture waits for stdin EOF, so it misses this window.
+
+- `apps/controller/src/claude-live.ts:277–285`: Safe lease release depends on `run.result` proving owned-process shutdown and draining stdout callbacks before resolving with `reason === 'cancelled'`. The supplied source omits `WorkerSupervisor`; therefore shutdown and late protocol-error races cannot be verified. Supply that implementation and regression evidence that protocol errors racing cancellation remain unknown and leased.
+
+VERDICT: CHANGES_REQUESTED

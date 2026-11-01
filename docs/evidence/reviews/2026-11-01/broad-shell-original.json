@@ -1,0 +1,70 @@
+{
+  "passed": false,
+  "security_concerns": [
+    {
+      "severity": "high",
+      "path": "apps/controller/src/share.ts",
+      "lines": "127-142",
+      "issue": "Credential exclusions do not exclude credentials already staged in Git's index. The code skips adding those paths but then commits the entire existing index, potentially publishing a file it explicitly reports as skipped.",
+      "reproduction": "In a disposable checkout on the shared branch, create .env with a credential, run git add .env, then invoke syncOnce. shareable rejects .env, but diff --cached detects the staged change and the unrestricted git commit includes it. A successful push publishes it; result.skipped still includes .env.",
+      "recommendation": "Use an isolated index containing only approved changes, or refuse to sync when excluded paths are staged. Validate the actual blobs being committed, not only working-tree files."
+    },
+    {
+      "severity": "high",
+      "path": "apps/controller/src/share.ts",
+      "lines": "32,58-67",
+      "issue": "The content filter explicitly permits files larger than 1 MiB without scanning them, contradicting the assurance that files resembling credentials are never committed.",
+      "reproduction": "Create an untracked dump.txt larger than 1 MiB containing a recognizable GitHub token matching ghp_ followed by 36 alphanumeric characters. Invoke syncOnce on the shared branch. The size check returns true before containsSecret runs, so dump.txt is staged, committed and eligible for publication.",
+      "recommendation": "Skip oversized or unreadable files with an explicit reason, or scan them incrementally. Do not treat an unperformed scan as a successful credential check."
+    }
+  ],
+  "logic_errors": [
+    {
+      "severity": "high",
+      "path": "apps/controller/src/shell.ts",
+      "lines": "165-178,187-192",
+      "related_locations": [
+        "scripts/xvant-shell.mjs:179-193",
+        "scripts/xvant.mjs:295-306"
+      ],
+      "issue": "/merge operates on the last produced branch, not the last accepted result. Neither acceptance state nor the run's final outcome is checked. Failed runs with integration branches can therefore be merged without passing /accept.",
+      "reproduction": "Run an objective that produces an integration branch but ultimately fails a check or review, then issue /merge without accepting it. In non-TTY mode the shell directly invokes git merge on that branch. A read-only execution of the actual interpreter confirmed that observing a branch and then interpreting /merge returns a git merge action without any acceptance.",
+      "recommendation": "Resolve and verify the persisted accepted result before merging, including its repository and branch. Track accepted results separately from lastBranch; a failed /accept must not enable merging."
+    },
+    {
+      "severity": "medium",
+      "path": "scripts/xvant-shell.mjs",
+      "lines": "183-190",
+      "issue": "Interactive /merge receives an unsupported --color option. The shared Git dispatcher inserts it after every subcommand, although git merge does not accept it.",
+      "reproduction": "In a real terminal, produce a branch and issue /merge. The generated invocation is git --no-pager merge --color --no-edit BRANCH, which fails option parsing instead of merging. The installed Git's merge help was inspected and has no --color option.",
+      "recommendation": "Apply --color only to subcommands that support it, or use Git's global -c color.ui=always configuration."
+    },
+    {
+      "severity": "medium",
+      "path": "scripts/xvant.mjs",
+      "lines": "453-473",
+      "related_locations": [
+        "apps/controller/src/share.ts:147-150",
+        "apps/controller/src/share.ts:201-207"
+      ],
+      "issue": "share --once exits successfully when remote access or publication fails. syncOnce returns those failures as notes, and cycle discards the structured result without setting a failing exit status.",
+      "reproduction": "In a disposable shared checkout, configure origin to an unavailable local repository and run share --repo PATH --branch BRANCH --once. syncOnce returns a Remote unreachable note; the CLI prints it and reaches normal termination with exit code 0. A rejected push follows the same success-exit path.",
+      "recommendation": "Return a structured cycle outcome and set a nonzero exit status for one-shot remote or push failures. Preserve retry behavior for continuous sharing."
+    }
+  ],
+  "suggestions": [
+    {
+      "path": "apps/controller/src/shell.ts",
+      "lines": "31-34",
+      "comment": "The new-session default explicitly selects Opus, and runArgs consequently supplies --tandem opus. This overrides the recommendation to leave the planner default unset and also excludes OpenCode from the default runtime pool. Treat this separately as a configuration-policy mismatch, not evidence of a paid API route. Consider tandem: null and make tandem opt-in."
+    },
+    {
+      "paths": [
+        "apps/controller/src/shell.test.ts:94-128",
+        "apps/controller/src/share.test.ts:109-121"
+      ],
+      "comment": "Add regressions for refusing merge before successful acceptance, failed acceptance, merging an explicitly accepted non-last run, TTY Git argument construction, staged credential exclusions, oversized credential-bearing files, and nonzero share --once failure exits. The current shell test explicitly expects merge to be available immediately after observing a branch."
+    }
+  ],
+  "summary": "Reviewed all seven scoped files and origin/main..3496fac diffs independently. Found two credential-publication bugs, an acceptance-gate bypass, broken interactive merge arguments, and successful one-shot exit codes on sync failure. Read-only interpreter verification and diff checks completed; the working tree remained clean. No files were created or modified, and no live providers or heavy tests were run."
+}

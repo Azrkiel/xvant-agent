@@ -1,4 +1,6 @@
 * text=auto eol=lf
+# cmd.exe reads batch files most reliably with CRLF.
+*.cmd text eol=crlf
 
 # Evidence bundles are verified by exact byte hashes; never convert line endings.
 docs/evidence/runs/** -text

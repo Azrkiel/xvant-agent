@@ -1,0 +1,1 @@
+{"version":2,"kind":"git","baseCommit":"68ce8b351ae92cf3605860c5a10e918e1a259d39","gitTree":"05658b4a404fc8bcb65a6697301c117d70dce501","patch":"e59a7bfa453e6fa89ad18b313eb1af7f06402af7fe955f61272f1ac07d3fc237","patchBytes":232,"files":[{"path":"hello.txt","status":"A"}]}

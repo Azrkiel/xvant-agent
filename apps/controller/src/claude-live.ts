@@ -261,17 +261,25 @@ export class LiveClaudeController {
           },
         },
       });
-      await writeChunked((frame) => run!.write(frame), text);
-      run.endInput();
       this.interrupts.set(id, (actorId) => {
         if (interrupted) return { status: 'already_requested' };
-        if (failed || !stream.started || stream.finished)
-          throw new Error('NOT_INTERRUPTIBLE');
+        // The host owns this dispatched process even before the init frame.
+        // Cancellation is proved by its shutdown, not by trusting model output.
+        if (failed || stream.finished) throw new Error('NOT_INTERRUPTIBLE');
         this.store.providers.requestInterrupt(id, token, actorId);
         interrupted = true;
         this.supervisor.cancel(run!.identity);
         return { status: 'requested' };
       });
+      try {
+        await writeChunked((frame) => run!.write(frame), text);
+        if (!interrupted) run.endInput();
+      } catch (error) {
+        // An admitted cancel can close stdin during delivery. Still await the
+        // owned process below before recording that it stopped; other errors
+        // retain the unknown outcome and its reservations.
+        if (!interrupted) throw error;
+      }
       const stopped = await run.result;
       this.interrupts.delete(id);
       this.options.fault?.('claude-live.after_shutdown');

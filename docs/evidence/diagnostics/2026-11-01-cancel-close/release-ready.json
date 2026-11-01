@@ -1,0 +1,116 @@
+{
+  "profile": "local-v1",
+  "ready": true,
+  "requirements": [
+    {
+      "id": "G00",
+      "state": "met",
+      "detail": "compatibility and billing scope recorded"
+    },
+    {
+      "id": "G01 offline",
+      "state": "met",
+      "detail": "covered by G10"
+    },
+    {
+      "id": "G02 offline",
+      "state": "met",
+      "detail": "covered by G10"
+    },
+    {
+      "id": "G03 offline",
+      "state": "met",
+      "detail": "covered by G10"
+    },
+    {
+      "id": "G04 offline",
+      "state": "met",
+      "detail": "covered by G10"
+    },
+    {
+      "id": "G05 offline",
+      "state": "met",
+      "detail": "covered by G10"
+    },
+    {
+      "id": "G06 offline",
+      "state": "met",
+      "detail": "covered by G10"
+    },
+    {
+      "id": "G07 offline",
+      "state": "met",
+      "detail": "covered by G10"
+    },
+    {
+      "id": "G08 offline",
+      "state": "met",
+      "detail": "covered by G10"
+    },
+    {
+      "id": "G09 offline",
+      "state": "met",
+      "detail": "covered by G10"
+    },
+    {
+      "id": "G10 offline",
+      "state": "met",
+      "detail": "passed on the current source"
+    },
+    {
+      "id": "G03-live-roster",
+      "state": "met",
+      "detail": "passed live"
+    },
+    {
+      "id": "G04-live-handoff",
+      "state": "met",
+      "detail": "passed live"
+    },
+    {
+      "id": "G05-live-mcp",
+      "state": "met",
+      "detail": "passed live"
+    },
+    {
+      "id": "G06-live-parallel-feature",
+      "state": "met",
+      "detail": "passed live"
+    },
+    {
+      "id": "G08-live-native",
+      "state": "met",
+      "detail": "passed live"
+    },
+    {
+      "id": "G07 real-repository UI run",
+      "state": "met",
+      "detail": "passed live"
+    },
+    {
+      "id": "benchmark-v1",
+      "state": "met",
+      "detail": "complete campaign on the frozen v1 suite with XVANT and a baseline"
+    },
+    {
+      "id": "P10-clean-install",
+      "state": "met",
+      "detail": "installs and starts from a clean clone"
+    },
+    {
+      "id": "P10-soak",
+      "state": "met",
+      "detail": "offline soak held every invariant"
+    },
+    {
+      "id": "P10-package",
+      "state": "met",
+      "detail": "release archive matches its commit and checksums"
+    },
+    {
+      "id": "Linux",
+      "state": "deferred",
+      "detail": "deferred by the operator; this release qualifies Windows only"
+    }
+  ]
+}

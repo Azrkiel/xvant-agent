@@ -37,20 +37,38 @@ export const LIVE_ROUTES = {
   }
 >;
 /**
+ * Versions admitted without moving the pin, which the offline fixtures
+ * speak. Each is treated like a pin: later patches of a plain version pass.
+ *
+ * Codex 0.160.1 (2026-10-08): `scripts/live-worker-smoke.mjs --runtime codex`
+ * passed against the pinned schema: one workspace-write turn, host check,
+ * acceptance after a restart. Resume and interrupt were not exercised on it.
+ */
+export const QUALIFIED_ALSO: Partial<Record<ProviderKind, readonly string[]>> =
+  { codex: ['0.160.1'] };
+/**
  * Whether an installed version may use a route. Runtimes auto-update, so a
  * later patch of the qualified major.minor is accepted and recorded as the
  * version actually used; the live gates re-qualify it. Prerelease pins (and
  * anything not plain semver) must match exactly.
  */
 export function versionAccepted(kind: ProviderKind, version: string): boolean {
-  const pinned = LIVE_ROUTES[kind].runtimeVersion;
-  if (version === pinned) return true;
   const plain = /^(\d+)\.(\d+)\.(\d+)$/;
-  const a = plain.exec(pinned),
-    b = plain.exec(version);
-  return (
-    !!a && !!b && a[1] === b[1] && a[2] === b[2] && Number(b[3]) >= Number(a[3])
-  );
+  const b = plain.exec(version);
+  return [
+    LIVE_ROUTES[kind].runtimeVersion,
+    ...(QUALIFIED_ALSO[kind] ?? []),
+  ].some((pinned) => {
+    if (version === pinned) return true;
+    const a = plain.exec(pinned);
+    return (
+      !!a &&
+      !!b &&
+      a[1] === b[1] &&
+      a[2] === b[2] &&
+      Number(b[3]) >= Number(a[3])
+    );
+  });
 }
 /**
  * XVANT's own loop on a local model server. The version is the loop's; the

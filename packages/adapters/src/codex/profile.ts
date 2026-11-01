@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
+import { versionAccepted } from '../../../contracts/src/live.ts';
 
 export const CODEX_VERSION = '0.158.0-alpha.2.1';
+/** The pin, or a later version a live probe qualified against the same schema. */
+export const codexVersionAccepted = (version: string) =>
+  versionAccepted('codex', version);
 const bundle = z
   .object({
     runtimeVersion: z.literal(CODEX_VERSION),

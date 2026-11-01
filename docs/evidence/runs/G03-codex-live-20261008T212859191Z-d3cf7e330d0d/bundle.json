@@ -1,0 +1,18 @@
+{
+  "bundleId": "G03-codex-live-20261008T212859191Z-d3cf7e330d0d",
+  "archivedAt": "2026-10-08T21:29:09.554Z",
+  "sourceRoot": "C:/Users/jiang/xt",
+  "receipt": {
+    "file": "C:/Users/jiang/xt/docs/evidence/G03-codex-live.json",
+    "sha256": "7b80810e8b2b90bee3ceabd071de0c75ddecc9cf9e7b316b6f00b0c7256383cf",
+    "status": "failed"
+  },
+  "artifacts": [],
+  "extras": [
+    {
+      "path": ".artifacts/live-codex-1791494938444/state.sqlite",
+      "sha256": "37d8d9209d7b4b1eae239b6aefd41946e2036403420d690c955a0193b91d6870"
+    }
+  ],
+  "integrity": "complete"
+}

@@ -1,10 +1,10 @@
 {
   "gateId": "G10",
   "status": "passed",
-  "generatedAt": "2026-10-08T19:04:15.278Z",
-  "sourceRevision": "7e79fe053874287d94a9ca3b8260d84917eede2d",
-  "branch": "codex/phase-5-tools",
-  "dirtyTreeHash": "d4359351f7bcc4c0d36dd9b1458cb9500c2b2eb8231e785b2da9d58696a522c4",
+  "generatedAt": "2026-11-01T17:39:12.657Z",
+  "sourceRevision": "2eea613de9acabd333c995818e3416276e16935a",
+  "branch": "claude/tandem",
+  "dirtyTreeHash": "2dd7fad8e6b1dad9c6324ad3ef2d3899dcee452a99b7e5e98b0038848007f791",
   "sourceHashScope": "All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.",
   "operatingSystem": "win32 10.0.26200",
   "executionHost": "kvn",
@@ -23,9 +23,9 @@
         "node_modules/typescript/bin/tsc",
         "--noEmit"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:04:15.638Z",
-      "finishedAt": "2026-10-08T19:04:23.478Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:39:13.531Z",
+      "finishedAt": "2026-11-01T17:39:36.764Z",
       "exitCode": 0
     },
     {
@@ -38,9 +38,9 @@
         "scripts",
         "tests"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:04:23.480Z",
-      "finishedAt": "2026-10-08T19:04:28.148Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:39:36.770Z",
+      "finishedAt": "2026-11-01T17:39:48.232Z",
       "exitCode": 0
     },
     {
@@ -51,9 +51,9 @@
         "--check",
         "."
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:04:28.149Z",
-      "finishedAt": "2026-10-08T19:04:34.905Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:39:48.233Z",
+      "finishedAt": "2026-11-01T17:40:00.322Z",
       "exitCode": 0
     },
     {
@@ -67,12 +67,12 @@
         "--reporter=json",
         "--outputFile=.artifacts/tests.json"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:04:34.905Z",
-      "finishedAt": "2026-10-08T19:10:51.753Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:40:00.323Z",
+      "finishedAt": "2026-11-01T17:49:46.055Z",
       "exitCode": 0,
-      "expectedCount": 1136,
-      "observedCount": 1205,
+      "expectedCount": 1210,
+      "observedCount": 1314,
       "suites": {
         "packages/contracts/src/contracts.test.ts": 15,
         "packages/core/src/task.test.ts": 26,
@@ -83,7 +83,7 @@
         "tests/evidence-bundle.test.ts": 8,
         "packages/storage/src/store.test.ts": 22,
         "packages/storage/src/artifacts.test.ts": 20,
-        "packages/supervisor/src/index.test.ts": 14,
+        "packages/supervisor/src/index.test.ts": 16,
         "packages/policy/src/index.test.ts": 2,
         "apps/controller/src/durable.test.ts": 13,
         "apps/controller/src/service.test.ts": 3,
@@ -95,7 +95,7 @@
         "packages/adapters/src/codex/transport.test.ts": 20,
         "packages/adapters/src/codex/profile.test.ts": 5,
         "packages/adapters/src/codex/lifecycle.test.ts": 9,
-        "packages/adapters/src/codex/thread.test.ts": 15,
+        "packages/adapters/src/codex/thread.test.ts": 22,
         "tests/codex-process.test.ts": 6,
         "packages/storage/src/providers.test.ts": 59,
         "tests/faults/provider-crash.test.ts": 8,
@@ -124,11 +124,11 @@
         "apps/controller/src/opencode-live.test.ts": 21,
         "packages/adapters/src/opencode/cli-stream.test.ts": 21,
         "tests/faults/opencode-live.test.ts": 12,
-        "packages/contracts/src/live.test.ts": 19,
+        "packages/contracts/src/live.test.ts": 20,
         "packages/storage/src/git-workspace.test.ts": 5,
         "packages/adapters/src/live/live-streams.test.ts": 11,
         "apps/controller/src/codex-live.test.ts": 6,
-        "apps/controller/src/claude-live.test.ts": 7,
+        "apps/controller/src/claude-live.test.ts": 10,
         "packages/adapters/src/live/discover.test.ts": 3,
         "apps/controller/src/live-roster.test.ts": 2,
         "apps/controller/src/live-gates.test.ts": 3,
@@ -154,9 +154,9 @@
         "packages/skills/src/compatibility.test.ts": 5,
         "packages/policy/src/runtimes.test.ts": 9,
         "apps/controller/src/tools-fixture.test.ts": 1,
-        "packages/core/src/scheduler.test.ts": 12,
+        "packages/core/src/scheduler.test.ts": 18,
         "packages/storage/src/integration.test.ts": 4,
-        "apps/controller/src/orchestrator.test.ts": 11,
+        "apps/controller/src/orchestrator.test.ts": 34,
         "apps/controller/src/turn-runner.test.ts": 3,
         "apps/controller/src/app.test.ts": 4,
         "tests/e2e/ui.test.ts": 3,
@@ -170,8 +170,11 @@
         "packages/evaluation/src/v1.test.ts": 1,
         "packages/evaluation/src/ledger.test.ts": 4,
         "apps/controller/src/benchmark-live.test.ts": 7,
-        "tests/release-policy.test.ts": 10,
-        "tests/audit-policy.test.ts": 6
+        "tests/release-policy.test.ts": 13,
+        "tests/audit-policy.test.ts": 6,
+        "apps/controller/src/share.test.ts": 9,
+        "apps/controller/src/shell.test.ts": 4,
+        "tests/shell-integration.test.ts": 20
       }
     },
     {
@@ -180,9 +183,9 @@
         "C:\\Users\\jiang\\XVANT\\.tools\\node_modules\\node-win-x64\\bin\\node.exe",
         "apps/controller/src/durable-demo.ts"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:10:51.800Z",
-      "finishedAt": "2026-10-08T19:10:52.633Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:46.125Z",
+      "finishedAt": "2026-11-01T17:49:47.021Z",
       "exitCode": 0
     },
     {
@@ -194,9 +197,9 @@
         "--runtime",
         "all"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:10:52.639Z",
-      "finishedAt": "2026-10-08T19:10:52.887Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:47.028Z",
+      "finishedAt": "2026-11-01T17:49:47.382Z",
       "exitCode": 0
     },
     {
@@ -205,9 +208,9 @@
         "C:\\Users\\jiang\\XVANT\\.tools\\node_modules\\node-win-x64\\bin\\node.exe",
         "scripts/roster-fixture.mjs"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:10:52.888Z",
-      "finishedAt": "2026-10-08T19:10:55.271Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:47.382Z",
+      "finishedAt": "2026-11-01T17:49:49.913Z",
       "exitCode": 0
     },
     {
@@ -217,9 +220,9 @@
         "scripts/opencode-http-fixture.mjs",
         "permission"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:10:55.272Z",
-      "finishedAt": "2026-10-08T19:10:56.072Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:49.914Z",
+      "finishedAt": "2026-11-01T17:49:50.804Z",
       "exitCode": 0
     },
     {
@@ -229,9 +232,9 @@
         "scripts/opencode-http-fixture.mjs",
         "interrupt"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:10:56.073Z",
-      "finishedAt": "2026-10-08T19:10:56.796Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:50.806Z",
+      "finishedAt": "2026-11-01T17:49:51.527Z",
       "exitCode": 0
     },
     {
@@ -241,9 +244,9 @@
         "scripts/opencode-http-fixture.mjs",
         "no-auth"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:10:56.797Z",
-      "finishedAt": "2026-10-08T19:10:58.363Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:51.528Z",
+      "finishedAt": "2026-11-01T17:49:52.929Z",
       "exitCode": 0
     },
     {
@@ -253,9 +256,9 @@
         "scripts/codex-fixture.mjs",
         "success"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:10:58.364Z",
-      "finishedAt": "2026-10-08T19:10:59.605Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:52.930Z",
+      "finishedAt": "2026-11-01T17:49:53.535Z",
       "exitCode": 0
     },
     {
@@ -266,9 +269,9 @@
         "claude",
         "permission"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:10:59.606Z",
-      "finishedAt": "2026-10-08T19:11:00.221Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:53.536Z",
+      "finishedAt": "2026-11-01T17:49:54.088Z",
       "exitCode": 0
     },
     {
@@ -278,9 +281,9 @@
         "scripts/native-controller-fixture.mjs",
         "claude"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:00.221Z",
-      "finishedAt": "2026-10-08T19:11:01.043Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:54.088Z",
+      "finishedAt": "2026-11-01T17:49:54.947Z",
       "exitCode": 0
     },
     {
@@ -291,9 +294,9 @@
         "claude",
         "interrupt"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:01.044Z",
-      "finishedAt": "2026-10-08T19:11:01.686Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:54.948Z",
+      "finishedAt": "2026-11-01T17:49:55.732Z",
       "exitCode": 0
     },
     {
@@ -304,9 +307,9 @@
         "claude",
         "quota-error"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:01.687Z",
-      "finishedAt": "2026-10-08T19:11:02.346Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:55.733Z",
+      "finishedAt": "2026-11-01T17:49:56.458Z",
       "exitCode": 0
     },
     {
@@ -318,9 +321,9 @@
         "permission",
         "create"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:02.347Z",
-      "finishedAt": "2026-10-08T19:11:03.124Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:56.459Z",
+      "finishedAt": "2026-11-01T17:49:57.372Z",
       "exitCode": 0
     },
     {
@@ -332,9 +335,9 @@
         "interrupt",
         "create"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:03.125Z",
-      "finishedAt": "2026-10-08T19:11:03.808Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:57.373Z",
+      "finishedAt": "2026-11-01T17:49:58.108Z",
       "exitCode": 0
     },
     {
@@ -345,9 +348,9 @@
         "opencode",
         "permission"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:03.808Z",
-      "finishedAt": "2026-10-08T19:11:04.396Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:58.109Z",
+      "finishedAt": "2026-11-01T17:49:58.719Z",
       "exitCode": 0
     },
     {
@@ -357,9 +360,9 @@
         "scripts/native-controller-fixture.mjs",
         "opencode"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:04.396Z",
-      "finishedAt": "2026-10-08T19:11:05.242Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:58.719Z",
+      "finishedAt": "2026-11-01T17:49:59.647Z",
       "exitCode": 0
     },
     {
@@ -370,9 +373,9 @@
         "opencode",
         "interrupt"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:05.243Z",
-      "finishedAt": "2026-10-08T19:11:05.919Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:49:59.648Z",
+      "finishedAt": "2026-11-01T17:50:00.377Z",
       "exitCode": 0
     },
     {
@@ -383,9 +386,9 @@
         "opencode",
         "quota-error"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:05.919Z",
-      "finishedAt": "2026-10-08T19:11:06.541Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:50:00.378Z",
+      "finishedAt": "2026-11-01T17:50:01.141Z",
       "exitCode": 0
     },
     {
@@ -397,9 +400,9 @@
         "permission",
         "create"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:06.541Z",
-      "finishedAt": "2026-10-08T19:11:07.314Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:50:01.142Z",
+      "finishedAt": "2026-11-01T17:50:02.114Z",
       "exitCode": 0
     },
     {
@@ -411,9 +414,9 @@
         "interrupt",
         "create"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:07.315Z",
-      "finishedAt": "2026-10-08T19:11:08.010Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:50:02.115Z",
+      "finishedAt": "2026-11-01T17:50:02.938Z",
       "exitCode": 0
     },
     {
@@ -422,9 +425,9 @@
         "C:\\Users\\jiang\\XVANT\\.tools\\node_modules\\node-win-x64\\bin\\node.exe",
         "scripts/handoff-fixture.mjs"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:08.010Z",
-      "finishedAt": "2026-10-08T19:11:09.280Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:50:02.938Z",
+      "finishedAt": "2026-11-01T17:50:04.296Z",
       "exitCode": 0
     },
     {
@@ -433,9 +436,9 @@
         "C:\\Users\\jiang\\XVANT\\.tools\\node_modules\\node-win-x64\\bin\\node.exe",
         "scripts/tools-fixture.mjs"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:09.281Z",
-      "finishedAt": "2026-10-08T19:11:10.237Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:50:04.297Z",
+      "finishedAt": "2026-11-01T17:50:05.077Z",
       "exitCode": 0
     },
     {
@@ -444,9 +447,9 @@
         "C:\\Users\\jiang\\XVANT\\.tools\\node_modules\\node-win-x64\\bin\\node.exe",
         "scripts/compatibility-report.mjs"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:10.238Z",
-      "finishedAt": "2026-10-08T19:11:10.678Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:50:05.078Z",
+      "finishedAt": "2026-11-01T17:50:05.492Z",
       "exitCode": 0
     },
     {
@@ -455,9 +458,9 @@
         "C:\\Users\\jiang\\XVANT\\.tools\\node_modules\\node-win-x64\\bin\\node.exe",
         "scripts/browser-fixture.mjs"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:10.680Z",
-      "finishedAt": "2026-10-08T19:11:33.178Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:50:05.493Z",
+      "finishedAt": "2026-11-01T17:50:27.234Z",
       "exitCode": 0
     },
     {
@@ -466,9 +469,9 @@
         "C:\\Users\\jiang\\XVANT\\.tools\\node_modules\\node-win-x64\\bin\\node.exe",
         "scripts/orchestration-fixture.mjs"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:11:33.179Z",
-      "finishedAt": "2026-10-08T19:12:04.723Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:50:27.234Z",
+      "finishedAt": "2026-11-01T17:50:59.044Z",
       "exitCode": 0
     },
     {
@@ -477,9 +480,9 @@
         "C:\\Users\\jiang\\XVANT\\.tools\\node_modules\\node-win-x64\\bin\\node.exe",
         "scripts/native-loop-fixture.mjs"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:12:04.725Z",
-      "finishedAt": "2026-10-08T19:12:10.995Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:50:59.045Z",
+      "finishedAt": "2026-11-01T17:51:06.761Z",
       "exitCode": 0
     },
     {
@@ -494,9 +497,9 @@
         "--report",
         ".artifacts/benchmark-fixture.json"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:12:10.997Z",
-      "finishedAt": "2026-10-08T19:12:34.209Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:51:06.762Z",
+      "finishedAt": "2026-11-01T17:51:34.327Z",
       "exitCode": 0
     },
     {
@@ -507,9 +510,9 @@
         "--report",
         ".artifacts/audit.json"
       ],
-      "workingDirectory": "C:\\Users\\jiang\\Downloads\\xvant\\xvant-agent",
-      "startedAt": "2026-10-08T19:12:34.210Z",
-      "finishedAt": "2026-10-08T19:12:34.885Z",
+      "workingDirectory": "C:\\Users\\jiang\\xt",
+      "startedAt": "2026-11-01T17:51:34.328Z",
+      "finishedAt": "2026-11-01T17:51:35.211Z",
       "exitCode": 0
     }
   ],
@@ -528,7 +531,7 @@
     },
     {
       "path": ".artifacts/tests.log",
-      "sha256": "dc8e268a7f25680a55c9e1165d899d4d78185ba339b7a23c671d3b313af6a780"
+      "sha256": "4986728f07c808379bfe3a7c23df7ac3a551ee653d0cf4bc75c0cec24c736846"
     },
     {
       "path": ".artifacts/runtime.log",
@@ -536,11 +539,11 @@
     },
     {
       "path": ".artifacts/tests.json",
-      "sha256": "2dd06490fec2ef612ecefdb191c566df1a4a2dd67c5bc154884f4fc000c55e1c"
+      "sha256": "392eae6bb4db6a3a1a44b41c66210a70f6de4e0ebc23c9a40935b62bdf823fe7"
     },
     {
       "path": "coverage/coverage-summary.json",
-      "sha256": "04f2a2e92a081fa1e1a81dae54692edb27c34619ed54a5394e833fecd49949f0"
+      "sha256": "a82f1e1699660b2251ce52d8ce4b482328cafab597259fc34a6fce09f3fc579b"
     },
     {
       "path": ".artifacts/provider-fixtures.log",
@@ -616,7 +619,7 @@
     },
     {
       "path": ".artifacts/handoff-fixture.log",
-      "sha256": "01746fe1d97ffc3948ea22cb9530df0dd69c1828a781579c48a5cfd26a2a9835"
+      "sha256": "f1bf408581c0af1b8725dc3ad7da160f4441fd032e8b6f2a65afa240a45136c0"
     },
     {
       "path": ".artifacts/tools-fixture.log",
@@ -644,7 +647,7 @@
     },
     {
       "path": ".artifacts/benchmark-fixture.json",
-      "sha256": "386ab1cf34fd11c47aaacf465b92a494aec274a3da6962c5b9f8c141dcf14198"
+      "sha256": "c59720a085f0ac997eb5116486268df3758a7fc6f7827c9da69fdf1a1a33d20f"
     },
     {
       "path": ".artifacts/release-audit.log",
@@ -652,11 +655,11 @@
     },
     {
       "path": ".artifacts/audit.json",
-      "sha256": "a3fcbf5ae6da5fc03ce2da9beaa6947bbde9c969628b957a633d3e6a4d61590c"
+      "sha256": "8446cb8b230ef71ce4224f44cb6e59474c8ab308a72593d1fe7f7240f93b6d3e"
     },
     {
       "path": ".artifacts/source-manifest.json",
-      "sha256": "b3b7bc52edea8236b63609347d01da8be9e399c893f232a6f7b54a336a829330"
+      "sha256": "d8b5a6a10ec50d335e21f5861470ff654634d3c6f0a87346c556bf364c710b91"
     }
   ],
   "limitations": [

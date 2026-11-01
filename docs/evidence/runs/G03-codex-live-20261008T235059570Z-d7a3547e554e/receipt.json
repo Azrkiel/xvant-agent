@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-10-08T23:50:59.570Z",
+  "classification": "live",
+  "scope": "codex-workspace-write-smoke",
+  "runtimeVersion": "0.160.1",
+  "adapterVersion": "codex-app-server-v1",
+  "stateDirectory": "C:\\Users\\jiang\\xt\\.artifacts/live-codex-1791503446902",
+  "sourceHash": "d7a3547e554e9103d746578b823fc1a6c9590b59578024f6ed50c82d2b2c4d4c",
+  "events": 30,
+  "state": "ready_for_acceptance",
+  "finalText": "Created `hello.txt` containing exactly `hi from codex`.",
+  "tokens": 47814,
+  "auth": {
+    "mode": "chatgpt",
+    "plan": "plus"
+  },
+  "sessionId": "01a11ded-6a79-7b40-b6d1-ff7645c3a1ea",
+  "runId": "01a11ded-6c9e-76d3-b37b-9f3c655c3020",
+  "outcome": "completed",
+  "verification": "passed",
+  "failure": null,
+  "activeCount": 0,
+  "acceptedAfterRestart": true,
+  "status": "passed"
+}

@@ -1,0 +1,30 @@
+{
+  "bundleId": "G03-codex-live-20261008T235059570Z-d7a3547e554e",
+  "archivedAt": "2026-10-08T23:51:19.782Z",
+  "sourceRoot": "C:/Users/jiang/xt",
+  "receipt": {
+    "file": "C:/Users/jiang/xt/docs/evidence/G03-codex-live.json",
+    "sha256": "d4e4b880726f6e015a90c07101f4b1aa4cb44d4f8be6cc370aa5bd2f3d451fdb",
+    "status": "passed"
+  },
+  "artifacts": [],
+  "extras": [
+    {
+      "path": ".artifacts/live-codex-1791503446902/objects/37659ed4a2067cefd75a62d935cc4cef81a532dc4946c5df5c7afc0ee6252a59",
+      "sha256": "37659ed4a2067cefd75a62d935cc4cef81a532dc4946c5df5c7afc0ee6252a59"
+    },
+    {
+      "path": ".artifacts/live-codex-1791503446902/objects/85ada3428664dd2e5081148ebd13aaf282d2d3c0f6ea26364c51a8657b18bfab",
+      "sha256": "85ada3428664dd2e5081148ebd13aaf282d2d3c0f6ea26364c51a8657b18bfab"
+    },
+    {
+      "path": ".artifacts/live-codex-1791503446902/objects/e59a7bfa453e6fa89ad18b313eb1af7f06402af7fe955f61272f1ac07d3fc237",
+      "sha256": "e59a7bfa453e6fa89ad18b313eb1af7f06402af7fe955f61272f1ac07d3fc237"
+    },
+    {
+      "path": ".artifacts/live-codex-1791503446902/state.sqlite",
+      "sha256": "263baf64b2ab62ee537d4453a4c879721d86b8f1e31149353d2ca88bb5e05c1a"
+    }
+  ],
+  "integrity": "complete"
+}

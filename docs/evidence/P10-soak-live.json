@@ -1,12 +1,12 @@
 {
   "gateId": "P10-soak-live",
-  "status": "failed",
-  "generatedAt": "2026-11-01T07:01:06.527Z",
+  "status": "passed",
+  "generatedAt": "2026-11-01T17:51:36.266Z",
   "classification": "live",
   "operatingSystem": "win32 10.0.26200",
   "executionHost": "kvn",
   "nodeVersion": "v24.21.0",
-  "sourceHash": "fb05eed8ec523fbd4b345058d09f684c90b586d2897e72e93e21093aaaf3e6f4",
+  "sourceHash": "2dd7fad8e6b1dad9c6324ad3ef2d3899dcee452a99b7e5e98b0038848007f791",
   "limitations": [
     "Haiku only: every role runs on the haiku model of one Claude Code version through a subscription login. Other models, Codex and OpenCode are not exercised.",
     "Tiny objectives: one or two small plain-JavaScript files per iteration, with a plan supplied up front, so planning turns and larger changes are not exercised.",
@@ -16,53 +16,30 @@
     "Memory is process rss of the soak itself, sampled once per iteration; Claude child processes are not included. Child processes are tracked by sampling the process table (PowerShell Get-CimInstance Win32_Process) every few seconds and after each iteration; a process that starts and exits between samples is not seen, and one that exits is not a leak.",
     "The Claude subscription and the host were shared with other work during the run."
   ],
-  "problems": [
-    "iteration 1 (impossible_check): phase needs_attention, expected failed (Node double needs_attention)",
-    "iteration 2 (clean): phase needs_attention, expected ready (Node shout needs_attention)",
-    "iteration 3 (check_fails_first): phase needs_attention, expected ready or failed (Node add needs_attention)",
-    "iteration 5 (check_fails_first): phase needs_attention, expected ready or failed (Node add needs_attention)",
-    "iteration 6 (impossible_check): phase needs_attention, expected failed (Node double needs_attention)",
-    "iteration 7 (conflicting_nodes): process still running after the iteration: csrss.exe pid 1452",
-    "iteration 7 (conflicting_nodes): process still running after the iteration: winlogon.exe pid 1540",
-    "iteration 7 (conflicting_nodes): process still running after the iteration: fontdrvhost.exe pid 1808",
-    "iteration 7 (conflicting_nodes): process still running after the iteration: dwm.exe pid 1656",
-    "iteration 8 (clean): phase needs_attention, expected ready (Node shout needs_attention)",
-    "iteration 10 (check_fails_first): phase needs_attention, expected ready or failed (Node add needs_attention)",
-    "iteration 11 (impossible_check): phase needs_attention, expected failed (Node double needs_attention)",
-    "iteration 12 (clean): phase needs_attention, expected ready (Node shout needs_attention)",
-    "iteration 15 (check_fails_first): phase needs_attention, expected ready or failed (Node add needs_attention)",
-    "iteration 16 (impossible_check): phase needs_attention, expected failed (Node double needs_attention)",
-    "iteration 17 (clean): phase needs_attention, expected ready (Node shout needs_attention)",
-    "iteration 20 (clean): phase needs_attention, expected ready (Node shout needs_attention)",
-    "iteration 23 (impossible_check): phase needs_attention, expected failed (Node double needs_attention)",
-    "iteration 24 (check_fails_first): phase needs_attention, expected ready or failed (Node add needs_attention)",
-    "iteration 26 (impossible_check): phase needs_attention, expected failed (Node double needs_attention)",
-    "iteration 27 (check_fails_first): phase needs_attention, expected ready or failed (Node add needs_attention)",
-    "iteration 29 (clean): phase needs_attention, expected ready (Node shout needs_attention)",
-    "iteration 31 (clean): phase needs_attention, expected ready (Node shout needs_attention)"
-  ],
+  "problems": [],
   "seed": 20261008,
   "requestedMinutes": 12,
-  "durationMs": 729986,
-  "iterations": 32,
+  "durationMs": 763610,
+  "iterations": 13,
   "scenarioCounts": {
-    "cancel_mid_run": 6,
-    "impossible_check": 6,
-    "clean": 7,
-    "check_fails_first": 6,
-    "conflicting_nodes": 7
+    "cancel_mid_run": 2,
+    "impossible_check": 3,
+    "clean": 3,
+    "check_fails_first": 3,
+    "conflicting_nodes": 2
   },
   "faultCounts": {
     "turn_failure": 0,
-    "unknown_outcome": 32,
-    "integration_conflict": 0,
-    "check_failure": 0,
+    "unknown_outcome": 0,
+    "integration_conflict": 2,
+    "check_failure": 12,
     "review_rejection": 0,
-    "cancel_delivered": 5
+    "cancel_delivered": 2
   },
   "phaseCounts": {
-    "cancelled": 5,
-    "needs_attention": 27
+    "cancelled": 2,
+    "failed": 6,
+    "ready": 5
   },
   "outcomes": [
     {
@@ -70,9 +47,8 @@
       "scenario": "cancel_mid_run",
       "phase": "cancelled",
       "reason": "CANCELLED",
-      "durationMs": 16458,
+      "durationMs": 12125,
       "notes": [
-        "a turn had an unknown outcome",
         "cancel delivered"
       ],
       "violations": []
@@ -80,124 +56,109 @@
     {
       "iteration": 1,
       "scenario": "impossible_check",
-      "phase": "needs_attention",
-      "reason": "Node double needs_attention",
-      "durationMs": 15699,
+      "phase": "failed",
+      "reason": "Combined checks still fail: check",
+      "durationMs": 75797,
       "notes": [
-        "a turn had an unknown outcome",
-        "the check never ran"
+        "check failed as designed",
+        "runtime: claude-3: subscription/claude-haiku-5-5"
       ],
-      "violations": [
-        "phase needs_attention, expected failed (Node double needs_attention)"
-      ]
+      "violations": []
     },
     {
       "iteration": 2,
       "scenario": "clean",
-      "phase": "needs_attention",
-      "reason": "Node shout needs_attention",
-      "durationMs": 13376,
+      "phase": "ready",
+      "reason": null,
+      "durationMs": 55602,
       "notes": [
-        "a turn had an unknown outcome"
+        "runtime: claude-3: subscription/claude-haiku-5-5",
+        "runtime: claude-1: subscription/claude-haiku-5-5"
       ],
-      "violations": [
-        "phase needs_attention, expected ready (Node shout needs_attention)"
-      ]
+      "violations": []
     },
     {
       "iteration": 3,
       "scenario": "check_fails_first",
-      "phase": "needs_attention",
-      "reason": "Node add needs_attention",
-      "durationMs": 17565,
+      "phase": "failed",
+      "reason": "Combined checks still fail: check",
+      "durationMs": 58548,
       "notes": [
-        "a turn had an unknown outcome",
-        "check passed first time (the fault was not exercised)"
+        "repair budget ran out",
+        "runtime: claude-3: subscription/claude-haiku-5-5"
       ],
-      "violations": [
-        "phase needs_attention, expected ready or failed (Node add needs_attention)"
-      ]
+      "violations": []
     },
     {
       "iteration": 4,
       "scenario": "conflicting_nodes",
-      "phase": "needs_attention",
-      "reason": "Node a needs_attention",
-      "durationMs": 90869,
+      "phase": "ready",
+      "reason": null,
+      "durationMs": 103281,
       "notes": [
-        "a turn had an unknown outcome",
-        "no integration conflict (the model avoided it)",
-        "runtime: claude-1: subscription/claude-haiku-5-5"
+        "integration conflict observed",
+        "runtime: claude-1: subscription/claude-haiku-5-5",
+        "runtime: claude-3: subscription/claude-haiku-5-5",
+        "runtime: claude-2: subscription/claude-haiku-5-5"
       ],
       "violations": []
     },
     {
       "iteration": 5,
       "scenario": "check_fails_first",
-      "phase": "needs_attention",
-      "reason": "Node add needs_attention",
-      "durationMs": 13997,
+      "phase": "failed",
+      "reason": "Combined checks still fail: check",
+      "durationMs": 65971,
       "notes": [
-        "a turn had an unknown outcome",
-        "check passed first time (the fault was not exercised)"
+        "repair budget ran out",
+        "runtime: claude-3: subscription/claude-haiku-5-5"
       ],
-      "violations": [
-        "phase needs_attention, expected ready or failed (Node add needs_attention)"
-      ]
+      "violations": []
     },
     {
       "iteration": 6,
       "scenario": "impossible_check",
-      "phase": "needs_attention",
-      "reason": "Node double needs_attention",
-      "durationMs": 12905,
+      "phase": "failed",
+      "reason": "Combined checks still fail: check",
+      "durationMs": 65603,
       "notes": [
-        "a turn had an unknown outcome",
-        "the check never ran"
+        "check failed as designed",
+        "runtime: claude-3: subscription/claude-haiku-5-5"
       ],
-      "violations": [
-        "phase needs_attention, expected failed (Node double needs_attention)"
-      ]
+      "violations": []
     },
     {
       "iteration": 7,
       "scenario": "conflicting_nodes",
-      "phase": "needs_attention",
-      "reason": "Node a needs_attention",
-      "durationMs": 61842,
+      "phase": "ready",
+      "reason": null,
+      "durationMs": 100430,
       "notes": [
-        "a turn had an unknown outcome",
-        "no integration conflict (the model avoided it)",
-        "runtime: claude-1: subscription/claude-haiku-5-5"
+        "integration conflict observed",
+        "runtime: claude-1: subscription/claude-haiku-5-5",
+        "runtime: claude-3: subscription/claude-haiku-5-5"
       ],
-      "violations": [
-        "process still running after the iteration: csrss.exe pid 1452",
-        "process still running after the iteration: winlogon.exe pid 1540",
-        "process still running after the iteration: fontdrvhost.exe pid 1808",
-        "process still running after the iteration: dwm.exe pid 1656"
-      ]
+      "violations": []
     },
     {
       "iteration": 8,
       "scenario": "clean",
-      "phase": "needs_attention",
-      "reason": "Node shout needs_attention",
-      "durationMs": 10671,
+      "phase": "ready",
+      "reason": null,
+      "durationMs": 52732,
       "notes": [
-        "a turn had an unknown outcome"
+        "runtime: claude-3: subscription/claude-haiku-5-5",
+        "runtime: claude-1: subscription/claude-haiku-5-5"
       ],
-      "violations": [
-        "phase needs_attention, expected ready (Node shout needs_attention)"
-      ]
+      "violations": []
     },
     {
       "iteration": 9,
       "scenario": "cancel_mid_run",
       "phase": "cancelled",
       "reason": "CANCELLED",
-      "durationMs": 11315,
+      "durationMs": 9985,
       "notes": [
-        "a turn had an unknown outcome",
         "cancel delivered"
       ],
       "violations": []
@@ -205,330 +166,52 @@
     {
       "iteration": 10,
       "scenario": "check_fails_first",
-      "phase": "needs_attention",
-      "reason": "Node add needs_attention",
-      "durationMs": 10356,
+      "phase": "failed",
+      "reason": "Combined checks still fail: check",
+      "durationMs": 49543,
       "notes": [
-        "a turn had an unknown outcome",
-        "check passed first time (the fault was not exercised)"
+        "repair budget ran out",
+        "runtime: claude-3: subscription/claude-haiku-5-5"
       ],
-      "violations": [
-        "phase needs_attention, expected ready or failed (Node add needs_attention)"
-      ]
+      "violations": []
     },
     {
       "iteration": 11,
       "scenario": "impossible_check",
-      "phase": "needs_attention",
-      "reason": "Node double needs_attention",
-      "durationMs": 10206,
+      "phase": "failed",
+      "reason": "Combined checks still fail: check",
+      "durationMs": 63146,
       "notes": [
-        "a turn had an unknown outcome",
-        "the check never ran"
+        "check failed as designed",
+        "runtime: claude-3: subscription/claude-haiku-5-5"
       ],
-      "violations": [
-        "phase needs_attention, expected failed (Node double needs_attention)"
-      ]
+      "violations": []
     },
     {
       "iteration": 12,
       "scenario": "clean",
-      "phase": "needs_attention",
-      "reason": "Node shout needs_attention",
-      "durationMs": 10768,
+      "phase": "ready",
+      "reason": null,
+      "durationMs": 50759,
       "notes": [
-        "a turn had an unknown outcome"
-      ],
-      "violations": [
-        "phase needs_attention, expected ready (Node shout needs_attention)"
-      ]
-    },
-    {
-      "iteration": 13,
-      "scenario": "cancel_mid_run",
-      "phase": "cancelled",
-      "reason": "CANCELLED",
-      "durationMs": 17625,
-      "notes": [
-        "a turn had an unknown outcome",
-        "cancel delivered"
-      ],
-      "violations": []
-    },
-    {
-      "iteration": 14,
-      "scenario": "conflicting_nodes",
-      "phase": "needs_attention",
-      "reason": "Node a needs_attention",
-      "durationMs": 59050,
-      "notes": [
-        "a turn had an unknown outcome",
-        "no integration conflict (the model avoided it)",
+        "runtime: claude-3: subscription/claude-haiku-5-5",
         "runtime: claude-1: subscription/claude-haiku-5-5"
       ],
       "violations": []
-    },
-    {
-      "iteration": 15,
-      "scenario": "check_fails_first",
-      "phase": "needs_attention",
-      "reason": "Node add needs_attention",
-      "durationMs": 15148,
-      "notes": [
-        "a turn had an unknown outcome",
-        "check passed first time (the fault was not exercised)"
-      ],
-      "violations": [
-        "phase needs_attention, expected ready or failed (Node add needs_attention)"
-      ]
-    },
-    {
-      "iteration": 16,
-      "scenario": "impossible_check",
-      "phase": "needs_attention",
-      "reason": "Node double needs_attention",
-      "durationMs": 13402,
-      "notes": [
-        "a turn had an unknown outcome",
-        "the check never ran"
-      ],
-      "violations": [
-        "phase needs_attention, expected failed (Node double needs_attention)"
-      ]
-    },
-    {
-      "iteration": 17,
-      "scenario": "clean",
-      "phase": "needs_attention",
-      "reason": "Node shout needs_attention",
-      "durationMs": 10537,
-      "notes": [
-        "a turn had an unknown outcome"
-      ],
-      "violations": [
-        "phase needs_attention, expected ready (Node shout needs_attention)"
-      ]
-    },
-    {
-      "iteration": 18,
-      "scenario": "conflicting_nodes",
-      "phase": "needs_attention",
-      "reason": "Node a needs_attention",
-      "durationMs": 55150,
-      "notes": [
-        "a turn had an unknown outcome",
-        "no integration conflict (the model avoided it)",
-        "runtime: claude-1: subscription/claude-haiku-5-5"
-      ],
-      "violations": []
-    },
-    {
-      "iteration": 19,
-      "scenario": "cancel_mid_run",
-      "phase": "cancelled",
-      "reason": "CANCELLED",
-      "durationMs": 10333,
-      "notes": [
-        "a turn had an unknown outcome",
-        "cancel delivered"
-      ],
-      "violations": []
-    },
-    {
-      "iteration": 20,
-      "scenario": "clean",
-      "phase": "needs_attention",
-      "reason": "Node shout needs_attention",
-      "durationMs": 13158,
-      "notes": [
-        "a turn had an unknown outcome"
-      ],
-      "violations": [
-        "phase needs_attention, expected ready (Node shout needs_attention)"
-      ]
-    },
-    {
-      "iteration": 21,
-      "scenario": "cancel_mid_run",
-      "phase": "cancelled",
-      "reason": "CANCELLED",
-      "durationMs": 15430,
-      "notes": [
-        "a turn had an unknown outcome",
-        "cancel delivered"
-      ],
-      "violations": []
-    },
-    {
-      "iteration": 22,
-      "scenario": "conflicting_nodes",
-      "phase": "needs_attention",
-      "reason": "Node a needs_attention",
-      "durationMs": 50031,
-      "notes": [
-        "a turn had an unknown outcome",
-        "no integration conflict (the model avoided it)",
-        "runtime: claude-1: subscription/claude-haiku-5-5"
-      ],
-      "violations": []
-    },
-    {
-      "iteration": 23,
-      "scenario": "impossible_check",
-      "phase": "needs_attention",
-      "reason": "Node double needs_attention",
-      "durationMs": 10070,
-      "notes": [
-        "a turn had an unknown outcome",
-        "the check never ran"
-      ],
-      "violations": [
-        "phase needs_attention, expected failed (Node double needs_attention)"
-      ]
-    },
-    {
-      "iteration": 24,
-      "scenario": "check_fails_first",
-      "phase": "needs_attention",
-      "reason": "Node add needs_attention",
-      "durationMs": 8548,
-      "notes": [
-        "a turn had an unknown outcome",
-        "check passed first time (the fault was not exercised)"
-      ],
-      "violations": [
-        "phase needs_attention, expected ready or failed (Node add needs_attention)"
-      ]
-    },
-    {
-      "iteration": 25,
-      "scenario": "cancel_mid_run",
-      "phase": "needs_attention",
-      "reason": "Node stats needs_attention",
-      "durationMs": 10139,
-      "notes": [
-        "a turn had an unknown outcome",
-        "the run ended before the cancel was delivered"
-      ],
-      "violations": []
-    },
-    {
-      "iteration": 26,
-      "scenario": "impossible_check",
-      "phase": "needs_attention",
-      "reason": "Node double needs_attention",
-      "durationMs": 10100,
-      "notes": [
-        "a turn had an unknown outcome",
-        "the check never ran"
-      ],
-      "violations": [
-        "phase needs_attention, expected failed (Node double needs_attention)"
-      ]
-    },
-    {
-      "iteration": 27,
-      "scenario": "check_fails_first",
-      "phase": "needs_attention",
-      "reason": "Node add needs_attention",
-      "durationMs": 10931,
-      "notes": [
-        "a turn had an unknown outcome",
-        "check passed first time (the fault was not exercised)"
-      ],
-      "violations": [
-        "phase needs_attention, expected ready or failed (Node add needs_attention)"
-      ]
-    },
-    {
-      "iteration": 28,
-      "scenario": "conflicting_nodes",
-      "phase": "needs_attention",
-      "reason": "Node a needs_attention",
-      "durationMs": 50485,
-      "notes": [
-        "a turn had an unknown outcome",
-        "no integration conflict (the model avoided it)",
-        "runtime: claude-1: subscription/claude-haiku-5-5"
-      ],
-      "violations": []
-    },
-    {
-      "iteration": 29,
-      "scenario": "clean",
-      "phase": "needs_attention",
-      "reason": "Node shout needs_attention",
-      "durationMs": 11510,
-      "notes": [
-        "a turn had an unknown outcome"
-      ],
-      "violations": [
-        "phase needs_attention, expected ready (Node shout needs_attention)"
-      ]
-    },
-    {
-      "iteration": 30,
-      "scenario": "conflicting_nodes",
-      "phase": "needs_attention",
-      "reason": "Node a needs_attention",
-      "durationMs": 48818,
-      "notes": [
-        "a turn had an unknown outcome",
-        "no integration conflict (the model avoided it)",
-        "runtime: claude-1: subscription/claude-haiku-5-5"
-      ],
-      "violations": []
-    },
-    {
-      "iteration": 31,
-      "scenario": "clean",
-      "phase": "needs_attention",
-      "reason": "Node shout needs_attention",
-      "durationMs": 13395,
-      "notes": [
-        "a turn had an unknown outcome"
-      ],
-      "violations": [
-        "phase needs_attention, expected ready (Node shout needs_attention)"
-      ]
     }
   ],
   "memory": {
-    "firstRss": 86192128,
-    "lastRss": 97079296,
-    "maxRss": 97316864,
-    "warmupIterations": 4,
-    "baselineRss": 86413312,
-    "maxFactorAfterWarmup": 1.126,
+    "firstRss": 85700608,
+    "lastRss": 93859840,
+    "maxRss": 98398208,
+    "warmupIterations": 3,
+    "baselineRss": 92164096,
+    "maxFactorAfterWarmup": 1.068,
     "allowedFactor": 1.5,
     "floorBytes": 67108864
   },
-  "maxTimerGapMs": 26607,
-  "violations": [
-    "iteration 1 (impossible_check): phase needs_attention, expected failed (Node double needs_attention)",
-    "iteration 2 (clean): phase needs_attention, expected ready (Node shout needs_attention)",
-    "iteration 3 (check_fails_first): phase needs_attention, expected ready or failed (Node add needs_attention)",
-    "iteration 5 (check_fails_first): phase needs_attention, expected ready or failed (Node add needs_attention)",
-    "iteration 6 (impossible_check): phase needs_attention, expected failed (Node double needs_attention)",
-    "iteration 7 (conflicting_nodes): process still running after the iteration: csrss.exe pid 1452",
-    "iteration 7 (conflicting_nodes): process still running after the iteration: winlogon.exe pid 1540",
-    "iteration 7 (conflicting_nodes): process still running after the iteration: fontdrvhost.exe pid 1808",
-    "iteration 7 (conflicting_nodes): process still running after the iteration: dwm.exe pid 1656",
-    "iteration 8 (clean): phase needs_attention, expected ready (Node shout needs_attention)",
-    "iteration 10 (check_fails_first): phase needs_attention, expected ready or failed (Node add needs_attention)",
-    "iteration 11 (impossible_check): phase needs_attention, expected failed (Node double needs_attention)",
-    "iteration 12 (clean): phase needs_attention, expected ready (Node shout needs_attention)",
-    "iteration 15 (check_fails_first): phase needs_attention, expected ready or failed (Node add needs_attention)",
-    "iteration 16 (impossible_check): phase needs_attention, expected failed (Node double needs_attention)",
-    "iteration 17 (clean): phase needs_attention, expected ready (Node shout needs_attention)",
-    "iteration 20 (clean): phase needs_attention, expected ready (Node shout needs_attention)",
-    "iteration 23 (impossible_check): phase needs_attention, expected failed (Node double needs_attention)",
-    "iteration 24 (check_fails_first): phase needs_attention, expected ready or failed (Node add needs_attention)",
-    "iteration 26 (impossible_check): phase needs_attention, expected failed (Node double needs_attention)",
-    "iteration 27 (check_fails_first): phase needs_attention, expected ready or failed (Node add needs_attention)",
-    "iteration 29 (clean): phase needs_attention, expected ready (Node shout needs_attention)",
-    "iteration 31 (clean): phase needs_attention, expected ready (Node shout needs_attention)"
-  ],
+  "maxTimerGapMs": 10835,
+  "violations": [],
   "minutes": 12,
   "maxIterations": null,
   "model": "haiku",
@@ -539,61 +222,60 @@
   },
   "scenarios": {
     "cancel_mid_run": {
-      "runs": 6,
+      "runs": 2,
       "phases": {
-        "cancelled": 5,
-        "needs_attention": 1
+        "cancelled": 2
       },
       "observed": {
-        "a turn had an unknown outcome": 6,
-        "cancel delivered": 5,
-        "the run ended before the cancel was delivered": 1
+        "cancel delivered": 2
       },
       "violations": 0
     },
     "impossible_check": {
-      "runs": 6,
+      "runs": 3,
       "phases": {
-        "needs_attention": 6
+        "failed": 3
       },
       "observed": {
-        "a turn had an unknown outcome": 6,
-        "the check never ran": 6
+        "check failed as designed": 3,
+        "runtime: claude-3: subscription/claude-haiku-5-5": 3
       },
-      "violations": 6
+      "violations": 0
     },
     "clean": {
-      "runs": 7,
+      "runs": 3,
       "phases": {
-        "needs_attention": 7
+        "ready": 3
       },
       "observed": {
-        "a turn had an unknown outcome": 7
+        "runtime: claude-3: subscription/claude-haiku-5-5": 3,
+        "runtime: claude-1: subscription/claude-haiku-5-5": 3
       },
-      "violations": 7
+      "violations": 0
     },
     "check_fails_first": {
-      "runs": 6,
+      "runs": 3,
       "phases": {
-        "needs_attention": 6
+        "failed": 3
       },
       "observed": {
-        "a turn had an unknown outcome": 6,
-        "check passed first time (the fault was not exercised)": 6
+        "repair budget ran out": 3,
+        "runtime: claude-3: subscription/claude-haiku-5-5": 3
       },
-      "violations": 6
+      "violations": 0
     },
     "conflicting_nodes": {
-      "runs": 7,
+      "runs": 2,
       "phases": {
-        "needs_attention": 7
+        "ready": 2
       },
       "observed": {
-        "a turn had an unknown outcome": 7,
-        "no integration conflict (the model avoided it)": 7,
-        "runtime: claude-1: subscription/claude-haiku-5-5": 7
+        "integration conflict observed": 2,
+        "runtime: claude-1: subscription/claude-haiku-5-5": 2,
+        "runtime: claude-3: subscription/claude-haiku-5-5": 2,
+        "runtime: claude-2: subscription/claude-haiku-5-5": 1
       },
-      "violations": 4
+      "violations": 0
     }
   }
 }
