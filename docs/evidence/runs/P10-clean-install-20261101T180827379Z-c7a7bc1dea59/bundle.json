@@ -1,0 +1,13 @@
+{
+  "bundleId": "P10-clean-install-20261101T180827379Z-c7a7bc1dea59",
+  "archivedAt": "2026-11-01T18:09:22.350Z",
+  "sourceRoot": "C:/Users/jiang/xm",
+  "receipt": {
+    "file": "C:/Users/jiang/xm/docs/evidence/P10-clean-install.json",
+    "sha256": "2f10788d362c5aa6a4f60c3701301dc0625358c6e40a8627bc4e0c802ec8fe26",
+    "status": "passed"
+  },
+  "artifacts": [],
+  "extras": [],
+  "integrity": "complete"
+}
