@@ -9,7 +9,6 @@ import {
 } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import {
-  existsSync,
   mkdirSync,
   mkdtempSync,
   realpathSync,
@@ -23,6 +22,7 @@ import { chromium, type Browser, type Page } from 'playwright-core';
 import { LIVE_ROUTES } from '../../packages/contracts/src/live.ts';
 import type { ProviderKind } from '../../packages/contracts/src/providers.ts';
 import { startApp } from '../../apps/controller/src/app.ts';
+import { findBrowser } from '../../scripts/browser-path.ts';
 
 vi.setConfig({ testTimeout: 180000, hookTimeout: 60000 });
 const fixture = (name: string) =>
@@ -32,20 +32,17 @@ const FAKES: Record<ProviderKind, string[]> = {
   claude: [fixture('claude-live-peer.mjs'), 'write'],
   opencode: [fixture('opencode-cli.mjs'), 'tools'],
 };
-// The host's own Chromium browser; a missing browser fails, as in the G05 browser fixture.
-const EDGE = [
-  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-].find((path) => existsSync(path));
+// The host's own Chromium browser, found the same way as the G05 browser
+// fixture; a missing browser fails the suite rather than skipping it.
+const BROWSER = findBrowser();
 let browser: Browser;
 let root: string,
   repo: string,
   app: Awaited<ReturnType<typeof startApp>>,
   page: Page;
 beforeAll(async () => {
-  if (!EDGE) throw new Error('No Chromium browser installed for UI tests');
-  browser = await chromium.launch({ executablePath: EDGE, headless: true });
+  if (!BROWSER) throw new Error('No Chromium browser installed for UI tests');
+  browser = await chromium.launch({ executablePath: BROWSER, headless: true });
 });
 afterAll(async () => browser?.close());
 beforeEach(async () => {
