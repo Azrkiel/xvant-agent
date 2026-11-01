@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import Database from 'better-sqlite3';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Store } from './store.ts';
 import { challengeId } from './lessons.ts';
+import { ArtifactStore, backupSnapshot, restoreSnapshot } from './artifacts.ts';
 import type {
   ChallengeInput,
   SolutionInput,
@@ -200,5 +203,48 @@ describe('lesson graph', () => {
     expect(
       store.lessons.find('project', { query: 'Request failed: 401' }),
     ).toHaveLength(1);
+  });
+
+  it('survive a verified snapshot, which rejects a changed lesson schema', async () => {
+    const ch = store.lessons.recordChallenge(challenge(failure(1)));
+    const fix = store.lessons.recordSolution(
+      solution('Removed the off-by-one'),
+    );
+    store.lessons.link('project', ch.id, fix.id, 'solved_by');
+    await backupSnapshot(
+      store,
+      new ArtifactStore(join(root, 'objects')),
+      join(root, 'backup'),
+    );
+    await restoreSnapshot(join(root, 'backup'), join(root, 'restored'));
+    const restored = new Store(join(root, 'restored', 'state.sqlite'), {
+      owner: 'restored',
+      // Snapshots keep the controller lease; open after it lapses.
+      now: () => now + 60_000,
+    });
+    try {
+      expect(
+        restored.lessons
+          .find('project', { query: failure(5) })[0]!
+          .solutions.map((s) => s.solution.id),
+      ).toEqual([fix.id]);
+    } finally {
+      restored.close();
+    }
+    const dbPath = join(root, 'backup', 'state.sqlite');
+    const db = new Database(dbPath);
+    db.exec('ALTER TABLE lesson_edges ADD COLUMN extra TEXT');
+    db.close();
+    const manifestPath = join(root, 'backup', 'manifest.json');
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+      database: { sha256: string };
+    };
+    manifest.database.sha256 = createHash('sha256')
+      .update(readFileSync(dbPath))
+      .digest('hex');
+    writeFileSync(manifestPath, JSON.stringify(manifest));
+    await expect(
+      restoreSnapshot(join(root, 'backup'), join(root, 'second')),
+    ).rejects.toThrow('SCHEMA_UNSUPPORTED');
   });
 });

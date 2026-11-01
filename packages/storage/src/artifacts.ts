@@ -158,6 +158,7 @@ const manifestSchema = z.strictObject({
     z.literal(2),
     z.literal(3),
     z.literal(4),
+    z.literal(5),
   ]),
   database: z.strictObject({
     file: z.literal('state.sqlite'),
@@ -191,6 +192,16 @@ const tables: Record<string, string[]> = {
   ],
   work_graphs: ['id', 'project_id', 'body'],
   work_events: ['sequence', 'graph_id', 'kind', 'payload'],
+  lesson_nodes: ['project_id', 'id', 'kind', 'body'],
+  lesson_edges: [
+    'project_id',
+    'from_id',
+    'to_id',
+    'relation',
+    'count',
+    'first_at',
+    'last_at',
+  ],
 };
 const primaryKeys: Record<string, string[]> = {
   tasks: ['id'],
@@ -208,6 +219,8 @@ const primaryKeys: Record<string, string[]> = {
   memory_records: ['project_id', 'id'],
   work_graphs: ['id'],
   work_events: ['sequence'],
+  lesson_nodes: ['project_id', 'id'],
+  lesson_edges: ['project_id', 'from_id', 'to_id', 'relation'],
 };
 const integerColumns = new Set([
   'events.sequence',
@@ -216,6 +229,9 @@ const integerColumns = new Set([
   'artifacts.work_revision',
   'provider_entries.sequence',
   'work_events.sequence',
+  'lesson_edges.count',
+  'lesson_edges.first_at',
+  'lesson_edges.last_at',
 ]);
 const foreignKeys: Record<string, { from: string; table: string }[]> = {
   tasks: [],
@@ -235,6 +251,8 @@ const foreignKeys: Record<string, { from: string; table: string }[]> = {
   memory_records: [],
   work_graphs: [],
   work_events: [{ from: 'graph_id', table: 'work_graphs' }],
+  lesson_nodes: [],
+  lesson_edges: [],
 };
 interface ColumnMetadata {
   name: string;
@@ -326,7 +344,7 @@ function validateDatabase(path: string): {
   const db = new Database(path, { readonly: true, fileMustExist: true });
   try {
     const schemaVersion = db.pragma('user_version', { simple: true }) as number;
-    if (![1, 2, 3, 4].includes(schemaVersion)) fail('SCHEMA_UNSUPPORTED');
+    if (![1, 2, 3, 4, 5].includes(schemaVersion)) fail('SCHEMA_UNSUPPORTED');
     if (
       db.pragma('integrity_check', { simple: true }) !== 'ok' ||
       (db.pragma('foreign_key_check') as unknown[]).length !== 0
@@ -336,6 +354,7 @@ function validateDatabase(path: string): {
       if (schemaVersion === 1 && table.startsWith('provider_')) continue;
       if (schemaVersion < 3 && table.startsWith('memory_')) continue;
       if (schemaVersion < 4 && table.startsWith('work_')) continue;
+      if (schemaVersion < 5 && table.startsWith('lesson_')) continue;
       validateTable(db, table, columns);
     }
     if (schemaVersion >= 3) {
@@ -343,6 +362,13 @@ function validateDatabase(path: string): {
         .prepare("SELECT sql FROM sqlite_schema WHERE name='memory_text'")
         .get() as { sql: string } | undefined;
       if (text?.sql !== 'CREATE VIRTUAL TABLE memory_text USING fts5(content)')
+        fail('SCHEMA_UNSUPPORTED');
+    }
+    if (schemaVersion >= 5) {
+      const text = db
+        .prepare("SELECT sql FROM sqlite_schema WHERE name='lesson_text'")
+        .get() as { sql: string } | undefined;
+      if (text?.sql !== 'CREATE VIRTUAL TABLE lesson_text USING fts5(text)')
         fail('SCHEMA_UNSUPPORTED');
     }
     const references = db
