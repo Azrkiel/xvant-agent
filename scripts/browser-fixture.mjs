@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -7,19 +7,11 @@ import { ArtifactStore } from '../packages/storage/src/artifacts.ts';
 import { WorkerSupervisor } from '../packages/supervisor/src/index.ts';
 import { ToolRegistry } from '../packages/tools/src/registry.ts';
 import { createBrowserTool } from '../packages/tools/src/browser.ts';
+import { findBrowser } from './browser-path.ts';
 
 // Real-browser qualification for browser.inspect on this host. A missing
 // browser is reported as unavailable, never as a pass.
-const candidates = [
-  process.env.XVANT_BROWSER,
-  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  '/usr/bin/chromium',
-  '/usr/bin/chromium-browser',
-  '/usr/bin/google-chrome',
-].filter(Boolean);
-const executable = candidates.find((path) => existsSync(path));
+const executable = findBrowser();
 if (!executable) {
   console.log(
     JSON.stringify({ classification: 'offline', status: 'unavailable' }),
