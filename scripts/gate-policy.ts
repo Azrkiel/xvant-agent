@@ -116,7 +116,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/storage/src/git-workspace.test.ts': 5,
               'packages/adapters/src/live/live-streams.test.ts': 11,
               'apps/controller/src/codex-live.test.ts': 6,
-              'apps/controller/src/claude-live.test.ts': 7,
+              'apps/controller/src/claude-live.test.ts': 10,
               'packages/adapters/src/live/discover.test.ts': 3,
               'apps/controller/src/live-roster.test.ts': 2,
               'apps/controller/src/live-gates.test.ts': 3,
