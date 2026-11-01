@@ -1,0 +1,13 @@
+{
+  "bundleId": "P10-soak-live-20261008T205509206Z-f91ff9ed4266",
+  "archivedAt": "2026-10-08T21:12:21.898Z",
+  "sourceRoot": "C:/Users/jiang/downloads/xvant/xvant-agent",
+  "receipt": {
+    "file": "C:/Users/jiang/downloads/xvant/xvant-agent/docs/evidence/P10-soak-live.json",
+    "sha256": "1c27bc73bdf893f2c8e4e41b802c7997411f6ed005b8891c039a741608864c9a",
+    "status": "failed"
+  },
+  "artifacts": [],
+  "extras": [],
+  "integrity": "complete"
+}
