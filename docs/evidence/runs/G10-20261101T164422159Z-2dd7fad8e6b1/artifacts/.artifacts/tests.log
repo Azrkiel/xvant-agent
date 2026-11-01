@@ -1,0 +1,704 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90mC:/Users/jiang/xt[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+warning: You appear to have cloned an empty repository.
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: You appear to have cloned an empty repository.
+ [31m❯[39m apps/controller/src/share.test.ts [2m([22m[2m9 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 160441[2mms[22m[39m
+   [33m[2m✓[22m[39m publishes a new shared branch and carries edits between two accounts[33m 21768[2mms[22m[39m
+   [33m[2m✓[22m[39m merges edits to different files and to different lines of one file[33m 32418[2mms[22m[39m
+[31m   [31m×[31m keeps both versions when two accounts change the same line[39m[33m 10693[2mms[22m[39m
+   [33m[2m✓[22m[39m lets a change win over a deletion of the same file[33m 24631[2mms[22m[39m
+   [33m[2m✓[22m[39m never commits files that look like credentials[33m 17509[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses pre-staged credentials without committing or publishing them[33m 9093[2mms[22m[39m
+[31m   [31m×[31m checks staged credential bytes even when the working copy was sanitized[39m[33m 12918[2mms[22m[39m
+   [33m[2m✓[22m[39m skips oversized credential-bearing files instead of publishing unscanned content[33m 20550[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses a checkout on another branch, and reports an unreachable remote[33m 10850[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m apps/controller/src/native-offline.test.ts [2m([22m[2m98 tests[22m[2m)[22m[33m 209366[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: performs setup before fixture dispatch[33m 2060[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: confirms interrupt without verifying or accepting[33m 855[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: confirms interrupt-result-first without verifying or accepting[33m 872[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after setup-error[33m 3003[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after setup-mismatch[33m 3247[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after setup-timeout[33m 4030[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-error[33m 3190[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-mismatch[33m 3105[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-timeout[33m 4255[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-partial[33m 1052[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed after interrupt-ack-only[33m 4216[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: does not dispatch after stop at the setup boundary[33m 3046[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: journals success through shutdown and review without acceptance[33m 1718[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: journals permission through shutdown and review without acceptance[33m 1718[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: retains reservations after wrong-session[33m 2530[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: retains reservations after malformed[33m 2559[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: retains reservations after partial[33m 861[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: retains reservations after error[33m 1027[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: retains reservations after timeout[33m 3831[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed at provider.receive.before_commit[33m 3213[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fails closed at native.after_shutdown[33m 1284[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: stops an in-flight peer without verification[33m 1940[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: refuses result persistence after controller takeover[33m 773[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: preserves verified evidence when stopped before review[33m 1296[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: performs setup before fixture dispatch[33m 1375[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: confirms interrupt without verifying or accepting[33m 859[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: confirms interrupt-result-first without verifying or accepting[33m 1123[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after setup-error[33m 3227[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after setup-mismatch[33m 3065[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after setup-timeout[33m 4161[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-error[33m 2593[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-mismatch[33m 2360[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-timeout[33m 4202[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-partial[33m 974[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed after interrupt-ack-only[33m 4221[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: does not dispatch after stop at the setup boundary[33m 3064[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: journals success through shutdown and review without acceptance[33m 1643[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: journals permission through shutdown and review without acceptance[33m 1815[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after wrong-session[33m 2820[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after malformed[33m 3130[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after partial[33m 998[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after error[33m 3066[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: retains reservations after timeout[33m 4129[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed at provider.send.before_commit[33m 2135[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed at provider.receive.before_commit[33m 3223[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fails closed at native.after_shutdown[33m 1201[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: stops an in-flight peer without verification[33m 2161[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: refuses result persistence after controller takeover[33m 1177[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: preserves verified evidence when stopped before review[33m 1603[2mms[22m[39m
+   [33m[2m✓[22m[39m does not prepare review when registered verification fails[33m 2004[2mms[22m[39m
+   [33m[2m✓[22m[39m creates and binds an OpenCode session before success[33m 1909[2mms[22m[39m
+   [33m[2m✓[22m[39m creates and binds an OpenCode session before permission[33m 1836[2mms[22m[39m
+   [33m[2m✓[22m[39m creates and binds an OpenCode session before interrupt[33m 1258[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation setup-error[33m 3167[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation setup-mismatch[33m 3465[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation setup-timeout[33m 4446[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation create-malformed[33m 3313[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation create-reused[33m 3061[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation create-permission[33m 3556[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch after OpenCode creation create-partial[33m 4300[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps the provisional reservation when a returned session belongs to another connection[33m 2841[2mms[22m[39m
+   [33m[2m✓[22m[39m retains the newly bound session when stopped before dispatch[33m 2785[2mms[22m[39m
+   [33m[2m✓[22m[39m launches a reserved Claude creation UUID through success[33m 1590[2mms[22m[39m
+   [33m[2m✓[22m[39m launches a reserved Claude creation UUID through permission[33m 1470[2mms[22m[39m
+   [33m[2m✓[22m[39m launches a reserved Claude creation UUID through interrupt[33m 895[2mms[22m[39m
+   [33m[2m✓[22m[39m persists explicit Claude resume options instead of an implicit latest session[33m 1416[2mms[22m[39m
+   [33m[2m✓[22m[39m retains Claude UUID after launch-error without verification[33m 1060[2mms[22m[39m
+   [33m[2m✓[22m[39m retains Claude UUID after launch-timeout without verification[33m 4094[2mms[22m[39m
+   [33m[2m✓[22m[39m retains Claude UUID after wrong-session without verification[33m 2998[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: never interrupts a holding turn without host admission[33m 3954[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: makes repeated interrupt admission idempotent[33m 1065[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: rejects interrupt before dispatch and after a terminal result[33m 1635[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: leaves admission retryable after a failed commit[33m 1055[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: fences interrupt admission after controller takeover[33m 2892[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: never interrupts a holding turn without host admission[33m 3763[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: makes repeated interrupt admission idempotent[33m 932[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: rejects interrupt before dispatch and after a terminal result[33m 1415[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: leaves admission retryable after a failed commit[33m 978[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: fences interrupt admission after controller takeover[33m 3008[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects Claude interrupt admission without advertised receipt capabilities[33m 2876[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: records auth-error and blocks the account group until cleared[33m 2619[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: records quota-error and blocks the account group until cleared[33m 2317[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: keeps model and worker failures attempt-scoped[33m 915[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: classifies an error result without leaking message text[33m 1009[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: never records an abort error after an admitted interrupt[33m 1051[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: records auth-error and blocks the account group until cleared[33m 2253[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: records quota-error and blocks the account group until cleared[33m 2507[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: keeps model and worker failures attempt-scoped[33m 946[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: classifies an error result without leaking message text[33m 2717[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: never records an abort error after an admitted interrupt[33m 980[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m apps/controller/src/orchestrator.test.ts [2m([22m[2m34 tests[22m[2m)[22m[33m 414273[2mms[22m[39m
+   [33m[2m✓[22m[39m plans, runs parallel nodes, integrates, verifies and reviews independently[33m 23717[2mms[22m[39m
+   [33m[2m✓[22m[39m repairs a failed node once and stops a repeated identical failure[33m 20124[2mms[22m[39m
+   [33m[2m✓[22m[39m passes check output to the repair and treats changing output as the same failure[33m 18367[2mms[22m[39m
+   [33m[2m✓[22m[39m never retries an unknown outcome[33m 12902[2mms[22m[39m
+   [33m[2m✓[22m[39m reruns a node that conflicts on the new integration head[33m 16993[2mms[22m[39m
+   [33m[2m✓[22m[39m re-plans once after an invalid plan and fixes a failing combined check[33m 19618[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects duplicate worker aliases[33m 1006[2mms[22m[39m
+   [33m[2m✓[22m[39m repairs once after a rejecting review, then verifies and reviews again[33m 23191[2mms[22m[39m
+   [33m[2m✓[22m[39m hands over a review that still rejects after its one repair[33m 24045[2mms[22m[39m
+   [33m[2m✓[22m[39m starts no repair for an approval, a rejection without findings, or a limit of zero[33m 29951[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps the store lease while a check outlasts it[33m 16735[2mms[22m[39m
+   [33m[2m✓[22m[39m does not repair on a review that gave no verdict or did not finish[33m 19156[2mms[22m[39m
+   [33m[2m✓[22m[39m does not trust an approval from a failed review turn[33m 9415[2mms[22m[39m
+   [33m[2m✓[22m[39m does not trust an approval from a unknown review turn[33m 8712[2mms[22m[39m
+   [33m[2m✓[22m[39m does not trust an approval from a cancelled review turn[33m 10378[2mms[22m[39m
+   [33m[2m✓[22m[39m does not trust an approval from a verification_failed review turn[33m 10218[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on AUTH_REQUIRED from api[33m 4941[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on QUOTA_BLOCKED from api[33m 5418[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on MODEL_UNAVAILABLE from api[33m 5321[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on AUTH_REQUIRED from plan[33m 5468[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on QUOTA_BLOCKED from plan[33m 5741[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on MODEL_UNAVAILABLE from plan[33m 5907[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on AUTH_REQUIRED from fix[33m 10418[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on QUOTA_BLOCKED from fix[33m 8844[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on MODEL_UNAVAILABLE from fix[33m 7793[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on AUTH_REQUIRED from review[33m 9025[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on QUOTA_BLOCKED from review[33m 9122[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on MODEL_UNAVAILABLE from review[33m 8784[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on AUTH_REQUIRED from review-fix[33m 10870[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on QUOTA_BLOCKED from review-fix[33m 10754[2mms[22m[39m
+   [33m[2m✓[22m[39m stops for operator attention on MODEL_UNAVAILABLE from review-fix[33m 10503[2mms[22m[39m
+   [33m[2m✓[22m[39m ends cancelled when cancelled during a review repair, and quotes findings as data[33m 11094[2mms[22m[39m
+   [33m[2m✓[22m[39m a worker that fixed failing checks does not count as an independent reviewer[33m 12294[2mms[22m[39m
+   [33m[2m✓[22m[39m routes a light node to the light worker and escalates it after a failure[33m 7439[2mms[22m[39m
+ [32m✓[39m tests/faults/soak.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 129017[2mms[22m[39m
+   [33m[2m✓[22m[39m runs a handful of fault iterations with no invariant violation[33m 129002[2mms[22m[39m
+ [32m✓[39m tests/shell-integration.test.ts [2m([22m[2m20 tests[22m[2m)[22m[33m 132176[2mms[22m[39m
+   [33m[2m✓[22m[39m uses global color configuration for interactive Git commands, including merge[33m 2830[2mms[22m[39m
+   [33m[2m✓[22m[39m merges the persisted accepted result after a separate CLI acceptance process[33m 8628[2mms[22m[39m
+   [33m[2m✓[22m[39m merges an explicitly selected earlier accepted run through realpath aliases[33m 9063[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses a persisted ready run without touching the checkout[33m 4743[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses a persisted failed run without touching the checkout[33m 5509[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses a persisted needs_attention run without touching the checkout[33m 5639[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses a persisted cancelled run without touching the checkout[33m 5645[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses merging into another clone with the same commit objects[33m 4972[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses merging into another worktree with the same commit objects[33m 4665[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses accepted integration identity drift: moved-head[33m 6124[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses accepted integration identity drift: wrong-branch[33m 5411[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses accepted integration identity drift: foreign-worktree[33m 8308[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses accepted integration identity drift: missing-integration[33m 7068[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses accepted integration identity drift: invalid-branch[33m 4785[2mms[22m[39m
+   [33m[2m✓[22m[39m does not persist acceptance of a ready result whose verified HEAD moved[33m 12569[2mms[22m[39m
+   [33m[2m✓[22m[39m share --once exits nonzero for unreachable[33m 5919[2mms[22m[39m
+   [33m[2m✓[22m[39m share --once exits nonzero for rejected-push[33m 7086[2mms[22m[39m
+   [33m[2m✓[22m[39m share --once succeeds after a completed local publication[33m 8016[2mms[22m[39m
+   [33m[2m✓[22m[39m continuous sharing retries an unreachable local remote instead of exiting[33m 8799[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses an unknown run even after a failed acceptance[33m 6390[2mms[22m[39m
+ [31m❯[39m apps/controller/src/codex-offline.test.ts [2m([22m[2m35 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 63848[2mms[22m[39m
+   [32m✓[39m refuses live qualification on the fixed offline controller[32m 207[2mms[22m[39m
+[31m   [31m×[31m orchestrates success through owned shutdown, verification and review without acceptance[39m[33m 6852[2mms[22m[39m
+   [33m[2m✓[22m[39m orchestrates approval through owned shutdown, verification and review without acceptance[33m 1712[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations after disconnect without verifying or resending[33m 581[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations after malformed without verifying or resending[33m 2290[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations after timeout without verifying or resending[33m 4134[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations after late-malformed without verifying or resending[33m 2355[2mms[22m[39m
+   [32m✓[39m refuses admission after stop[32m 93[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch a turn when stopped immediately after session setup[33m 2380[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects incomplete trailing output before persisting a successful outcome[33m 550[2mms[22m[39m
+   [33m[2m✓[22m[39m stops an in-flight peer without verification or replay[33m 2018[2mms[22m[39m
+   [32m✓[39m rejects invalid scenarios and unpinned workers before reserving[32m 99[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps connection identity separate from existing command identities[33m 1129[2mms[22m[39m
+   [33m[2m✓[22m[39m performs explicit create before turn dispatch and binds evidence to the returned session[33m 1147[2mms[22m[39m
+   [33m[2m✓[22m[39m performs explicit resume before turn dispatch and binds evidence to the returned session[33m 1178[2mms[22m[39m
+   [33m[2m✓[22m[39m never starts a turn or retries after thread-rpc-error[33m 2550[2mms[22m[39m
+   [33m[2m✓[22m[39m never starts a turn or retries after thread-mismatch[33m 2311[2mms[22m[39m
+   [33m[2m✓[22m[39m never starts a turn or retries after thread-malformed[33m 2293[2mms[22m[39m
+   [33m[2m✓[22m[39m never starts a turn or retries after thread-disconnect[33m 537[2mms[22m[39m
+   [33m[2m✓[22m[39m never starts a turn or retries after thread-timeout[33m 4119[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps native-error away from verification and acceptance[33m 2585[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps native-retry away from verification and acceptance[33m 2399[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps turn-rpc-error away from verification and acceptance[33m 2335[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps turn-failed away from verification and acceptance[33m 579[2mms[22m[39m
+   [33m[2m✓[22m[39m interrupts a running turn only after durable host admission[33m 620[2mms[22m[39m
+   [33m[2m✓[22m[39m makes repeated Codex interrupt admission idempotent[33m 569[2mms[22m[39m
+   [33m[2m✓[22m[39m never sends turn/interrupt for a holding turn without admission[33m 4104[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps an admitted interrupt unknown after interrupt-error[33m 2393[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps an admitted interrupt unknown after interrupt-ignored[33m 2474[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects Codex interrupt before dispatch and after the terminal turn[33m 1296[2mms[22m[39m
+   [33m[2m✓[22m[39m fences Codex interrupt admission after controller takeover[33m 2353[2mms[22m[39m
+   [33m[2m✓[22m[39m classifies Codex native-error and blocks the account group[33m 2127[2mms[22m[39m
+   [33m[2m✓[22m[39m classifies Codex auth-failed and blocks the account group[33m 483[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps an unlabeled failed Codex turn attempt-scoped[33m 457[2mms[22m[39m
+   [33m[2m✓[22m[39m records no failure for a confirmed Codex interrupt[33m 529[2mms[22m[39m
+ [32m✓[39m packages/evaluation/src/v1.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 95117[2mms[22m[39m
+   [33m[2m✓[22m[39m the v1 suite is frozen, has the planned shape, and every check separates its solution from no change[33m 92061[2mms[22m[39m
+ [32m✓[39m packages/evaluation/src/evaluation.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 80590[2mms[22m[39m
+   [32m✓[39m campaign [2m(8)[22m
+     [33m[2m✓[22m[39m lets only the hidden host check decide acceptance[33m 8295[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps quota-interrupted attempts incomplete and does not retry them[33m 2158[2mms[22m[39m
+     [33m[2m✓[22m[39m records a host-interrupted attempt as incomplete[33m 1869[2mms[22m[39m
+     [33m[2m✓[22m[39m ends the campaign with no record when a configuration can run nothing, and resumes[33m 3586[2mms[22m[39m
+     [33m[2m✓[22m[39m resumes a stopped campaign without rerunning recorded attempts[33m 5801[2mms[22m[39m
+     [33m[2m✓[22m[39m records failures, give-ups, errors and declared exclusions[33m 5665[2mms[22m[39m
+     [33m[2m✓[22m[39m marks an attempt that outlived its timeout incomplete, even if it passed[33m 3185[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects records from a different freeze[33m 2960[2mms[22m[39m
+   [32m✓[39m report and promotion [2m(3)[22m
+     [33m[2m✓[22m[39m does not invent usage and labels small samples[33m 12788[2mms[22m[39m
+     [33m[2m✓[22m[39m blocks a candidate that accepts fewer held-out tasks, whatever else improves[33m 12093[2mms[22m[39m
+     [33m[2m✓[22m[39m promotes only with a measured benefit and passing safety fixtures[33m 21862[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m apps/controller/src/turn-runner.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 34867[2mms[22m[39m
+   [33m[2m✓[22m[39m orchestrates nodes on all three runtimes through their live controllers[33m 26021[2mms[22m[39m
+   [33m[2m✓[22m[39m names why a node check failed so the repair prompt can fix it[33m 8029[2mms[22m[39m
+   [33m[2m✓[22m[39m writes large prompts as bounded UTF-8 pieces[33m 808[2mms[22m[39m
+ [31m❯[39m tests/native-process.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 33244[2mms[22m[39m
+   [33m[2m✓[22m[39m claude native offline process conformance[33m 28785[2mms[22m[39m
+[31m   [31m×[31m opencode native offline process conformance[39m[33m 4449[2mms[22m[39m
+ [32m✓[39m packages/evaluation/src/v2.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 74143[2mms[22m[39m
+   [33m[2m✓[22m[39m every check separates its solution from no change, and every visible test fails before the solution and passes after it[33m 72126[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m apps/controller/src/live-roster.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 58149[2mms[22m[39m
+   [33m[2m✓[22m[39m runs the 2/3/5 roster with distinct sessions, resume and interruption[33m 58135[2mms[22m[39m
+ [32m✓[39m apps/controller/src/benchmark-live.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 59641[2mms[22m[39m
+   [33m[2m✓[22m[39m runs one runtime turn per attempt and lets the hidden check accept it[33m 5863[2mms[22m[39m
+   [33m[2m✓[22m[39m records a rate-limited turn as incomplete, not failed[33m 2245[2mms[22m[39m
+   [33m[2m✓[22m[39m runs the native loop as a configuration with unknown usage[33m 5907[2mms[22m[39m
+   [33m[2m✓[22m[39m runs XVANT orchestration and hands its combined result to the hidden check[33m 20868[2mms[22m[39m
+   [33m[2m✓[22m[39m plans and reviews on the planner model while workers keep the runtime model[33m 19595[2mms[22m[39m
+   [33m[2m✓[22m[39m ends the campaign with no record when the runtime changed under a single worker[33m 1673[2mms[22m[39m
+   [33m[2m✓[22m[39m ends the campaign with no record when the runtime changed under XVANT orchestration[33m 3483[2mms[22m[39m
+ [32m✓[39m apps/controller/src/claude-live.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 29393[2mms[22m[39m
+   [33m[2m✓[22m[39m builds explicit-session arguments without user MCP servers or network tools[33m 1641[2mms[22m[39m
+   [33m[2m✓[22m[39m removes API-key and nested-session variables from the child[33m 1460[2mms[22m[39m
+   [33m[2m✓[22m[39m edits its worktree and prepares verified evidence on the reserved session[33m 5703[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses a session that reports an API key[33m 2112[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses a stream for another session[33m 2057[2mms[22m[39m
+   [33m[2m✓[22m[39m records a classified account failure[33m 2065[2mms[22m[39m
+   [33m[2m✓[22m[39m cancels an owned process before its init frame without an unknown outcome[33m 3960[2mms[22m[39m
+   [33m[2m✓[22m[39m cancels while prompt delivery is blocked without leaving an unknown lease[33m 4132[2mms[22m[39m
+   [33m[2m✓[22m[39m retains the unknown lease when a rejected auth frame races an admitted cancel[33m 2303[2mms[22m[39m
+   [33m[2m✓[22m[39m cancels a running turn by stopping its owning process[33m 3951[2mms[22m[39m
+ [32m✓[39m tests/faults/native-controller.test.ts [2m([22m[2m26 tests[22m[2m)[22m[33m 60791[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at native.after_reserve without replay or acceptance[33m 1359[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at native.after_setup without replay or acceptance[33m 2298[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at provider.interrupt.before_commit without replay or acceptance[33m 2422[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at native.after_interrupt_request without replay or acceptance[33m 2236[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at native.after_interrupt without replay or acceptance[33m 2354[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at provider.send.before_commit without replay or acceptance[33m 1280[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at provider.receive.before_commit without replay or acceptance[33m 2131[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at native.after_shutdown without replay or acceptance[33m 2031[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at provider.result.before_commit without replay or acceptance[33m 2021[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at native.before_review without replay or acceptance[33m 3019[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: recovers controller death at native.prepare.before_commit without replay or acceptance[33m 2900[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at native.after_reserve without replay or acceptance[33m 1367[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at native.after_setup without replay or acceptance[33m 2316[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at provider.interrupt.before_commit without replay or acceptance[33m 2396[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at native.after_interrupt_request without replay or acceptance[33m 2147[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at native.after_interrupt without replay or acceptance[33m 2320[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at provider.send.before_commit without replay or acceptance[33m 2698[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at provider.receive.before_commit without replay or acceptance[33m 3769[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at native.after_shutdown without replay or acceptance[33m 2512[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at provider.result.before_commit without replay or acceptance[33m 2125[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at native.before_review without replay or acceptance[33m 2803[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: recovers controller death at native.prepare.before_commit without replay or acceptance[33m 2776[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: keeps a committed quota block across death at provider.failure.before_commit[33m 2486[2mms[22m[39m
+   [33m[2m✓[22m[39m claude: keeps a committed quota block across death at provider.result.before_commit[33m 2320[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: keeps a committed quota block across death at provider.failure.before_commit[33m 2444[2mms[22m[39m
+   [33m[2m✓[22m[39m opencode: keeps a committed quota block across death at provider.result.before_commit[33m 2238[2mms[22m[39m
+ [32m✓[39m tests/e2e/ui.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 46388[2mms[22m[39m
+   [33m[2m✓[22m[39m completes a run keyboard-first, from sign-in to acceptance[33m 31184[2mms[22m[39m
+   [33m[2m✓[22m[39m shows worker output as text and stops running work from the page[33m 10623[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses to run without the one-time capability[33m 2247[2mms[22m[39m
+ [32m✓[39m apps/controller/src/app.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 53470[2mms[22m[39m
+   [33m[2m✓[22m[39m serves the page publicly with a strict policy and guards every API call[33m 1022[2mms[22m[39m
+   [33m[2m✓[22m[39m runs a task end to end, once per submission, and accepts only what was reviewed[33m 30426[2mms[22m[39m
+   [33m[2m✓[22m[39m streams run events and resumes from the last event ID[33m 17919[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects a folder that is not a Git repository and stops running work[33m 4096[2mms[22m[39m
+ [31m❯[39m apps/controller/src/opencode-http.test.ts [2m([22m[2m17 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 34686[2mms[22m[39m
+   [32m✓[39m refuses live qualification on the fixed HTTP controller[32m 171[2mms[22m[39m
+   [33m[2m✓[22m[39m runs success over an owned authenticated endpoint through review[33m 1253[2mms[22m[39m
+   [33m[2m✓[22m[39m runs permission over an owned authenticated endpoint through review[33m 1223[2mms[22m[39m
+   [33m[2m✓[22m[39m never journals or persists the endpoint secret[33m 1216[2mms[22m[39m
+[31m   [31m×[31m refuses no-auth (an unauthenticated server) before any session traffic[39m[33m 7640[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses wrong-version (an unpinned server version) before any session traffic[33m 2487[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses announce-remote (a non-loopback announcement) before any session traffic[33m 2432[2mms[22m[39m
+   [33m[2m✓[22m[39m creates and binds a session over HTTP before prompting[33m 1248[2mms[22m[39m
+   [33m[2m✓[22m[39m never prompts after setup-mismatch[33m 2345[2mms[22m[39m
+   [33m[2m✓[22m[39m never prompts after create-permission[33m 2550[2mms[22m[39m
+   [33m[2m✓[22m[39m admits a host interrupt and confirms abort before cancelling[33m 726[2mms[22m[39m
+   [33m[2m✓[22m[39m times out a holding turn without admission and never aborts[33m 4974[2mms[22m[39m
+   [33m[2m✓[22m[39m classifies error from the event stream[33m 2848[2mms[22m[39m
+   [33m[2m✓[22m[39m classifies quota-error from the event stream[33m 845[2mms[22m[39m
+   [32m✓[39m does not launch after stop between intent and startup[32m 90[2mms[22m[39m
+   [33m[2m✓[22m[39m fences a stale owner after endpoint binding[33m 2533[2mms[22m[39m
+   [32m✓[39m rejects non-OpenCode or unpinned workers before reservation[32m 97[2mms[22m[39m
+ [32m✓[39m packages/supervisor/src/index.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 20900[2mms[22m[39m
+   [32m✓[39m owned process supervision [2m(8)[22m
+     [33m[2m✓[22m[39m captures exit and bounded combined output without shell evaluation[33m 469[2mms[22m[39m
+     [33m[2m✓[22m[39m streams long sessions without retaining or truncating stdout[33m 319[2mms[22m[39m
+     [33m[2m✓[22m[39m hard deadline kills a worker that does not cooperate[33m 2229[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects forged identity and accepts owned cancellation[33m 1937[2mms[22m[39m
+     [33m[2m✓[22m[39m abort interrupts active execution[33m 1968[2mms[22m[39m
+   [33m[2m✓[22m[39m terminates the owned ordinary descendant tree on deadline[33m 2500[2mms[22m[39m
+   [33m[2m✓[22m[39m global stop interrupts every owned process and rejects stale generations[33m 2528[2mms[22m[39m
+   [33m[2m✓[22m[39m retains ownership after uncertain shutdown so cancellation can be retried[33m 8006[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m packages/evaluation/src/smoke.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 34279[2mms[22m[39m
+   [33m[2m✓[22m[39m the committed smoke suite is frozen and separates a solution from no change[33m 33170[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.env', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'config/deploy.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/fetch.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/fetch.mjs', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m apps/controller/src/live-gates.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 35503[2mms[22m[39m
+   [33m[2m✓[22m[39m delivers a value each runtime can only obtain through the MCP bridge[33m 17431[2mms[22m[39m
+   [33m[2m✓[22m[39m fails a runtime that never calls the bridge[33m 5934[2mms[22m[39m
+   [33m[2m✓[22m[39m continues a task on another runtime from the sealed packet alone[33m 12128[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m tests/faults/opencode-live.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 27723[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at live.after_reserve without replay or acceptance[33m 1992[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at provider.send.before_commit without replay or acceptance[33m 1891[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at live.after_session without replay or acceptance[33m 2108[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at provider.session.before_commit without replay or acceptance[33m 2153[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at live.after_intent without replay or acceptance[33m 2124[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at live.after_launch without replay or acceptance[33m 2207[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at provider.receive.before_commit without replay or acceptance[33m 1937[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at live.after_shutdown without replay or acceptance[33m 2331[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at provider.result.before_commit without replay or acceptance[33m 2503[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at provider.verify.before_commit without replay or acceptance[33m 2723[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at provider.verified.before_commit without replay or acceptance[33m 2821[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers live CLI controller death at native.prepare.before_commit without replay or acceptance[33m 2913[2mms[22m[39m
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m apps/controller/src/opencode-live.test.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 29018[2mms[22m[39m
+   [33m[2m✓[22m[39m journals before launch, verifies output, and accepts live evidence explicitly after restart[33m 2073[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations without acceptance on malformed[33m 1145[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations without acceptance on wrong-session[33m 1218[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations without acceptance on nonzero[33m 1263[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations without acceptance on timeout[33m 4652[2mms[22m[39m
+   [33m[2m✓[22m[39m blocks account on v2 auth failure without persisting raw error text[33m 1103[2mms[22m[39m
+   [33m[2m✓[22m[39m never dispatches inference after invalid provisioning: create-malformed[33m 796[2mms[22m[39m
+   [33m[2m✓[22m[39m never dispatches inference after invalid provisioning: create-wrong-root[33m 803[2mms[22m[39m
+   [33m[2m✓[22m[39m never dispatches inference after invalid provisioning: create-nonzero[33m 800[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses missing live approval and unpinned executable before dispatch[33m 437[2mms[22m[39m
+   [33m[2m✓[22m[39m persists interrupt admission before process cancellation and retains uncertainty[33m 2564[2mms[22m[39m
+   [33m[2m✓[22m[39m retains durable work on injected failure at live.after_reserve[33m 382[2mms[22m[39m
+   [33m[2m✓[22m[39m retains durable work on injected failure at live.after_intent[33m 698[2mms[22m[39m
+   [33m[2m✓[22m[39m retains durable work on injected failure at live.after_shutdown[33m 1090[2mms[22m[39m
+   [33m[2m✓[22m[39m snapshots caller inputs before asynchronous inventory[33m 1491[2mms[22m[39m
+   [33m[2m✓[22m[39m persists an auth block when valid error is followed by malformed output[33m 1128[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses cross-project resume of an accepted native session[33m 1574[2mms[22m[39m
+   [33m[2m✓[22m[39m lets a workspace-write run edit through its own tools, without a host result file[33m 1654[2mms[22m[39m
+   [33m[2m✓[22m[39m stops a run that reports any billed step[33m 956[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses workspace writes without acknowledged native bypass[33m 411[2mms[22m[39m
+   [33m[2m✓[22m[39m cancels a workspace-write run by stopping the process that owns its turn[33m 2766[2mms[22m[39m
+ [32m✓[39m apps/controller/src/native-turn-runner.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 36253[2mms[22m[39m
+   [33m[2m✓[22m[39m runs a node through the native loop, host-verifies and accepts it as native-local[33m 4296[2mms[22m[39m
+   [33m[2m✓[22m[39m journals every tool receipt so they survive a restart[33m 4210[2mms[22m[39m
+   [33m[2m✓[22m[39m enforces node write ownership through the tools, not the prompt[33m 4295[2mms[22m[39m
+   [33m[2m✓[22m[39m reports failing checks with their output for the repair[33m 3857[2mms[22m[39m
+   [33m[2m✓[22m[39m records a loop that hits its step cap as a known failure[33m 932[2mms[22m[39m
+   [33m[2m✓[22m[39m maps an unavailable model to MODEL_UNAVAILABLE and other faults to WORKER_FAILED[33m 915[2mms[22m[39m
+   [33m[2m✓[22m[39m stops on interrupt and records a cancelled turn[33m 860[2mms[22m[39m
+   [33m[2m✓[22m[39m admits a live dispatch only as an explicit model over loopback HTTP[33m 3882[2mms[22m[39m
+   [33m[2m✓[22m[39m runs native-local nodes inside an orchestrated root through the live runner[33m 7388[2mms[22m[39m
+   [33m[2m✓[22m[39m accepts a turn in a store that already holds more than one page of events[33m 5609[2mms[22m[39m
+ [31m❯[39m packages/storage/src/providers.test.ts [2m([22m[2m59 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 25374[2mms[22m[39m
+   [32m✓[39m binds only a provisional OpenCode creation reservation before dispatch[32m 208[2mms[22m[39m
+   [32m✓[39m rejects invalid OpenCode binding: missing[32m 66[2mms[22m[39m
+   [32m✓[39m rejects invalid OpenCode binding: wrong-provider[32m 67[2mms[22m[39m
+   [32m✓[39m rejects invalid OpenCode binding: after-dispatch[32m 67[2mms[22m[39m
+   [32m✓[39m rejects invalid OpenCode binding: not-provisional[32m 60[2mms[22m[39m
+   [32m✓[39m atomically binds a created session before a turn and retains it across recovery[32m 109[2mms[22m[39m
+   [32m✓[39m rejects session rebinding without a creation intent, after turn dispatch or with a stale token[32m 78[2mms[22m[39m
+   [32m✓[39m does not steal another connection session or lose the original reservation[32m 92[2mms[22m[39m
+   [32m✓[39m rolls back session binding with its reservation update[32m 94[2mms[22m[39m
+   [32m✓[39m persists exact intent before pipe write and reply metadata before delivery[32m 89[2mms[22m[39m
+   [32m✓[39m does not deliver a reply or notification when its journal commit fails[32m 114[2mms[22m[39m
+   [32m✓[39m does not write when outgoing persistence fails[32m 88[2mms[22m[39m
+   [32m✓[39m fences the old owner and rejects old connection reuse after recovery[32m 86[2mms[22m[39m
+   [32m✓[39m retains workspace reservation after a native terminal result[32m 74[2mms[22m[39m
+   [32m✓[39m retains worker reservation after a native terminal result[32m 80[2mms[22m[39m
+   [32m✓[39m retains session reservation after a native terminal result[32m 76[2mms[22m[39m
+   [32m✓[39m prevents native and simulated workers from using the same workspace[32m 58[2mms[22m[39m
+   [32m✓[39m prevents native dispatch into a simulated reservation[32m 56[2mms[22m[39m
+   [32m✓[39m does not enable live or attached execution through the journal[32m 70[2mms[22m[39m
+   [33m[2m✓[22m[39m restores provider records and reservations in a verified snapshot[33m 324[2mms[22m[39m
+   [32m✓[39m migrates an existing v1 database without losing its tasks[32m 139[2mms[22m[39m
+   [32m✓[39m rejects replayed RPC IDs and attempts even after trusted reconciliation[32m 96[2mms[22m[39m
+   [32m✓[39m does not clear uncertainty with a late terminal result[32m 75[2mms[22m[39m
+   [32m✓[39m journals notifications before exposing them and blocks delivery on storage failure[32m 120[2mms[22m[39m
+[31m   [31m×[31m bounds journal growth and poisons the connection at the limit[39m[33m 19015[2mms[22m[39m
+   [33m[2m✓[22m[39m restores a legacy v1 snapshot then migrates it on open[33m 422[2mms[22m[39m
+   [32m✓[39m retains terminal outcome completed and reconciliation evidence across restart[32m 99[2mms[22m[39m
+   [32m✓[39m retains terminal outcome cancelled and reconciliation evidence across restart[32m 115[2mms[22m[39m
+   [32m✓[39m retains terminal outcome failed and reconciliation evidence across restart[32m 107[2mms[22m[39m
+   [32m✓[39m admits one durable interrupt request only after turn dispatch[32m 115[2mms[22m[39m
+   [32m✓[39m requires a bound Codex turn before interrupt admission[32m 81[2mms[22m[39m
+   [32m✓[39m rejects interrupt admission after a native terminal result or uncertainty[32m 84[2mms[22m[39m
+   [32m✓[39m fences interrupt admission after controller takeover[32m 100[2mms[22m[39m
+   [32m✓[39m rolls back interrupt admission with its audit event[32m 109[2mms[22m[39m
+   [32m✓[39m cannot record completion after an admitted interrupt[32m 87[2mms[22m[39m
+   [32m✓[39m blocks admission for an account group after a quota failure until a trusted clear[32m 163[2mms[22m[39m
+   [32m✓[39m records attempt-scoped failures without blocking the account group[32m 80[2mms[22m[39m
+   [32m✓[39m blocks on auth failures and fences failure records[32m 97[2mms[22m[39m
+   [32m✓[39m binds one verified loopback endpoint before session traffic[32m 93[2mms[22m[39m
+   [32m✓[39m rejects endpoint binding without its launch intent, after traffic or off loopback[32m 88[2mms[22m[39m
+   [32m✓[39m treats an HTTP prompt as turn dispatch for interrupts and session binding[32m 87[2mms[22m[39m
+   [32m✓[39m admits approved live Big Pickle with an existing native session and CLI interrupt[32m 87[2mms[22m[39m
+   [32m✓[39m rejects unsupported or unapproved live admission 0[32m 77[2mms[22m[39m
+   [32m✓[39m rejects unsupported or unapproved live admission 1[32m 72[2mms[22m[39m
+   [32m✓[39m rejects unsupported or unapproved live admission 2[32m 64[2mms[22m[39m
+   [32m✓[39m rejects unsupported or unapproved live admission 3[32m 67[2mms[22m[39m
+   [32m✓[39m rejects unsupported or unapproved live admission 4[32m 63[2mms[22m[39m
+   [32m✓[39m rejects unsupported or unapproved live admission 5[32m 71[2mms[22m[39m
+   [32m✓[39m rejects unsupported or unapproved live admission 6[32m 73[2mms[22m[39m
+   [32m✓[39m rejects unsupported or unapproved live admission 7[32m 64[2mms[22m[39m
+   [32m✓[39m rejects unsupported or unapproved live admission 8[32m 60[2mms[22m[39m
+   [32m✓[39m rejects unsupported or unapproved live admission 9[32m 70[2mms[22m[39m
+   [32m✓[39m rejects unsupported or unapproved live admission 10[32m 66[2mms[22m[39m
+   [32m✓[39m atomically replaces an approved provisional live reservation with its native session[32m 82[2mms[22m[39m
+   [32m✓[39m retains live authorization and reservations after restart without replay[32m 98[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves live approval and uncertainty in snapshot restore[33m 336[2mms[22m[39m
+   [33m[2m✓[22m[39m requires matching classification for offline durable evidence and acceptance[33m 334[2mms[22m[39m
+   [32m✓[39m requires matching classification for live durable evidence and acceptance[32m 237[2mms[22m[39m
+   [32m✓[39m journals tool receipts durably, fenced, bound to the attempt and without result bodies[32m 111[2mms[22m[39m
+ [32m✓[39m apps/controller/src/codex-live.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 26655[2mms[22m[39m
+   [33m[2m✓[22m[39m edits its worktree, binds identities and prepares patch evidence for review[33m 8128[2mms[22m[39m
+   [33m[2m✓[22m[39m stops before any thread when the session is not on the subscription login[33m 4832[2mms[22m[39m
+   [33m[2m✓[22m[39m records a failed turn without verification[33m 2927[2mms[22m[39m
+   [33m[2m✓[22m[39m interrupts a running turn through host admission[33m 2979[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects write access without acknowledged native bypass[33m 2301[2mms[22m[39m
+   [33m[2m✓[22m[39m times out as unknown without replaying the turn[33m 5480[2mms[22m[39m
+ [32m✓[39m apps/controller/src/native-loop-fixture.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 20984[2mms[22m[39m
+   [33m[2m✓[22m[39m holds every G08 boundary against a hostile local model and runs every skill fixture[33m 20974[2mms[22m[39m
+ [32m✓[39m tests/faults/codex-controller.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 18528[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at codex.after_reserve without replay or acceptance[33m 1320[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at codex.after_shutdown without replay or acceptance[33m 1924[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at provider.result.before_commit without replay or acceptance[33m 1882[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at codex.before_review without replay or acceptance[33m 2757[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at native.prepare.before_commit without replay or acceptance[33m 2547[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at provider.session.before_commit without replay or acceptance[33m 1915[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at codex.after_session without replay or acceptance[33m 2204[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at provider.interrupt.before_commit without replay or acceptance[33m 1961[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers controller death at codex.after_interrupt_request without replay or acceptance[33m 2005[2mms[22m[39m
+warning: in the working copy of 'a.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'a.txt', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m apps/controller/src/durable.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 14829[2mms[22m[39m
+   [33m[2m✓[22m[39m runs isolated simulation and trusted checks then accepts after restart[33m 1543[2mms[22m[39m
+   [33m[2m✓[22m[39m persists normalized quota cause[33m 1148[2mms[22m[39m
+   [33m[2m✓[22m[39m persists normalized failure cause[33m 1282[2mms[22m[39m
+   [33m[2m✓[22m[39m persists normalized malformed cause[33m 903[2mms[22m[39m
+   [33m[2m✓[22m[39m persists normalized unknown cause[33m 899[2mms[22m[39m
+   [33m[2m✓[22m[39m does not dispatch again when an idempotent request is repeated[33m 1154[2mms[22m[39m
+   [33m[2m✓[22m[39m records verifier failure without accepting worker claims[33m 1241[2mms[22m[39m
+   [33m[2m✓[22m[39m kills a hanging verifier and persists attention[33m 3742[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers incomplete verification after restart[33m 1127[2mms[22m[39m
+   [33m[2m✓[22m[39m normalizes synchronous verifier configuration failures[33m 973[2mms[22m[39m
+   [33m[2m✓[22m[39m renews a short lease while the controller is idle[33m 693[2mms[22m[39m
+warning: in the working copy of 'a.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'a.txt', LF will be replaced by CRLF the next time Git touches it
+ [32m✓[39m packages/storage/src/integration.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 22668[2mms[22m[39m
+   [33m[2m✓[22m[39m applies independent patches one at a time and merges non-overlapping edits[33m 9910[2mms[22m[39m
+   [33m[2m✓[22m[39m reports a conflict and leaves the branch where it was[33m 9448[2mms[22m[39m
+   [33m[2m✓[22m[39m treats an empty patch as a no-op and reopens after a restart[33m 2545[2mms[22m[39m
+   [33m[2m✓[22m[39m persists work graphs with optimistic versions and an event history[33m 754[2mms[22m[39m
+ [32m✓[39m packages/tools/src/repository.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 9807[2mms[22m[39m
+   [32m✓[39m repo.search [2m(2)[22m
+     [33m[2m✓[22m[39m returns ranked files with matching lines[33m 1361[2mms[22m[39m
+     [33m[2m✓[22m[39m bounds results[33m 941[2mms[22m[39m
+   [32m✓[39m git.inspect [2m(4)[22m
+     [33m[2m✓[22m[39m reports status without secret paths[33m 1059[2mms[22m[39m
+     [33m[2m✓[22m[39m returns a diff that drops secret files and credential-bearing hunks[33m 1396[2mms[22m[39m
+     [33m[2m✓[22m[39m reports head, branch and distance from the task base revision[33m 1954[2mms[22m[39m
+     [33m[2m✓[22m[39m never runs repository-configured diff drivers or fsmonitor hooks[33m 3085[2mms[22m[39m
+ [32m✓[39m tests/faults/soak-live.test.ts [2m([22m[2m20 tests[22m[2m)[22m[33m 4145[2mms[22m[39m
+   [32m✓[39m live scenarios [2m(10)[22m
+     [33m[2m✓[22m[39m clean: the check fails without the work and passes with it[33m 918[2mms[22m[39m
+     [33m[2m✓[22m[39m check_fails_first: the check names a file the objective does not[33m 788[2mms[22m[39m
+     [33m[2m✓[22m[39m impossible_check: exits 1 whatever the repository holds[33m 991[2mms[22m[39m
+     [33m[2m✓[22m[39m cancel_mid_run: a valid check for a single node[33m 491[2mms[22m[39m
+     [33m[2m✓[22m[39m conflicting_nodes: parallel nodes that rewrite one shared line[33m 819[2mms[22m[39m
+ [32m✓[39m packages/storage/src/git-workspace.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 19561[2mms[22m[39m
+   [33m[2m✓[22m[39m creates an isolated worktree at a recorded base commit[33m 2358[2mms[22m[39m
+   [33m[2m✓[22m[39m captures working-tree changes as a patch against the base[33m 6508[2mms[22m[39m
+   [33m[2m✓[22m[39m is independent of commits the worker made[33m 5100[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects a directory that is not the worktree root[33m 2205[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects a tampered patch during verification[33m 3385[2mms[22m[39m
+ [32m✓[39m tests/codex-process.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 13785[2mms[22m[39m
+   [32m✓[39m Codex offline stdio process [2m(6)[22m
+     [33m[2m✓[22m[39m runs success through real Node pipes with no provider[33m 2229[2mms[22m[39m
+     [33m[2m✓[22m[39m runs approval through real Node pipes with no provider[33m 2111[2mms[22m[39m
+     [33m[2m✓[22m[39m runs interrupt through real Node pipes with no provider[33m 2099[2mms[22m[39m
+     [33m[2m✓[22m[39m retains uncertainty after disconnect and does not resend[33m 1997[2mms[22m[39m
+     [33m[2m✓[22m[39m retains uncertainty after malformed and does not resend[33m 1956[2mms[22m[39m
+     [33m[2m✓[22m[39m retains uncertainty after timeout and does not resend[33m 3382[2mms[22m[39m
+ [32m✓[39m tests/faults/opencode-http.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 12591[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers HTTP controller death at opencode.before_launch without replay, secrets or orphans[33m 1731[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers HTTP controller death at provider.endpoint.before_commit without replay, secrets or orphans[33m 1866[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers HTTP controller death at opencode.after_endpoint without replay, secrets or orphans[33m 2115[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers HTTP controller death at opencode.after_setup without replay, secrets or orphans[33m 2296[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers HTTP controller death at opencode.after_interrupt_request without replay, secrets or orphans[33m 2247[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers HTTP controller death at provider.result.before_commit without replay, secrets or orphans[33m 2323[2mms[22m[39m
+ [32m✓[39m apps/controller/src/live-native.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 9554[2mms[22m[39m
+   [33m[2m✓[22m[39m accepts a change the model made through registry tools[33m 5382[2mms[22m[39m
+   [33m[2m✓[22m[39m reports a model that claims success without making the change[33m 4156[2mms[22m[39m
+ [32m✓[39m tests/faults/crash.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 9433[2mms[22m[39m
+   [33m[2m✓[22m[39m survives process death at create.before_commit without replay[33m 1412[2mms[22m[39m
+   [33m[2m✓[22m[39m survives process death at dispatch.before_commit without replay[33m 1230[2mms[22m[39m
+   [33m[2m✓[22m[39m survives process death at after_dispatch without replay[33m 1456[2mms[22m[39m
+   [33m[2m✓[22m[39m survives process death at send.before_commit without replay[33m 1387[2mms[22m[39m
+   [33m[2m✓[22m[39m survives process death at after_send without replay[33m 1356[2mms[22m[39m
+   [33m[2m✓[22m[39m survives process death at after_ack without replay[33m 1350[2mms[22m[39m
+   [33m[2m✓[22m[39m survives process death at after_result without replay[33m 1229[2mms[22m[39m
+ [32m✓[39m tests/faults/claude-launch.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 11989[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude create crash at native.after_reserve without launch replay[33m 1434[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude create crash at provider.send.before_commit without launch replay[33m 1542[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude create crash at native.before_launch without launch replay[33m 1308[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude create crash at native.after_launch without launch replay[33m 1791[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude resume crash at native.after_reserve without launch replay[33m 1605[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude resume crash at provider.send.before_commit without launch replay[33m 1444[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude resume crash at native.before_launch without launch replay[33m 1319[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers Claude resume crash at native.after_launch without launch replay[33m 1526[2mms[22m[39m
+ [32m✓[39m apps/controller/src/native-verifier.test.ts [2m([22m[2m23 tests[22m[2m)[22m[33m 9455[2mms[22m[39m
+   [33m[2m✓[22m[39m persists host-generated receipts tied to native identity and real artifact bytes[33m 908[2mms[22m[39m
+   [33m[2m✓[22m[39m fails checks without retaining their output as evidence[33m 591[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps a redacted output tail of failing checks for repairs, outside evidence[33m 408[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps no output tail for passing checks[33m 577[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects evidence if a check changes workspace bytes[33m 544[2mms[22m[39m
+   [33m[2m✓[22m[39m retains reservations after verifier timeout[33m 2174[2mms[22m[39m
+   [33m[2m✓[22m[39m does not release the workspace or accept after successful verification[33m 412[2mms[22m[39m
+   [33m[2m✓[22m[39m does not attest truncated verifier output[33m 530[2mms[22m[39m
+   [33m[2m✓[22m[39m does not publish late evidence after ownership changes during a check[33m 933[2mms[22m[39m
+   [33m[2m✓[22m[39m restores verified receipts together with every referenced artifact[33m 817[2mms[22m[39m
+ [32m✓[39m tests/faults/native-session.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 8722[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers OpenCode creation death at native.after_reserve without dispatch or recreation[33m 1465[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers OpenCode creation death at provider.session.before_commit without dispatch or recreation[33m 2504[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers OpenCode creation death at native.after_session without dispatch or recreation[33m 2380[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers OpenCode creation death at native.after_setup without dispatch or recreation[33m 2362[2mms[22m[39m
+ [32m✓[39m tests/gate.test.ts [2m([22m[2m18 tests[22m[2m)[22m[33m 4348[2mms[22m[39m
+   [32m✓[39m bounded gate stage [2m(2)[22m
+     [33m[2m✓[22m[39m returns the exit code and the logged output[33m 341[2mms[22m[39m
+     [33m[2m✓[22m[39m fails fast on timeout and stops descendants holding the output[33m 3944[2mms[22m[39m
+ [32m✓[39m apps/controller/src/handoff-fixture.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 6528[2mms[22m[39m
+   [32m✓[39m offline handoff fixture [2m(3)[22m
+     [33m[2m✓[22m[39m lets a second worker finish the task from the packet alone[33m 2282[2mms[22m[39m
+     [33m[2m✓[22m[39m fails when the handoff omits the continuation value[33m 1869[2mms[22m[39m
+     [33m[2m✓[22m[39m makes the recipient refuse a tampered packet[33m 2370[2mms[22m[39m
+ [32m✓[39m apps/controller/src/native-review.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 5860[2mms[22m[39m
+   [33m[2m✓[22m[39m accepts only the explicit reviewed offline evidence and audits the actor[33m 795[2mms[22m[39m
+   [33m[2m✓[22m[39m deduplicates acceptance across restart without duplicating its audit event[33m 643[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses failed or uncertain verification: process.exit(1)[33m 552[2mms[22m[39m
+   [33m[2m✓[22m[39m refuses failed or uncertain verification: require('node:fs').writeFileSync('result.txt','changed')[33m 520[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects stale versions, wrong evidence digest, missing actor and live classification[33m 527[2mms[22m[39m
+   [33m[2m✓[22m[39m fails closed when a reviewed artifact is corrupted[33m 543[2mms[22m[39m
+   [33m[2m✓[22m[39m accepts immutable reviewed artifacts rather than later workspace edits[33m 543[2mms[22m[39m
+   [33m[2m✓[22m[39m rolls acceptance state, event and reservation release back together[33m 484[2mms[22m[39m
+   [33m[2m✓[22m[39m does not review unrelated objects or accept a reconciled connection[33m 578[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves a pending immutable review across controller restart[33m 494[2mms[22m[39m
+ [32m✓[39m tests/faults/provider-crash.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 11117[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at provider.reserve.before_commit without replay[33m 1493[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at provider.send.before_commit without replay[33m 1321[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at before_write without replay[33m 1267[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at after_write without replay[33m 1378[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at provider.receive.before_commit without replay[33m 1384[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at after_ack without replay[33m 1208[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at provider.result.before_commit without replay[33m 1607[2mms[22m[39m
+   [33m[2m✓[22m[39m recovers actual process death at after_result without replay[33m 1443[2mms[22m[39m
+ [32m✓[39m tests/faults/native-verification.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 7696[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves native verification across process boundary provider.verify.before_commit[33m 1509[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves native verification across process boundary provider.verified.before_commit[33m 1879[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves native verification across process boundary after_verified[33m 2230[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves native verification across process boundary success[33m 2066[2mms[22m[39m
+ [32m✓[39m packages/tools/src/browser.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 6088[2mms[22m[39m
+   [32m✓[39m browser.inspect [2m(8)[22m
+     [33m[2m✓[22m[39m captures page evidence in an isolated, deleted profile[33m 2871[2mms[22m[39m
+     [33m[2m✓[22m[39m stops the browser and removes the profile when the page never loads[33m 2898[2mms[22m[39m
+ [32m✓[39m packages/skills/src/bundled.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 11929[2mms[22m[39m
+   [32m✓[39m bundled skills [2m(13)[22m
+     [33m[2m✓[22m[39m fixture diagnose-off-by-one fails untouched and passes with its reference solution[33m 1204[2mms[22m[39m
+     [33m[2m✓[22m[39m fixture document-cli-flag fails untouched and passes with its reference solution[33m 493[2mms[22m[39m
+     [33m[2m✓[22m[39m fixture evaluate-candidate fails untouched and passes with its reference solution[33m 613[2mms[22m[39m
+     [33m[2m✓[22m[39m fixture explore-entrypoints fails untouched and passes with its reference solution[33m 513[2mms[22m[39m
+     [33m[2m✓[22m[39m fixture handoff-partial-feature fails untouched and passes with its reference solution[33m 736[2mms[22m[39m
+     [33m[2m✓[22m[39m fixture implement-clamp fails untouched and passes with its reference solution[33m 1213[2mms[22m[39m
+     [33m[2m✓[22m[39m fixture integrate-two-patches fails untouched and passes with its reference solution[33m 1734[2mms[22m[39m
+     [33m[2m✓[22m[39m fixture plan-rate-limit fails untouched and passes with its reference solution[33m 1357[2mms[22m[39m
+     [33m[2m✓[22m[39m fixture review-unsafe-merge fails untouched and passes with its reference solution[33m 1040[2mms[22m[39m
+     [33m[2m✓[22m[39m fixture test-slugify fails untouched and passes with its reference solution[33m 2797[2mms[22m[39m
+ [32m✓[39m apps/controller/src/offline-roster.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 7654[2mms[22m[39m
+   [33m[2m✓[22m[39m routes ten concurrent named workers to their own sessions and outcomes[33m 7641[2mms[22m[39m
+ [32m✓[39m tests/probe.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 5887[2mms[22m[39m
+   [32m✓[39m provider probe boundary [2m(12)[22m
+     [33m[2m✓[22m[39m CLI rejects unsafe or malformed flags: [][33m 1184[2mms[22m[39m
+     [33m[2m✓[22m[39m CLI rejects unsafe or malformed flags: [ '--live', '--read-only', …(2) ][33m 1211[2mms[22m[39m
+     [33m[2m✓[22m[39m CLI rejects unsafe or malformed flags: [ '--offline', '--runtime', …(2) ][33m 1269[2mms[22m[39m
+     [33m[2m✓[22m[39m CLI rejects unsafe or malformed flags: [ '--inventory-only', …(2) ][33m 1116[2mms[22m[39m
+     [33m[2m✓[22m[39m CLI offline mode runs in real Node with no credentials or provider executables[33m 1062[2mms[22m[39m
+ [32m✓[39m tests/faults/native-acceptance.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 7267[2mms[22m[39m
+   [33m[2m✓[22m[39m atomically survives native acceptance crash at native.prepare.before_commit[33m 2621[2mms[22m[39m
+   [33m[2m✓[22m[39m atomically survives native acceptance crash at native.accept.before_commit[33m 2463[2mms[22m[39m
+   [33m[2m✓[22m[39m atomically survives native acceptance crash at after_accepted[33m 2171[2mms[22m[39m
+ [32m✓[39m packages/tools/src/process.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 4829[2mms[22m[39m
+   [32m✓[39m command.run [2m(10)[22m
+     [33m[2m✓[22m[39m runs an approved argv in the workspace without a shell[33m 562[2mms[22m[39m
+     [33m[2m✓[22m[39m stops at its deadline and redacts credential-shaped output[33m 2721[2mms[22m[39m
+   [32m✓[39m test.run [2m(2)[22m
+     [33m[2m✓[22m[39m runs a host-registered command without per-action approval and binds the revision[33m 819[2mms[22m[39m
+     [33m[2m✓[22m[39m reports failures and refuses unregistered commands[33m 607[2mms[22m[39m
+ [32m✓[39m packages/supervisor/src/interactive.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 3174[2mms[22m[39m
+   [33m[2m✓[22m[39m owns stdin and streams bounded stdout until confirmed close[33m 572[2mms[22m[39m
+   [33m[2m✓[22m[39m rejects excessive input without writing it[33m 389[2mms[22m[39m
+   [33m[2m✓[22m[39m bounds streamed output and stops callback failures[33m 2201[2mms[22m[39m
+ [32m✓[39m packages/context/src/retrieval.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 7491[2mms[22m[39m
+   [32m✓[39m repository collection [2m(9)[22m
+     [33m[2m✓[22m[39m honors git ignore rules and hashes file content[33m 656[2mms[22m[39m
+     [33m[2m✓[22m[39m stops at file and byte limits and reports the remainder[33m 472[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects links instead of following them out of the root (walk)[33m 4081[2mms[22m[39m
+     [33m[2m✓[22m[39m does not run repository-configured fsmonitor commands[33m 713[2mms[22m[39m
+ [32m✓[39m tests/real-repo-policy.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 8091[2mms[22m[39m
+   [33m[2m✓[22m[39m the script refuses to start without approval, a repository, an objective and a check[33m 8078[2mms[22m[39m
+ [32m✓[39m packages/storage/src/backup.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 3228[2mms[22m[39m
+   [32m✓[39m backup and restore [2m(9)[22m
+     [33m[2m✓[22m[39m round-trips rows and object bytes into an empty home[33m 423[2mms[22m[39m
+     [33m[2m✓[22m[39m with --force moves existing state aside instead of deleting it[33m 312[2mms[22m[39m
+   [33m[2m✓[22m[39m carries the routing default, its history and candidates through a restore[33m 306[2mms[22m[39m
+ [32m✓[39m packages/storage/src/artifacts.test.ts [2m([22m[2m20 tests[22m[2m)[22m[33m 4164[2mms[22m[39m
+   [32m✓[39m verified snapshots [2m(4)[22m
+     [33m[2m✓[22m[39m restores a consistent database and verified artifacts to a new destination[33m 452[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects corrupt or missing snapshot objects without leaving a restore target[33m 314[2mms[22m[39m
+   [32m✓[39m snapshot artifact references [2m(3)[22m
+     [33m[2m✓[22m[39m preserves both referenced and retained unreferenced artifacts[33m 345[2mms[22m[39m
+ [32m✓[39m apps/controller/src/http/server.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 1763[2mms[22m[39m
+   [33m[2m✓[22m[39m loads in the pinned Node strip-only runtime[33m 1335[2mms[22m[39m
+ [32m✓[39m packages/storage/src/store.test.ts [2m([22m[2m22 tests[22m[2m)[22m[33m 2280[2mms[22m[39m
+   [33m[2m✓[22m[39m finds the latest event of a kind for a task beyond the first page[33m 571[2mms[22m[39m
+ [32m✓[39m packages/tools/src/mcp.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 617[2mms[22m[39m
+ [32m✓[39m apps/controller/src/service.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 2065[2mms[22m[39m
+   [33m[2m✓[22m[39m creates, queues, executes and accepts through authenticated HTTP[33m 1882[2mms[22m[39m
+ [32m✓[39m packages/adapters/src/opencode/endpoint.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 671[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps a quiet event stream open past the request timeout[33m 315[2mms[22m[39m
+ [32m✓[39m tests/release-sign.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 2401[2mms[22m[39m
+   [33m[2m✓[22m[39m a signature verifies only for the signed bytes and the signing key[33m 2125[2mms[22m[39m
+
+Timed out after 1200000 ms

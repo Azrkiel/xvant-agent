@@ -1,15 +1,15 @@
 {
   "gateId": "G10",
-  "status": "passed",
-  "generatedAt": "2026-10-09T00:19:44.075Z",
-  "sourceRevision": "0613a1f68bfe5921bbc154600a80ac1cf6d2f142",
+  "status": "failed",
+  "generatedAt": "2026-11-01T16:44:22.159Z",
+  "sourceRevision": "f9a184e52d6fc08863095090bd56be716dca1c3b",
   "branch": "claude/tandem",
-  "dirtyTreeHash": "9f9481e95b7f16844c4b35bb45d8cc8387d18ab17f398b4e439c8ae74f5b9b1f",
+  "dirtyTreeHash": "2dd7fad8e6b1dad9c6324ad3ef2d3899dcee452a99b7e5e98b0038848007f791",
   "sourceHashScope": "All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.",
   "operatingSystem": "win32 10.0.26200",
   "executionHost": "kvn",
   "nodeVersion": "v24.21.0",
-  "npmVersion": "not invoked through npm",
+  "npmVersion": "npm/12.0.2 node/v24.21.0 win32 x64 workspaces/false",
   "gitVersion": "git version 2.55.0.windows.3",
   "classification": "offline",
   "qualificationScope": "offline-release",
@@ -24,8 +24,8 @@
         "--noEmit"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:19:44.463Z",
-      "finishedAt": "2026-10-09T00:19:53.284Z",
+      "startedAt": "2026-11-01T16:44:23.717Z",
+      "finishedAt": "2026-11-01T16:44:45.333Z",
       "exitCode": 0
     },
     {
@@ -39,8 +39,8 @@
         "tests"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:19:53.286Z",
-      "finishedAt": "2026-10-09T00:20:00.195Z",
+      "startedAt": "2026-11-01T16:44:45.341Z",
+      "finishedAt": "2026-11-01T16:45:02.209Z",
       "exitCode": 0
     },
     {
@@ -52,8 +52,8 @@
         "."
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:20:00.195Z",
-      "finishedAt": "2026-10-09T00:20:08.035Z",
+      "startedAt": "2026-11-01T16:45:02.209Z",
+      "finishedAt": "2026-11-01T16:45:22.545Z",
       "exitCode": 0
     },
     {
@@ -68,111 +68,10 @@
         "--outputFile=.artifacts/tests.json"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:20:08.036Z",
-      "finishedAt": "2026-10-09T00:27:29.718Z",
-      "exitCode": 0,
-      "expectedCount": 1136,
-      "observedCount": 1236,
-      "suites": {
-        "packages/contracts/src/contracts.test.ts": 15,
-        "packages/core/src/task.test.ts": 26,
-        "packages/core/src/graph.test.ts": 20,
-        "packages/adapters/src/simulated/simulated.test.ts": 10,
-        "apps/controller/src/controller.test.ts": 24,
-        "tests/gate.test.ts": 18,
-        "tests/evidence-bundle.test.ts": 8,
-        "packages/storage/src/store.test.ts": 22,
-        "packages/storage/src/artifacts.test.ts": 20,
-        "packages/supervisor/src/index.test.ts": 14,
-        "packages/policy/src/index.test.ts": 2,
-        "apps/controller/src/durable.test.ts": 13,
-        "apps/controller/src/service.test.ts": 3,
-        "apps/controller/src/http/server.test.ts": 11,
-        "tests/faults/crash.test.ts": 7,
-        "packages/adapters/src/providers/conformance.test.ts": 19,
-        "packages/adapters/src/providers/protocol.test.ts": 8,
-        "tests/probe.test.ts": 12,
-        "packages/adapters/src/codex/transport.test.ts": 20,
-        "packages/adapters/src/codex/profile.test.ts": 5,
-        "packages/adapters/src/codex/lifecycle.test.ts": 9,
-        "packages/adapters/src/codex/thread.test.ts": 15,
-        "tests/codex-process.test.ts": 6,
-        "packages/storage/src/providers.test.ts": 59,
-        "tests/faults/provider-crash.test.ts": 8,
-        "packages/storage/src/workspace.test.ts": 5,
-        "apps/controller/src/native-verifier.test.ts": 23,
-        "tests/faults/native-verification.test.ts": 4,
-        "packages/core/src/native-acceptance.test.ts": 9,
-        "apps/controller/src/native-review.test.ts": 12,
-        "tests/faults/native-acceptance.test.ts": 3,
-        "apps/controller/src/codex-offline.test.ts": 35,
-        "packages/supervisor/src/interactive.test.ts": 3,
-        "tests/faults/codex-controller.test.ts": 9,
-        "packages/adapters/src/providers/native-stream.test.ts": 34,
-        "packages/adapters/src/providers/native-lifecycle.test.ts": 34,
-        "tests/native-process.test.ts": 2,
-        "apps/controller/src/native-offline.test.ts": 98,
-        "packages/adapters/src/providers/claude-launch.test.ts": 16,
-        "tests/faults/claude-launch.test.ts": 8,
-        "tests/faults/native-controller.test.ts": 26,
-        "tests/faults/native-session.test.ts": 4,
-        "packages/adapters/src/providers/failures.test.ts": 18,
-        "apps/controller/src/offline-roster.test.ts": 2,
-        "packages/adapters/src/opencode/endpoint.test.ts": 9,
-        "apps/controller/src/opencode-http.test.ts": 17,
-        "tests/faults/opencode-http.test.ts": 6,
-        "apps/controller/src/opencode-live.test.ts": 21,
-        "packages/adapters/src/opencode/cli-stream.test.ts": 21,
-        "tests/faults/opencode-live.test.ts": 12,
-        "packages/contracts/src/live.test.ts": 20,
-        "packages/storage/src/git-workspace.test.ts": 5,
-        "packages/adapters/src/live/live-streams.test.ts": 11,
-        "apps/controller/src/codex-live.test.ts": 6,
-        "apps/controller/src/claude-live.test.ts": 7,
-        "packages/adapters/src/live/discover.test.ts": 3,
-        "apps/controller/src/live-roster.test.ts": 2,
-        "apps/controller/src/live-gates.test.ts": 3,
-        "packages/context/src/packet.test.ts": 21,
-        "packages/context/src/retrieval.test.ts": 12,
-        "packages/storage/src/memory.test.ts": 12,
-        "packages/memory/src/relevance.test.ts": 5,
-        "packages/context/src/handoff.test.ts": 10,
-        "packages/context/src/inspect.test.ts": 2,
-        "packages/context/src/transfer.test.ts": 6,
-        "apps/controller/src/handoff-fixture.test.ts": 3,
-        "packages/context/src/render.test.ts": 3,
-        "packages/tools/src/registry.test.ts": 10,
-        "packages/tools/src/files.test.ts": 19,
-        "packages/tools/src/repository.test.ts": 6,
-        "packages/tools/src/process.test.ts": 12,
-        "packages/tools/src/controller.test.ts": 5,
-        "packages/tools/src/mcp.test.ts": 8,
-        "packages/tools/src/browser.test.ts": 8,
-        "packages/skills/src/catalog.test.ts": 12,
-        "packages/skills/src/hooks.test.ts": 4,
-        "packages/skills/src/bundled.test.ts": 13,
-        "packages/skills/src/compatibility.test.ts": 5,
-        "packages/policy/src/runtimes.test.ts": 9,
-        "apps/controller/src/tools-fixture.test.ts": 1,
-        "packages/core/src/scheduler.test.ts": 18,
-        "packages/storage/src/integration.test.ts": 4,
-        "apps/controller/src/orchestrator.test.ts": 15,
-        "apps/controller/src/turn-runner.test.ts": 3,
-        "apps/controller/src/app.test.ts": 4,
-        "tests/e2e/ui.test.ts": 3,
-        "packages/native-agent/src/local-endpoint.test.ts": 20,
-        "packages/native-agent/src/loop.test.ts": 14,
-        "apps/controller/src/native-turn-runner.test.ts": 10,
-        "apps/controller/src/native-loop-fixture.test.ts": 2,
-        "apps/controller/src/live-native.test.ts": 3,
-        "packages/evaluation/src/evaluation.test.ts": 17,
-        "packages/evaluation/src/smoke.test.ts": 1,
-        "packages/evaluation/src/v1.test.ts": 1,
-        "packages/evaluation/src/ledger.test.ts": 4,
-        "apps/controller/src/benchmark-live.test.ts": 7,
-        "tests/release-policy.test.ts": 13,
-        "tests/audit-policy.test.ts": 6
-      }
+      "startedAt": "2026-11-01T16:45:22.547Z",
+      "finishedAt": "2026-11-01T17:05:23.610Z",
+      "exitCode": 1,
+      "timedOut": true
     },
     {
       "id": "runtime",
@@ -181,8 +80,8 @@
         "apps/controller/src/durable-demo.ts"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:29.797Z",
-      "finishedAt": "2026-10-09T00:27:31.217Z",
+      "startedAt": "2026-11-01T17:05:23.620Z",
+      "finishedAt": "2026-11-01T17:05:26.191Z",
       "exitCode": 0
     },
     {
@@ -195,8 +94,8 @@
         "all"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:31.223Z",
-      "finishedAt": "2026-10-09T00:27:31.602Z",
+      "startedAt": "2026-11-01T17:05:26.207Z",
+      "finishedAt": "2026-11-01T17:05:26.964Z",
       "exitCode": 0
     },
     {
@@ -206,8 +105,8 @@
         "scripts/roster-fixture.mjs"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:31.603Z",
-      "finishedAt": "2026-10-09T00:27:35.590Z",
+      "startedAt": "2026-11-01T17:05:26.965Z",
+      "finishedAt": "2026-11-01T17:05:32.850Z",
       "exitCode": 0
     },
     {
@@ -218,8 +117,8 @@
         "permission"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:35.590Z",
-      "finishedAt": "2026-10-09T00:27:36.662Z",
+      "startedAt": "2026-11-01T17:05:32.851Z",
+      "finishedAt": "2026-11-01T17:05:35.309Z",
       "exitCode": 0
     },
     {
@@ -230,8 +129,8 @@
         "interrupt"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:36.662Z",
-      "finishedAt": "2026-10-09T00:27:37.498Z",
+      "startedAt": "2026-11-01T17:05:35.311Z",
+      "finishedAt": "2026-11-01T17:05:37.221Z",
       "exitCode": 0
     },
     {
@@ -242,8 +141,8 @@
         "no-auth"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:37.499Z",
-      "finishedAt": "2026-10-09T00:27:39.572Z",
+      "startedAt": "2026-11-01T17:05:37.221Z",
+      "finishedAt": "2026-11-01T17:05:40.666Z",
       "exitCode": 0
     },
     {
@@ -254,8 +153,8 @@
         "success"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:39.572Z",
-      "finishedAt": "2026-10-09T00:27:40.284Z",
+      "startedAt": "2026-11-01T17:05:40.668Z",
+      "finishedAt": "2026-11-01T17:05:42.595Z",
       "exitCode": 0
     },
     {
@@ -267,8 +166,8 @@
         "permission"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:40.285Z",
-      "finishedAt": "2026-10-09T00:27:41.049Z",
+      "startedAt": "2026-11-01T17:05:42.596Z",
+      "finishedAt": "2026-11-01T17:05:44.263Z",
       "exitCode": 0
     },
     {
@@ -279,8 +178,8 @@
         "claude"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:41.050Z",
-      "finishedAt": "2026-10-09T00:27:42.278Z",
+      "startedAt": "2026-11-01T17:05:44.265Z",
+      "finishedAt": "2026-11-01T17:05:46.439Z",
       "exitCode": 0
     },
     {
@@ -292,8 +191,8 @@
         "interrupt"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:42.278Z",
-      "finishedAt": "2026-10-09T00:27:43.062Z",
+      "startedAt": "2026-11-01T17:05:46.440Z",
+      "finishedAt": "2026-11-01T17:05:48.570Z",
       "exitCode": 0
     },
     {
@@ -305,8 +204,8 @@
         "quota-error"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:43.062Z",
-      "finishedAt": "2026-10-09T00:27:43.934Z",
+      "startedAt": "2026-11-01T17:05:48.572Z",
+      "finishedAt": "2026-11-01T17:05:50.376Z",
       "exitCode": 0
     },
     {
@@ -319,8 +218,8 @@
         "create"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:43.934Z",
-      "finishedAt": "2026-10-09T00:27:44.883Z",
+      "startedAt": "2026-11-01T17:05:50.378Z",
+      "finishedAt": "2026-11-01T17:05:53.671Z",
       "exitCode": 0
     },
     {
@@ -333,8 +232,8 @@
         "create"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:44.884Z",
-      "finishedAt": "2026-10-09T00:27:45.717Z",
+      "startedAt": "2026-11-01T17:05:53.672Z",
+      "finishedAt": "2026-11-01T17:05:55.710Z",
       "exitCode": 0
     },
     {
@@ -346,8 +245,8 @@
         "permission"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:45.718Z",
-      "finishedAt": "2026-10-09T00:27:46.331Z",
+      "startedAt": "2026-11-01T17:05:55.712Z",
+      "finishedAt": "2026-11-01T17:05:57.472Z",
       "exitCode": 0
     },
     {
@@ -358,8 +257,8 @@
         "opencode"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:46.332Z",
-      "finishedAt": "2026-10-09T00:27:47.230Z",
+      "startedAt": "2026-11-01T17:05:57.475Z",
+      "finishedAt": "2026-11-01T17:06:00.092Z",
       "exitCode": 0
     },
     {
@@ -371,8 +270,8 @@
         "interrupt"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:47.230Z",
-      "finishedAt": "2026-10-09T00:27:48.029Z",
+      "startedAt": "2026-11-01T17:06:00.093Z",
+      "finishedAt": "2026-11-01T17:06:02.024Z",
       "exitCode": 0
     },
     {
@@ -384,8 +283,8 @@
         "quota-error"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:48.029Z",
-      "finishedAt": "2026-10-09T00:27:48.940Z",
+      "startedAt": "2026-11-01T17:06:02.026Z",
+      "finishedAt": "2026-11-01T17:06:04.550Z",
       "exitCode": 0
     },
     {
@@ -398,8 +297,8 @@
         "create"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:48.940Z",
-      "finishedAt": "2026-10-09T00:27:49.886Z",
+      "startedAt": "2026-11-01T17:06:04.552Z",
+      "finishedAt": "2026-11-01T17:06:06.912Z",
       "exitCode": 0
     },
     {
@@ -412,8 +311,8 @@
         "create"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:49.887Z",
-      "finishedAt": "2026-10-09T00:27:50.744Z",
+      "startedAt": "2026-11-01T17:06:06.913Z",
+      "finishedAt": "2026-11-01T17:06:09.174Z",
       "exitCode": 0
     },
     {
@@ -423,8 +322,8 @@
         "scripts/handoff-fixture.mjs"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:50.745Z",
-      "finishedAt": "2026-10-09T00:27:52.985Z",
+      "startedAt": "2026-11-01T17:06:09.175Z",
+      "finishedAt": "2026-11-01T17:06:12.905Z",
       "exitCode": 0
     },
     {
@@ -434,8 +333,8 @@
         "scripts/tools-fixture.mjs"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:52.986Z",
-      "finishedAt": "2026-10-09T00:27:54.032Z",
+      "startedAt": "2026-11-01T17:06:12.909Z",
+      "finishedAt": "2026-11-01T17:06:14.892Z",
       "exitCode": 0
     },
     {
@@ -445,8 +344,8 @@
         "scripts/compatibility-report.mjs"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:54.032Z",
-      "finishedAt": "2026-10-09T00:27:54.467Z",
+      "startedAt": "2026-11-01T17:06:14.894Z",
+      "finishedAt": "2026-11-01T17:06:15.741Z",
       "exitCode": 0
     },
     {
@@ -456,8 +355,8 @@
         "scripts/browser-fixture.mjs"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:27:54.469Z",
-      "finishedAt": "2026-10-09T00:28:16.477Z",
+      "startedAt": "2026-11-01T17:06:15.745Z",
+      "finishedAt": "2026-11-01T17:06:39.429Z",
       "exitCode": 0
     },
     {
@@ -467,8 +366,8 @@
         "scripts/orchestration-fixture.mjs"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:28:16.477Z",
-      "finishedAt": "2026-10-09T00:28:48.586Z",
+      "startedAt": "2026-11-01T17:06:39.431Z",
+      "finishedAt": "2026-11-01T17:07:14.461Z",
       "exitCode": 0
     },
     {
@@ -478,8 +377,8 @@
         "scripts/native-loop-fixture.mjs"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:28:48.586Z",
-      "finishedAt": "2026-10-09T00:28:57.412Z",
+      "startedAt": "2026-11-01T17:07:14.463Z",
+      "finishedAt": "2026-11-01T17:07:33.313Z",
       "exitCode": 0
     },
     {
@@ -495,8 +394,8 @@
         ".artifacts/benchmark-fixture.json"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:28:57.413Z",
-      "finishedAt": "2026-10-09T00:29:29.740Z",
+      "startedAt": "2026-11-01T17:07:33.314Z",
+      "finishedAt": "2026-11-01T17:08:47.404Z",
       "exitCode": 0
     },
     {
@@ -508,8 +407,8 @@
         ".artifacts/audit.json"
       ],
       "workingDirectory": "C:\\Users\\jiang\\xt",
-      "startedAt": "2026-10-09T00:29:29.741Z",
-      "finishedAt": "2026-10-09T00:29:30.906Z",
+      "startedAt": "2026-11-01T17:08:47.408Z",
+      "finishedAt": "2026-11-01T17:08:50.263Z",
       "exitCode": 0
     }
   ],
@@ -528,7 +427,7 @@
     },
     {
       "path": ".artifacts/tests.log",
-      "sha256": "fbd6657dce8a0c4d9f2c5a88d451f2231688a3446e4256b8bdc9088123e95f78"
+      "sha256": "eaed4f3cea3d05336281fa45720096950b42ca7b68e3865b96c3faf9fc38d79b"
     },
     {
       "path": ".artifacts/runtime.log",
@@ -537,10 +436,6 @@
     {
       "path": ".artifacts/tests.json",
       "sha256": "0f19e8532fcbd1850ef4f1b4b18f185fa1232f670cae91ae076b5e0923d1940b"
-    },
-    {
-      "path": "coverage/coverage-summary.json",
-      "sha256": "3686ffaaeefcacd071f3bf2084ee414c0ac0fea47cce34f819e8cbdc4fd13847"
     },
     {
       "path": ".artifacts/provider-fixtures.log",
@@ -616,7 +511,7 @@
     },
     {
       "path": ".artifacts/handoff-fixture.log",
-      "sha256": "67e7631a2c64cff66f781a6ed694f358b05d77efa7fc53ff9e0b47c25826b93c"
+      "sha256": "107fd2a9d1b5a38ee8bf2d9a46b177036525c115004737e34a0e549aafa7c35c"
     },
     {
       "path": ".artifacts/tools-fixture.log",
@@ -644,7 +539,7 @@
     },
     {
       "path": ".artifacts/benchmark-fixture.json",
-      "sha256": "df3d47dfa7e0ab9c39c673001ceed3ea871ef651622ae039ac077e7cf6a128cb"
+      "sha256": "8a5abf769a0c69577764289ae8a22d3325008d05bf0c36e75a0494f3ac4b77dd"
     },
     {
       "path": ".artifacts/release-audit.log",
@@ -652,11 +547,11 @@
     },
     {
       "path": ".artifacts/audit.json",
-      "sha256": "25593df242c91f32f0b334c0e54d3b41d8af38a2498247fb5785ebe395df07f0"
+      "sha256": "be9ab5e467d7163520ea480f412e3243091800a4b3613629762e5e8e96ab1adb"
     },
     {
       "path": ".artifacts/source-manifest.json",
-      "sha256": "24c0f842839f68036a509e08c55d2bf7a57a5790eef1f42f342876a14a2c72d5"
+      "sha256": "d8b5a6a10ec50d335e21f5861470ff654634d3c6f0a87346c556bf364c710b91"
     }
   ],
   "limitations": [
