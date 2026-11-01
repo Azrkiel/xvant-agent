@@ -2,6 +2,7 @@
 // a Git repository. Work happens in XVANT-owned worktrees and lands on an
 // `xvant/<id>` branch; your checkout and branches are never changed.
 //
+//   npm run xvant                      (the interactive shell; also `shell`)
 //   npm run xvant -- ui [--no-open] [--port N]
 //   npm run xvant -- runtimes
 //   npm run xvant -- run --repo PATH --objective TEXT [--criterion TEXT]...
@@ -64,7 +65,11 @@ function discover(only) {
   return { runtimes, table };
 }
 
-if (command === 'ui') {
+if (command === undefined || command === 'shell') {
+  const { startShell } = await import('./xvant-shell.mjs');
+  await startShell({ home });
+  process.exit(0);
+} else if (command === 'ui') {
   const { startApp } = await import('../apps/controller/src/app.ts');
   const app = await startApp({
     home,
@@ -332,6 +337,13 @@ if (command === 'ui') {
           record.state.integration?.branch ?? '',
         );
       }
+  } catch (error) {
+    console.error(
+      error.message === 'NOT_FOUND'
+        ? 'No run named ' + rest[0] + '. List them with: status'
+        : 'Status failed: ' + error.message,
+    );
+    process.exitCode = 1;
   } finally {
     store.close();
   }
@@ -356,6 +368,13 @@ if (command === 'ui') {
       'Accepted. Merge when you are ready: git merge ' +
         record.state.integration.branch,
     );
+  } catch (error) {
+    console.error(
+      error.message === 'NOT_FOUND'
+        ? 'No run named ' + rest[0] + '. List them with: status'
+        : error.message,
+    );
+    process.exitCode = 1;
   } finally {
     store.close();
   }
@@ -475,7 +494,7 @@ if (command === 'ui') {
   }
 } else {
   console.error(
-    'Commands: ui | runtimes | run | status [ID] | accept ID | share | backup | restore',
+    'Commands: shell | ui | runtimes | run | status [ID] | accept ID | share | backup | restore',
   );
   process.exit(2);
 }

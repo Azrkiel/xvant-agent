@@ -42,6 +42,31 @@ Tier rules: light work goes to a light worker first, and to a standard one when 
 
 State acceptance criteria explicitly with `--criterion`. On the benchmark, a small model given explicit criteria passed far more often than the same model given only the objective.
 
+## Interactive shell
+
+`npm run xvant` with no command (or `xvant.cmd` from any folder) opens a prompt in the current Git repository. Type what you want done and press Enter: XVANT plans it, runs the workers, shows their activity as it happens, checks the result and leaves it on a branch.
+
+| Command | What it does |
+| --- | --- |
+| `/repo PATH` | Work in another Git repository |
+| `/tandem opus\|sol\|off` | Who plans: Opus, GPT-6.1-Sol, or the plain pool. Starts as `opus` |
+| `/only LIST\|all` | Limit runtimes, for example `/only claude` |
+| `/check COMMAND`, `/check clear` | Commands the result must pass |
+| `/criterion TEXT`, `/criterion clear` | Acceptance criteria |
+| `/review on\|off` | Review the combined result |
+| `/settings`, `/runtimes` | Show the settings, or which runtimes are usable |
+| `/status [ID]` | List runs, or show one (default: the last run of this session) |
+| `/diff` | What the last run changed |
+| `/accept [ID]`, `/merge` | Accept a ready result, then merge its branch into your checkout |
+| `/share BRANCH`, `/share stop` | Keep a branch in step with its remote while you work (see below) |
+| `/help`, `/quit` | |
+
+- The shell runs each action as the same `xvant` or `git` command line you could type yourself, so it behaves exactly as those do.
+- Settings are remembered per repository in `shell.json` in the state directory.
+- Ctrl+C during a run stops the run and its workers; at the prompt it leaves the shell.
+- `xvant.cmd` looks for Node in `XVANT_NODE`, then in this checkout's `.tools`, then on `PATH`. Put the checkout's folder on `PATH` to type `xvant` anywhere.
+- It is a command prompt, not a chat: each line is one objective or one command, and a run does not remember the previous one.
+
 ## Shared files across accounts and devices
 
 `xvant share` keeps one branch of a checkout in step with its remote, so several people on several machines edit the same files and see each other's changes within a few seconds. Git is the store: there is no server to run, every version stays in history, and access is whoever can push to the remote.
