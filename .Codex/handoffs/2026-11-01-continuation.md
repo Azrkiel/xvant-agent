@@ -53,6 +53,10 @@ Independent original findings and scoped approvals are preserved under `docs/evi
 export PATH="/c/Users/jiang/XVANT/.tools/node_modules/node-win-x64/bin:/c/Users/jiang/XVANT/.tools/node_modules/.bin:$PATH"
 ```
 
+## Post-snapshot cancellation finding (before final gate)
+
+The next final-source live rerun failed (53 iterations), retained as `P10-soak-live-20261101T080258626Z-0ed64ee25a2a`; no offline gate or merge followed that failure. Instrumented isolated Claude runs found Windows `taskkill /T /F` returning 128 before the owned process subsequently emitted `close` within the existing seven-second deadline. The supervisor had permanently promoted the reason to `needs_attention` on the earlier helper error. A deterministic regression reproduced that false unknown. The Windows-only fix waits for actual owned close or the unchanged deadline; no-close still retains uncertain ownership. Non-Windows behavior is unchanged. Supervisor tests now total 16. Actual before/after diagnostic traces are in `docs/evidence/diagnostics/2026-11-01-cancel-close/`. Fresh qualification of this fix is pending at this handoff snapshot; use the final evidence note for actual outcomes.
+
 ### Known limitations carried forward
 
 Current Codex runtime mismatch; no GUI tandem; CLI-vs-UI requirement still needs human disposition; no hosted/multi-device share trial; no live check-repair success shown by the soak; no Linux qualification; no arbitrary-secret/history scan or hostile concurrent Git-index guarantee; explicit assignments still take precedence during ordinary repairs. Store lease review found no concrete bug, not an all-races proof.

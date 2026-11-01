@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "security_concerns": [],
+  "logic_errors": [],
+  "suggestions": [],
+  "summary": "No concrete blockers found in the Windows-only late-close cancellation diff after reading the full supervisor, its tests, and claude-live.ts. Failed taskkill escalation no longer overrides the cancellation reason before the owned close event; the unchanged seven-second deadline still returns needs_attention and retains ownership for an unclosed live root. The caller only finalizes an interrupted unfinished turn as cancelled after the supervisor returns cancelled; uncertain shutdown remains unknown. Ownership identity checks, PID-reuse guards, non-Windows behavior, and treeContainment=false are unchanged. Both targeted Windows regression cases passed independently (2 passed, 14 skipped); no live models or heavy tests were run. Git classified index.ts as binary, so its exact diff was inspected using git diff --text. This approval is limited to the scoped trusted-local Windows fix, not hostile descendant containment or Linux qualification."
+}

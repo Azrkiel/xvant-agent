@@ -69,7 +69,7 @@ export function phaseSuites(phase: string): Record<string, number> {
         ...baseline,
         'packages/storage/src/store.test.ts': 20,
         'packages/storage/src/artifacts.test.ts': 20,
-        'packages/supervisor/src/index.test.ts': 12,
+        'packages/supervisor/src/index.test.ts': 16,
         'packages/policy/src/index.test.ts': 2,
         'apps/controller/src/durable.test.ts': 13,
         'apps/controller/src/service.test.ts': 3,
