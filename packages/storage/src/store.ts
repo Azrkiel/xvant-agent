@@ -104,6 +104,9 @@ function canonical(value: unknown): string {
     );
   return json(value);
 }
+/** The newest schema this code writes; a database beyond it is refused. */
+export const SCHEMA_VERSION = 5;
+
 export class Store {
   readonly providers: ProviderJournal;
   readonly memory: MemoryRecords;

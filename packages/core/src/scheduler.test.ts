@@ -222,3 +222,108 @@ describe('explicit assignment', () => {
     );
   });
 });
+
+describe('tiers', () => {
+  const pool = () => [
+    worker('claude-2', { tier: 'standard' }),
+    worker('claude-3', { roles: ['worker'], tier: 'light' }),
+    worker('codex-1'),
+  ];
+  it('sends light work to the light worker and standard work past it', () => {
+    const light = routeNode(task({ tier: 'light' }), pool());
+    expect(light.alias).toBe('claude-3');
+    expect(light.reasons).toContain('Matches the light tier');
+    const standard = routeNode(task(), pool());
+    expect(standard.alias).not.toBe('claude-3');
+    expect(standard.excluded).toContainEqual({
+      alias: 'claude-3',
+      reason: 'light tier is below this node',
+    });
+  });
+  it('lets a standard worker take light work when the light one is busy', () => {
+    const [a, b, c] = pool();
+    const decision = routeNode(task({ tier: 'light' }), [
+      a!,
+      { ...b!, busy: true },
+      c!,
+    ]);
+    expect(decision.alias).not.toBe('claude-3');
+    expect(decision.reasons).toContain(
+      'No idle light worker; taken by a standard one',
+    );
+  });
+  it('waits for a busy standard worker instead of handing standard work down', () => {
+    const [a, b, c] = pool();
+    expect(
+      routeNode(task(), [{ ...a!, busy: true }, b!, { ...c!, busy: true }])
+        .alias,
+    ).toBeNull();
+  });
+  it('hands standard work down only when no standard worker is usable', () => {
+    const [a, b, c] = pool();
+    expect(
+      routeNode(task(), [
+        { ...a!, blocked: true },
+        b!,
+        { ...c!, healthy: false },
+      ]).alias,
+    ).toBe('claude-3');
+  });
+  it('prefers the tier over continuing a dependency', () => {
+    const [a, b, c] = pool();
+    expect(
+      routeNode(task({ tier: 'light', dependsOn: ['api'] }), [
+        { ...a!, completed: ['api'] },
+        b!,
+        c!,
+      ]).alias,
+    ).toBe('claude-3');
+  });
+  it('tells the planner about tiers only in a pool that has both', () => {
+    const prompt = (workers: Parameters<typeof planningPrompt>[0]['workers']) =>
+      planningPrompt({
+        objective: 'o',
+        acceptanceCriteria: ['c'],
+        workers,
+        repositorySummary: 'r',
+        maxNodes: 5,
+      });
+    const tiered = prompt([
+      { alias: 'claude-1', runtimeKind: 'claude', roles: ['planner'] },
+      {
+        alias: 'claude-2',
+        runtimeKind: 'claude',
+        roles: ['worker'],
+        tier: 'standard',
+        model: 'sonnet',
+      },
+      {
+        alias: 'claude-3',
+        runtimeKind: 'claude',
+        roles: ['worker'],
+        tier: 'light',
+        model: 'haiku',
+      },
+    ]);
+    expect(tiered).toMatch(/@claude-3 \(claude; worker; light tier on haiku\)/);
+    expect(tiered).toMatch(/@claude-1 \(claude; planner\)/);
+    expect(tiered).toContain('Give each task a "tier"');
+    expect(
+      prompt([{ alias: 'claude-2', runtimeKind: 'claude', roles: ['worker'] }]),
+    ).not.toContain('tier');
+    expect(
+      validatePlan({
+        summary: 's',
+        nodes: [
+          {
+            id: 'a',
+            title: 't',
+            objective: 'o',
+            acceptanceCriteria: ['c'],
+            tier: 'light',
+          },
+        ],
+      }).plan.nodes[0]!.tier,
+    ).toBe('light');
+  });
+});

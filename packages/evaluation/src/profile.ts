@@ -1,9 +1,10 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import {
   existsSync,
   mkdirSync,
   readFileSync,
   readdirSync,
+  renameSync,
   writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
@@ -13,12 +14,14 @@ import { evaluatePromotion, type BenchmarkReport } from './report.ts';
 
 const name = z.string().regex(/^[A-Za-z0-9._-]{1,64}$/);
 const kind = z.enum(['codex', 'claude', 'opencode']);
+/** A runtime's model name, e.g. `opencode/big-pickle`. It never starts with `-`, so it cannot read as a flag. */
+const model = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,127}$/);
 /** What a routing version decides: which model each role runs on. */
 const settingsSchema = z.strictObject({
   /** Model per runtime; a runtime not named uses its own default. */
-  models: z.partialRecord(kind, name),
+  models: z.partialRecord(kind, model),
   /** One worker plans and reviews on this model and implements nothing. */
-  plannerModel: name.optional(),
+  plannerModel: model.optional(),
 });
 export type RoutingSettings = z.infer<typeof settingsSchema>;
 const profileSchema = z.strictObject({
@@ -61,8 +64,12 @@ export function settingsOf(
   const runtime = kind.safeParse(versions.workerRuntime);
   if (versions.runtime !== 'xvant-orchestrated' || !runtime.success)
     return null;
+  // `default` is how a record says the runtime chose its own model. It is
+  // kept only beside a planner model, which needs to know its runtime.
+  const named =
+    versions.model && (versions.model !== 'default' || versions.plannerModel);
   return settingsSchema.parse({
-    models: versions.model ? { [runtime.data]: versions.model } : {},
+    models: named ? { [runtime.data]: versions.model } : {},
     ...(versions.plannerModel ? { plannerModel: versions.plannerModel } : {}),
   });
 }
@@ -131,10 +138,15 @@ export class RoutingProfiles {
   }
   #save(folder: 'profiles' | 'candidates', profile: RoutingProfile) {
     mkdirSync(join(this.#dir, folder), { recursive: true });
+    // Written beside and renamed, so a reader never sees half a file.
+    const path = this.#file(folder, profile.version);
+    const temp = path + '.' + randomUUID() + '.tmp';
     writeFileSync(
-      this.#file(folder, profile.version),
+      temp,
       JSON.stringify(profileSchema.parse(profile), null, 2) + '\n',
+      { flag: 'wx' },
     );
+    renameSync(temp, path);
   }
   /** The default a run uses, or null before `initialize`. A profile that no longer matches the ledger is refused. */
   active(): RoutingProfile | null {

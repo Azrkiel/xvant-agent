@@ -19,10 +19,20 @@ const session =
     ? '00000000-0000-4000-8000-000000000000'
     : (flag('--session-id') ?? flag('--resume'));
 const send = (value) => process.stdout.write(JSON.stringify(value) + '\n');
+if (scenario === 'blocked-input') {
+  writeFileSync(join(process.cwd(), 'blocked-input.started'), 'started\n');
+  setInterval(() => {}, 1000);
+  await new Promise(() => {});
+}
 let prompt = '';
 process.stdin.on('data', (d) => (prompt += d));
 process.stdin.on('end', async () => {
   if (!prompt.trim()) process.exit(1);
+  if (scenario === 'before-init') {
+    writeFileSync(join(process.cwd(), 'before-init.started'), 'started\n');
+    setInterval(() => {}, 1000);
+    return;
+  }
   send({
     type: 'system',
     subtype: 'init',
