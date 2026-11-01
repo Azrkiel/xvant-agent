@@ -1,0 +1,13 @@
+{
+  "bundleId": "P10-soak-live-20261101T080258626Z-0ed64ee25a2a",
+  "archivedAt": "2026-11-01T08:15:27.177Z",
+  "sourceRoot": "C:/Users/jiang/xt",
+  "receipt": {
+    "file": "C:/Users/jiang/xt/docs/evidence/P10-soak-live.json",
+    "sha256": "aa35aadf9ff716e27b521433b27cd1aedbc91157e5102abb6b5e1a52b0bd3729",
+    "status": "failed"
+  },
+  "artifacts": [],
+  "extras": [],
+  "integrity": "complete"
+}
