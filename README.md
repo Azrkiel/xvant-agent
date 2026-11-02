@@ -161,14 +161,14 @@ readable with `--project cli`.
   and adds a _Lessons from earlier work_ section to the prompt: fixes ranked
   by how often they worked and were verified, and approaches that did not
   work. Whether that repair then passes is fed back into the ranking, so
-  suggestions that help rise and ones that do not sink. Workers on XVANT's own
-  loop (`native-local`) can also query it themselves with the read-only
-  `lessons.search` tool, and project memory with `memory.search`; both are in
-  that loop's catalog and every call is receipted. `lessons.search` always reads
-  the scope the run writes to, chosen by the host and not by tool input, so a
-  worker never sees another repository's lessons; `lessons: false` turns it off
-  for the run. External runtimes get them through the task's MCP bridge when the
-  host lists them in that task's catalog.
+  suggestions that help rise and ones that do not sink. Workers can also query
+  it themselves with the read-only `lessons.search` tool, and project memory
+  with `memory.search`; every call is receipted. Workers on XVANT's own loop
+  (`native-local`) have both in their catalog, and Codex, Claude and OpenCode
+  turns reach them through a task-scoped MCP bridge that serves only those two
+  tools. `lessons.search` always reads the scope the run writes to, chosen by
+  the host and not by tool input, so a worker never sees another repository's
+  lessons; `lessons: false` turns it off for the run.
 - **Trust.** Only the host writes the graph. A solution counts as verified
   only for checks the host ran; its summary is the worker's own account.
   `xvant run` and the app run no checks on a node alone, so a node repair is

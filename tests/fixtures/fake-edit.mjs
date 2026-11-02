@@ -74,8 +74,13 @@ export async function followMcpInstruction(
   endpoint,
   cwd = process.cwd(),
 ) {
+  const lookup =
+    /Call lessons_search on the MCP server named xvant for: (.+?)\. Save/.exec(
+      prompt,
+    );
   if (
-    !/file_read tool from the MCP server named xvant/.test(prompt) ||
+    (!lookup &&
+      !/file_read tool from the MCP server named xvant/.test(prompt)) ||
     !endpoint
   )
     return false;
@@ -96,6 +101,20 @@ export async function followMcpInstruction(
   };
   await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {} });
   const listed = await rpc('tools/list', {});
+  if (lookup) {
+    const tools = listed.result.tools.map((tool) => tool.name).sort();
+    const found = tools.includes('lessons_search')
+      ? await rpc('tools/call', {
+          name: 'lessons_search',
+          arguments: { query: lookup[1] },
+        })
+      : undefined;
+    writeFileSync(
+      join(cwd, 'lessons.json'),
+      JSON.stringify({ tools, result: found?.result.structuredContent }),
+    );
+    return true;
+  }
   if (!listed.result.tools.some((tool) => tool.name === 'file_read'))
     return false;
   const read = await rpc('tools/call', {
