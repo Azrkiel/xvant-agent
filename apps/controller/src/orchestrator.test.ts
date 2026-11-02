@@ -17,6 +17,8 @@ import { Store } from '../../../packages/storage/src/store.ts';
 import { ArtifactStore } from '../../../packages/storage/src/artifacts.ts';
 import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
 import { captureGitWorkspace } from '../../../packages/storage/src/git-workspace.ts';
+import { defaultWorkers } from './app.ts';
+import { applyRouting } from './routing-default.ts';
 import {
   Orchestrator,
   type TurnOutcome,
@@ -377,6 +379,147 @@ const apiCheck = {
     args: ['-e', "require('node:fs').readFileSync('api.txt')"],
   },
 };
+
+it.each([
+  {
+    scenario: 'prefers the healthy planner over an independent Claude reviewer',
+    plannerModel: 'gpt-6.1-sol',
+    blockPlanner: false,
+    reviewer: 'codex-1',
+  },
+  {
+    scenario: 'falls back to Claude when the planner account becomes blocked',
+    plannerModel: 'gpt-6.1-sol',
+    blockPlanner: true,
+    reviewer: 'claude-1',
+  },
+  {
+    scenario: 'keeps independent-runtime review without a planner model',
+    plannerModel: undefined,
+    blockPlanner: false,
+    reviewer: 'claude-1',
+  },
+])(
+  'configured combined review: $scenario',
+  async ({ plannerModel, blockPlanner, reviewer }) => {
+    const pool = defaultWorkers(['codex', 'claude']);
+    applyRouting(
+      pool,
+      { codex: {}, claude: {} },
+      {
+        models: { codex: 'gpt-6.1-sol' },
+        ...(plannerModel ? { plannerModel } : {}),
+      },
+    );
+    const planner = pool.find((w) => w.alias === 'codex-1')!;
+    const runner = new FakeRunner((request) => {
+      const label = byLabel(request);
+      if (label === 'plan')
+        return {
+          finalText:
+            '```json\n' +
+            JSON.stringify({
+              ...onlyApi,
+              nodes: [{ ...onlyApi.nodes[0]!, assignee: '@codex-2' }],
+            }) +
+            '\n```',
+        };
+      if (label === 'review') return verdict(true);
+      expect(label).toBe('api');
+      return { write: { 'api.txt': 'api by codex-2\n' } };
+    });
+    const state = await new Orchestrator(store, runner, pool, {
+      stateRoot: join(root, 'runs'),
+      onChange: (current, kind) => {
+        if (!blockPlanner || kind !== 'graph.checked') return;
+        // The implementation is integrated and verified; review has not run yet.
+        expect(current.nodes.api!.status).toBe('integrated');
+        expect(current.review).toBeNull();
+        expect(store.providers.blocked(planner.quotaGroupId)).toBeUndefined();
+        store.create('create-quota', {
+          id: 'quota-task',
+          projectId: 'p',
+          objective: 'Provider quota fixture',
+          requiredCheckIds: ['test'],
+          acceptanceCriteria: ['Account failure recorded'],
+        });
+        const queued = store.queue('queue-quota', 'quota-task', 0);
+        const connection = store.providers.reserve({
+          connectionId: 'quota-connection',
+          taskId: queued.id,
+          attemptId: 'quota-attempt',
+          workspaceId: 'quota-workspace',
+          expectedVersion: queued.rowVersion,
+          classification: 'offline',
+          worker: {
+            id: planner.alias,
+            alias: planner.alias,
+            runtimeKind: planner.runtimeKind,
+            quotaGroupId: planner.quotaGroupId,
+            hostId: 'host',
+            endpointId: 'endpoint',
+            nativeSessionId: 'quota-session',
+            runtimeVersion: 'test',
+            adapterVersion: 'test',
+            mode: 'managed',
+          },
+        });
+        store.providers.recordFailure(
+          connection.connectionId,
+          connection.token,
+          {
+            code: 'QUOTA_BLOCKED',
+            scope: 'quota_group',
+            native: 'usageLimitExceeded',
+          },
+        );
+      },
+    }).run({
+      id: 'configuredreview',
+      projectId: 'p',
+      repository: repo,
+      baseRevision: 'main',
+      objective: 'Add api',
+      acceptanceCriteria: ['api.txt exists'],
+      checks: apiCheck,
+    });
+    expect(state.reason).toBeUndefined();
+    expect(state.phase).toBe('ready');
+    expect(state.nodes.api!.status).toBe('integrated');
+    expect(state.checks).toEqual([
+      { id: 'api', status: 'passed', head: state.integration!.head },
+    ]);
+    expect(
+      runner.calls.map((call) => ({
+        label: byLabel({ taskId: call.taskId } as TurnRequest),
+        alias: call.alias,
+      })),
+    ).toEqual([
+      { label: 'plan', alias: 'codex-1' },
+      { label: 'api', alias: 'codex-2' },
+      { label: 'review', alias: reviewer },
+    ]);
+    expect(runner.calls[2]!.prompt).toContain('+api by codex-2');
+    expect(state.review).toEqual({
+      alias: reviewer,
+      approve: true,
+      findings: [],
+      independent: true,
+      sameRuntime: reviewer === 'codex-1',
+    });
+    const reviewed = store.graphs
+      .events('configuredreview')
+      .filter((event) => event.kind === 'graph.reviewed');
+    expect(reviewed).toHaveLength(1);
+    expect(reviewed[0]!.payload).toEqual(state.review);
+    if (blockPlanner)
+      expect(store.providers.blocked(planner.quotaGroupId)).toMatchObject({
+        code: 'QUOTA_BLOCKED',
+        connectionId: 'quota-connection',
+      });
+    else expect(store.providers.blocked(planner.quotaGroupId)).toBeUndefined();
+  },
+);
 
 it('repairs once after a rejecting review, then verifies and reviews again', async () => {
   let reviews = 0;

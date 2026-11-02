@@ -11,6 +11,8 @@ export interface RoutableWorker {
   completed: readonly string[];
   /** Roles this worker is configured for. */
   roles: readonly ('worker' | 'reviewer')[];
+  /** Prefer this worker for automatic review routing after eligibility checks. */
+  preferredReviewer?: boolean;
   /** The strongest work this worker should implement; absent means `standard`. */
   tier?: 'light' | 'standard';
 }
@@ -23,10 +25,13 @@ export interface RouteDecision {
 /**
  * Explainable routing. An explicit `@alias` wins when that worker can take
  * the node; otherwise filter by role, health, account block and runtime
- * preference, prefer a worker that completed a dependency (its session holds
- * the context), then a reviewer on a runtime that wrote none of the work,
- * then the least recently loaded worker. Nothing here changes billing: an
- * unavailable preference waits instead of falling back to another account.
+ * preference, prefer a configured reviewer for review nodes, then prefer a
+ * worker that completed a dependency (its session holds the context), then a
+ * reviewer on a runtime that wrote none of the work, then the least recently
+ * loaded worker. Explicit assignments and runtime restrictions still apply.
+ * Nothing here changes billing: an unavailable preference waits instead of
+ * falling back to another account. The one exception is a preferred reviewer:
+ * when it is unavailable, the review goes to another configured reviewer.
  *
  * In a pool with tiers, implementation goes to a worker of the node's tier
  * first. A standard worker may take light work when the light ones are busy;
@@ -122,7 +127,7 @@ export function routeNode(
   const score = (w: RoutableWorker) => {
     let s = 0;
     if (node.dependsOn.some((d) => w.completed.includes(d))) s += 4;
-    // A reviewer who wrote none of the work comes first; another runtime next.
+    // Among equally preferred reviewers, favor independent work, then runtime.
     if (node.role === 'reviewer' && !w.completed.length) s += 16;
     if (
       node.role === 'reviewer' &&
@@ -138,10 +143,18 @@ export function routeNode(
     return s;
   };
   const ranked = [...eligible].sort(
-    (a, b) => score(b) - score(a) || (a.alias < b.alias ? -1 : 1),
+    (a, b) =>
+      (node.role === 'reviewer'
+        ? Number(b.preferredReviewer === true) -
+          Number(a.preferredReviewer === true)
+        : 0) ||
+      score(b) - score(a) ||
+      (a.alias < b.alias ? -1 : 1),
   );
   const chosen = ranked[0]!;
   const reasons = ['Idle and eligible for role ' + node.role];
+  if (node.role === 'reviewer' && chosen.preferredReviewer)
+    reasons.push('Preferred reviewer');
   if (tiered)
     reasons.push(
       tierOf(chosen) === wants
