@@ -360,6 +360,63 @@ describe('tiers', () => {
       ]).alias,
     ).toBe('claude-3');
   });
+  describe('with a preferred reviewer in the pool', () => {
+    const sonnet = (alias: string, extra: Partial<RoutableWorker> = {}) =>
+      worker(alias, {
+        roles: ['worker', 'reviewer'],
+        tier: 'standard',
+        ...extra,
+      });
+    const tandem = (
+      planner: Partial<RoutableWorker> = {},
+      one: Partial<RoutableWorker> = {},
+      two: Partial<RoutableWorker> = {},
+    ) => [
+      worker('codex-1', {
+        roles: ['reviewer'],
+        preferredReviewer: true,
+        ...planner,
+      }),
+      worker('codex-2', { roles: ['worker'] }),
+      sonnet('claude-1', one),
+      sonnet('claude-2', two),
+      worker('claude-3', { roles: ['worker'], tier: 'light' }),
+    ];
+    it('gives standard work to a tiered worker ahead of a plain one', () => {
+      expect(routeNode(task({ tier: 'standard' }), tandem()).alias).toBe(
+        'claude-1',
+      );
+    });
+    it('keeps doing so as the tiered workers finish nodes', () => {
+      expect(
+        routeNode(
+          task({ tier: 'standard' }),
+          tandem({}, { completed: ['a', 'b'] }, { completed: ['c', 'd'] }),
+        ).alias,
+      ).toBe('claude-1');
+    });
+    it('uses the plain worker when the tiered ones are busy', () => {
+      expect(
+        routeNode(
+          task({ tier: 'standard' }),
+          tandem({}, { busy: true }, { busy: true }),
+        ).alias,
+      ).toBe('codex-2');
+    });
+    it.each([{ blocked: true }, { healthy: false }])(
+      'keeps fallback reviewers independent when the planner is %j',
+      (planner) => {
+        expect(
+          routeNode(task({ tier: 'standard' }), tandem(planner)).alias,
+        ).toBe('codex-2');
+      },
+    );
+    it('still gives light work to the light worker', () => {
+      expect(routeNode(task({ tier: 'light' }), tandem()).alias).toBe(
+        'claude-3',
+      );
+    });
+  });
   it('prefers the tier over continuing a dependency', () => {
     const [a, b, c] = pool();
     expect(
