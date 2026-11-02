@@ -308,9 +308,11 @@ The older transport-only lifecycle fixtures still support a host-supplied loaded
 thread; the owned controller always performs explicit setup.
 
 Thread RPC errors, malformed/mismatched replies, timeout and disconnect prevent
-turn dispatch. Correlated native `error` notifications stop the peer even when
-`willRetry` is true; XVANT neither retries nor treats the notification as successful
-completion. Failed turns never enter verification. Error bodies remain transient;
+turn dispatch. Correlated native `error` notifications stop the peer, with one
+exception: an attempt-scoped error with `willRetry` true is ignored, because Codex
+is reconnecting and the turn continues. Account errors (auth, quota) stop the peer
+even when `willRetry` is true. XVANT itself never retries, and never treats the
+notification as successful completion. Failed turns never enter verification. Error bodies remain transient;
 the existing journal retains bounded envelope metadata and digests.
 
 Crashes before and after session binding preserve the provisional or final native

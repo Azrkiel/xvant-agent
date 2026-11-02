@@ -183,3 +183,44 @@ it.each([false, true])(
     expect(() => life.start('retry')).toThrow();
   },
 );
+const disconnected = (willRetry: boolean) => ({
+  method: 'error',
+  params: {
+    threadId: 'thread-1',
+    turnId: 'turn-1',
+    error: {
+      message: 'fixture error',
+      codexErrorInfo: { responseStreamDisconnected: { httpStatusCode: null } },
+    },
+    willRetry,
+  },
+});
+it('keeps the turn running while Codex retries a disconnected stream', () => {
+  const life = ready('thread-1');
+  life.start('task');
+  life.started({ turn: { id: 'turn-1', status: 'inProgress', items: [] } });
+  expect(life.message(disconnected(true))).toEqual({ kind: 'ignored' });
+  expect(life.status).not.toBe('needs_attention');
+  expect(life.failure).toBeUndefined();
+  expect(
+    life.message({
+      method: 'turn/completed',
+      params: {
+        threadId: 'thread-1',
+        turn: { id: 'turn-1', status: 'completed', items: [] },
+      },
+    }),
+  ).toEqual({ kind: 'completed' });
+});
+it('stops and names the cause when Codex gives up on a disconnected stream', () => {
+  const life = ready('thread-1');
+  life.start('task');
+  life.started({ turn: { id: 'turn-1', status: 'inProgress', items: [] } });
+  life.message(disconnected(true));
+  expect(() => life.message(disconnected(false))).toThrow('WORKER_FAILED');
+  expect(life.status).toBe('needs_attention');
+  expect(life.failure).toMatchObject({
+    code: 'WORKER_FAILED',
+    native: 'responseStreamDisconnected',
+  });
+});

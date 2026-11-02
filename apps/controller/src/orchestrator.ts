@@ -502,7 +502,13 @@ export class Orchestrator {
           outcome.status === 'cancelled'
         ) {
           entry.status = 'needs_attention';
-          save('node.needs_attention', { id, alias, status: outcome.status });
+          if (outcome.failure) entry.lastFailure = outcome.failure;
+          save('node.needs_attention', {
+            id,
+            alias,
+            status: outcome.status,
+            ...(outcome.failure ? { reason: outcome.failure } : {}),
+          });
           return;
         } else entry.lastFailure = outcome.failure ?? outcome.status;
         // Check failures and conflicts are challenges about the code; a
