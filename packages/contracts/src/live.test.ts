@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   LIVE_ROUTES,
   NATIVE_LOCAL_ROUTE,
+  acceptedVersions,
   liveRouteIssue,
   versionAccepted,
 } from './live.ts';
@@ -119,6 +120,23 @@ describe('runtime version compatibility', () => {
     expect(versionAccepted('codex', '0.161.0')).toBe(false);
     expect(versionAccepted('codex', '0.160.1-alpha.1')).toBe(false);
     expect(versionAccepted('claude', '0.160.1')).toBe(false);
+  });
+});
+
+describe('accepted version descriptions', () => {
+  it('lists the pin first, then the additionally qualified codex version', () =>
+    expect(acceptedVersions('codex')).toBe(
+      '0.158.0-alpha.2.1, 0.160.1 or later 0.160 patches',
+    ));
+  it('describes a plain pin as later patches of its minor', () => {
+    expect(acceptedVersions('claude')).toBe('2.1.285 or later 2.1 patches');
+    expect(acceptedVersions('opencode')).toBe('2.0.19 or later 2.0 patches');
+  });
+  it('keeps prerelease pins verbatim without a patch range', () => {
+    expect(acceptedVersions('codex')).toContain('0.158.0-alpha.2.1,');
+    expect(acceptedVersions('codex')).not.toContain(
+      '0.158.0-alpha.2.1 or later',
+    );
   });
 });
 
