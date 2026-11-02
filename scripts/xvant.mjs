@@ -29,6 +29,7 @@ import { lessonsLine } from '../packages/memory/src/lessons.ts';
 import { Store } from '../packages/storage/src/store.ts';
 import { ArtifactStore } from '../packages/storage/src/artifacts.ts';
 import { discoverRuntime } from '../packages/adapters/src/live/discover.ts';
+import { acceptedVersions } from '../packages/contracts/src/live.ts';
 import { Orchestrator } from '../apps/controller/src/orchestrator.ts';
 import { LiveTurnRunner } from '../apps/controller/src/turn-runner.ts';
 import { defaultWorkers, shellCheck } from '../apps/controller/src/app.ts';
@@ -166,7 +167,10 @@ if (command === undefined || command === 'shell') {
       found.runtimeKind.padEnd(9),
       found.status.padEnd(17),
       (found.version ?? '-').padEnd(20),
-      found.executable ?? '',
+      (found.executable ?? '') +
+        (found.status === 'version_mismatch'
+          ? ' (accepted: ' + acceptedVersions(found.runtimeKind) + ')'
+          : ''),
     );
 } else if (command === 'run') {
   const repo = value('--repo');
@@ -200,7 +204,10 @@ if (command === undefined || command === 'shell') {
           found.runtimeKind +
           ': ' +
           found.status +
-          (found.version ? ' ' + found.version : ''),
+          (found.version ? ' ' + found.version : '') +
+          (found.status === 'version_mismatch'
+            ? ' (accepted: ' + acceptedVersions(found.runtimeKind) + ')'
+            : ''),
       );
   const workers = defaultWorkers(Object.keys(runtimes));
   if (!workers.length) {

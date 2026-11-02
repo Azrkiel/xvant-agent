@@ -71,6 +71,20 @@ export function versionAccepted(kind: ProviderKind, version: string): boolean {
   });
 }
 /**
+ * Human-readable list of the versions a route accepts, for "version_mismatch"
+ * messages. Derived from the pin and QUALIFIED_ALSO, so it cannot drift from
+ * versionAccepted: a plain x.y.z reads as later x.y patches; others verbatim.
+ */
+export function acceptedVersions(kind: ProviderKind): string {
+  const plain = /^(\d+)\.(\d+)\.(\d+)$/;
+  return [LIVE_ROUTES[kind].runtimeVersion, ...(QUALIFIED_ALSO[kind] ?? [])]
+    .map((pinned) => {
+      const a = plain.exec(pinned);
+      return a ? `${pinned} or later ${a[1]}.${a[2]} patches` : pinned;
+    })
+    .join(', ');
+}
+/**
  * XVANT's own loop on a local model server. The version is the loop's; the
  * model is named in the approval and must be explicit, never `default`.
  */
