@@ -157,7 +157,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/core/src/scheduler.test.ts': 12,
               'packages/storage/src/integration.test.ts': 4,
               'apps/controller/src/orchestrator.test.ts': 48,
-              'apps/controller/src/turn-runner.test.ts': 3,
+              'apps/controller/src/turn-runner.test.ts': 8,
             }
           : {}),
         ...(Number(phase) >= 7

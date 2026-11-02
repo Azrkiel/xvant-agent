@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto';
+import { realpathSync } from 'node:fs';
 import type { Store } from '../../../packages/storage/src/store.ts';
 import type { ArtifactStore } from '../../../packages/storage/src/artifacts.ts';
+import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
 import { LIVE_ROUTES } from '../../../packages/contracts/src/live.ts';
+import { ToolRegistry } from '../../../packages/tools/src/registry.ts';
+import { createControllerTools } from '../../../packages/tools/src/controller.ts';
+import { startMcpBridge } from '../../../packages/tools/src/mcp.ts';
 import { NativeReviewController } from './native-review.ts';
 import { LiveCodexController, type LiveEvent } from './codex-live.ts';
 import { LiveClaudeController } from './claude-live.ts';
@@ -17,6 +22,23 @@ import type {
 type ExternalKind = Exclude<WorkerSpec['runtimeKind'], 'native-local'>;
 type Controller =
   LiveCodexController | LiveClaudeController | LiveOpenCodeController;
+/** Controller tools offered to workers: read-only lookups, nothing that writes. */
+export const CONTROLLER_READS = ['lessons.search', 'memory.search'];
+/**
+ * The host picks the lesson scope from the turn's repository; a worker cannot
+ * name one. Without a derivable scope the task's project is used (`undefined`).
+ */
+export function resolveLessonScope(
+  request: TurnRequest,
+  root: string,
+): string | null | undefined {
+  if (request.lessonScope !== undefined) return request.lessonScope;
+  try {
+    return lessonScope(root);
+  } catch {
+    return undefined;
+  }
+}
 /**
  * Runs orchestrator turns on the live runtimes. Each turn gets its own
  * controller, provider task and worktree; a passing host verification is
@@ -63,6 +85,65 @@ export class LiveTurnRunner implements TurnRunner {
     } catch {
       controller.stop();
       return true;
+    }
+  }
+  /**
+   * The turn's lookups, served over a task-scoped bridge. Learning never fails
+   * a run: if the bridge cannot start, the turn goes ahead without these tools.
+   */
+  async #startSearchBridge(request: TurnRequest) {
+    const store = this.#store;
+    const id = request.taskId;
+    try {
+      const scope = resolveLessonScope(
+        request,
+        realpathSync(request.workspace.path),
+      );
+      const tools = CONTROLLER_READS.filter(
+        (name) => scope !== null || name !== 'lessons.search',
+      );
+      const registry = new ToolRegistry(
+        createControllerTools({
+          store,
+          objects: this.#objects,
+          lessonScopeOf: () => scope,
+        }).filter(({ manifest }) => tools.includes(manifest.name)),
+        {
+          // The controller holds the reservation's token. A lost store owner
+          // still fails the generation fence here, so that call errors.
+          record: (receipt) =>
+            store.providers.recordToolReceipt(
+              id,
+              store.providers.get(id).token,
+              receipt,
+            ),
+        },
+      );
+      const bridge = await startMcpBridge({
+        registry,
+        context: {
+          projectId: request.projectId,
+          taskId: id,
+          attemptId: id + '-a1',
+          workerId: request.alias,
+          permissionProfile: 'trusted-local',
+          allowedTools: tools,
+          approvals: [],
+          now: () => Date.now(),
+        },
+      });
+      return { bridge, tools };
+    } catch {
+      try {
+        this.#onEvent(request.alias, id, {
+          connectionId: id,
+          kind: 'activity',
+          text: 'search tools unavailable for this turn',
+        });
+      } catch {
+        /* Observers cannot affect execution. */
+      }
+      return undefined;
     }
   }
   async run(request: TurnRequest): Promise<TurnOutcome> {
@@ -132,6 +213,19 @@ export class LiveTurnRunner implements TurnRunner {
     };
     let controller: Controller;
     let finalText = '';
+    const search = await this.#startSearchBridge(request);
+    const options = {
+      ...common,
+      ...(search
+        ? {
+            mcp: {
+              url: search.bridge.url,
+              token: search.bridge.token,
+              tools: search.tools,
+            },
+          }
+        : {}),
+    };
     try {
       if (worker.runtimeKind === 'codex') {
         const c = new LiveCodexController(
@@ -139,7 +233,7 @@ export class LiveTurnRunner implements TurnRunner {
           this.#objects,
           workspaces,
           request.checks,
-          common,
+          options,
         );
         controller = c;
         this.#active.set(request.taskId, c);
@@ -150,7 +244,7 @@ export class LiveTurnRunner implements TurnRunner {
           this.#objects,
           workspaces,
           request.checks,
-          common,
+          options,
         );
         controller = c;
         this.#active.set(request.taskId, c);
@@ -161,7 +255,7 @@ export class LiveTurnRunner implements TurnRunner {
           this.#objects,
           workspaces,
           request.checks,
-          common,
+          options,
         );
         controller = c;
         this.#active.set(request.taskId, c);
@@ -170,6 +264,7 @@ export class LiveTurnRunner implements TurnRunner {
       }
     } finally {
       this.#active.delete(request.taskId);
+      await search?.bridge.close();
     }
     const checkOutput = controller.checkOutput(request.taskId);
     controller.stop();

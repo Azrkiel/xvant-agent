@@ -12,7 +12,6 @@ import {
 } from '../../../packages/tools/src/repository.ts';
 import { createProcessTools } from '../../../packages/tools/src/process.ts';
 import { createControllerTools } from '../../../packages/tools/src/controller.ts';
-import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
 import { WorkerSupervisor } from '../../../packages/supervisor/src/index.ts';
 import type { ModelProvider } from '../../../packages/native-agent/src/model.ts';
 import {
@@ -23,7 +22,11 @@ import {
 } from '../../../packages/native-agent/src/loop.ts';
 import { NativeVerifier } from './native-verifier.ts';
 import { NativeReviewController } from './native-review.ts';
-import { settleTurn } from './turn-runner.ts';
+import {
+  CONTROLLER_READS,
+  resolveLessonScope,
+  settleTurn,
+} from './turn-runner.ts';
 import type {
   TurnOutcome,
   TurnRequest,
@@ -41,8 +44,6 @@ const CATALOG = [
   'lessons.search',
   'memory.search',
 ];
-/** Controller tools offered to workers: read-only lookups, nothing that writes. */
-const CONTROLLER_READS = ['lessons.search', 'memory.search'];
 
 /**
  * Runs orchestrator turns through XVANT's own model/tool loop under the
@@ -185,15 +186,7 @@ export class NativeTurnRunner implements TurnRunner {
     try {
       const runId = randomUUID();
       store.providers.bindRun(id, token, runId);
-      // The host picks the lesson scope from the turn's repository; a worker
-      // cannot name one. Without a derivable scope the task's project is used.
-      let scope: string | null | undefined = request.lessonScope;
-      if (scope === undefined)
-        try {
-          scope = lessonScope(root);
-        } catch {
-          scope = undefined;
-        }
+      const scope = resolveLessonScope(request, root);
       const registry = new ToolRegistry(
         [
           fileRead,
