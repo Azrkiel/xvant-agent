@@ -331,7 +331,15 @@ export class CodexLifecycle {
       if (id !== this.runId) fail('INVALID_EVENT');
       if (message.method === 'error') {
         if (message.id !== undefined) fail('INVALID_EVENT');
-        this.nativeFailure ??= classifyCodex(params.error?.codexErrorInfo);
+        const failure = classifyCodex(params.error?.codexErrorInfo);
+        // willRetry means Codex is reconnecting and the turn goes on; it sends
+        // a final error if it gives up. Account failures still stop at once.
+        if (
+          (params as { willRetry?: boolean }).willRetry === true &&
+          failure.scope === 'attempt'
+        )
+          return { kind: 'ignored' };
+        this.nativeFailure ??= failure;
         fail('WORKER_FAILED');
       }
       if (message.method.endsWith('/requestApproval')) {

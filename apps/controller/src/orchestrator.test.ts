@@ -1124,6 +1124,17 @@ it.each(['failed', 'unknown', 'cancelled', 'verification_failed'] as const)(
   },
 );
 
+it('names the cause when a node stops on an unknown outcome', async () => {
+  const failure = 'WORKER_FAILED:responseStreamDisconnected';
+  const runner = new FakeRunner(() => ({ status: 'unknown', failure }));
+  const state = await orchestrate(runner, { plan: onlyApi, checks: {} });
+  expect(state.phase).toBe('needs_attention');
+  expect(state.reason).toContain(failure);
+  expect(state.nodes.api!.status).toBe('needs_attention');
+  expect(state.nodes.api!.repairs).toBe(0);
+  expect(runner.calls).toHaveLength(1);
+});
+
 it.each(
   ['api', 'plan', 'fix', 'review', 'review-fix'].flatMap((label) =>
     ['AUTH_REQUIRED', 'QUOTA_BLOCKED', 'MODEL_UNAVAILABLE'].map((code) => ({

@@ -66,7 +66,7 @@ afterEach(() => {
   store.close();
   rmSync(root, { recursive: true, force: true });
 });
-it.each(['success', 'approval'])(
+it.each(['success', 'approval', 'stream-retry'])(
   'orchestrates %s through owned shutdown, verification and review without acceptance',
   async (scenario) => {
     const result = await controller.run(spec, scenario);
