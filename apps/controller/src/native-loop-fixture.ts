@@ -304,24 +304,26 @@ async function fixture(
   // and is accepted under the native-local identity.
   const good = new ScriptedProvider((messages, n) =>
     n === 1
-      ? {
-          toolCalls: [
-            toolCall('file.apply_patch', {
-              edits: [
-                { path: 'note.txt', expectedHash: null, content: 'hi\n' },
-              ],
-            }),
-          ],
-        }
+      ? { toolCalls: [toolCall('lessons.search', { query: 'note.txt' })] }
       : n === 2
-        ? { toolCalls: [toolCall('test.run', { commandId: 'note' })] }
-        : {
-            text:
-              'Created note.txt; check ' +
-              ((lastResult(messages).result as { passed?: boolean })?.passed
-                ? 'passed'
-                : 'failed'),
-          },
+        ? {
+            toolCalls: [
+              toolCall('file.apply_patch', {
+                edits: [
+                  { path: 'note.txt', expectedHash: null, content: 'hi\n' },
+                ],
+              }),
+            ],
+          }
+        : n === 3
+          ? { toolCalls: [toolCall('test.run', { commandId: 'note' })] }
+          : {
+              text:
+                'Created note.txt; check ' +
+                ((lastResult(messages).result as { passed?: boolean })?.passed
+                  ? 'passed'
+                  : 'failed'),
+            },
   );
   const cooperative = await new NativeTurnRunner(
     store,
@@ -343,6 +345,22 @@ async function fixture(
     cooperative.finalText === 'Created note.txt; check passed' &&
     store.getTask('cooperative').state === 'accepted' &&
     store.providers.get('cooperative').worker.runtimeKind === 'native-local';
+  // Its first call was lessons.search, which reached the registry and left a receipt.
+  const lessonReceipts: ToolReceipt[] = [];
+  for (let after = 0; ;) {
+    const page = store.events(after, 1000);
+    if (!page.length) break;
+    for (const e of page)
+      if (e.kind === 'tool.receipt')
+        lessonReceipts.push(e.payload as ToolReceipt);
+    after = page.at(-1)!.sequence;
+  }
+  checks.lessonsSearchReceipted = lessonReceipts.some(
+    (r) =>
+      r.tool === 'lessons.search' &&
+      r.status === 'succeeded' &&
+      r.taskId === 'cooperative',
+  );
 
   // 3. A restart between saving a tool request and running it.
   const scratch = join(root, 'pending');

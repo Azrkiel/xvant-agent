@@ -18,6 +18,7 @@ it('holds every G08 boundary against a hostile local model and runs every skill 
     'cooperativeAccepted',
     'hostileNotAccepted',
     'invalidNeverExecuted',
+    'lessonsSearchReceipted',
     'noCredentialsSent',
     'nonLoopbackRefused',
     'pendingCallNotRepeated',

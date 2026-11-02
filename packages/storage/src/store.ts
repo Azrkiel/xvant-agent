@@ -78,6 +78,8 @@ interface Options {
   leaseMs?: number;
   fault?: (point: string) => void;
   migrations?: { version: number; sql: string }[];
+  /** Live lesson nodes kept per scope; defaults to DEFAULT_LESSON_CAP. */
+  lessonCap?: number;
 }
 const migration = `
 CREATE TABLE tasks(id TEXT PRIMARY KEY, project_id TEXT NOT NULL, body TEXT NOT NULL);
@@ -125,6 +127,11 @@ export class Store {
     this.#ttl = options.leaseMs ?? 30000;
     this.#fault = options.fault ?? (() => {});
     if (!Number.isSafeInteger(this.#ttl) || this.#ttl < 100)
+      throw new StorageError('INVALID_INPUT');
+    if (
+      options.lessonCap !== undefined &&
+      (!Number.isSafeInteger(options.lessonCap) || options.lessonCap < 1)
+    )
       throw new StorageError('INVALID_INPUT');
     this.#db = new Database(path, { timeout: 1000 });
     try {
@@ -182,6 +189,7 @@ export class Store {
     this.lessons = new LessonGraph(this.#db, {
       transaction: (fn) => this.#transaction(fn),
       now: () => this.#now(),
+      ...(options.lessonCap === undefined ? {} : { cap: options.lessonCap }),
     });
     this.memory = new MemoryRecords(this.#db, {
       transaction: (fn) => this.#transaction(fn),

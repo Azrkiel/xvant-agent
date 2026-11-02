@@ -36,6 +36,8 @@ CREATE VIRTUAL TABLE lesson_text USING fts5(text);
 interface Host {
   transaction<T>(fn: () => T): T;
   now(): number;
+  /** Most live (not forgotten) nodes one scope keeps; see DEFAULT_LESSON_CAP. */
+  cap?: number;
 }
 interface EdgeRow {
   project_id: string;
@@ -64,6 +66,13 @@ const edgeOf = (row: EdgeRow): LessonEdge => ({
 /** Bounded text from untrusted output, with credential shapes removed. */
 const clean = (text: string, max: number) => clip(redactSecrets(text), max);
 const SEEN_IN = 5;
+/** Live nodes one scope keeps; recording past it prunes the least useful, oldest. */
+export const DEFAULT_LESSON_CAP = 2000;
+/**
+ * SQL: the body has no forgotten mark. JSON.stringify escapes every quote
+ * inside a string value, so `"forgotten":` can only be a node's own key.
+ */
+const UNMARKED = 'instr(body, \'"forgotten":\') = 0';
 /** Below this share of a challenge's identifying words, a match is noise. */
 const MIN_OVERLAP = 0.5;
 
@@ -81,9 +90,13 @@ export function challengeId(failure: string): string {
 export class LessonGraph {
   readonly #db: Database.Database;
   readonly #host: Host;
+  readonly #cap: number;
   constructor(db: Database.Database, host: Host) {
     this.#db = db;
     this.#host = host;
+    this.#cap = host.cap ?? DEFAULT_LESSON_CAP;
+    if (!Number.isSafeInteger(this.#cap) || this.#cap < 1)
+      fail('INVALID_INPUT');
   }
   #load(projectId: string, id: string): LessonNode | undefined {
     const row = this.#db
@@ -148,6 +161,8 @@ export class LessonGraph {
         firstSeenAt: prior?.firstSeenAt ?? now,
         lastSeenAt: now,
         seenIn: [...(prior?.seenIn ?? []), value.provenance].slice(-SEEN_IN),
+        // Seeing a forgotten challenge again does not bring it back.
+        ...(prior?.forgotten ? { forgotten: prior.forgotten } : {}),
       };
       this.#put(
         node,
@@ -155,6 +170,7 @@ export class LessonGraph {
           '\n',
         ),
       );
+      this.#prune(node.projectId, node.id);
       return node;
     });
   }
@@ -198,8 +214,93 @@ export class LessonGraph {
         node,
         prior ? undefined : summary + '\n' + value.files.join(' '),
       );
+      this.#prune(node.projectId, node.id);
       return node;
     });
+  }
+  /**
+   * Soft delete: marks a node as forgotten, with when and why. The node, its
+   * edges and its text stay for audit, but it is never matched or offered
+   * again, and recording the same failure or change later does not revive it.
+   * Forgetting a forgotten node keeps the first mark.
+   */
+  forget(projectId: string, id: string, reason: string): LessonNode {
+    idSchema.parse(projectId);
+    const why = clean(String(reason).trim(), 500).trim();
+    if (!why) fail('INVALID_INPUT');
+    const now = this.#host.now();
+    return this.#host.transaction(() => {
+      const node = this.#load(projectId, String(id)) ?? fail('NOT_FOUND');
+      if (node.forgotten) return node;
+      const marked = { ...node, forgotten: { at: now, reason: why } };
+      this.#put(marked);
+      return marked;
+    });
+  }
+  /**
+   * Keeps a scope within its cap. Counting is an index scan; bodies are read
+   * only once the scope is over the cap, and then pruning goes a tenth below
+   * it so the next many writes do not read them again. Forgotten nodes are
+   * kept for audit and do not count: they can neither fill the cap nor be
+   * pruned. The least useful go first (no verified solution or successful
+   * reuse; an orphaned solution counts for nothing), then the oldest. `keep`
+   * was just written and is never pruned. Edges and text go with their node.
+   */
+  #prune(projectId: string, keep: string): void {
+    const total = this.#db
+      .prepare('SELECT COUNT(*) AS n FROM lesson_nodes WHERE project_id=?')
+      .get(projectId) as { n: number };
+    if (total.n <= this.#cap) return;
+    const rows = this.#db
+      .prepare(
+        'SELECT rowid, id, body FROM lesson_nodes WHERE project_id=? AND ' +
+          UNMARKED,
+      )
+      .all(projectId) as { rowid: number; id: string; body: string }[];
+    if (rows.length <= this.#cap) return;
+    const nodes = new Map(
+      rows.map((row) => [row.id, JSON.parse(row.body) as LessonNode]),
+    );
+    const lastLink = new Map<string, number>();
+    const wins = new Map<string, number>();
+    const linked = new Set<string>();
+    for (const edge of this.edges(projectId)) {
+      lastLink.set(edge.to, Math.max(lastLink.get(edge.to) ?? 0, edge.lastAt));
+      linked.add(edge.to);
+      const solution = nodes.get(edge.to);
+      if (edge.relation === 'solved_by' && solution?.kind === 'solution') {
+        const worth =
+          (solution.checks.length ? 1 : 0) + solution.usage.succeeded;
+        wins.set(edge.from, (wins.get(edge.from) ?? 0) + worth);
+      }
+    }
+    const rank = rows
+      .filter((row) => row.id !== keep)
+      .map((row) => {
+        const node = nodes.get(row.id)!;
+        return node.kind === 'challenge'
+          ? { row, useful: wins.get(node.id) ?? 0, age: node.lastSeenAt }
+          : {
+              row,
+              useful: linked.has(node.id)
+                ? (node.checks.length ? 1 : 0) + node.usage.succeeded
+                : 0,
+              age: Math.max(node.createdAt, lastLink.get(node.id) ?? 0),
+            };
+      })
+      .sort((a, b) => a.useful - b.useful || a.age - b.age);
+    const target = this.#cap - Math.floor(this.#cap / 10);
+    const drop = rank.slice(0, Math.max(0, rows.length - target));
+    const text = this.#db.prepare('DELETE FROM lesson_text WHERE rowid=?');
+    const node = this.#db.prepare('DELETE FROM lesson_nodes WHERE rowid=?');
+    const edges = this.#db.prepare(
+      'DELETE FROM lesson_edges WHERE project_id=? AND (from_id=? OR to_id=?)',
+    );
+    for (const { row } of drop) {
+      text.run(row.rowid);
+      node.run(row.rowid);
+      edges.run(projectId, row.id, row.id);
+    }
   }
   /** Adds an edge, or counts one more observation of it. */
   link(
@@ -291,7 +392,7 @@ export class LessonGraph {
     const deadEnds: LessonMatch['deadEnds'] = [];
     for (const edge of this.edges(projectId, challenge.id)) {
       const node = this.#load(projectId, edge.to);
-      if (node?.kind !== 'solution') continue;
+      if (node?.kind !== 'solution' || node.forgotten) continue;
       if (edge.relation === 'not_solved_by') {
         deadEnds.push({ solution: node, edge });
         continue;
@@ -321,18 +422,20 @@ export class LessonGraph {
     const exactId = challengeId(query);
     const candidates = new Map<string, ChallengeNode>();
     const exact = this.#load(projectId, exactId);
-    if (exact?.kind === 'challenge') candidates.set(exact.id, exact);
+    if (exact?.kind === 'challenge' && !exact.forgotten)
+      candidates.set(exact.id, exact);
     const words = lessonTokens(failureLines(query).join(' ') + ' ' + query)
       .slice(0, 48)
       .map((word) => '"' + word.replace(/"/g, '') + '"');
     if (words.length) {
       const rows = this.#db
         .prepare(
-          "SELECT n.body FROM lesson_text t JOIN lesson_nodes n ON n.rowid = t.rowid WHERE lesson_text MATCH ? AND n.project_id = ? AND n.kind = 'challenge' ORDER BY bm25(lesson_text) LIMIT 30",
+          "SELECT n.body FROM lesson_text t JOIN lesson_nodes n ON n.rowid = t.rowid WHERE lesson_text MATCH ? AND n.project_id = ? AND n.kind = 'challenge' AND instr(n.body, '\"forgotten\":') = 0 ORDER BY bm25(lesson_text) LIMIT 30",
         )
         .all(words.join(' OR '), projectId) as { body: string }[];
       for (const row of rows) {
         const node = JSON.parse(row.body) as ChallengeNode;
+        if (node.forgotten) continue;
         if (challengeOverlap(query, node.signature) >= MIN_OVERLAP)
           candidates.set(node.id, node);
       }

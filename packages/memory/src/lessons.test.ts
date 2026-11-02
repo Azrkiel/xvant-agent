@@ -7,9 +7,13 @@ import type {
 import {
   challengeOverlap,
   failureSignature,
+  lessonReport,
+  lessonsLine,
   lessonsToMarkdown,
   lessonsToMermaid,
+  readRunLessons,
   renderLessons,
+  renderReport,
 } from './lessons.ts';
 
 const challenge: ChallengeNode = {
@@ -129,5 +133,160 @@ describe('readable lessons', () => {
     expect(markdown).toMatch(/## ch_1: Checks failed: unit/);
     expect(markdown).toMatch(/Solved by sol_a \(1×, checks: unit\)/);
     expect(markdown).toMatch(/Not solved by sol_b/);
+  });
+});
+
+const stored = (hinted: [number, number], unhinted: [number, number]) => ({
+  challenges: 1,
+  solutions: 1,
+  hinted: 0,
+  errors: 0,
+  scope: 'repo_a',
+  repairs: {
+    hinted: { passed: hinted[0], failed: hinted[1] },
+    unhinted: { passed: unhinted[0], failed: unhinted[1] },
+  },
+});
+
+describe('lessons in a run summary', () => {
+  it('tolerates run states stored before scope and repairs existed', () => {
+    const old = { challenges: 2, solutions: 1, hinted: 1, errors: 0 };
+    expect(readRunLessons(old)).toEqual({
+      ...old,
+      repairs: {
+        hinted: { passed: 0, failed: 0 },
+        unhinted: { passed: 0, failed: 0 },
+      },
+    });
+    expect(lessonsLine(old)).toBe('Lessons: 2 challenges, 1 fix recorded');
+    // Anything malformed reads as nothing rather than throwing.
+    expect(readRunLessons(undefined)).toBeNull();
+    expect(readRunLessons('x')).toBeNull();
+    expect(
+      readRunLessons({ challenges: 'many', repairs: { hinted: 7 } }),
+    ).toMatchObject({
+      challenges: 0,
+      repairs: { hinted: { passed: 0, failed: 0 } },
+    });
+  });
+
+  it('prints one line, and nothing when lessons were off or idle', () => {
+    expect(lessonsLine(stored([1, 0], [0, 1]))).toBe(
+      'Lessons: 1 challenge, 1 fix recorded, repairs hinted 1/1 passed, unhinted 0/1 passed',
+    );
+    expect(
+      lessonsLine({
+        ...stored([0, 0], [0, 0]),
+        challenges: 2,
+        solutions: 2,
+        errors: 1,
+      }),
+    ).toBe('Lessons: 2 challenges, 2 fixes recorded, 1 lesson error');
+    expect(lessonsLine(stored([0, 0], [0, 0]))).toBe(
+      'Lessons: 1 challenge, 1 fix recorded',
+    );
+    expect(
+      lessonsLine({ challenges: 0, solutions: 0, hinted: 0, errors: 0 }),
+    ).toBeNull();
+    expect(lessonsLine(undefined)).toBeNull();
+  });
+});
+
+describe('lesson report', () => {
+  const solved = (id: string, succeeded: number, checks = ['unit']) => ({
+    ...solution(id, 'Fix ' + id),
+    checks,
+    usage: { suggested: succeeded + 1, succeeded, failed: 1 },
+  });
+  const challengeOf = (id: string, occurrences: number): ChallengeNode => ({
+    ...challenge,
+    id,
+    title: 'Challenge ' + id,
+    occurrences,
+  });
+  const link = (
+    from: string,
+    to: string,
+    relation: LessonEdge['relation'] = 'solved_by',
+    count = 1,
+  ): LessonEdge => ({ ...edge(to, relation), from, count });
+
+  it('adds up hinted and unhinted repairs across runs, with the counts', () => {
+    const report = lessonReport(
+      [stored([2, 1], [1, 3]), stored([1, 0], [0, 1]), { challenges: 0 }],
+      [],
+      [],
+    );
+    expect(report.runs).toBe(3);
+    expect(report.repairs).toEqual({
+      hinted: { passed: 3, failed: 1 },
+      unhinted: { passed: 1, failed: 4 },
+    });
+    expect(report.repairsPerRun).toBeCloseTo(3);
+    const text = renderReport('repo_a', report);
+    expect(text).toContain('hinted (prompt carried lessons): 3/4 passed (75%)');
+    expect(text).toContain('unhinted: 1/5 passed (20%)');
+    expect(text).toContain('Judged repairs per run: 3.00');
+  });
+
+  it('says the sample is too small unless both groups have enough', () => {
+    const few = lessonReport([stored([4, 0], [5, 5])], [], []);
+    expect(few.comparable).toBe(false);
+    expect(renderReport('s', few)).toContain(
+      'Sample too small to compare: need at least 5 judged repairs in each group.',
+    );
+    const enough = lessonReport([stored([3, 2], [5, 5])], [], []);
+    expect(enough.comparable).toBe(true);
+    const text = renderReport('s', enough);
+    expect(text).not.toContain('too small');
+    expect(text).toContain('not randomized');
+    // No runs at all: nothing to divide by.
+    const none = lessonReport([], [], []);
+    expect(none.repairsPerRun).toBeNull();
+    expect(renderReport('s', none)).toContain('Judged repairs per run: n/a');
+    expect(renderReport('s', none)).toContain('0/0 passed (n/a)');
+  });
+
+  it('ranks helpful fixes and lists challenges seen often with no verified fix', () => {
+    const nodes = [
+      challengeOf('ch_a', 4),
+      challengeOf('ch_b', 6),
+      challengeOf('ch_c', 1),
+      challengeOf('ch_d', 3),
+      solved('sol_1', 3),
+      solved('sol_2', 3),
+      solved('sol_3', 0, []),
+      solved('sol_4', 0),
+    ];
+    const edges = [
+      link('ch_a', 'sol_1'),
+      link('ch_a', 'sol_2', 'solved_by', 4),
+      link('ch_b', 'sol_3'),
+      link('ch_d', 'sol_4', 'not_solved_by'),
+    ];
+    const report = lessonReport([], nodes, edges);
+    // By successful reuse, then by how often the fix solved the challenge.
+    expect(report.helpful.map((h) => h.id)).toEqual([
+      'sol_2',
+      'sol_1',
+      'sol_3',
+    ]);
+    // ch_a has a verified fix; ch_b only an unverified one; ch_c is rare.
+    expect(report.unsolved.map((u) => [u.id, u.occurrences])).toEqual([
+      ['ch_b', 6],
+      ['ch_d', 3],
+    ]);
+  });
+
+  it('leaves forgotten nodes out', () => {
+    const forgotten = { at: 1, reason: 'bad' };
+    const nodes = [
+      challengeOf('ch_a', 4),
+      { ...challengeOf('ch_b', 9), forgotten },
+      { ...solved('sol_1', 5), forgotten },
+    ];
+    const report = lessonReport([], nodes, [link('ch_a', 'sol_1')]);
+    expect(report.helpful).toEqual([]);
+    expect(report.unsolved.map((u) => u.id)).toEqual(['ch_a']);
   });
 });

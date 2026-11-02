@@ -291,4 +291,68 @@ describe('lessons.search', () => {
       ).matches,
     ).toEqual([]);
   });
+  it('searches the scope the host names, ignoring the task project and the caller', async () => {
+    const learn = (projectId: string, summary: string) => {
+      const challenge = store.lessons.recordChallenge({
+        projectId,
+        failure: 'Checks failed: unit\nTypeError: parse is not a function',
+        source: 'node',
+        provenance: { graphId: 'g' },
+      });
+      const fix = store.lessons.recordSolution({
+        projectId,
+        summary,
+        files: ['src/parse.js'],
+        diff: '+export { parse };',
+        checks: ['unit'],
+        provenance: { graphId: 'g' },
+      });
+      store.lessons.link(projectId, challenge.id, fix.id, 'solved_by');
+    };
+    learn('project', 'Project-wide fix');
+    learn('repo_b', 'Fix for repository B');
+    learn('repo_a', 'Fix for repository A');
+    const searchIn = async (
+      scope: string | null | undefined,
+      input: Record<string, unknown> = {},
+    ) => {
+      const tools = createControllerTools({
+        store,
+        objects,
+        lessonScopeOf: () => scope,
+      });
+      const registry = new ToolRegistry(tools, { record: () => {} });
+      const receipt = await registry.invoke(
+        {
+          tool: 'lessons.search',
+          input: { query: 'TypeError: parse is not a function', ...input },
+        },
+        {
+          projectId: 'repo_a',
+          taskId: 'task',
+          attemptId: 'attempt-task',
+          workerId: 'codex-1',
+          permissionProfile: 'read-only',
+          allowedTools: ['lessons.search'],
+          approvals: [],
+          now: () => 1,
+        },
+      );
+      return receipt;
+    };
+    const text = async (scope: string | null | undefined) =>
+      JSON.stringify((await searchIn(scope)).result);
+    const own = await text('repo_b');
+    expect(own).toContain('Fix for repository B');
+    expect(own).not.toContain('repository A');
+    expect(own).not.toContain('Project-wide');
+    // No derivable scope: the task's own project.
+    expect(await text(undefined)).toContain('Project-wide fix');
+    // Lessons off for the run.
+    expect((await searchIn(null)).result).toEqual({ matches: [] });
+    // The scope is not an input; a worker naming one is refused.
+    expect((await searchIn('repo_b', { projectId: 'repo_a' })).code).toBe(
+      'INVALID_INPUT',
+    );
+  });
 });

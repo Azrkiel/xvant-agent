@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Store } from '../packages/storage/src/store.ts';
+import { lessonScope } from '../packages/storage/src/lesson-scope.ts';
 import type { RootState } from '../apps/controller/src/orchestrator.ts';
 
 import * as shell from '../apps/controller/src/shell.ts';
@@ -320,3 +321,186 @@ it('refuses an unknown run even after a failed acceptance', () => {
   expect(merged.stderr).toContain('No run named missing');
   expect(git(f.repo, 'rev-parse', 'HEAD')).toBe(f.baseCommit);
 });
+
+/** Lesson stats as a run stores them. */
+const lessonsOf = (
+  scope: string,
+  hinted: [number, number],
+  unhinted: [number, number],
+) => ({
+  challenges: 2,
+  solutions: 1,
+  hinted: 1,
+  errors: 0,
+  scope,
+  repairs: {
+    hinted: { passed: hinted[0], failed: hinted[1] },
+    unhinted: { passed: unhinted[0], failed: unhinted[1] },
+  },
+});
+
+it('lessons stats counts only the runs of the repository it is asked about', () => {
+  const f = fixture();
+  const mine = lessonScope(f.repo);
+  const store = new Store(join(f.home, 'state.sqlite'), {
+    owner: 'shell-test',
+  });
+  try {
+    store.graphs.create(
+      'run1',
+      'cli',
+      { ...f.state, lessons: lessonsOf(mine, [3, 0], [1, 2]) },
+      {},
+    );
+    store.graphs.create(
+      'run2',
+      'cli',
+      { ...f.state, lessons: lessonsOf(mine, [1, 1], [0, 1]) },
+      {},
+    );
+    // Another repository's run, and a run stored before lessons had a scope.
+    store.graphs.create(
+      'other',
+      'cli',
+      { ...f.state, lessons: lessonsOf('repo_elsewhere', [9, 0], [0, 9]) },
+      {},
+    );
+    store.graphs.create(
+      'oldrun',
+      'cli',
+      {
+        ...f.state,
+        lessons: { challenges: 1, solutions: 0, hinted: 0, errors: 0 },
+      },
+      {},
+    );
+  } finally {
+    store.close();
+  }
+  const text = f.run('lessons', 'stats');
+  expect(text.status, text.stderr).toBe(0);
+  expect(text.stdout).toContain('2 runs');
+  expect(text.stdout).toContain(
+    'hinted (prompt carried lessons): 4/5 passed (80%)',
+  );
+  expect(text.stdout).toContain('unhinted: 1/4 passed (25%)');
+  expect(text.stdout).toContain('Sample too small to compare');
+  const json = f.run('lessons', 'stats', '--format', 'json');
+  expect(json.status, json.stderr).toBe(0);
+  expect(JSON.parse(json.stdout)).toMatchObject({
+    project: mine,
+    runs: 2,
+    comparable: false,
+    repairs: {
+      hinted: { passed: 4, failed: 1 },
+      unhinted: { passed: 1, failed: 3 },
+    },
+  });
+  // The other repository sees only its own run.
+  const other = f.run('lessons', 'stats', '--project', 'repo_elsewhere');
+  expect(other.stdout).toContain('1 run');
+  expect(other.stdout).toContain('9/9 passed (100%)');
+}, 30000);
+
+it('status and run summaries show one lessons line, or none when idle', () => {
+  const f = fixture();
+  f.save('withlessons', {
+    lessons: lessonsOf('repo_x', [1, 0], [0, 1]),
+  });
+  f.save('idle', {
+    lessons: { challenges: 0, solutions: 0, hinted: 0, errors: 0 },
+  });
+  const shown = f.run('status', 'withlessons');
+  expect(shown.status, shown.stderr).toBe(0);
+  expect(shown.stdout).toContain(
+    'Lessons: 2 challenges, 1 fix recorded, repairs hinted 1/1 passed, unhinted 0/1 passed',
+  );
+  const idle = f.run('status', 'idle');
+  expect(idle.status, idle.stderr).toBe(0);
+  expect(idle.stdout).not.toContain('Lessons:');
+});
+
+it('lessons forget hides a node from list, keeps it for audit and shows the mark', () => {
+  const f = fixture();
+  const scope = lessonScope(f.repo);
+  const store = new Store(join(f.home, 'state.sqlite'), {
+    owner: 'shell-test',
+  });
+  let challengeId: string;
+  let solutionId: string;
+  try {
+    const challenge = store.lessons.recordChallenge({
+      projectId: scope,
+      failure: 'Checks failed: unit\nError: widget missing',
+      source: 'node',
+      provenance: { graphId: 'run1' },
+    });
+    const solution = store.lessons.recordSolution({
+      projectId: scope,
+      summary: 'Added the widget',
+      files: ['widget.js'],
+      diff: '+widget',
+      checks: ['unit'],
+      provenance: { graphId: 'run1' },
+    });
+    store.lessons.link(scope, challenge.id, solution.id, 'solved_by');
+    challengeId = challenge.id;
+    solutionId = solution.id;
+  } finally {
+    store.close();
+  }
+  expect(f.run('lessons', 'list').stdout).toContain(challengeId);
+  expect(
+    f.run('lessons', 'search', 'Checks failed: unit Error: widget missing')
+      .stdout,
+  ).toContain('Added the widget');
+
+  // A reason is required: usage, exit 2, nothing forgotten.
+  for (const args of [
+    ['forget', challengeId],
+    ['forget', challengeId, '--reason', '  '],
+    ['forget', '--reason', 'why'],
+  ]) {
+    const refused = f.run('lessons', ...args);
+    expect(refused.status, args.join(' ')).toBe(2);
+    expect(refused.stderr).toContain('Usage: lessons');
+  }
+  expect(f.run('lessons', 'list').stdout).toContain(challengeId);
+
+  const missing = f.run('lessons', 'forget', 'ch_nope', '--reason', 'why');
+  expect(missing.status).toBe(1);
+  expect(missing.stderr).toContain('No lesson ch_nope');
+
+  const forgotSolution = f.run(
+    'lessons',
+    'forget',
+    solutionId,
+    '--reason',
+    'did not really work',
+  );
+  expect(forgotSolution.status, forgotSolution.stderr).toBe(0);
+  expect(forgotSolution.stdout).toContain('Forgot solution ' + solutionId);
+  // Nothing is left to offer for that failure.
+  expect(
+    f.run('lessons', 'search', 'Checks failed: unit Error: widget missing')
+      .stdout,
+  ).toContain('No matching lessons');
+
+  const forgotChallenge = f.run(
+    'lessons',
+    'forget',
+    challengeId,
+    '--reason',
+    'stale',
+  );
+  expect(forgotChallenge.status, forgotChallenge.stderr).toBe(0);
+  expect(f.run('lessons', 'list').stdout).not.toContain(challengeId);
+  expect(f.run('lessons', 'list', '--all').stdout).toContain(
+    '[forgotten] Checks failed: unit',
+  );
+  const shown = f.run('lessons', 'show', challengeId);
+  expect(shown.stdout).toMatch(/^FORGOTTEN \d{4}-\d\d-\d\dT.*: stale/);
+  expect(shown.stdout).toContain('"reason": "stale"');
+  expect(f.run('lessons', 'export').stdout).toContain('0 challenges');
+  expect(f.run('lessons', 'export', '--all').stdout).toContain('1 challenges');
+}, 60000);

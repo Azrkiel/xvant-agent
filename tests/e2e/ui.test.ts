@@ -23,6 +23,7 @@ import { LIVE_ROUTES } from '../../packages/contracts/src/live.ts';
 import type { ProviderKind } from '../../packages/contracts/src/providers.ts';
 import { startApp } from '../../apps/controller/src/app.ts';
 import { findBrowser } from '../../scripts/browser-path.ts';
+import { lessonScope } from '../../packages/storage/src/lesson-scope.ts';
 
 vi.setConfig({ testTimeout: 180000, hookTimeout: 60000 });
 const fixture = (name: string) =>
@@ -200,4 +201,68 @@ it('refuses to run without the one-time capability', async () => {
   await expect
     .poll(() => page.locator('[role=alert]').textContent())
     .toContain('session ended');
+});
+
+it('opens the lessons view for a repository, shows markup as text and forgets with a reason', async () => {
+  const scope = lessonScope(repo);
+  app.store.graphs.create(
+    'rlessons',
+    'app',
+    { objective: 'earlier work', phase: 'ready', repository: repo },
+    {},
+  );
+  const markup = '<img src=x onerror="window.pwned=1">';
+  const provenance = { graphId: 'rlessons' };
+  const challenge = app.store.lessons.recordChallenge({
+    projectId: scope,
+    failure: 'AssertionError: sum is wrong ' + markup,
+    source: 'checks',
+    files: ['src/sum.js'],
+    provenance,
+  });
+  const fix = app.store.lessons.recordSolution({
+    projectId: scope,
+    summary: 'Removed the off-by-one ' + markup,
+    files: ['src/sum.js'],
+    diff: '-  return a + b - 1;\n+  return a + b;\n',
+    checks: ['unit'],
+    provenance,
+  });
+  app.store.lessons.link(scope, challenge.id, fix.id, 'solved_by');
+  await page.goto(app.origin + '/#bootstrap=' + app.bootstrapToken);
+  await expect.poll(() => page.locator('#run-title').isVisible()).toBe(true);
+  await page.getByRole('button', { name: 'Lessons' }).click();
+  await expect
+    .poll(() => page.locator('#lessons-repo').inputValue())
+    .toBe(repo);
+  const item = page.locator('#lessons-list li').first();
+  await expect.poll(() => item.textContent()).toContain('sum is wrong');
+  expect(await item.textContent()).toContain('1 fix, 0 dead ends');
+  expect(await page.locator('#lessons-stats').textContent()).toContain(
+    'Sample too small to compare',
+  );
+  expect(await page.locator('#lessons-mermaid').textContent()).toContain(
+    'flowchart LR',
+  );
+  await item.locator('summary').first().click();
+  expect(await item.textContent()).toContain('Verified');
+  expect(await item.textContent()).toContain('Removed the off-by-one');
+  // Markup from workers is text: no element was created and nothing ran.
+  expect(await page.locator('#lessons-list img').count()).toBe(0);
+  expect(await item.textContent()).toContain(markup);
+  expect(
+    await page.evaluate(() => (window as unknown as { pwned?: number }).pwned),
+  ).toBeUndefined();
+  // Forgetting needs a reason, then a confirmation, and hides the challenge.
+  await item.getByRole('button', { name: 'Forget challenge' }).click();
+  await expect.poll(() => status().textContent()).toContain('why');
+  await item
+    .getByLabel('Reason for forgetting this challenge')
+    .fill('not relevant');
+  await item.getByRole('button', { name: 'Forget challenge' }).click();
+  await page.locator('#confirm-ok').click();
+  await expect.poll(() => page.locator('#lessons-list').count()).toBe(0);
+  expect(app.store.lessons.get(scope, challenge.id).forgotten).toMatchObject({
+    reason: 'not relevant',
+  });
 });

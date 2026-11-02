@@ -86,6 +86,28 @@ export class WorkGraphs {
       };
     });
   }
+  /**
+   * The lesson stats stored in the states of the newest runs of a lesson
+   * scope, newest first. The scope is filtered in SQL and only the small
+   * stats object leaves the database, so a large store is not loaded whole.
+   * Runs stored before lesson scopes were recorded are not matched.
+   */
+  lessonSummaries(
+    scope: string,
+    limit = 200,
+  ): { id: string; lessons: unknown }[] {
+    if (!Number.isSafeInteger(limit) || limit < 1) fail('INVALID_INPUT');
+    return (
+      this.#db
+        .prepare(
+          "SELECT id, json_extract(body, '$.state.lessons') AS lessons FROM work_graphs WHERE json_extract(body, '$.state.lessons.scope') = ? ORDER BY rowid DESC LIMIT ?",
+        )
+        .all(scope, limit) as { id: string; lessons: string }[]
+    ).map((row) => ({
+      id: row.id,
+      lessons: JSON.parse(row.lessons) as unknown,
+    }));
+  }
   /** Replace the state if the caller saw the current version; record why. */
   update<T>(
     id: string,

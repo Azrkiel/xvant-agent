@@ -349,3 +349,50 @@ code {
 textarea.short {
   min-height: 60px;
 }
+
+.side-actions {
+  display: flex;
+  gap: 6px;
+}
+.wrap {
+  overflow-wrap: anywhere;
+}
+select {
+  width: 100%;
+  font: inherit;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+}
+.lessons,
+.solutions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.lessons > li {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+.solution {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+  margin-top: 8px;
+}
+.forget {
+  margin-top: 8px;
+  align-items: center;
+}
+.forget input[type='text'] {
+  flex: 1;
+  min-width: 160px;
+  width: auto;
+}
+pre.wrap {
+  white-space: pre-wrap;
+}

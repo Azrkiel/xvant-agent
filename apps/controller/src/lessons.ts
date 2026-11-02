@@ -3,38 +3,41 @@ import type {
   LessonMatch,
   LessonRelation,
   LessonSource,
+  RunLessonStats,
+  SolutionInput,
 } from '../../../packages/contracts/src/lessons.ts';
 import { renderLessons } from '../../../packages/memory/src/lessons.ts';
 
-export interface LessonStats {
-  /** Challenge occurrences recorded in this run. */
-  challenges: number;
-  /** Solutions linked to a challenge (worked or did not) in this run. */
-  solutions: number;
-  /** Prompts that carried lessons from the graph. */
-  hinted: number;
-  /** Lesson writes or reads that failed; the run continued without them. */
-  errors: number;
-}
+export type LessonStats = RunLessonStats;
 
 /**
  * One run's view of the lesson graph. Learning is an aid, never a reason
  * for a run to fail: every call that throws is counted and skipped.
  */
 export class RunLessons {
-  readonly stats: LessonStats = {
+  readonly stats: LessonStats & {
+    repairs: NonNullable<LessonStats['repairs']>;
+  } = {
     challenges: 0,
     solutions: 0,
     hinted: 0,
     errors: 0,
+    repairs: {
+      hinted: { passed: 0, failed: 0 },
+      unhinted: { passed: 0, failed: 0 },
+    },
   };
   readonly #store: Store | null;
   readonly #projectId: string;
   readonly #graphId: string;
+  /** Repairs recorded without checks this run, as sent, to verify later. */
+  #unverified: SolutionInput[] = [];
   constructor(store: Store | null, projectId: string, graphId: string) {
     this.#store = store;
     this.#projectId = projectId;
     this.#graphId = graphId;
+    // A run with lessons off has no scope and records no repairs.
+    if (store) this.stats.scope = projectId;
   }
   #try<T>(fn: (store: Store) => T): T | undefined {
     if (!this.#store) return undefined;
@@ -88,7 +91,7 @@ export class RunLessons {
     if (!challengeIds.length || (!change.files.length && !change.diff.trim()))
       return;
     this.#try((store) => {
-      const solution = store.lessons.recordSolution({
+      const input: SolutionInput = {
         projectId: this.#projectId,
         summary: change.summary.slice(0, 200_000),
         files: change.files.slice(0, 64),
@@ -99,18 +102,48 @@ export class RunLessons {
           ...(change.taskId ? { taskId: change.taskId } : {}),
           ...(change.alias ? { alias: change.alias.slice(0, 64) } : {}),
         },
-      });
+      };
+      const solution = store.lessons.recordSolution(input);
+      if (relation === 'solved_by' && !input.checks.length)
+        this.#unverified.push(input);
       for (const id of new Set(challengeIds)) {
         store.lessons.link(this.#projectId, id, solution.id, relation);
         this.stats.solutions++;
       }
     });
   }
+  /**
+   * Marks the repairs of this run that were recorded without checks as
+   * verified by `passed`, the checks that just passed on the combined result.
+   * The same input arrives again, so the graph merges the check ids into the
+   * solution it already holds.
+   */
+  verify(passed: readonly string[]): void {
+    const checks = passed.slice(0, 32);
+    if (!checks.length || !this.#unverified.length) return;
+    const pending = this.#unverified;
+    this.#unverified = [];
+    for (const input of pending)
+      this.#try((store) => {
+        store.lessons.recordSolution({ ...input, checks: [...checks] });
+      });
+  }
   followedBy(from: string | undefined, to: string | undefined): void {
     if (!from || !to || from === to) return;
     this.#try((store) =>
       store.lessons.link(this.#projectId, from, to, 'followed_by'),
     );
+  }
+  /**
+   * Counts one repair turn whose outcome was judged, by whether its prompt
+   * carried lessons. Callers skip turns that say nothing about the repair
+   * (unknown, cancelled, runtime failure, operator stop, no verdict).
+   */
+  repair(hinted: boolean, passed: boolean): void {
+    if (!this.#store) return;
+    this.stats.repairs[hinted ? 'hinted' : 'unhinted'][
+      passed ? 'passed' : 'failed'
+    ]++;
   }
   /** Tells the graph whether the repair that was shown `suggested` succeeded. */
   usage(suggested: readonly string[] | undefined, succeeded: boolean): void {

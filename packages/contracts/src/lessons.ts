@@ -55,6 +55,15 @@ export const solutionInputSchema = z.strictObject({
 });
 export type SolutionInput = z.input<typeof solutionInputSchema>;
 
+/**
+ * Set when an operator forgot a node. The node stays for audit but is never
+ * matched, offered as a fix or shown as a dead end, and recording it again
+ * does not clear the mark.
+ */
+export interface LessonForgotten {
+  at: number;
+  reason: string;
+}
 export interface ChallengeNode {
   kind: 'challenge';
   id: string;
@@ -72,6 +81,7 @@ export interface ChallengeNode {
   lastSeenAt: number;
   /** Most recent runs that met it, newest last. */
   seenIn: { graphId: string; taskId?: string | undefined }[];
+  forgotten?: LessonForgotten;
 }
 export interface SolutionNode {
   kind: 'solution';
@@ -89,6 +99,7 @@ export interface SolutionNode {
   };
   /** What happened when this solution was shown to a later repair. */
   usage: { suggested: number; succeeded: number; failed: number };
+  forgotten?: LessonForgotten;
 }
 export type LessonNode = ChallengeNode | SolutionNode;
 export interface LessonEdge {
@@ -117,3 +128,32 @@ export const lessonSearchSchema = z.strictObject({
   limit: z.number().int().min(1).max(20).optional(),
 });
 export type LessonSearch = z.input<typeof lessonSearchSchema>;
+
+/** Judged repair turns of one run, by outcome. */
+export interface RepairCounts {
+  passed: number;
+  failed: number;
+}
+/**
+ * What one run recorded in, and used from, the lesson graph. It is stored in
+ * the run's state. States stored before a field existed lack it, so readers
+ * treat `scope` and `repairs` as optional.
+ */
+export interface RunLessonStats {
+  /** Challenge occurrences recorded in this run. */
+  challenges: number;
+  /** Solutions linked to a challenge (worked or did not) in this run. */
+  solutions: number;
+  /** Prompts that carried lessons from the graph. */
+  hinted: number;
+  /** Lesson writes or reads that failed; the run continued without them. */
+  errors: number;
+  /** The lesson scope (repository) the run read and wrote. */
+  scope?: string;
+  /**
+   * Repair turns (node repair, combined-check fix, review fix) whose outcome
+   * was judged, split by whether the repair prompt carried lessons. A first
+   * attempt is not a repair; turns with no verdict are not judged.
+   */
+  repairs?: { hinted: RepairCounts; unhinted: RepairCounts };
+}

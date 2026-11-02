@@ -19,6 +19,7 @@ const tools = [
   { name: 'agent.read_result', effect: 'read' },
   { name: 'agent.request_work', effect: 'read' },
   { name: 'memory.search', effect: 'read' },
+  { name: 'lessons.search', effect: 'read' },
   { name: 'memory.propose', effect: 'read' },
 ] as const;
 
