@@ -109,8 +109,8 @@ browser check as unavailable, which fails the gate rather than passing it.
 
 - **Tools** (`packages/tools`): `file.read`, `file.apply_patch`, `repo.search`,
   `git.inspect`, `command.run`, `test.run`, `artifact.publish`,
-  `agent.read_result`, `agent.request_work`, `memory.search`, `memory.propose` and
-  `browser.inspect`. Every call passes one gate: the task catalog, the permission
+  `agent.read_result`, `agent.request_work`, `memory.search`, `memory.propose`,
+  `lessons.search` and `browser.inspect`. Every call passes one gate: the task catalog, the permission
   profile's effect classes, and for process actions an approval bound to the exact
   action hash. Results are schema-checked, size-capped and receipted. Workspace
   paths cannot escape, follow links, reach `.git` or secret files, or write outside
@@ -138,7 +138,15 @@ browser check as unavailable, which fails the gate rather than passing it.
 Every orchestrated run records what went wrong and what fixed it, so later
 work starts from what is already known instead of trying fixes blindly.
 The graph lives in the same SQLite state (schema v5,
-`packages/storage/src/lessons.ts`), scoped per project.
+`packages/storage/src/lessons.ts`), scoped per repository: a run's lessons
+are stored under `repo_<16 hex>`, a hash of the repository's normalized `origin`
+URL (credentials, `.git` and case of the host ignored, so `git@host:a/b` and
+`https://host/a/b` match), or of its Git common directory when there is no
+remote, so clones with one origin and all worktrees of one repository share
+lessons and other repositories never see them. The remote itself is never
+stored. `RootSpec.lessonScope` overrides the scope; if it cannot be derived
+the run uses its `projectId`. Lessons recorded before this under `cli` stay
+readable with `--project cli`.
 
 - **Nodes.** A _challenge_ is a failure XVANT met: a node's failing check or
   integration conflict, a failing combined check, or a review finding. Its
@@ -153,24 +161,84 @@ The graph lives in the same SQLite state (schema v5,
   and adds a _Lessons from earlier work_ section to the prompt: fixes ranked
   by how often they worked and were verified, and approaches that did not
   work. Whether that repair then passes is fed back into the ranking, so
-  suggestions that help rise and ones that do not sink. Workers can also
-  query it themselves with the read-only `lessons.search` tool.
+  suggestions that help rise and ones that do not sink. Workers on XVANT's own
+  loop (`native-local`) can also query it themselves with the read-only
+  `lessons.search` tool, and project memory with `memory.search`; both are in
+  that loop's catalog and every call is receipted. `lessons.search` always reads
+  the scope the run writes to, chosen by the host and not by tool input, so a
+  worker never sees another repository's lessons; `lessons: false` turns it off
+  for the run. External runtimes get them through the task's MCP bridge when the
+  host lists them in that task's catalog.
 - **Trust.** Only the host writes the graph. A solution counts as verified
   only for checks the host ran; its summary is the worker's own account.
+  `xvant run` and the app run no checks on a node alone, so a node repair is
+  recorded unverified first. When the combined checks then all pass on the
+  integrated result, the repairs of that run are marked as verified by the
+  checks that passed; if they fail, or there are none, they stay unverified.
   Lessons enter prompts marked as sourced data, not instructions, and stored
   text has credential-shaped strings removed. Turn it off per run with
   `lessons: false` in the root spec.
+- **Are they helping?** Each run stores, in its state (`state.lessons`), its
+  lesson scope and how its repair turns went, split by whether the repair prompt
+  carried lessons: `repairs: { hinted: {passed, failed}, unhinted: {passed,
+failed} }`. Repairs are node repairs, combined-check fixes and review fixes; a
+  node's first attempt is not a repair. A repair is judged by the same rules that
+  feed the ranking: an unknown or cancelled turn, a runtime failure, an operator
+  stop and a review that gave no verdict are not judged. `xvant run` and
+  `xvant status ID` end with one line, e.g. `Lessons: 2 challenges, 1 fix
+recorded, repairs hinted 1/1 passed, unhinted 0/1 passed`, left out when
+  lessons were off or nothing happened. `lessons stats` adds the runs of the
+  scope up (the newest 200, filtered in the database; runs stored before scopes
+  were recorded are not counted) and prints the raw counts, the pass rate of
+  each group, judged repairs per run, the most helpful fixes and the challenges
+  seen often with no verified fix. With fewer than 5 judged repairs in either
+  group it says the sample is too small to compare. The groups are not
+  randomized (hinted repairs are the ones whose failure was seen before), so a
+  gap is a lead and not proof.
+- **Forgetting.** `lessons forget ID --reason TEXT` is a soft delete for a
+  challenge or a solution. The node stays in the graph for audit, marked
+  `forgotten: {at, reason}` in its body, but it is never matched: not by
+  `lessons.search`, not in a prompt, not as a fix or a dead end. Seeing the
+  same failure again, or recording the same change again, does not bring it
+  back. `list` and `export` hide forgotten nodes unless `--all`; `show` prints
+  the mark.
+- **Size cap.** A scope keeps at most 2000 live nodes (`DEFAULT_LESSON_CAP`;
+  `lessonCap` in the `Store` options). Recording past it, in the same
+  transaction, prunes about a tenth below the cap: least useful first (no
+  verified solution or successful reuse; a solution nothing links to counts
+  for nothing), then oldest. The node just written is never pruned. Pruning
+  deletes the node, its edges and its search text. Forgotten nodes neither count
+  toward the cap nor get pruned, so they cannot crowd out live lessons. Under
+  the cap a write only counts rows.
 
-Read it with the CLI (the `run` command records under project `cli`):
+Read it with the CLI. With no `--project`, it reads the scope of `--repo PATH`,
+else of the current directory, else the legacy project `cli`:
 
 ```sh
 npm run xvant -- lessons                      # challenges, newest first
+npm run xvant -- lessons --repo ../other-repo  # another repository's lessons
 npm run xvant -- lessons search "expected 42, got 41"
 npm run xvant -- lessons show ch_354d7a4a2e0a6dbe
+npm run xvant -- lessons stats                # hinted vs unhinted repairs, raw counts
+npm run xvant -- lessons stats --format json
+npm run xvant -- lessons forget ch_354d7a4a2e0a6dbe --reason "fix was wrong"
+npm run xvant -- lessons list --all           # include forgotten nodes
 npm run xvant -- lessons export               # Markdown document
 npm run xvant -- lessons export --format mermaid   # paste into any Mermaid viewer
 npm run xvant -- lessons export --format json
 ```
+
+The local app (`xvant ui`) has a **Lessons** view for the same data. Pick one
+of the repositories the app has run work in (the server maps it to its scope; a
+scope or an unknown folder is refused). It lists the challenges, newest first,
+each expanding to its fixes and dead ends with the summary, files, whether it
+is verified, usage counts and a diff excerpt, then the `lessons stats` report
+(raw counts and the sample-too-small note) and the Mermaid source as copyable
+text; no diagram renderer is bundled. All of it is shown as text, since it
+derives from worker output. Forgotten nodes are hidden. A **Forget** button on
+a challenge, fix or dead end needs a reason and a confirmation, and does what
+`lessons forget` does. The API is `GET /api/v1/lessons/repositories`,
+`GET /api/v1/lessons?repository=PATH` and `POST /api/v1/lessons/forget`.
 
 ## Layout
 

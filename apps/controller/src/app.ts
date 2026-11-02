@@ -22,6 +22,8 @@ import { LiveTurnRunner } from './turn-runner.ts';
 import { activeRouting, applyRouting } from './routing-default.ts';
 import type { RosterRuntime } from './live-roster.ts';
 import { HttpError, startAppServer, type Asset } from './http/app-server.ts';
+import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
+import { lessonsView } from './lessons-view.ts';
 
 const POOL: Record<ProviderKind, [string, WorkerSpec['roles']][]> = {
   codex: [
@@ -79,6 +81,13 @@ const startSchema = z.strictObject({
 const acceptSchema = z.strictObject({
   expectedVersion: z.number().int().positive(),
   head: z.string().regex(/^[a-f0-9]{40}([a-f0-9]{24})?$/),
+});
+const lessonQuerySchema = z.strictObject({
+  repository: z.string().trim().min(1).max(1024),
+});
+const forgetSchema = lessonQuerySchema.extend({
+  id: z.string().regex(/^(ch|sol)_[a-f0-9]{16}$/),
+  reason: z.string().trim().min(1).max(500),
 });
 const webRoot = fileURLToPath(new URL('../public/', import.meta.url));
 function loadAssets(): Record<string, Asset> {
@@ -261,6 +270,32 @@ export async function startApp(options: {
       events: store.graphs.events(id).slice(-300),
     };
   };
+  /**
+   * Repositories this app has run work in, each with its lesson scope. Lessons
+   * are only ever read through one of these: a client names a repository, never
+   * a scope.
+   */
+  const knownRepositories = () => {
+    const found = new Map<string, string>();
+    for (const g of store.graphs.list()) {
+      const path =
+        meta.get(g.id)?.repository ??
+        store.graphs.get<RootState & { repository?: string }>(g.id).state
+          .repository;
+      if (typeof path !== 'string' || found.has(path)) continue;
+      try {
+        found.set(path, lessonScope(path));
+      } catch {
+        /* The folder is gone or no longer a repository: no lessons to show. */
+      }
+    }
+    return found;
+  };
+  const scopeOfKnown = (repository: string) =>
+    knownRepositories().get(repository) ??
+    (() => {
+      throw new HttpError(404, 'UNKNOWN_REPOSITORY');
+    })();
   const server = await startAppServer({
     ...(options.port === undefined ? {} : { port: options.port }),
     assets: loadAssets(),
@@ -335,6 +370,41 @@ export async function startApp(options: {
               };
             }),
         }),
+      },
+      {
+        method: 'GET',
+        path: /^\/api\/v1\/lessons\/repositories$/,
+        handle: async () => ({
+          repositories: [...knownRepositories().keys()].map((path) => ({
+            path,
+          })),
+        }),
+      },
+      {
+        method: 'GET',
+        path: /^\/api\/v1\/lessons$/,
+        handle: async ({ query }) => {
+          const { repository } = lessonQuerySchema.parse({
+            repository: query.get('repository'),
+          });
+          return {
+            repository,
+            ...lessonsView(store, scopeOfKnown(repository)),
+          };
+        },
+      },
+      {
+        method: 'POST',
+        path: /^\/api\/v1\/lessons\/forget$/,
+        handle: async ({ body }) => {
+          const { repository, id, reason } = forgetSchema.parse(body);
+          const node = store.lessons.forget(
+            scopeOfKnown(repository),
+            id,
+            reason,
+          );
+          return { id: node.id, forgotten: node.forgotten };
+        },
       },
       {
         method: 'POST',

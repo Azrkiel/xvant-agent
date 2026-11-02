@@ -141,8 +141,8 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/tools/src/files.test.ts': 19,
               'packages/tools/src/repository.test.ts': 6,
               'packages/tools/src/process.test.ts': 12,
-              'packages/tools/src/controller.test.ts': 5,
-              'packages/tools/src/mcp.test.ts': 8,
+              'packages/tools/src/controller.test.ts': 6,
+              'packages/tools/src/mcp.test.ts': 9,
               'packages/tools/src/browser.test.ts': 8,
               'packages/skills/src/catalog.test.ts': 12,
               'packages/skills/src/hooks.test.ts': 4,
@@ -156,21 +156,21 @@ export function phaseSuites(phase: string): Record<string, number> {
           ? {
               'packages/core/src/scheduler.test.ts': 12,
               'packages/storage/src/integration.test.ts': 4,
-              'apps/controller/src/orchestrator.test.ts': 34,
+              'apps/controller/src/orchestrator.test.ts': 48,
               'apps/controller/src/turn-runner.test.ts': 3,
             }
           : {}),
         ...(Number(phase) >= 7
           ? {
-              'apps/controller/src/app.test.ts': 4,
-              'tests/e2e/ui.test.ts': 3,
+              'apps/controller/src/app.test.ts': 7,
+              'tests/e2e/ui.test.ts': 4,
             }
           : {}),
         ...(Number(phase) >= 8
           ? {
               'packages/native-agent/src/local-endpoint.test.ts': 20,
               'packages/native-agent/src/loop.test.ts': 14,
-              'apps/controller/src/native-turn-runner.test.ts': 10,
+              'apps/controller/src/native-turn-runner.test.ts': 11,
               'apps/controller/src/native-loop-fixture.test.ts': 2,
               'apps/controller/src/live-native.test.ts': 3,
             }
@@ -190,7 +190,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'tests/audit-policy.test.ts': 6,
               'apps/controller/src/share.test.ts': 9,
               'apps/controller/src/shell.test.ts': 4,
-              'tests/shell-integration.test.ts': 20,
+              'tests/shell-integration.test.ts': 23,
             }
           : {}),
       };

@@ -24,6 +24,7 @@ import { ModelError } from '../../../packages/native-agent/src/model.ts';
 import { Orchestrator, type WorkerSpec } from './orchestrator.ts';
 import { NativeTurnRunner } from './native-turn-runner.ts';
 import { LiveTurnRunner } from './turn-runner.ts';
+import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
 
 vi.setConfig({ testTimeout: 60000 });
 let root: string, repo: string, store: Store, objects: ArtifactStore;
@@ -320,4 +321,70 @@ it('accepts a turn in a store that already holds more than one page of events', 
   );
   expect(store.events(0, 1000).length).toBeGreaterThan(120);
   expect(outcome.status).toBe('accepted');
+});
+
+it('searches only its own repository’s lessons through lessons.search', async () => {
+  const other = join(root, 'repo-a');
+  mkdirSync(other);
+  const gitIn = (cwd: string, ...args: string[]) =>
+    execFileSync(
+      'git',
+      ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args],
+      { cwd },
+    );
+  gitIn(other, 'init', '-q', '-b', 'main');
+  const failure = 'Checks failed: unit\nTypeError: parse is not a function';
+  const learn = (repository: string, summary: string) => {
+    const projectId = lessonScope(repository);
+    const challenge = store.lessons.recordChallenge({
+      projectId,
+      failure,
+      source: 'node',
+      provenance: { graphId: 'g' },
+    });
+    const fix = store.lessons.recordSolution({
+      projectId,
+      summary,
+      files: ['src/parse.js'],
+      diff: '+export { parse };',
+      checks: ['unit'],
+      provenance: { graphId: 'g' },
+    });
+    store.lessons.link(projectId, challenge.id, fix.id, 'solved_by');
+  };
+  learn(other, 'Fix recorded for repository A');
+  learn(repo, 'Fix recorded for repository B');
+  const seen: ReturnType<typeof lastResult>[] = [];
+  const search = (extra = {}) =>
+    turn(
+      runner((messages, n) => {
+        if (n === 1)
+          return {
+            toolCalls: [
+              toolCall('lessons.search', {
+                query: 'TypeError: parse is not a function',
+              }),
+            ],
+          };
+        seen.push(lastResult(messages));
+        return { text: 'searched' };
+      }),
+      extra,
+    );
+  await search();
+  expect(seen[0]!.status).toBe('succeeded');
+  const own = JSON.stringify(seen[0]!.result);
+  expect(own).toContain('Fix recorded for repository B');
+  expect(own).not.toContain('repository A');
+  const receipts = store
+    .events(0, 1000)
+    .filter((e) => e.kind === 'tool.receipt')
+    .map((e) => (e.payload as { tool: string }).tool);
+  expect(receipts).toEqual(['lessons.search']);
+  // The host can switch lessons off for a run; the worker cannot switch it back.
+  await search({ taskId: 'node-b', lessonScope: null });
+  expect(seen[1]).toMatchObject({
+    status: 'succeeded',
+    result: { matches: [] },
+  });
 });

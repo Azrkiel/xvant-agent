@@ -4,6 +4,12 @@ import { z } from 'zod';
 import type { ToolApproval, ToolReceipt } from '../../contracts/src/tools.ts';
 import { ToolRegistry, defineTool } from './registry.ts';
 import type { ToolContext } from './registry.ts';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { Store } from '../../storage/src/store.ts';
+import { ArtifactStore } from '../../storage/src/artifacts.ts';
+import { createControllerTools } from './controller.ts';
 import { startMcpBridge } from './mcp.ts';
 
 const tool = (
@@ -284,5 +290,85 @@ describe('MCP bridge tools', () => {
     await expect(
       rpc({ jsonrpc: '2.0', id: 1, method: 'ping' }),
     ).rejects.toThrow();
+  });
+});
+
+describe('controller read tools', () => {
+  it('lists lessons_search and memory_search and nothing that writes', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'xvant-mcp-lessons-'));
+    const store = new Store(join(dir, 'state.sqlite'), { owner: 'test' });
+    const receipts: ToolReceipt[] = [];
+    const registry = new ToolRegistry(
+      createControllerTools({
+        store,
+        objects: new ArtifactStore(join(dir, 'objects')),
+      }),
+      { record: (receipt) => receipts.push(receipt) },
+    );
+    const own = await startMcpBridge({
+      registry,
+      context: {
+        projectId: 'project',
+        taskId: 'task',
+        attemptId: 'attempt',
+        workerId: 'codex-1',
+        permissionProfile: 'trusted-local',
+        allowedTools: ['lessons.search', 'memory.search'],
+        approvals: [],
+        now: () => 1,
+      },
+    });
+    try {
+      const send = async (body: unknown, session?: string) => {
+        const response = await fetch(own.url, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            authorization: 'Bearer ' + own.token,
+            ...(session ? { 'mcp-session-id': session } : {}),
+          },
+          body: JSON.stringify(body),
+        });
+        return {
+          session: response.headers.get('mcp-session-id'),
+          json: (await response.json()) as RpcReply,
+        };
+      };
+      const init = await send({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: { protocolVersion: '2025-06-18' },
+      });
+      const listed = await send(
+        { jsonrpc: '2.0', id: 2, method: 'tools/list' },
+        init.session!,
+      );
+      expect(listed.json.result.tools.map((t) => t.name).sort()).toEqual([
+        'lessons_search',
+        'memory_search',
+      ]);
+      expect(listed.json.result.tools[0]!.annotations).toMatchObject({
+        readOnlyHint: true,
+      });
+      const denied = await send(
+        {
+          jsonrpc: '2.0',
+          id: 3,
+          method: 'tools/call',
+          params: { name: 'memory_propose', arguments: {} },
+        },
+        init.session!,
+      );
+      expect(denied.json.result.isError).toBe(true);
+      expect(receipts.at(-1)).toMatchObject({
+        tool: 'unknown',
+        status: 'denied',
+      });
+    } finally {
+      await own.close();
+      store.close();
+      rmSync(dir, { recursive: true, force: true, maxRetries: 10 });
+    }
   });
 });

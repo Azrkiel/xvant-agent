@@ -18,12 +18,14 @@
 //                          [--interval SECONDS] [--once]
 //   npm run xvant -- backup [--out DIR]
 //   npm run xvant -- restore --from DIR [--force]
-//   npm run xvant -- lessons [list | show ID | search TEXT | export]
-//                            [--format md|mermaid|json] [--project ID]
+//   npm run xvant -- lessons [list [--all] | show ID | search TEXT | export [--all]
+//                            | stats | forget ID --reason TEXT]
+//                            [--format md|mermaid|json] [--project ID | --repo PATH]
 import { mkdirSync, readFileSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
+import { lessonsLine } from '../packages/memory/src/lessons.ts';
 import { Store } from '../packages/storage/src/store.ts';
 import { ArtifactStore } from '../packages/storage/src/artifacts.ts';
 import { discoverRuntime } from '../packages/adapters/src/live/discover.ts';
@@ -352,6 +354,8 @@ if (command === undefined || command === 'shell') {
           : ' (not independent: the reviewer also implemented)'),
       ...state.review.findings.map((f) => '\n    - ' + f),
     );
+  const learned = lessonsLine(state.lessons);
+  if (learned) console.log('  ' + learned);
   if (state.integration)
     console.log(
       '\nBranch ' +
@@ -386,6 +390,8 @@ if (command === undefined || command === 'shell') {
           2,
         ),
       );
+      const learned = lessonsLine(record.state.lessons);
+      if (learned) console.log(learned);
       for (const e of store.graphs.events(id))
         console.log(String(e.sequence).padStart(5), e.kind);
     } else
@@ -536,16 +542,80 @@ if (command === undefined || command === 'shell') {
     await import('../packages/memory/src/lessons.ts');
   const { store } = open();
   try {
-    const project = value('--project') ?? 'cli';
+    // Lessons are scoped per repository: the one given, else the current
+    // one, else the legacy shared scope.
+    let project = value('--project');
+    if (!project) {
+      const { lessonScope } =
+        await import('../packages/storage/src/lesson-scope.ts');
+      try {
+        project = lessonScope(resolve(value('--repo') ?? process.cwd()));
+      } catch {
+        project = 'cli';
+      }
+    }
     const format = value('--format') ?? 'md';
-    const flags = new Set(['--project', '--format']);
+    const flags = new Set(['--project', '--repo', '--format', '--reason']);
+    const all = rest.includes('--all');
     const words = rest.filter(
-      (arg, i) => !flags.has(arg) && !flags.has(rest[i - 1]),
+      (arg, i) => arg !== '--all' && !flags.has(arg) && !flags.has(rest[i - 1]),
     );
     const [action = 'list', ...args] = words;
-    const nodes = store.lessons.nodes(project);
-    const edges = store.lessons.edges(project);
-    if (action === 'list') {
+    const usage = () => {
+      console.error(
+        'Usage: lessons [list [--all] | show ID | search TEXT | export [--all] | stats | forget ID --reason TEXT] [--format md|mermaid|json] [--project ID | --repo PATH]',
+      );
+      process.exitCode = 2;
+    };
+    // Forgotten nodes stay in the graph for audit; reads hide them unless --all.
+    const everything = store.lessons.nodes(project);
+    const allEdges = store.lessons.edges(project);
+    const nodes = all ? everything : everything.filter((n) => !n.forgotten);
+    const kept = new Set(nodes.map((n) => n.id));
+    const edges = allEdges.filter((e) => kept.has(e.from) && kept.has(e.to));
+    if (action === 'forget') {
+      const reason = (value('--reason') ?? '').trim();
+      if (args.length !== 1 || !reason) usage();
+      else
+        try {
+          const node = store.lessons.forget(project, args[0], reason);
+          console.log(
+            'Forgot ' +
+              node.kind +
+              ' ' +
+              node.id +
+              ' (' +
+              node.forgotten.reason +
+              '). It stays in the graph for audit: lessons list --all',
+          );
+        } catch (error) {
+          console.error(
+            error.message === 'NOT_FOUND'
+              ? 'No lesson ' +
+                  args[0] +
+                  ' in ' +
+                  project +
+                  '. List them with: lessons list --all'
+              : 'Forget failed: ' + error.message,
+          );
+          process.exitCode = 1;
+        }
+    } else if (action === 'stats') {
+      const { lessonReport, renderReport } =
+        await import('../packages/memory/src/lessons.ts');
+      // Only this scope's newest runs are read, filtered in the database.
+      const report = lessonReport(
+        store.graphs.lessonSummaries(project, 200).map((r) => r.lessons),
+        everything,
+        allEdges,
+        200,
+      );
+      console.log(
+        format === 'json'
+          ? JSON.stringify({ project, ...report }, null, 2)
+          : renderReport(project, report),
+      );
+    } else if (action === 'list') {
       const count = (id, relation) =>
         edges.filter((e) => e.from === id && e.relation === relation).length;
       const challenges = nodes.filter((n) => n.kind === 'challenge');
@@ -556,12 +626,20 @@ if (command === undefined || command === 'shell') {
           ('seen ' + n.occurrences + '×').padEnd(9),
           ('fixes ' + count(n.id, 'solved_by')).padEnd(8),
           ('dead ends ' + count(n.id, 'not_solved_by')).padEnd(12),
-          n.title.split('\n')[0].slice(0, 90),
+          (n.forgotten ? '[forgotten] ' : '') +
+            n.title.split('\n')[0].slice(0, 90),
         );
     } else if (action === 'show' && args[0]) {
       const node = store.lessons.get(project, args[0]);
+      if (node.forgotten)
+        console.log(
+          'FORGOTTEN ' +
+            new Date(node.forgotten.at).toISOString() +
+            ': ' +
+            node.forgotten.reason,
+        );
       console.log(JSON.stringify(node, null, 2));
-      for (const e of edges.filter(
+      for (const e of allEdges.filter(
         (e) => e.from === node.id || e.to === node.id,
       ))
         console.log(e.from, '--' + e.relation + ' ×' + e.count + '->', e.to);
@@ -583,12 +661,7 @@ if (command === undefined || command === 'shell') {
             ? lessonsToMermaid(nodes, edges)
             : lessonsToMarkdown(nodes, edges),
       );
-    } else {
-      console.error(
-        'Usage: lessons [list | show ID | search TEXT | export] [--format md|mermaid|json] [--project ID]',
-      );
-      process.exitCode = 2;
-    }
+    } else usage();
   } finally {
     store.close();
   }

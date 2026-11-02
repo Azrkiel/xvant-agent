@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { LIVE_ROUTES } from '../../../packages/contracts/src/live.ts';
 import type { ProviderKind } from '../../../packages/contracts/src/providers.ts';
 import { startApp } from './app.ts';
+import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
 
 vi.setConfig({ testTimeout: 120000 });
 const fixture = (name: string) =>
@@ -311,4 +312,197 @@ it('rejects a folder that is not a Git repository and stops running work', async
     (r) => ['cancelled', 'needs_attention', 'failed'].includes(r.state.phase),
   );
   expect(stopped.state.phase).toBe('cancelled');
+});
+
+/** A repository the app has worked in: a stored run names it. */
+function knownRepository(name: string) {
+  const dir = join(root, name);
+  mkdirSync(dir);
+  const git = (...args: string[]) =>
+    execFileSync(
+      'git',
+      ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args],
+      {
+        cwd: dir,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    );
+  git('init', '-q', '-b', 'main');
+  writeFileSync(join(dir, 'README.md'), '# ' + name + '\n');
+  git('add', '.');
+  git('commit', '-qm', 'base');
+  const path = realpathSync(dir);
+  app.store.graphs.create(
+    'r' + name,
+    'app',
+    { objective: 'work in ' + name, phase: 'ready', repository: path },
+    {},
+  );
+  return { path, scope: lessonScope(path) };
+}
+function seedLesson(
+  scope: string,
+  title: string,
+  summary: string,
+  diff = '-a\n+b\n',
+) {
+  const provenance = { graphId: 'seed' };
+  const challenge = app.store.lessons.recordChallenge({
+    projectId: scope,
+    failure: title,
+    source: 'checks',
+    files: ['src/a.ts'],
+    provenance,
+  });
+  const fix = app.store.lessons.recordSolution({
+    projectId: scope,
+    summary,
+    files: ['src/a.ts'],
+    diff,
+    checks: ['unit'],
+    provenance,
+  });
+  const dead = app.store.lessons.recordSolution({
+    projectId: scope,
+    summary: 'Tried and failed: ' + summary,
+    files: ['src/b.ts'],
+    diff: '-c\n+d\n',
+    checks: [],
+    provenance,
+  });
+  app.store.lessons.link(scope, challenge.id, fix.id, 'solved_by');
+  app.store.lessons.link(scope, challenge.id, dead.id, 'not_solved_by');
+  return { challenge, fix, dead };
+}
+
+it('serves one known repository lessons and stats, never another repository or an unknown one', async () => {
+  const s = await login();
+  const a = knownRepository('alpha');
+  const b = knownRepository('beta');
+  const one = seedLesson(a.scope, 'AssertionError: alpha broke', 'Fix alpha');
+  seedLesson(b.scope, 'TypeError: beta broke', 'Fix beta');
+
+  const repos = JSON.parse((await s.get('/api/v1/lessons/repositories')).body);
+  expect(
+    repos.repositories.map((r: { path: string }) => r.path).sort(),
+  ).toEqual([a.path, b.path].sort());
+  const read = async (path: string) =>
+    s.get('/api/v1/lessons?repository=' + encodeURIComponent(path));
+  const got = JSON.parse((await read(a.path)).body);
+  expect(got.repository).toBe(a.path);
+  expect(got.totalChallenges).toBe(1);
+  expect(got.challenges).toEqual([
+    expect.objectContaining({
+      id: one.challenge.id,
+      title: expect.stringContaining('alpha broke'),
+      occurrences: 1,
+      fixes: 1,
+      deadEnds: 1,
+    }),
+  ]);
+  const [fix, dead] = got.challenges[0].solutions;
+  expect(fix).toMatchObject({
+    id: one.fix.id,
+    relation: 'solved_by',
+    summary: 'Fix alpha',
+    files: ['src/a.ts'],
+    verified: true,
+    checks: ['unit'],
+    usage: { suggested: 0, succeeded: 0, failed: 0 },
+    diff: '-a\n+b\n',
+  });
+  expect(dead).toMatchObject({ relation: 'not_solved_by', verified: false });
+  // The same report as `xvant lessons stats`, with its small-sample message.
+  expect(got.stats.report).toMatchObject({ runs: 0, comparable: false });
+  expect(got.stats.text).toContain('Sample too small to compare');
+  expect(got.mermaid).toContain('flowchart LR');
+  expect(got.mermaid).toContain(one.challenge.id);
+  // Nothing of the other repository leaks into any part of the reply.
+  expect((await read(a.path)).body).not.toMatch(/beta/);
+  expect((await read(b.path)).body).not.toMatch(/alpha/);
+
+  // A client names repositories, not scopes, and unknown ones are refused.
+  for (const unknown of [repo, root, a.scope, 'cli', '..']) {
+    const refused = await read(unknown);
+    expect(refused.status).toBe(404);
+    expect(JSON.parse(refused.body).error).toBe('UNKNOWN_REPOSITORY');
+  }
+  expect((await s.get('/api/v1/lessons')).status).toBe(400);
+  expect(
+    (
+      await s.post('/api/v1/lessons/forget', {
+        repository: repo,
+        id: one.challenge.id,
+        reason: 'x',
+      })
+    ).status,
+  ).toBe(404);
+});
+
+it('forgets a lesson with a reason, hides it from the view and guards the write', async () => {
+  const s = await login();
+  const a = knownRepository('alpha');
+  const b = knownRepository('beta');
+  const one = seedLesson(a.scope, 'AssertionError: alpha broke', 'Fix alpha');
+  const other = seedLesson(b.scope, 'TypeError: beta broke', 'Fix beta');
+  const forget = (body: unknown) => s.post('/api/v1/lessons/forget', body);
+  expect(
+    (await forget({ repository: a.path, id: one.challenge.id, reason: ' ' }))
+      .status,
+  ).toBe(400);
+  expect(
+    (await forget({ repository: a.path, id: 'not an id', reason: 'x' })).status,
+  ).toBe(400);
+  // An id from another repository is not found in this one.
+  expect(
+    (
+      await forget({
+        repository: a.path,
+        id: other.challenge.id,
+        reason: 'wrong repo',
+      })
+    ).status,
+  ).toBe(404);
+  expect(
+    (await send('/api/v1/lessons/forget', 'POST', { origin: app.origin }, {}))
+      .status,
+  ).toBe(401);
+  const done = await forget({
+    repository: a.path,
+    id: one.fix.id,
+    reason: 'stale fix',
+  });
+  expect(done.status).toBe(202);
+  const view = async (path: string) =>
+    JSON.parse(
+      (await s.get('/api/v1/lessons?repository=' + encodeURIComponent(path)))
+        .body,
+    );
+  expect((await view(a.path)).challenges[0].solutions).toEqual([
+    expect.objectContaining({ id: one.dead.id }),
+  ]);
+  await forget({ repository: a.path, id: one.challenge.id, reason: 'gone' });
+  const after = await view(a.path);
+  expect(after.challenges).toEqual([]);
+  expect(after.mermaid).not.toContain(one.challenge.id);
+  expect((await view(b.path)).challenges).toHaveLength(1);
+});
+
+it('returns lesson text from workers as inert data and ships a client that only sets text', async () => {
+  const s = await login();
+  const a = knownRepository('alpha');
+  const payload =
+    '<img src=x onerror="window.pwned=1"><script>alert(1)</script>';
+  seedLesson(a.scope, 'Error: ' + payload, 'Fix ' + payload, '+' + payload);
+  const got = JSON.parse(
+    (await s.get('/api/v1/lessons?repository=' + encodeURIComponent(a.path)))
+      .body,
+  );
+  // Returned verbatim as JSON string data; the page must never parse it as HTML.
+  expect(got.challenges[0].title).toContain(payload);
+  expect(got.challenges[0].solutions[0].summary).toContain(payload);
+  const script = (await send('/app.js')).body;
+  expect(script).not.toMatch(
+    /innerHTML|outerHTML|insertAdjacentHTML|document\.write/,
+  );
 });

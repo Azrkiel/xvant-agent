@@ -15,6 +15,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Store } from '../../../packages/storage/src/store.ts';
 import { ArtifactStore } from '../../../packages/storage/src/artifacts.ts';
+import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
 import { captureGitWorkspace } from '../../../packages/storage/src/git-workspace.ts';
 import {
   Orchestrator,
@@ -158,6 +159,7 @@ const orchestrate = (runner: TurnRunner, extra: Record<string, unknown> = {}) =>
   }).run({
     id: 'feature',
     projectId: 'p',
+    lessonScope: 'p',
     repository: repo,
     baseRevision: 'main',
     objective: 'Add api, web and docs',
@@ -523,6 +525,7 @@ describe('lesson graph', () => {
       review: false,
       ...extra,
     });
+  const none = { passed: 0, failed: 0 };
   const repairPrompt = (runner: FakeRunner) =>
     runner.calls.filter((c) => byLabel(c as TurnRequest) === 'api')[1]!.prompt;
 
@@ -535,6 +538,8 @@ describe('lesson graph', () => {
       solutions: 1,
       hinted: 0,
       errors: 0,
+      scope: 'p',
+      repairs: { hinted: none, unhinted: { passed: 1, failed: 0 } },
     });
     // Nothing was known yet, so the first repair worked it out alone.
     expect(repairPrompt(first)).not.toContain('Lessons from earlier work');
@@ -638,6 +643,265 @@ describe('lesson graph', () => {
     expect(solved(challenges[1]!.id)).toMatchObject([
       { summary: 'Said fixed', checks: ['all'] },
     ]);
+    // Both repairs passed, with nothing in the graph yet to show them.
+    expect(state.lessons!.repairs).toEqual({
+      hinted: none,
+      unhinted: { passed: 2, failed: 0 },
+    });
+
+    // The same failures in a later run: both repair prompts carry lessons.
+    let again = 0;
+    const second = new FakeRunner((request) => {
+      const label = byLabel(request);
+      if (label === 'fix')
+        return {
+          write: { 'web.txt': 'w', 'docs.txt': 'd' },
+          finalText: 'Added',
+        };
+      if (label === 'review')
+        return ++again === 1
+          ? verdict(false, ['api.txt must say fixed'])
+          : verdict(true);
+      if (label === 'review-fix')
+        return { write: { 'api.txt': 'fixed\n' }, finalText: 'Said fixed' };
+      return { write: { 'api.txt': 'x\n' } };
+    });
+    const next = await orchestrate(second, { id: 'combined2', plan: onlyApi });
+    expect(next.phase).toBe('ready');
+    expect(next.lessons!.repairs).toEqual({
+      hinted: { passed: 2, failed: 0 },
+      unhinted: none,
+    });
+    expect(
+      second.calls.filter((c) => /-(fix|review-fix)-\d+$/.test(c.taskId)),
+    ).toHaveLength(2);
+    for (const call of second.calls.filter((c) => /fix-\d+$/.test(c.taskId)))
+      expect(call.prompt).toContain('## Lessons from earlier work');
+  });
+
+  it('judges a node repair that fails and never counts the first attempt', async () => {
+    let tries = 0;
+    const runner = new FakeRunner((request) =>
+      byLabel(request) === 'api'
+        ? {
+            status: 'verification_failed',
+            failure: unitFailure(++tries),
+            write: { 'api.txt': 'attempt ' + tries + '\n' },
+          }
+        : verdict(true),
+    );
+    const state = await run(runner, 'repairfail');
+    expect(state.phase).toBe('failed');
+    // Attempt one is not a repair; attempt two is, and it failed unhinted.
+    expect(state.lessons!.repairs).toEqual({
+      hinted: none,
+      unhinted: { passed: 0, failed: 1 },
+    });
+  });
+
+  it('does not judge a node repair that is unknown, cancelled, a runtime failure or an operator stop', async () => {
+    const outcomes = [
+      { status: 'unknown' },
+      { status: 'cancelled' },
+      { status: 'failed', failure: 'runtime crashed' },
+      { status: 'failed', failure: 'AUTH_REQUIRED: log in again' },
+    ] as const;
+    for (const [i, outcome] of outcomes.entries()) {
+      let tries = 0;
+      const runner = new FakeRunner((request) =>
+        byLabel(request) !== 'api'
+          ? verdict(true)
+          : ++tries === 1
+            ? {
+                status: 'verification_failed',
+                failure: unitFailure(tries),
+                write: { 'api.txt': '41\n' },
+              }
+            : { ...outcome, write: { 'api.txt': '42\n' } },
+      );
+      const state = await run(runner, 'notjudged' + i);
+      expect(state.lessons!.repairs, outcome.status).toEqual({
+        hinted: none,
+        unhinted: none,
+      });
+      expect(tries).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it('judges combined-check fixes and review fixes that do not work', async () => {
+    const stubborn = new FakeRunner((request) => {
+      const label = byLabel(request);
+      if (label === 'fix') return { write: { 'other.txt': 'o' } };
+      if (label === 'review') return verdict(false, ['api.txt must say fixed']);
+      if (label === 'review-fix') return { write: { 'api.txt': 'nope\n' } };
+      return { write: { 'api.txt': 'x\n' } };
+    });
+    const state = await orchestrate(stubborn, {
+      id: 'stubborn',
+      plan: onlyApi,
+    });
+    expect(state.phase).toBe('failed');
+    // Two combined fixes failed: the second one was shown the first as a
+    // dead end. No review ran, so no review fix.
+    expect(state.lessons!.repairs).toEqual({
+      hinted: { passed: 0, failed: 1 },
+      unhinted: { passed: 0, failed: 1 },
+    });
+
+    const rejected = new FakeRunner((request) => {
+      const label = byLabel(request);
+      if (label === 'review') return verdict(false, ['api.txt must say fixed']);
+      if (label === 'review-fix') return { write: { 'api.txt': 'nope\n' } };
+      return { write: { 'api.txt': 'x\n' } };
+    });
+    const review = await orchestrate(rejected, {
+      id: 'stubborn2',
+      lessonScope: 'review-scope',
+      plan: onlyApi,
+      checks: apiCheck,
+    });
+    expect(review.phase).toBe('ready');
+    expect(review.review!.approve).toBe(false);
+    expect(review.lessons!.repairs).toEqual({
+      hinted: none,
+      unhinted: { passed: 0, failed: 1 },
+    });
+  });
+
+  it('does not judge a combined-check fix whose turn did not finish', async () => {
+    for (const status of ['failed', 'unknown', 'cancelled'] as const) {
+      const fixer = new FakeRunner((request) =>
+        byLabel(request) === 'fix'
+          ? { status, write: { 'web.txt': 'w', 'docs.txt': 'd' } }
+          : verdict(true),
+      );
+      const state = await orchestrate(fixer, {
+        id: 'fixturn' + status,
+        plan: onlyApi,
+      });
+      expect(state.phase, status).not.toBe('ready');
+      expect(state.lessons!.repairs, status).toEqual({
+        hinted: none,
+        unhinted: none,
+      });
+    }
+  });
+
+  it('does not judge a review fix whose turn did not finish', async () => {
+    for (const status of ['failed', 'unknown'] as const) {
+      let reviews = 0;
+      const runner = new FakeRunner((request) => {
+        const label = byLabel(request);
+        if (label === 'review')
+          return ++reviews === 1
+            ? verdict(false, ['api.txt must say fixed'])
+            : verdict(true);
+        if (label === 'review-fix')
+          return { status, write: { 'api.txt': 'fixed\n' } };
+        return { write: { 'api.txt': 'x\n' } };
+      });
+      const state = await run(runner, 'reviewturn' + status, {
+        review: undefined,
+      });
+      expect(state.lessons!.repairs, status).toEqual({
+        hinted: none,
+        unhinted: none,
+      });
+    }
+  });
+
+  it('does not judge a review fix when the next review gives no verdict', async () => {
+    let reviews = 0;
+    const silent = new FakeRunner((request) => {
+      const label = byLabel(request);
+      if (label === 'review')
+        return ++reviews === 1
+          ? verdict(false, ['api.txt must say fixed'])
+          : { finalText: 'Looks fine to me.' };
+      if (label === 'review-fix') return { write: { 'api.txt': 'fixed\n' } };
+      return { write: { 'api.txt': 'x\n' } };
+    });
+    const state = await run(silent, 'silentreview', { review: undefined });
+    expect(reviews).toBe(2);
+    expect(state.lessons!.repairs).toEqual({ hinted: none, unhinted: none });
+  });
+
+  it('marks a repair verified once the combined checks pass on the result', async () => {
+    // No nodeChecks, as in `xvant run` and the app: the repair is recorded bare.
+    const state = await run(flaky(), 'backfill', { nodeChecks: undefined });
+    expect(state.phase).toBe('ready');
+    const solutions = store.lessons
+      .nodes('p')
+      .filter((n) => n.kind === 'solution');
+    expect(solutions).toHaveLength(1);
+    expect(solutions[0]).toMatchObject({
+      summary: 'Return 42 instead of 41 in api',
+      checks: ['api'],
+    });
+    expect(state.lessons).toMatchObject({ solutions: 1, errors: 0 });
+    expect(store.lessons.nodes('p')).toHaveLength(2);
+  });
+
+  it('leaves a repair unverified when the combined checks fail', async () => {
+    const state = await run(flaky(), 'nobackfill', {
+      nodeChecks: undefined,
+      checks: {
+        api: {
+          executable: process.execPath,
+          args: [
+            '-e',
+            "if (require('node:fs').readFileSync('api.txt', 'utf8').trim() !== '99') process.exit(1)",
+          ],
+        },
+      },
+    });
+    expect(state.phase).toBe('failed');
+    const solutions = store.lessons
+      .nodes('p')
+      .filter((n) => n.kind === 'solution');
+    expect(solutions).toHaveLength(1);
+    expect(solutions[0]).toMatchObject({
+      summary: 'Return 42 instead of 41 in api',
+      checks: [],
+    });
+  });
+
+  it('keeps lessons with their repository, shared by its worktrees', async () => {
+    const other = join(root, 'other');
+    mkdirSync(other);
+    git(other, 'init', '-q', '-b', 'main');
+    writeFileSync(join(other, 'README.md'), 'base\n');
+    git(other, 'add', '.');
+    git(other, 'commit', '-qm', 'base');
+    const linked = join(root, 'linked');
+    git(repo, 'worktree', 'add', '-q', '-b', 'linked', linked, 'main');
+    const scoped = (repository: string, id: string) =>
+      run(flaky(), id, {
+        repository,
+        lessonScope: undefined,
+        nodeChecks: undefined,
+      });
+
+    await scoped(repo, 'scopeA');
+    const scopeA = lessonScope(repo);
+    expect(scopeA).not.toBe('p');
+    expect(store.lessons.nodes('p')).toEqual([]);
+    expect(store.lessons.nodes(scopeA)).toHaveLength(2);
+
+    const b = await scoped(other, 'scopeB');
+    expect(b.lessons).toMatchObject({ hinted: 0, errors: 0 });
+    expect(lessonScope(other)).not.toBe(scopeA);
+
+    const again = await scoped(linked, 'scopeC');
+    expect(again.lessons).toMatchObject({ hinted: 1, errors: 0 });
+    expect(
+      store.lessons.nodes(scopeA).filter((n) => n.kind === 'challenge'),
+    ).toHaveLength(1);
+  });
+
+  it('uses an explicit lessonScope over the derived one', async () => {
+    await run(flaky(), 'explicit', { lessonScope: 'custom' });
+    expect(store.lessons.nodes('custom')).toHaveLength(2);
   });
 
   it('records and shows nothing when lessons are off', async () => {
@@ -645,11 +909,13 @@ describe('lesson graph', () => {
     const second = flaky();
     const state = await run(second, 'off2', { lessons: false });
     expect(store.lessons.nodes('p')).toEqual([]);
+    // Off: no scope, and the repair is not counted.
     expect(state.lessons).toEqual({
       challenges: 0,
       solutions: 0,
       hinted: 0,
       errors: 0,
+      repairs: { hinted: none, unhinted: none },
     });
     expect(repairPrompt(second)).not.toContain('Lessons');
   });
@@ -672,6 +938,7 @@ it('does not repair on a review that gave no verdict or did not finish', async (
     }).run({
       id: 'noverdict' + i,
       projectId: 'p',
+      lessonScope: 'p',
       repository: repo,
       baseRevision: 'main',
       objective: 'Add api',

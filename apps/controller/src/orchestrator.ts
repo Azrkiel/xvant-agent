@@ -16,6 +16,7 @@ import {
   routeNode,
   type RouteDecision,
 } from '../../../packages/core/src/router.ts';
+import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
 import { RunLessons, type LessonStats } from './lessons.ts';
 
 export interface Check {
@@ -44,6 +45,12 @@ export interface TurnRequest {
    * External runtimes get them as prompt text; XVANT's own tools enforce them.
    */
   writablePaths?: string[];
+  /**
+   * Lesson scope for the turn's `lessons.search`, chosen by the host from the
+   * run's repository. `null`: lessons are off. Absent: the runner derives it
+   * from the workspace, else uses the task's project.
+   */
+  lessonScope?: string | null;
 }
 export interface TurnOutcome {
   status:
@@ -82,6 +89,11 @@ export interface RootSpec {
    * lesson graph, and show known fixes to repairs. On unless false.
    */
   lessons?: boolean;
+  /**
+   * Lesson-graph scope. Absent, it is derived from `repository` so lessons
+   * stay with their repository; `projectId` still scopes everything else.
+   */
+  lessonScope?: string;
 }
 type NodeStatus =
   'pending' | 'running' | 'integrated' | 'failed' | 'needs_attention';
@@ -144,6 +156,14 @@ export interface RootState {
   lessons?: LessonStats;
   reason?: string;
 }
+/** A repository's lesson scope; a run that cannot derive one keeps its project's. */
+const scopeOf = (repository: string, fallback: string) => {
+  try {
+    return lessonScope(repository);
+  } catch {
+    return fallback;
+  }
+};
 const tail = (text: string, max = 3000) =>
   text.length > max ? '…' + text.slice(-max) : text;
 // TurnRunner prefixes native failures with a structured code. Never infer an
@@ -155,6 +175,15 @@ const needsOperator = (
   ['AUTH_REQUIRED', 'QUOTA_BLOCKED', 'MODEL_UNAVAILABLE'].includes(
     outcome.failure?.split(':', 1)[0] ?? '',
   );
+/**
+ * Whether a repair turn says anything about the repair: an unknown or
+ * cancelled turn, a runtime failure and an operator stop do not.
+ */
+const judged = (outcome: TurnOutcome) =>
+  outcome.status !== 'unknown' &&
+  outcome.status !== 'cancelled' &&
+  outcome.status !== 'failed' &&
+  !needsOperator(outcome);
 // The first line names the failure; check output below it varies run to run.
 const signature = (text: string) =>
   createHash('sha256')
@@ -237,7 +266,9 @@ export class Orchestrator {
     };
     const lessons = new RunLessons(
       spec.lessons === false ? null : this.#store,
-      spec.projectId,
+      spec.lessons === false
+        ? spec.projectId
+        : (spec.lessonScope ?? scopeOf(spec.repository, spec.projectId)),
       spec.id,
     );
     state.lessons = lessons.stats;
@@ -291,6 +322,12 @@ export class Orchestrator {
         // Separate namespace: a branch cannot nest under the integration branch.
         'xvant-work/' + spec.id + '/' + label,
       );
+    const turnLessonScope =
+      spec.lessons === false
+        ? null
+        : (spec.lessonScope ?? scopeOf(spec.repository, spec.projectId));
+    // Nodes whose current repair prompt carried lessons.
+    const hintedNodes = new Set<string>();
     const noop = { reply: { executable: process.execPath, args: ['-e', ''] } };
     const turn = async (
       alias: string,
@@ -312,6 +349,7 @@ export class Orchestrator {
           workspace: tree,
           checks: Object.keys(checks).length ? checks : noop,
           ...(writablePaths.length ? { writablePaths } : {}),
+          lessonScope: turnLessonScope,
         });
         return { taskId, outcome };
       } finally {
@@ -397,6 +435,9 @@ export class Orchestrator {
         outcome: TurnOutcome,
       ) => {
         const entry = state.nodes[id]!;
+        // A first attempt is not a repair.
+        const repair = entry.repairs > 0;
+        const hinted = hintedNodes.delete(id);
         entry.attempts.push({
           taskId,
           alias,
@@ -436,6 +477,7 @@ export class Orchestrator {
                 changeOf(outcome, taskId, alias, Object.keys(nodeChecks)),
               );
             lessons.usage(entry.suggested, true);
+            if (repair) lessons.repair(hinted, true);
             delete entry.challenge;
             delete entry.suggested;
             save('node.integrated', {
@@ -472,6 +514,7 @@ export class Orchestrator {
             );
           else lessons.followedBy(previous, current);
           lessons.usage(entry.suggested, false);
+          if (repair) lessons.repair(hinted, false);
           if (current) entry.challenge = current;
           else delete entry.challenge;
           delete entry.suggested;
@@ -509,6 +552,8 @@ export class Orchestrator {
           : { text: '', suggested: [] };
         if (hint.suggested.length) entry.suggested = hint.suggested;
         else delete entry.suggested;
+        if (hint.text) hintedNodes.add(entry.node.id);
+        else hintedNodes.delete(entry.node.id);
         return [
           'You are working on part of a larger XVANT task.',
           '',
@@ -632,6 +677,10 @@ export class Orchestrator {
         challenges: Map<string, string>;
         change: ReturnType<typeof changeOf>;
         suggested: string[];
+        /** Whether the fix prompt carried lessons. */
+        hinted: boolean;
+        /** Checks the fix was meant to repair; only the combined fix has them. */
+        failing?: string[];
       };
       let pendingFix: Pending | null = null;
       let pendingReviewFix: Pending | null = null;
@@ -672,6 +721,10 @@ export class Orchestrator {
             );
             lessons.resolve(unsolved, 'not_solved_by', change);
             lessons.usage(fix.suggested, !unsolved.length);
+            lessons.repair(
+              fix.hinted,
+              (fix.failing ?? []).every((check) => passed.includes(check)),
+            );
             pendingFix = null;
           }
           const failures = failing.map(
@@ -688,7 +741,11 @@ export class Orchestrator {
             if (id) checkChallenges.set(f.id, id);
           });
           save('graph.checked', { head, checks: state.checks });
-          if (!failing.length) break;
+          if (!failing.length) {
+            // Node repairs were recorded before the checks ran on the result.
+            lessons.verify(passed);
+            break;
+          }
           if (fixes >= maxRepairs) {
             state.phase = 'failed';
             state.reason =
@@ -734,14 +791,14 @@ export class Orchestrator {
               challenges: checkChallenges,
               change: changeOf(outcome, taskId, fixer.alias, []),
               suggested: fixHint.suggested,
+              hinted: Boolean(fixHint.text),
+              failing: failing.map((f) => f.id),
             };
           // An unknown outcome says nothing about whether the hints helped.
-          else if (
-            outcome.status !== 'unknown' &&
-            outcome.status !== 'cancelled' &&
-            !needsOperator(outcome)
-          )
+          else if (judged(outcome)) {
             lessons.usage(fixHint.suggested, false);
+            lessons.repair(Boolean(fixHint.text), false);
+          }
           save('graph.fix', {
             taskId,
             alias: fixer.alias,
@@ -876,6 +933,7 @@ export class Orchestrator {
                   change,
                 );
               lessons.usage(fix.suggested, verdict.approve);
+              lessons.repair(fix.hinted, verdict.approve);
             }
             pendingReviewFix = null;
             save('graph.reviewed', state.review);
@@ -949,13 +1007,12 @@ export class Orchestrator {
             challenges: findingChallenges,
             change: changeOf(outcome, taskId, fixer.alias, []),
             suggested: reviewHint.suggested,
+            hinted: Boolean(reviewHint.text),
           };
-        else if (
-          outcome.status !== 'unknown' &&
-          outcome.status !== 'cancelled' &&
-          !needsOperator(outcome)
-        )
+        else if (judged(outcome)) {
           lessons.usage(reviewHint.suggested, false);
+          lessons.repair(Boolean(reviewHint.text), false);
+        }
         save('graph.review_fix', {
           taskId,
           alias: fixer.alias,

@@ -86,6 +86,7 @@ const ERRORS = {
   UNAUTHORIZED: 'Your session ended. Start XVANT again from the terminal.',
   INVALID_REPOSITORY: 'That folder is not a Git repository.',
   NO_RUNTIME: 'No supported runtime is installed and signed in.',
+  UNKNOWN_REPOSITORY: 'XVANT has not worked in that repository.',
 };
 const explain = (error) =>
   ERRORS[error.message] ?? 'Request failed: ' + error.message;
@@ -275,10 +276,10 @@ function showComposer() {
   void refreshOverview();
 }
 
-function diffView(text) {
+function diffView(text, label = 'Combined diff') {
   return h(
     'pre',
-    { class: 'diff', tabindex: '0', 'aria-label': 'Combined diff' },
+    { class: 'diff', tabindex: '0', 'aria-label': label },
     ...text.split('\n').map((line) =>
       h(
         'span',
@@ -591,6 +592,289 @@ async function openRun(id, focus = true) {
   void refreshOverview();
 }
 
+// Lessons: the challenge/solution graph of one repository. Every string in it
+// comes from worker or tool output, so it is only ever set as text.
+const lessonsState = {
+  repository: localStorage.getItem('xvant-lessons-repo') ?? '',
+};
+const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+async function forgetLesson(repository, id, reason, what) {
+  const body =
+    'It is hidden here and never suggested again. It stays in the store for audit.';
+  if (!(await confirm('Forget this ' + what + '?', body, 'Forget'))) return;
+  try {
+    await api('/lessons/forget', {
+      method: 'POST',
+      body: JSON.stringify({ repository, id, reason }),
+    });
+    announce('Forgotten.');
+  } catch (error) {
+    announce(explain(error));
+  }
+  await openLessons(false);
+}
+function forgetRow(repository, id, what) {
+  const reason = h('input', {
+    type: 'text',
+    'aria-label': 'Reason for forgetting this ' + what,
+    placeholder: 'Why forget this ' + what + '?',
+    maxlength: 500,
+    autocomplete: 'off',
+  });
+  return h(
+    'div',
+    { class: 'row forget' },
+    reason,
+    h(
+      'button',
+      {
+        type: 'button',
+        class: 'danger',
+        onclick: () => {
+          const why = reason.value.trim();
+          if (why) return forgetLesson(repository, id, why, what);
+          announce('Say why before forgetting.');
+          reason.focus();
+        },
+      },
+      'Forget ' + what,
+    ),
+  );
+}
+function solutionItem(repository, s) {
+  const fix = s.relation === 'solved_by';
+  const what = fix ? 'fix' : 'dead end';
+  return h(
+    'li',
+    { class: 'solution' },
+    h(
+      'p',
+      {},
+      h(
+        'span',
+        { class: 'badge ' + (fix ? 's-passed' : 's-failed') },
+        fix ? 'Fix' : 'Dead end',
+      ),
+      ' ',
+      h(
+        'span',
+        { class: 'badge ' + (s.verified ? 's-passed' : 's-cancelled') },
+        s.verified ? 'Verified' : 'Unverified',
+      ),
+      ' ',
+      h(
+        'span',
+        { class: 'hint' },
+        'linked ' +
+          s.count +
+          '×, suggested ' +
+          s.usage.suggested +
+          ', worked ' +
+          s.usage.succeeded +
+          ', failed ' +
+          s.usage.failed,
+      ),
+    ),
+    h('p', { class: 'wrap' }, s.summary || '(no summary)'),
+    s.files.length
+      ? h('p', { class: 'hint wrap' }, 'Files: ' + s.files.join(', '))
+      : null,
+    s.checks.length
+      ? h('p', { class: 'hint wrap' }, 'Checks: ' + s.checks.join(', '))
+      : null,
+    s.diff
+      ? h(
+          'details',
+          {},
+          h('summary', {}, 'Diff excerpt'),
+          diffView(s.diff, 'Diff excerpt'),
+        )
+      : h('p', { class: 'hint' }, 'No diff recorded.'),
+    forgetRow(repository, s.id, what),
+  );
+}
+function challengeItem(repository, c) {
+  return h(
+    'li',
+    {},
+    h(
+      'details',
+      {},
+      h(
+        'summary',
+        {},
+        h('span', { class: 'wrap' }, c.title),
+        ' ',
+        h(
+          'span',
+          { class: 'hint' },
+          'seen ' +
+            c.occurrences +
+            '×, ' +
+            plural(c.fixes, 'fix', 'fixes') +
+            ', ' +
+            plural(c.deadEnds, 'dead end', 'dead ends'),
+        ),
+      ),
+      c.files.length
+        ? h('p', { class: 'hint wrap' }, 'Files: ' + c.files.join(', '))
+        : null,
+      c.solutions.length
+        ? h(
+            'ul',
+            { class: 'solutions' },
+            ...c.solutions.map((s) => solutionItem(repository, s)),
+          )
+        : h('p', { class: 'empty' }, 'Nothing learned for this yet.'),
+      forgetRow(repository, c.id, 'challenge'),
+    ),
+  );
+}
+async function copyText(text, pre) {
+  try {
+    await navigator.clipboard.writeText(text);
+    announce('Copied.');
+  } catch {
+    const range = document.createRange();
+    range.selectNodeContents(pre);
+    getSelection().removeAllRanges();
+    getSelection().addRange(range);
+    announce('Press Ctrl+C to copy the selected text.');
+  }
+}
+function lessonsBody(data) {
+  const mermaid = h(
+    'pre',
+    {
+      class: 'diff wrap',
+      id: 'lessons-mermaid',
+      tabindex: '0',
+      'aria-label': 'Mermaid source',
+    },
+    data.mermaid,
+  );
+  return [
+    h(
+      'section',
+      { 'aria-labelledby': 'lessons-stats-h' },
+      h('h3', { id: 'lessons-stats-h' }, 'Do lessons help?'),
+      h(
+        'pre',
+        {
+          class: 'diff wrap',
+          id: 'lessons-stats',
+          tabindex: '0',
+          'aria-label': 'Lesson stats',
+        },
+        data.stats.text,
+      ),
+    ),
+    h(
+      'section',
+      { 'aria-labelledby': 'lessons-ch-h' },
+      h('h3', { id: 'lessons-ch-h' }, 'Challenges'),
+      data.challenges.length
+        ? h(
+            'ul',
+            { class: 'lessons', id: 'lessons-list' },
+            ...data.challenges.map((c) => challengeItem(data.repository, c)),
+          )
+        : h(
+            'p',
+            { class: 'empty' },
+            'No lessons recorded for this repository yet.',
+          ),
+      data.totalChallenges > data.challenges.length
+        ? h(
+            'p',
+            { class: 'hint' },
+            'Showing the newest ' +
+              data.challenges.length +
+              ' of ' +
+              data.totalChallenges +
+              '.',
+          )
+        : null,
+    ),
+    h(
+      'section',
+      { 'aria-labelledby': 'lessons-mm-h' },
+      h('h3', { id: 'lessons-mm-h' }, 'Mermaid source'),
+      h(
+        'p',
+        { class: 'hint' },
+        'Paste into any Mermaid renderer to draw the graph.',
+      ),
+      h(
+        'div',
+        { class: 'actions' },
+        h(
+          'button',
+          { type: 'button', onclick: () => copyText(data.mermaid, mermaid) },
+          'Copy Mermaid',
+        ),
+      ),
+      mermaid,
+    ),
+  ];
+}
+async function openLessons(focus = true) {
+  view.root = null;
+  const { repositories } = await api('/lessons/repositories');
+  const paths = repositories.map((r) => r.path);
+  if (!paths.includes(lessonsState.repository))
+    lessonsState.repository = paths[0] ?? '';
+  const select = h(
+    'select',
+    { id: 'lessons-repo' },
+    ...paths.map((p) =>
+      h('option', { value: p, selected: p === lessonsState.repository }, p),
+    ),
+  );
+  select.addEventListener('change', () => {
+    lessonsState.repository = select.value;
+    localStorage.setItem('xvant-lessons-repo', select.value);
+    void openLessons(false);
+  });
+  const body = h('div', { id: 'lessons-body' });
+  $('main').replaceChildren(
+    h(
+      'article',
+      { 'aria-labelledby': 'lessons-title' },
+      h(
+        'h2',
+        { class: 'title', id: 'lessons-title', tabindex: '-1' },
+        'Lessons',
+      ),
+      h(
+        'p',
+        { class: 'hint' },
+        'What went wrong in earlier runs on a repository, and what fixed it. Read-only except Forget.',
+      ),
+      paths.length
+        ? [h('label', { for: 'lessons-repo' }, 'Repository'), select, body]
+        : h(
+            'p',
+            { class: 'empty' },
+            'No repositories yet. Start a run and its lessons will appear here.',
+          ),
+    ),
+  );
+  if (focus) $('lessons-title').focus();
+  void refreshOverview();
+  if (!paths.length) return;
+  try {
+    const data = await api(
+      '/lessons?repository=' + encodeURIComponent(lessonsState.repository),
+    );
+    body.replaceChildren(...lessonsBody(data));
+  } catch (error) {
+    body.replaceChildren(
+      h('p', { class: 'notice error', role: 'alert' }, explain(error)),
+    );
+  }
+}
+
 let cursor = 0;
 let pending;
 function listen() {
@@ -612,6 +896,9 @@ function listen() {
 }
 
 $('new-run').addEventListener('click', showComposer);
+$('open-lessons').addEventListener('click', () =>
+  openLessons().catch((error) => announce(explain(error))),
+);
 $('stop-all').addEventListener('click', async () => {
   if (
     !(await confirm(
