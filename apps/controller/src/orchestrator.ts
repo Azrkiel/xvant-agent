@@ -28,6 +28,8 @@ export interface WorkerSpec {
   runtimeKind: 'codex' | 'claude' | 'opencode' | 'native-local';
   quotaGroupId: string;
   roles: readonly ('worker' | 'reviewer' | 'planner')[];
+  /** Prefer this worker for automatic review routing after eligibility checks. */
+  preferredReviewer?: boolean;
   /** Model for this worker's turns; absent means its runtime's model. */
   model?: string;
   /** The strongest work this worker should implement; absent means `standard`. */
@@ -374,6 +376,9 @@ export class Orchestrator {
         roles: w.roles.filter(
           (r): r is 'worker' | 'reviewer' => r !== 'planner',
         ),
+        ...(w.preferredReviewer !== undefined
+          ? { preferredReviewer: w.preferredReviewer }
+          : {}),
         ...(w.tier ? { tier: w.tier } : {}),
       }));
     try {

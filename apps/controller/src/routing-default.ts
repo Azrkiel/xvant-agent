@@ -95,6 +95,7 @@ export function applyRouting(
       worker.roles = worker.roles.filter((r) => r !== 'planner');
   planner.roles = ['planner', 'reviewer'];
   planner.model = settings.plannerModel;
+  planner.preferredReviewer = true;
   notes.push(planner.alias + ' plans and reviews on ' + settings.plannerModel);
   return notes;
 }
