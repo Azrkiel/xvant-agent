@@ -195,6 +195,97 @@ describe('reviewer independence', () => {
 });
 
 describe('review routing', () => {
+  const reviewPool = (preferred: Partial<RoutableWorker> = {}) => [
+    worker('codex-1', preferred),
+    worker('codex-2', { completed: ['api'] }),
+    worker('claude-1'),
+  ];
+  it('prefers the configured reviewer over an alphabetical tie', () => {
+    const decision = routeNode(
+      task({ role: 'reviewer', dependsOn: ['api'] }),
+      reviewPool({ preferredReviewer: true }),
+      { implementerRuntimes: ['codex', 'claude'] },
+    );
+    expect(decision.alias).toBe('codex-1');
+    expect(decision.reasons).toContain('Preferred reviewer');
+  });
+  it('keeps alphabetical tie-breaking without a preferred reviewer', () => {
+    expect(
+      routeNode(task({ role: 'reviewer', dependsOn: ['api'] }), reviewPool(), {
+        implementerRuntimes: ['codex', 'claude'],
+      }).alias,
+    ).toBe('claude-1');
+  });
+  it('prefers the configured reviewer over a different runtime', () => {
+    expect(
+      routeNode(
+        task({ role: 'reviewer', dependsOn: ['api'] }),
+        reviewPool({ preferredReviewer: true }),
+        { implementerRuntimes: ['codex'] },
+      ).alias,
+    ).toBe('codex-1');
+  });
+  it('prefers the configured reviewer over implementation independence', () => {
+    expect(
+      routeNode(
+        task({ role: 'reviewer', dependsOn: ['api'] }),
+        reviewPool({ preferredReviewer: true, completed: ['api'] }),
+        { implementerRuntimes: ['codex'] },
+      ).alias,
+    ).toBe('codex-1');
+  });
+  it.each<{ override: Partial<RoutableWorker>; reason: string }>([
+    { override: { blocked: true }, reason: 'account blocked' },
+    { override: { healthy: false }, reason: 'unhealthy' },
+    { override: { busy: true }, reason: 'busy' },
+    {
+      override: { roles: ['worker'] },
+      reason: 'role reviewer not configured',
+    },
+  ])('excludes a preferred reviewer when $reason', ({ override, reason }) => {
+    const decision = routeNode(
+      task({ role: 'reviewer' }),
+      reviewPool({ preferredReviewer: true, ...override }),
+      { implementerRuntimes: ['codex', 'claude'] },
+    );
+    expect(decision.alias).toBe('claude-1');
+    expect(decision.excluded).toContainEqual({ alias: 'codex-1', reason });
+  });
+  it('keeps runtime restrictions with a preferred reviewer', () => {
+    const decision = routeNode(
+      task({ role: 'reviewer', assignee: 'claude' }),
+      reviewPool({ preferredReviewer: true }),
+    );
+    expect(decision.alias).toBe('claude-1');
+    expect(decision.excluded).toContainEqual({
+      alias: 'codex-1',
+      reason: 'runtime is not claude',
+    });
+  });
+  it('ignores reviewer preference for implementation', () => {
+    expect(
+      routeNode(task(), reviewPool({ preferredReviewer: true })).alias,
+    ).toBe('claude-1');
+  });
+  it('honours explicit reviewer assignment over preference', () => {
+    expect(
+      routeNode(
+        task({ role: 'reviewer', assignee: '@claude-1' }),
+        reviewPool({ preferredReviewer: true }),
+      ).alias,
+    ).toBe('claude-1');
+  });
+  it('waits for an explicitly assigned busy reviewer despite preference', () => {
+    const decision = routeNode(
+      task({ role: 'reviewer', assignee: '@claude-1' }),
+      [
+        worker('codex-1', { preferredReviewer: true }),
+        worker('claude-1', { busy: true }),
+      ],
+    );
+    expect(decision.alias).toBeNull();
+    expect(decision.reasons[0]).toMatch(/busy/);
+  });
   it('prefers a reviewer who implemented nothing, even on a used runtime', () => {
     const decision = routeNode(
       task({ role: 'reviewer' }),
