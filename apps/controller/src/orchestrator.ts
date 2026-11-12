@@ -311,7 +311,12 @@ export class Orchestrator {
       head: integration.head(),
     };
     let turnCount = 0;
-    const turnId = (label: string) => spec.id + '-' + label + '-' + ++turnCount;
+    // Runners derive idempotency keys such as 'create-<id>' that must fit
+    // idSchema's 64 characters. The counter keeps a shortened ID unique.
+    const turnId = (label: string) => {
+      const suffix = '-' + ++turnCount;
+      return (spec.id + '-' + label).slice(0, 57 - suffix.length) + suffix;
+    };
     const busy = new Set<string>();
     const completed = new Map<string, string[]>();
     const worktree = (label: string) =>

@@ -1,9 +1,10 @@
-import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   realpathSync,
   rmSync,
   writeFileSync,
@@ -13,6 +14,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Store } from '../../../packages/storage/src/store.ts';
 import { ArtifactStore } from '../../../packages/storage/src/artifacts.ts';
+import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
 import { writeChunked } from '../../../packages/supervisor/src/index.ts';
 import { Orchestrator, type WorkerSpec } from './orchestrator.ts';
 import { LiveTurnRunner } from './turn-runner.ts';
@@ -149,6 +151,58 @@ it('orchestrates nodes on all three runtimes through their live controllers', as
   });
 });
 
+it('runs a node whose run and node names are as long as the CLI makes them', async () => {
+  const workers: WorkerSpec[] = [
+    {
+      alias: 'claude-1',
+      runtimeKind: 'claude',
+      quotaGroupId: 'claude',
+      roles: ['worker'],
+    },
+  ];
+  const runner = new LiveTurnRunner(
+    store,
+    objects,
+    workers,
+    {
+      claude: {
+        executable: process.execPath,
+        prefixArgs: [fixture('claude-live-peer.mjs'), 'write'],
+      },
+    },
+    { timeoutMs: 20000 },
+  );
+  const nodes = ['accepted-versions', 'n'.repeat(64)].map((id, i) => ({
+    id,
+    title: id,
+    objective:
+      'Create a file named f' +
+      i +
+      '.txt in the current directory whose entire content is the single line: ok. Do not change anything else.',
+    acceptanceCriteria: ['the file exists'],
+    assignee: '@claude-1',
+    writablePaths: ['f' + i + '.txt'],
+  }));
+  const state = await new Orchestrator(store, runner, workers, {
+    stateRoot: join(root, 'runs'),
+  }).run({
+    id: 'x261102051059-make-a-version-mismatch-',
+    projectId: 'p',
+    repository: repo,
+    baseRevision: 'main',
+    objective: 'Create two files',
+    acceptanceCriteria: ['both exist'],
+    checks: {},
+    review: false,
+    maxActive: 1,
+    plan: { summary: 'two files', nodes },
+  });
+  expect(state.reason).toBeUndefined();
+  expect(state.phase).toBe('ready');
+  const taskIds = Object.values(state.nodes).map((n) => n.attempts[0]!.taskId);
+  expect(new Set(taskIds).size).toBe(2);
+});
+
 it('names why a node check failed so the repair prompt can fix it', async () => {
   const workers: WorkerSpec[] = [
     {
@@ -207,6 +261,121 @@ it('names why a node check failed so the repair prompt can fix it', async () => 
     },
   });
   expect(repair.status).toBe('accepted');
+});
+
+describe('read-only search tools on external runtimes', () => {
+  const peers = {
+    codex: [fixture('codex-live-peer.mjs'), 'write'],
+    claude: [fixture('claude-live-peer.mjs'), 'write'],
+    opencode: [fixture('opencode-cli.mjs'), 'tools'],
+  } as const;
+  const failure = 'Checks failed: unit\nTypeError: parse is not a function';
+  const learn = (scope: string, summary: string) => {
+    const challenge = store.lessons.recordChallenge({
+      projectId: scope,
+      failure,
+      source: 'node',
+      provenance: { graphId: 'g' },
+    });
+    const fix = store.lessons.recordSolution({
+      projectId: scope,
+      summary,
+      files: ['src/parse.js'],
+      diff: '+export { parse };',
+      checks: ['unit'],
+      provenance: { graphId: 'g' },
+    });
+    store.lessons.link(scope, challenge.id, fix.id, 'solved_by');
+  };
+  const search = async (
+    kind: keyof typeof peers,
+    extra: { lessonScope?: string | null } = {},
+  ) => {
+    const alias = kind + '-1';
+    const worker: WorkerSpec = {
+      alias,
+      runtimeKind: kind,
+      quotaGroupId: kind,
+      roles: ['worker'],
+    };
+    const runner = new LiveTurnRunner(
+      store,
+      objects,
+      [worker],
+      {
+        [kind]: {
+          executable: process.execPath,
+          prefixArgs: [...peers[kind]],
+        },
+      },
+      { timeoutMs: 20000 },
+    );
+    const outcome = await runner.run({
+      taskId: 'node-a',
+      projectId: 'p',
+      alias,
+      prompt:
+        'Call lessons_search on the MCP server named xvant for: TypeError: parse is not a function. Save it.',
+      workspace: {
+        path: repo,
+        baseCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo })
+          .toString()
+          .trim(),
+      },
+      checks: {
+        saved: {
+          executable: process.execPath,
+          args: ['-e', "require('node:fs').readFileSync('lessons.json')"],
+        },
+      },
+      ...extra,
+    });
+    return {
+      outcome,
+      seen: JSON.parse(readFileSync(join(repo, 'lessons.json'), 'utf8')) as {
+        tools: string[];
+        result?: unknown;
+      },
+      receipts: store
+        .events(0, 1000)
+        .filter((event) => event.kind === 'tool.receipt')
+        .map(
+          (event) =>
+            event.payload as { tool: string; status: string; taskId: string },
+        ),
+    };
+  };
+  it.each(['codex', 'claude', 'opencode'] as const)(
+    '%s finds only its own repository’s lessons and leaves a receipt',
+    async (kind) => {
+      learn('some-other-repository', 'Fix recorded for repository A');
+      learn(lessonScope(repo), 'Fix recorded for repository B');
+      const { outcome, seen, receipts } = await search(kind);
+      expect(outcome.status).toBe('accepted');
+      // Read-only lookups and nothing that writes.
+      expect(seen.tools).toEqual(['lessons_search', 'memory_search']);
+      const text = JSON.stringify(seen.result);
+      expect(text).toContain('Fix recorded for repository B');
+      expect(text).not.toContain('repository A');
+      expect(receipts).toEqual([
+        expect.objectContaining({
+          tool: 'lessons.search',
+          status: 'succeeded',
+          taskId: 'node-a',
+        }),
+      ]);
+    },
+  );
+  it('offers no lessons tool when the run switched lessons off', async () => {
+    learn(lessonScope(repo), 'Fix recorded for repository B');
+    const { outcome, seen, receipts } = await search('claude', {
+      lessonScope: null,
+    });
+    expect(outcome.status).toBe('accepted');
+    expect(seen.tools).toEqual(['memory_search']);
+    expect(seen.result).toBeUndefined();
+    expect(receipts).toEqual([]);
+  });
 });
 
 it('writes large prompts as bounded UTF-8 pieces', async () => {
