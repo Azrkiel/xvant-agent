@@ -36,7 +36,8 @@ export interface RouteDecision {
  * In a pool with tiers, implementation goes to a worker of the node's tier
  * first. A standard worker may take light work when the light ones are busy;
  * a light worker takes standard work only when no usable standard worker
- * could ever take it.
+ * could ever take it. A worker configured for the tier goes ahead of one that
+ * only defaults to it, so a model chosen for a tier gets that tier's work.
  */
 export function routeNode(
   node: Pick<PlanNode, 'id' | 'role' | 'assignee' | 'dependsOn'> & {
@@ -124,6 +125,13 @@ export function routeNode(
       reasons: ['No eligible worker is idle; waiting'],
       excluded,
     };
+  const reviewHeld = workers.some(
+    (w) =>
+      w.preferredReviewer &&
+      w.roles.includes('reviewer') &&
+      w.healthy &&
+      !w.blocked,
+  );
   const score = (w: RoutableWorker) => {
     let s = 0;
     if (node.dependsOn.some((d) => w.completed.includes(d))) s += 4;
@@ -135,10 +143,18 @@ export function routeNode(
     )
       s += 8;
     // Keep reviewers free of implementation when a plain worker can take it,
-    // so an independent review stays possible.
-    if (node.role === 'worker' && w.roles.includes('reviewer')) s -= 1;
+    // so an independent review stays possible. A usable preferred reviewer
+    // already holds the review, which frees the others to implement.
+    if (
+      node.role === 'worker' &&
+      w.roles.includes('reviewer') &&
+      (w.preferredReviewer || !reviewHeld)
+    )
+      s -= 1;
     // The tier outranks session continuity: it is what keeps cheap work cheap.
     if (tiered && tierOf(w) === wants) s += 6;
+    // A worker configured for this tier goes ahead of one that only defaults to it.
+    if (tiered && w.tier === wants) s += 0.5;
     s -= w.completed.length * 0.01;
     return s;
   };
