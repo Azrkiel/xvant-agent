@@ -35,6 +35,7 @@ const scenarioSchema = z.enum([
   'thread-timeout',
   'native-error',
   'native-retry',
+  'stream-retry',
   'turn-rpc-error',
   'turn-failed',
   'auth-failed',

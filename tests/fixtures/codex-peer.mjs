@@ -124,6 +124,22 @@ input.on('line', (line) => {
         });
         break;
       }
+      if (scenario === 'stream-retry') {
+        send({
+          method: 'error',
+          params: {
+            threadId,
+            turnId: 'turn-1',
+            error: {
+              message: 'fixture error',
+              codexErrorInfo: {
+                responseStreamDisconnected: { httpStatusCode: null },
+              },
+            },
+            willRetry: true,
+          },
+        });
+      }
       if (scenario === 'turn-failed' || scenario === 'auth-failed') {
         complete('failed');
         break;
