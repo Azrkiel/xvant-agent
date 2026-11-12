@@ -83,7 +83,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/adapters/src/codex/transport.test.ts': 20,
               'packages/adapters/src/codex/profile.test.ts': 5,
               'packages/adapters/src/codex/lifecycle.test.ts': 9,
-              'packages/adapters/src/codex/thread.test.ts': 22,
+              'packages/adapters/src/codex/thread.test.ts': 24,
               'tests/codex-process.test.ts': 6,
               'packages/storage/src/providers.test.ts': 41,
               'tests/faults/provider-crash.test.ts': 8,
@@ -93,7 +93,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/core/src/native-acceptance.test.ts': 8,
               'apps/controller/src/native-review.test.ts': 12,
               'tests/faults/native-acceptance.test.ts': 3,
-              'apps/controller/src/codex-offline.test.ts': 34,
+              'apps/controller/src/codex-offline.test.ts': 36,
               'packages/supervisor/src/interactive.test.ts': 3,
               'tests/faults/codex-controller.test.ts': 9,
               'packages/adapters/src/providers/native-stream.test.ts': 34,
@@ -155,10 +155,11 @@ export function phaseSuites(phase: string): Record<string, number> {
           : {}),
         ...(Number(phase) >= 6
           ? {
-              'packages/core/src/scheduler.test.ts': 12,
+              'packages/core/src/scheduler.test.ts': 36,
               'packages/storage/src/integration.test.ts': 4,
-              'apps/controller/src/orchestrator.test.ts': 48,
+              'apps/controller/src/orchestrator.test.ts': 52,
               'apps/controller/src/turn-runner.test.ts': 8,
+              'apps/controller/src/routing-default.test.ts': 7,
             }
           : {}),
         ...(Number(phase) >= 7

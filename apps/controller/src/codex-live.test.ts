@@ -142,7 +142,12 @@ it('stops before any thread when the session is not on the subscription login', 
     .entries('connection')
     .filter((e) => e.direction === 'out')
     .map((e) => e.method);
-  expect(methods).toEqual(['initialize', 'initialized']);
+  // Rejected account metadata can arrive with the initialize reply, before
+  // the initialized notification is sent. Neither ordering may open a thread.
+  expect([['initialize'], ['initialize', 'initialized']]).toContainEqual(
+    methods,
+  );
+  expect(result.auth?.mode).toBe('apikey');
   expect(readFileSync(join(worktree.path, 'README.md'), 'utf8')).toContain(
     'fixture',
   );
