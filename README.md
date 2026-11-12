@@ -1,5 +1,7 @@
 # XVANT
 
+For the always-on autonomous project manager roadmap, read the [overall execution plan](docs/autonomy/README.md) and its detailed agent subplans.
+
 Original local agent harness. Phase 2 adds durable SQLite state, supervised simulated workers, process checks, an authenticated loopback API, and verified snapshots. The default demos make no model calls; the explicitly approved OpenCode live probe below does.
 
 ## Run

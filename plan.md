@@ -1,3 +1,5 @@
+> **Current autonomous-agent roadmap:** Start with [docs/autonomy/README.md](docs/autonomy/README.md), then read the assigned detailed subplan. The record below is historical; its checkout paths, resume instructions, and status claims are not the current execution plan.
+
 # XVANT plan
 
 Updated 2026-10-03. The [detailed implementation plan](docs/plans/2026-09-26-xvant-implementation-plan.md) owns the phased backlog.
