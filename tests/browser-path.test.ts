@@ -20,3 +20,7 @@ it('retains system discovery when there is no explicit registration', () => {
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   );
 });
+
+it('A00 controlled failing fixture remains a real failure', () => {
+  expect('controlled failure').toBe('passed');
+});
