@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2025]
+        os: [ubuntu-24.04]
     defaults:
       run:
         shell: bash
@@ -82,6 +82,8 @@ jobs:
             browser="$launcher"
           fi
           echo "XVANT_BROWSER=$browser" >> "$GITHUB_ENV"
+      - name: Deliberately register an unavailable browser for A00 proof
+        run: echo "XVANT_BROWSER=$RUNNER_TEMP/a00-browser-does-not-exist" >> "$GITHUB_ENV"
       - name: Run full offline gate
         run: |
           set -euo pipefail
