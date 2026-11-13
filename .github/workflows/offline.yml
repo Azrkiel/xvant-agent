@@ -54,6 +54,10 @@ jobs:
             npm ci --ignore-scripts --no-audit --no-fund
             node --input-type=module -e 'import Database from "better-sqlite3"; const db=new Database(":memory:"); console.log(db.prepare("select sqlite_version() version").get()); db.close()'
           } 2>&1 | tee .artifacts/setup.log
+      - name: Use canonical runner temp storage for fixtures
+        run: |
+          set -euo pipefail
+          node --input-type=module -e 'import {appendFileSync,mkdirSync,realpathSync} from "node:fs"; import {join} from "node:path"; const path=join(process.env.RUNNER_TEMP,"xvant-fixtures"); mkdirSync(path,{recursive:true}); const canonical=realpathSync.native(path); for(const key of ["TMP","TEMP","TMPDIR"]) appendFileSync(process.env.GITHUB_ENV,key+"="+canonical+"\n"); console.log("Fixture temp: "+canonical)' 2>&1 | tee -a .artifacts/setup.log
       - name: Install Linux init and browser dependencies
         if: runner.os == 'Linux'
         run: |
@@ -86,6 +90,11 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/runner-preflight.mjs 2>&1 | tee .artifacts/runner-preflight.log
+      - name: Check Windows durable journal deadline before the full gate
+        if: runner.os == 'Windows'
+        run: |
+          set -euo pipefail
+          node node_modules/vitest/vitest.mjs run packages/storage/src/providers.test.ts -t 'bounds journal growth and poisons the connection at the limit' 2>&1 | tee .artifacts/journal-preflight.log
       - name: Run full offline gate
         run: |
           set -euo pipefail

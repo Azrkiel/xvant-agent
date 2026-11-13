@@ -8,8 +8,9 @@ export default defineConfig({
     ],
     // Tests that spawn Git or child processes take several seconds on a loaded Windows host.
     testTimeout: 15000,
-    // Bound concurrent process-heavy suites; Windows startup otherwise exhausts deadlines.
-    maxWorkers: 2,
+    // Hosted Windows has slower durable I/O. Serialize suites rather than
+    // weakening the journal/death-test deadlines or durability settings.
+    maxWorkers: process.platform === 'win32' ? 1 : 2,
     coverage: {
       provider: 'v8',
       include: [
