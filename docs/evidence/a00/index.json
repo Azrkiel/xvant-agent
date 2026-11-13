@@ -557,6 +557,334 @@
         "runUrl": "https://github.com/Azrkiel/xvant-agent/actions/runs/43368644128",
         "artifactRetentionDays": 30
       }
+    },
+    {
+      "id": "ci-windows-browser-failed",
+      "classification": "offline",
+      "result": "failed",
+      "sourceRevision": "6e5fbffb23c0765b2b3b8c4dd0d4d1dd41678c8a",
+      "sourceUrl": "https://github.com/Azrkiel/xvant-agent/commit/6e5fbffb23c0765b2b3b8c4dd0d4d1dd41678c8a",
+      "sourceContentHash": "5bc38301302e0d84593777fba1be50baa7073d35159d21eb7b629baf57ab4fa5",
+      "sourceHashScope": "All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.",
+      "receipt": "ci-windows-browser-failed.json",
+      "archive": "ci-windows-browser-failed.tar.gz",
+      "archiveSha256": "b22a8a294e389aaffa5e40e7d811aff39130c3871fbface7739b19fc03e01611",
+      "bundleId": "G10-20261113T045708715Z-5bc38301302e",
+      "bundleIntegrity": "complete",
+      "generatedAt": "2026-11-13T04:57:08.715Z",
+      "runtime": {
+        "node": "v24.21.0",
+        "npm": "npm/12.0.2 node/v24.21.0 win32 x64 workspaces/false ci/github-actions/dotcom-hosted",
+        "git": "git version 2.56.0.windows.4"
+      },
+      "host": {
+        "os": "win32 10.0.26100",
+        "name": "runnervmm7ud1"
+      },
+      "commands": [
+        "npm ci --ignore-scripts --no-audit --no-fund",
+        "npm run gate -- --phase 10 --offline"
+      ],
+      "checksRun": 27,
+      "testReport": {
+        "success": true,
+        "numTotalTests": 1441,
+        "numPassedTests": 1441,
+        "numFailedTests": 0,
+        "numPendingTests": 0,
+        "numTodoTests": 0,
+        "numFailedTestSuites": 0
+      },
+      "coverageSummaryRetained": true,
+      "failure": "Browser fixture failed",
+      "limitations": [
+        "This report qualifies only its recorded host and platform; other CI jobs need their own reports.",
+        "Simulation fixtures do not qualify provider protocols, subscriptions, or real coding ability.",
+        "Process supervision is trusted-local only. No hostile-code, filesystem, network, or escaped-descendant containment is qualified.",
+        "Linux and Windows qualification are independent; this receipt is not a live-provider or unattended-operation qualification."
+      ],
+      "ci": {
+        "repository": "Azrkiel/xvant-agent",
+        "runId": "43368639732",
+        "runAttempt": "1",
+        "event": "push",
+        "eventRevision": "6e5fbffb23c0765b2b3b8c4dd0d4d1dd41678c8a",
+        "expectedRevision": "6e5fbffb23c0765b2b3b8c4dd0d4d1dd41678c8a",
+        "job": "offline",
+        "runnerOS": "Windows",
+        "runnerArch": "X64",
+        "runUrl": "https://github.com/Azrkiel/xvant-agent/actions/runs/43368639732",
+        "artifactRetentionDays": 30
+      }
+    },
+    {
+      "id": "readiness-source-changed",
+      "classification": "offline",
+      "result": "failed",
+      "sourceRevision": "b56cab6fc797df20693c613bc594127f0882dcbe",
+      "sourceUrl": "https://github.com/Azrkiel/xvant-agent/commit/b56cab6fc797df20693c613bc594127f0882dcbe",
+      "sourceContentHash": "55cfc32ce18e8909df20c8c922cb6e281f2f410969a63530b008f795802b14c7",
+      "sourceHashScope": "All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.",
+      "receipt": "readiness-source-changed.json",
+      "archive": "readiness-source-changed.tar.gz",
+      "archiveSha256": "d93f15749a77e4c932488856e178faa57b2a1221753eebf4eb7e67256aad40d1",
+      "bundleId": "G10-20261113T051659507Z-55cfc32ce18e",
+      "bundleIntegrity": "complete",
+      "generatedAt": "2026-11-13T05:16:59.507Z",
+      "runtime": {
+        "node": "v24.21.0",
+        "npm": "npm/12.0.2 node/v24.21.0 linux x64 workspaces/false",
+        "git": "git version 2.52.0"
+      },
+      "host": {
+        "os": "linux 6.18.57",
+        "name": "bdcd31fd86ef"
+      },
+      "commands": [
+        "npm ci --ignore-scripts --no-audit --no-fund",
+        "npm run gate -- --phase 10 --offline"
+      ],
+      "checksRun": 31,
+      "testReport": {
+        "success": true,
+        "numTotalTests": 1444,
+        "numPassedTests": 1444,
+        "numFailedTests": 0,
+        "numPendingTests": 0,
+        "numTodoTests": 0,
+        "numFailedTestSuites": 0
+      },
+      "coverageSummaryRetained": true,
+      "failure": "Source changed during verification",
+      "limitations": [
+        "This report qualifies only its recorded host and platform; other CI jobs need their own reports.",
+        "Simulation fixtures do not qualify provider protocols, subscriptions, or real coding ability.",
+        "Process supervision is trusted-local only. No hostile-code, filesystem, network, or escaped-descendant containment is qualified.",
+        "Linux and Windows qualification are independent; this receipt is not a live-provider or unattended-operation qualification."
+      ]
+    },
+    {
+      "id": "readiness-linux-local",
+      "classification": "offline",
+      "result": "passed",
+      "sourceRevision": "febbb5f17515606886c6caec91005f9b3431ec55",
+      "sourceUrl": "https://github.com/Azrkiel/xvant-agent/commit/febbb5f17515606886c6caec91005f9b3431ec55",
+      "sourceContentHash": "e2c5a5bfd0bb20d5f298d126919deb52de924f0092c56d6e2687b26fc0d21127",
+      "sourceHashScope": "All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.",
+      "receipt": "readiness-linux-local.json",
+      "archive": "readiness-linux-local.tar.gz",
+      "archiveSha256": "8eb1939d71cee5b41b0079b6fd8f0c2767306bcb44b3d9aa60b1b0f5e72e45a4",
+      "bundleId": "G10-20261113T052113363Z-e2c5a5bfd0bb",
+      "bundleIntegrity": "complete",
+      "generatedAt": "2026-11-13T05:21:13.363Z",
+      "runtime": {
+        "node": "v24.21.0",
+        "npm": "npm/12.0.2 node/v24.21.0 linux x64 workspaces/false",
+        "git": "git version 2.52.0"
+      },
+      "host": {
+        "os": "linux 6.18.57",
+        "name": "bdcd31fd86ef"
+      },
+      "commands": [
+        "npm ci --ignore-scripts --no-audit --no-fund",
+        "npm run gate -- --phase 10 --offline"
+      ],
+      "checksRun": 31,
+      "testReport": {
+        "success": true,
+        "numTotalTests": 1444,
+        "numPassedTests": 1444,
+        "numFailedTests": 0,
+        "numPendingTests": 0,
+        "numTodoTests": 0,
+        "numFailedTestSuites": 0
+      },
+      "coverageSummaryRetained": true,
+      "failure": null,
+      "limitations": [
+        "This report qualifies only its recorded host and platform; other CI jobs need their own reports.",
+        "Simulation fixtures do not qualify provider protocols, subscriptions, or real coding ability.",
+        "Process supervision is trusted-local only. No hostile-code, filesystem, network, or escaped-descendant containment is qualified.",
+        "Linux and Windows qualification are independent; this receipt is not a live-provider or unattended-operation qualification."
+      ]
+    },
+    {
+      "id": "ci-linux-readiness",
+      "classification": "offline",
+      "result": "passed",
+      "sourceRevision": "febbb5f17515606886c6caec91005f9b3431ec55",
+      "sourceUrl": "https://github.com/Azrkiel/xvant-agent/commit/febbb5f17515606886c6caec91005f9b3431ec55",
+      "sourceContentHash": "e2c5a5bfd0bb20d5f298d126919deb52de924f0092c56d6e2687b26fc0d21127",
+      "sourceHashScope": "All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.",
+      "receipt": "ci-linux-readiness.json",
+      "archive": "ci-linux-readiness.tar.gz",
+      "archiveSha256": "189e0a8c0dd016da3e86cc9988a34b0503aeabb97afdd83317d68e2d291875cd",
+      "bundleId": "G10-20261113T051922595Z-e2c5a5bfd0bb",
+      "bundleIntegrity": "complete",
+      "generatedAt": "2026-11-13T05:19:22.595Z",
+      "runtime": {
+        "node": "v24.21.0",
+        "npm": "npm/12.0.2 node/v24.21.0 linux x64 workspaces/false ci/github-actions/dotcom-hosted",
+        "git": "git version 2.56.0"
+      },
+      "host": {
+        "os": "linux 7.0.0-1017-azure",
+        "name": "runnervm7aw5e"
+      },
+      "commands": [
+        "npm ci --ignore-scripts --no-audit --no-fund",
+        "npm run gate -- --phase 10 --offline"
+      ],
+      "checksRun": 31,
+      "testReport": {
+        "success": true,
+        "numTotalTests": 1444,
+        "numPassedTests": 1444,
+        "numFailedTests": 0,
+        "numPendingTests": 0,
+        "numTodoTests": 0,
+        "numFailedTestSuites": 0
+      },
+      "coverageSummaryRetained": true,
+      "failure": null,
+      "limitations": [
+        "This report qualifies only its recorded host and platform; other CI jobs need their own reports.",
+        "Simulation fixtures do not qualify provider protocols, subscriptions, or real coding ability.",
+        "Process supervision is trusted-local only. No hostile-code, filesystem, network, or escaped-descendant containment is qualified.",
+        "Linux and Windows qualification are independent; this receipt is not a live-provider or unattended-operation qualification."
+      ],
+      "ci": {
+        "repository": "Azrkiel/xvant-agent",
+        "runId": "43371112543",
+        "runAttempt": "1",
+        "event": "pull_request",
+        "eventRevision": "1561cad4574e0c5a42c404e94dced736e7c1420a",
+        "expectedRevision": "febbb5f17515606886c6caec91005f9b3431ec55",
+        "job": "offline",
+        "runnerOS": "Linux",
+        "runnerArch": "X64",
+        "runUrl": "https://github.com/Azrkiel/xvant-agent/actions/runs/43371112543",
+        "artifactRetentionDays": 30
+      }
+    },
+    {
+      "id": "ci-windows-readiness",
+      "classification": "offline",
+      "result": "passed",
+      "sourceRevision": "febbb5f17515606886c6caec91005f9b3431ec55",
+      "sourceUrl": "https://github.com/Azrkiel/xvant-agent/commit/febbb5f17515606886c6caec91005f9b3431ec55",
+      "sourceContentHash": "e2c5a5bfd0bb20d5f298d126919deb52de924f0092c56d6e2687b26fc0d21127",
+      "sourceHashScope": "All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.",
+      "receipt": "ci-windows-readiness.json",
+      "archive": "ci-windows-readiness.tar.gz",
+      "archiveSha256": "7b636e83931d3af9b2373b7e92f339c16ec1ef7118605901be1bc0dd1da8c694",
+      "bundleId": "G10-20261113T051956681Z-e2c5a5bfd0bb",
+      "bundleIntegrity": "complete",
+      "generatedAt": "2026-11-13T05:19:56.681Z",
+      "runtime": {
+        "node": "v24.21.0",
+        "npm": "npm/12.0.2 node/v24.21.0 win32 x64 workspaces/false ci/github-actions/dotcom-hosted",
+        "git": "git version 2.56.0.windows.4"
+      },
+      "host": {
+        "os": "win32 10.0.26100",
+        "name": "runnervmm7ud1"
+      },
+      "commands": [
+        "npm ci --ignore-scripts --no-audit --no-fund",
+        "npm run gate -- --phase 10 --offline"
+      ],
+      "checksRun": 31,
+      "testReport": {
+        "success": true,
+        "numTotalTests": 1444,
+        "numPassedTests": 1444,
+        "numFailedTests": 0,
+        "numPendingTests": 0,
+        "numTodoTests": 0,
+        "numFailedTestSuites": 0
+      },
+      "coverageSummaryRetained": true,
+      "failure": null,
+      "limitations": [
+        "This report qualifies only its recorded host and platform; other CI jobs need their own reports.",
+        "Simulation fixtures do not qualify provider protocols, subscriptions, or real coding ability.",
+        "Process supervision is trusted-local only. No hostile-code, filesystem, network, or escaped-descendant containment is qualified.",
+        "Linux and Windows qualification are independent; this receipt is not a live-provider or unattended-operation qualification."
+      ],
+      "ci": {
+        "repository": "Azrkiel/xvant-agent",
+        "runId": "43371112543",
+        "runAttempt": "1",
+        "event": "pull_request",
+        "eventRevision": "1561cad4574e0c5a42c404e94dced736e7c1420a",
+        "expectedRevision": "febbb5f17515606886c6caec91005f9b3431ec55",
+        "job": "offline",
+        "runnerOS": "Windows",
+        "runnerArch": "X64",
+        "runUrl": "https://github.com/Azrkiel/xvant-agent/actions/runs/43371112543",
+        "artifactRetentionDays": 30
+      }
+    },
+    {
+      "id": "ci-windows-readiness-repeat",
+      "classification": "offline",
+      "result": "passed",
+      "sourceRevision": "febbb5f17515606886c6caec91005f9b3431ec55",
+      "sourceUrl": "https://github.com/Azrkiel/xvant-agent/commit/febbb5f17515606886c6caec91005f9b3431ec55",
+      "sourceContentHash": "e2c5a5bfd0bb20d5f298d126919deb52de924f0092c56d6e2687b26fc0d21127",
+      "sourceHashScope": "All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.",
+      "receipt": "ci-windows-readiness-repeat.json",
+      "archive": "ci-windows-readiness-repeat.tar.gz",
+      "archiveSha256": "eb4827a1b3fd0fabfc9ae2d382595ee077b5acbc3cd9aec458bc18ebc26fa522",
+      "bundleId": "G10-20261113T051947508Z-e2c5a5bfd0bb",
+      "bundleIntegrity": "complete",
+      "generatedAt": "2026-11-13T05:19:47.508Z",
+      "runtime": {
+        "node": "v24.21.0",
+        "npm": "npm/12.0.2 node/v24.21.0 win32 x64 workspaces/false ci/github-actions/dotcom-hosted",
+        "git": "git version 2.56.0.windows.4"
+      },
+      "host": {
+        "os": "win32 10.0.26100",
+        "name": "runnervmm7ud1"
+      },
+      "commands": [
+        "npm ci --ignore-scripts --no-audit --no-fund",
+        "npm run gate -- --phase 10 --offline"
+      ],
+      "checksRun": 31,
+      "testReport": {
+        "success": true,
+        "numTotalTests": 1444,
+        "numPassedTests": 1444,
+        "numFailedTests": 0,
+        "numPendingTests": 0,
+        "numTodoTests": 0,
+        "numFailedTestSuites": 0
+      },
+      "coverageSummaryRetained": true,
+      "failure": null,
+      "limitations": [
+        "This report qualifies only its recorded host and platform; other CI jobs need their own reports.",
+        "Simulation fixtures do not qualify provider protocols, subscriptions, or real coding ability.",
+        "Process supervision is trusted-local only. No hostile-code, filesystem, network, or escaped-descendant containment is qualified.",
+        "Linux and Windows qualification are independent; this receipt is not a live-provider or unattended-operation qualification."
+      ],
+      "ci": {
+        "repository": "Azrkiel/xvant-agent",
+        "runId": "43371106442",
+        "runAttempt": "1",
+        "event": "push",
+        "eventRevision": "febbb5f17515606886c6caec91005f9b3431ec55",
+        "expectedRevision": "febbb5f17515606886c6caec91005f9b3431ec55",
+        "job": "offline",
+        "runnerOS": "Windows",
+        "runnerArch": "X64",
+        "runUrl": "https://github.com/Azrkiel/xvant-agent/actions/runs/43371106442",
+        "artifactRetentionDays": 30
+      }
     }
   ],
   "windowsPathDiagnostic": {

@@ -139,3 +139,14 @@ route, for example `node scripts/live-gate.mjs --phase 03 --fixture roster
 --approve-live --concurrency 3`. That command uses real accounts and is **not**
 a step to execute as part of A00. Preserve its separately classified receipt;
 fixture passes cannot substitute for it.
+
+## Browser startup diagnostics
+
+CI invokes the standalone browser fixture before the full gate so setup failures
+are reported early. This is an additional check, not a substitute for the gate.
+The tool waits for a page target within its existing 15-second launch deadline:
+a `DevToolsActivePort` file alone does not mean Chromium has registered its
+initial page. It never relaunches a failed browser or repeats navigation as a
+retry. Protocol errors and readiness deadlines fail closed; profiles and owned
+processes must still be removed. The fixture includes a bounded, redacted
+underlying error message when invocation fails.

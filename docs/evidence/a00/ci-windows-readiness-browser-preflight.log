@@ -1,0 +1,1 @@
+{"classification":"offline","browser":"chrome.exe","status":"succeeded","code":null,"diagnostic":null,"title":"XVANT fixture","httpStatus":200,"textSeen":true,"consoleErrors":["fixture console error"],"blockedRequests":["http://example.com/leak"],"screenshotPng":true,"screenshotBytes":8491,"profileRemoved":true,"activeCount":0}

@@ -1,156 +1,160 @@
 # A00 handoff
 
-Status: in progress. Browser readiness follow-up is awaiting fresh CI. No prerequisite milestones.
-The PR targets `codex/autonomous-agent-plan` and must remain unmerged for owner
-review. A01 has not begun.
+Status: complete. Work packages 1–3 delivered; no prerequisite milestones.
+[PR #10](https://github.com/Azrkiel/xvant-agent/pull/10) targets
+`codex/autonomous-agent-plan`. The implementation branch is
+`codex/a00-reproducible-checks-ci`. The PR remains unmerged; A01 has not begun.
 
 ## Implementation and provenance
 
 - Plan baseline: [`71b7b4e`](https://github.com/Azrkiel/xvant-agent/commit/71b7b4e7559eaa9607a45aabcdb841faaccf404b).
-- Work package 1: [`3fdf146`](https://github.com/Azrkiel/xvant-agent/commit/3fdf1464f7e0b95ee2f34a26d113a6b98f91841e),
-  clean clone/install, runner diagnosis, full baseline gate and preserved receipts.
-- Work package 2: [`7bb00ad`](https://github.com/Azrkiel/xvant-agent/commit/7bb00ada15cf912ed4cbcb2cd367ffa2328f0db7),
-  CI, source/bundle admission, fail-closed browser selection, complete suite floors,
-  and failed-run artifacts.
-- Runner diagnosis: [`29101ca`](https://github.com/Azrkiel/xvant-agent/commit/29101ca629fb110a864779ca6c836ec0d97160d8),
-  retained Git/Node identity preflight; Windows failed early with its path spellings.
-- Runner correction: [`6e5fbff`](https://github.com/Azrkiel/xvant-agent/commit/6e5fbffb23c0765b2b3b8c4dd0d4d1dd41678c8a),
-  canonical temp storage and one Windows worker, with unchanged behavioral checks.
-- Work package 3: this evidence/index and final documentation commit, reviewed in
-  [PR #10](https://github.com/Azrkiel/xvant-agent/pull/10).
+- Baseline reproduction: [`3fdf146`](https://github.com/Azrkiel/xvant-agent/commit/3fdf1464f7e0b95ee2f34a26d113a6b98f91841e).
+- CI, complete suite floors, source/bundle admission and fail-closed browser registration:
+  [`7bb00ad`](https://github.com/Azrkiel/xvant-agent/commit/7bb00ada15cf912ed4cbcb2cd367ffa2328f0db7).
+- Hosted-runner diagnosis/correction:
+  [`29101ca`](https://github.com/Azrkiel/xvant-agent/commit/29101ca629fb110a864779ca6c836ec0d97160d8) and
+  [`6e5fbff`](https://github.com/Azrkiel/xvant-agent/commit/6e5fbffb23c0765b2b3b8c4dd0d4d1dd41678c8a).
+- Browser readiness regression/correction:
+  [`b56cab6`](https://github.com/Azrkiel/xvant-agent/commit/b56cab6fc797df20693c613bc594127f0882dcbe).
+- Qualified runtime/CI source:
+  [`febbb5f`](https://github.com/Azrkiel/xvant-agent/commit/febbb5f17515606886c6caec91005f9b3431ec55),
+  also adding the early standalone-browser preflight. Later changes are runner
+  documentation, status and evidence records; final PR checks exercise the
+  submitted head again.
 
 [Runner guide](../../autonomy/a00-runner.md), [evidence index](../README.md),
-[machine-readable observations](index.json), and [retained file checksums](SHA256SUMS).
-Receipts identify the tested commit separately from the source content hash;
-source inventories deliberately exclude `docs/evidence/`. Subsequent status and
-runner-guide edits are documentation changes; the final PR checks exercise the
-submitted head again. Follow the PR checks link for the current head, and the
-pinned run links below for the durable historical observations.
+[machine-readable observations](index.json), [CI jobs/artifacts](ci-jobs.json),
+and [retained file checksums](SHA256SUMS). Each receipt identifies the tested
+commit separately from its source content hash. Source inventories exclude
+`docs/evidence/` to avoid circular evidence hashing; all other indexed and
+nonignored files, including documentation, are inventoried.
 
 ## Acceptance results
 
-| Criterion | Result     | Observed evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| --------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A00-C1    | **Passed** | Fresh clone and empty npm cache installed with `npm ci --ignore-scripts --no-audit --no-fund`; [baseline receipt](baseline-passed.json) and [bundle](baseline-passed.tar.gz): 31 checks / 1,428 tests / 113 suites passed. [Implementation local receipt](implementation-linux-local.json): 31 / 1,441 / 115 passed. Hosted Linux and Windows independently installed and passed the same integrated gate; their qualified receipts are linked below.                                                                                                                                                                                              |
-| A00-C2    | **Partial** | [PR Linux job](https://github.com/Azrkiel/xvant-agent/actions/runs/43367284166/job/131694576532), [receipt](ci-linux-passed.json), [source admission](ci-linux-passed-source-validation.json), [bundle](ci-linux-passed.tar.gz). Actual checkout and receipt revision are `7bb00ada15cf912ed4cbcb2cd367ffa2328f0db7`, not the PR merge SHA. All 31 stages and every required suite are admitted. [Deleted-suite run](https://github.com/Azrkiel/xvant-agent/actions/runs/43367338919) failed even though Vitest itself exited 0 with 1,439 tests; [receipt](ci-missing-suite.json) reports `Missing or reduced suite: tests/release-sign.test.ts`. |
-| A00-C3    | **Passed** | [Deliberate assertion run](https://github.com/Azrkiel/xvant-agent/actions/runs/43367338661) failed: one of 1,442 tests failed, gate exit 1, diagnostics uploaded. [Receipt](ci-failing-fixture.json), [bundle with assertion/stack trace](ci-failing-fixture.tar.gz). [Unavailable-browser run](https://github.com/Azrkiel/xvant-agent/actions/runs/43367338498) failed UI setup and standalone browser exit 2 with `status: unavailable`; [receipt](ci-missing-browser.json), [bundle](ci-missing-browser.tar.gz). All proof jobs were genuinely red, with no `continue-on-error` or retry.                                                       |
-| A00-C4    | **Passed** | [Workflow](../../../.github/workflows/offline.yml) uses `contents: read`, `persist-credentials: false`, no secrets, no provider logins, no `pull_request_target`, and only the offline gate. [Observed token permissions](ci-runner-permissions.log): Contents/Metadata read. Package/browser installation uses public downloads; artifact upload uses GitHub's scoped artifact service, not a repository write credential.                                                                                                                                                                                                                        |
-| A00-C5    | **Partial** | Linux receipts above are independent of Windows qualification. The [runner guide](../../autonomy/a00-runner.md) documents Tini `-s`, OpenSSH, SQLite, and the observed Chromium sandbox setup failure. Process-death/reaping assertions stayed intact. The corrected Windows and Linux jobs each passed 31 checks / 1,441 tests; their independent receipts are recorded below. Neither platform is an unattended/live qualification.                                                                                                                                                                                                              |
-| A00-C6    | **Passed** | [Index](../README.md), [machine index](index.json), source manifests in each bundle, runtime/host details in receipts and setup logs, [job/artifact metadata](ci-jobs.json), durable archives and checksums. Git-tracked evidence survives 30-day Actions artifact expiry. Retained data was checked with the existing secret detector; no private keys, databases, profiles, credentials, or live transcripts are included.                                                                                                                                                                                                                       |
+| Criterion | Result     | Observed command/artifact and outcome                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| --------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A00-C1    | **Passed** | Fresh clone/empty npm cache: `npm ci --ignore-scripts --no-audit --no-fund`, then `npm run gate -- --phase 10 --offline`. [Baseline receipt](baseline-passed.json) and [bundle](baseline-passed.tar.gz): 31 checks, 1,428 tests / 113 suites. [Clean implementation receipt](readiness-linux-local.json), [bundle](readiness-linux-local.tar.gz), [source admission](readiness-linux-local-source-validation.json): 31 checks, 1,444 tests / 115 suites. Fresh hosted Linux and Windows runners independently installed and passed below.                                                                                                                                                                                                                                                                                                        |
+| A00-C2    | **Passed** | [Linux job](https://github.com/Azrkiel/xvant-agent/actions/runs/43371112543/job/131706944811), [Windows job](https://github.com/Azrkiel/xvant-agent/actions/runs/43371112543/job/131706945049), and source admissions [Linux](ci-linux-readiness-ci-summary.json) / [Windows](ci-windows-readiness-ci-summary.json) bind the actual checkout to `febbb5f17515606886c6caec91005f9b3431ec55` and the full content hash. All 31 stages and 115 required suites are admitted. [Deleted-suite run](https://github.com/Azrkiel/xvant-agent/actions/runs/43367338919) failed even though Vitest exited 0 with 1,439 passing tests; [receipt](ci-missing-suite.json) reports the missing signing suite. A [source-changed local receipt](readiness-source-changed.json) also correctly failed after 31 passing stages and is not qualification evidence. |
+| A00-C3    | **Passed** | [Deliberate assertion run](https://github.com/Azrkiel/xvant-agent/actions/runs/43367338661) failed with one of 1,442 tests failing; all 31 stages ran and diagnostics uploaded. [Receipt](ci-failing-fixture.json), [bundle/stack trace](ci-failing-fixture.tar.gz). [Unavailable-browser run](https://github.com/Azrkiel/xvant-agent/actions/runs/43367338498) failed UI setup and the standalone browser with exit 2 / `status: unavailable`; [receipt](ci-missing-browser.json), [bundle](ci-missing-browser.tar.gz). Jobs were genuinely red, with no `continue-on-error` or job reruns.                                                                                                                                                                                                                                                     |
+| A00-C4    | **Passed** | [Workflow](../../../.github/workflows/offline.yml): `contents: read`, `persist-credentials: false`, no secrets/provider logins, no `pull_request_target`, offline commands only. [Observed token permissions](ci-runner-permissions.log): Contents/Metadata read. Public dependency/browser downloads and GitHub's scoped artifact service require no repository write credential or real provider account.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| A00-C5    | **Passed** | Independent Linux and Windows receipts below: each 31 checks / 1,444 tests, coverage passed. Tini `-s`, canonical temp storage, OpenSSH and Chromium requirements are documented and exercised. Windows uses one worker; original deadlines, SQLite durability and process-death assertions remain unchanged. Live/unattended Windows operation is not qualified.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| A00-C6    | **Passed** | Source/runtime/host/command/result links are retained in the index, machine index, receipts, setup logs and immutable bundles. Git-tracked archives survive 30-day Actions artifact expiry. All archive manifests and downloaded ZIP digests were verified. Raw logs/evidence bytes are preserved by Git attributes and the retained files were checked with the existing secret detector. Keys, databases, browser profiles, credentials and live transcripts are excluded.                                                                                                                                                                                                                                                                                                                                                                     |
 
-## Platform and controlled-failure scope
+## Independent platform qualification
 
-Linux baseline: Debian 13.6, recorded Linux kernel/host in
-[host record](baseline-host.json), Node 24.21.0, npm 12.0.2, SQLite 3.53.4,
-Chromium 156.0.8078.79, OpenSSH 10.0p2, Tini 0.19.0. Hosted Linux uses Ubuntu
-24.04 and the locked Playwright browser; exact versions are in
-[setup log](ci-linux-passed-setup.log) and the receipt. The initial Linux local/CI implementation content
-hashes match: `2af9f61170a5b9db3f58078ac59385726e35d32deba5d98550e6626fd5434582`.
+Both qualified jobs tested `febbb5f17515606886c6caec91005f9b3431ec55` and source
+content hash `e2c5a5bfd0bb20d5f298d126919deb52de924f0092c56d6e2687b26fc0d21127`.
 
-Windows: **passed** on Windows Server 2025 / `win32 10.0.26100`, independently
-recorded in the [qualified job](https://github.com/Azrkiel/xvant-agent/actions/runs/43368644128/job/131699034676),
-[receipt](ci-windows-qualified.json), [bundle](ci-windows-qualified.tar.gz),
-[setup](ci-windows-qualified-setup.log), [path probe](ci-windows-qualified-runner-preflight.json),
-and [journal probe](ci-windows-qualified-journal-preflight.log). All 31 checks and
-1,441 tests in 115 suites passed. Node 24.21.0, npm 12.0.2, SQLite 3.53.4,
-Git 2.56.0.windows.4, OpenSSH 10.6p1, Chromium 153.0.8010.12. The journal-limit test
-took approximately 3.04 seconds under coverage, within the original 15-second
-bound (initial failing setup: 31.68 seconds).
+| Platform                          | Observed result                                      | Durable evidence                                                                                                                                                                                                                                        |
+| --------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Linux / Ubuntu 24.04              | 31 checks; 1,444 tests / 115 suites; coverage passed | [Receipt](ci-linux-readiness.json), [bundle](ci-linux-readiness.tar.gz), [setup](ci-linux-readiness-setup.log), [real-browser preflight](ci-linux-readiness-browser-preflight.log)                                                                      |
+| Windows Server 2025 / build 26100 | 31 checks; 1,444 tests / 115 suites; coverage passed | [Receipt](ci-windows-readiness.json), [bundle](ci-windows-readiness.tar.gz), [setup](ci-windows-readiness-setup.log), [real-browser preflight](ci-windows-readiness-browser-preflight.log), [journal probe](ci-windows-readiness-journal-preflight.log) |
 
-The corrected Linux and Windows jobs both tested `6e5fbffb23c0765b2b3b8c4dd0d4d1dd41678c8a`
-and recorded the same source hash:
-`5bc38301302e0d84593777fba1be50baa7073d35159d21eb7b629baf57ab4fa5`.
-[Corrected Linux receipt](ci-linux-qualified.json), [bundle](ci-linux-qualified.tar.gz),
-and [job](https://github.com/Azrkiel/xvant-agent/actions/runs/43368644128/job/131699034967).
-Coverage passed on both platforms: Linux lines 95.55%, branches 89.43%; Windows
-lines 95.58%, branches 89.70%. Detailed function/statement and per-file coverage
-are in the bundled summaries. Final source changes after this revision are
-runner documentation, status/evidence records and evidence byte-preservation
-attributes; CI exercises the final submitted head again.
+Pinned runtime on both hosted platforms: Node **24.21.0**, npm **12.0.2**,
+SQLite **3.53.4**, and locked Playwright Chromium **153.0.8010.12**.
+Linux Git was **2.56.0**; Windows Git **2.56.0.windows.4**. Linux uses Tini
+**0.19.0**; Windows uses its native process supervision. Exact OpenSSH, browser,
+OS and host details remain in each receipt/setup log. Linux coverage: lines
+**95.49%**, branches **89.39%**; Windows: lines **95.52%**, branches **89.66%**.
+Function/statement and per-file thresholds also passed; see bundled summaries.
 
-Controlled failures are separate disposable Linux-only branches based on
-`7bb00ad`. They were never merged into the implementation branch. Reproduce the
-exact mutations with the retained patches:
+The independent [Windows push job](https://github.com/Azrkiel/xvant-agent/actions/runs/43371106442/job/131706922445)
+also passed 31 checks / 1,444 tests: [receipt](ci-windows-readiness-repeat.json),
+[bundle](ci-windows-readiness-repeat.tar.gz), [source admission](ci-windows-readiness-repeat-ci-summary.json).
+Both complete push and PR runs passed on both platforms; their metadata is
+retained in `ci-jobs.json`. Neither was a rerun of a failed job.
+
+The local baseline was Debian 13.6, Node 24.21.0, npm 12.0.2, SQLite 3.53.4,
+Chromium 156.0.8078.79, OpenSSH 10.0p2 and Tini 0.19.0; see
+[host record](baseline-host.json). It used a fresh checkout/cache on the recorded
+cloud host, not a newly provisioned VM. Hosted CI independently supplies fresh
+runners and records each host. Fixture results never establish live provider,
+subscription, hostile-code containment, or unattended-operation readiness.
+
+## Failures, diagnosis and evidence limits
+
+- Initial Linux browser launch failed because the Chromium sandbox helper was
+  owned by `nobody` and user namespaces were unavailable. [Failed receipt](baseline-browser-failed.json),
+  [launch diagnostic](baseline-browser-launch.log), and [bundle](baseline-browser-failed.tar.gz).
+  A documented ephemeral `--no-sandbox` launcher is limited to trusted local
+  fixtures, matching Playwright's Linux fixture setting. Allowed-origin,
+  denied-request, screenshot, profile cleanup and child cleanup checks stay required.
+- Initial Windows setup failed 87 tests. [Receipt](ci-windows-initial-failed.json)
+  and [path probe](ci-windows-path-diagnostic.json) show Node preserving `RUNNER~1`
+  while Git expanded it to `runneradmin`, breaking strict root/scope comparisons.
+  CI uses canonical `RUNNER_TEMP/xvant-fixtures` for `TEMP`, `TMP` and `TMPDIR`,
+  outside the checkout. One Windows worker reduces durable-I/O contention.
+  The 4,096-frame limit, `synchronous=FULL`, original 15-second journal deadline
+  and process-death assertions did not change.
+- The parallel Windows push for `6e5fbff` [failed its browser check](https://github.com/Azrkiel/xvant-agent/actions/runs/43368639732/job/131699032575)
+  although its 1,441 tests and the PR job passed. [Receipt](ci-windows-browser-failed.json)
+  and [bundle](ci-windows-browser-failed.tar.gz) remain retained. Its original
+  generic `TOOL_FAILED` output does not establish the exact failed startup boundary.
+  A delayed-page regression then reproduced a concrete readiness defect in the
+  original code: [red result](browser-readiness-before.log). The correction waits
+  for the initial DevTools page within the existing launch deadline, without
+  relaunching a browser or repeating navigation. Protocol errors and timeout/
+  cleanup still fail. The fixture now records a bounded, redacted underlying error.
+  Subsequent qualification is bound to the corrected source, not inferred from
+  the earlier green job. The historical discarded exception cannot be recovered.
+- A local run was invalidated because its workflow source changed while checks
+  were running. It passed 31 stages / 1,444 tests, then correctly failed with
+  `Source changed during verification`; [receipt](readiness-source-changed.json),
+  [bundle](readiness-source-changed.tar.gz), [log](readiness-source-changed.log).
+  The separate frozen-commit local run passed. No invalidated receipt was admitted.
+
+Negative proofs are separate Linux-only commits based on `7bb00ad`, never merged
+into the implementation branch. Retained patches reproduce the exact mutations:
 [assertion](proof-failing-fixture.patch), [browser](proof-missing-browser.patch),
-[deleted suite](proof-missing-suite.patch). Their source hashes differ by design;
-the failed-job receipts must never be presented as a pass of the submitted source.
-The browser failure has no coverage summary because the UI hook failed; the
-missing-suite run retains its passing test report and coverage but fails gate
-admission. Complete bundle integrity means preserved bytes, not passing behavior.
+[deleted suite](proof-missing-suite.patch). Their source hashes differ by design.
+These unchanged failure paths remain distinct from the corrected source's positive
+qualification. Complete bundle integrity means preserved bytes, not passing tests.
+The browser-negative run has no coverage summary because its UI hook failed;
+the missing-suite run retains passing test JSON/coverage but fails gate admission.
 
-## Design changes, interfaces, migration and rollback
+## Design, interfaces, migration and rollback
 
-The implementation keeps the original gate and all coverage/fault assertions.
-It raises stale suite floors to the observed baseline and adds ten previously
-unlisted existing suites. A regression test requires every checked-in test suite
-in phase 10. New tests add thirteen test cases; no existing test was removed.
-`ci-policy.ts` requires the complete 31-stage roster, source identity, required
-suite counts and structured artifacts. When intentionally adding gate stages or
-tests, update their required manifests in the same reviewed change.
+The original gate, coverage thresholds, process-death checks and ownership/policy
+assertions remain. Suite floors were raised to the observed baseline and ten
+previously omitted existing suites were made required. New regressions add sixteen
+test cases. Every checked-in test suite is required by phase 10. `ci-policy.ts`
+admits the complete 31-stage roster, source identity, suite counts and structured
+artifacts. Intentionally added tests/stages need their required manifests updated
+in the same reviewed change.
 
-The gate clears stale test/coverage/manifest output, captures the source manifest
-before checks, and archives available test JSON/coverage even on failure. CI
-checks a clean source checkout and verifies the exact receipt's immutable bundle.
-Evidence and GitHub job metadata are observations, not autonomous product acceptance.
+The gate clears stale test/coverage/manifest outputs, snapshots source before
+checks, and archives available structured diagnostics even on failure. CI checks
+a clean source checkout, validates the exact immutable bundle, runs read-only
+preflights, retains allowlisted outputs on failure, and bounds job/stage execution.
+There is no mutable project-state cache. Evidence is an observation, not product
+permission or autonomous acceptance.
 
-`XVANT_BROWSER` now registers an authoritative executable; a missing or empty
-registration fails closed. Unset it to restore automatic system discovery.
-Linux CI uses an ephemeral browser launcher with `--no-sandbox` for trusted local
-fixtures, matching Playwright's Linux fixture setting. This is a documented host
-setup decision, not browser/worker isolation qualification; allowed-origin,
-blocked-request, screenshot and cleanup checks are unchanged. A sandbox-capable
-host is the alternative for browser isolation work, which belongs to later scope.
+An explicitly set `XVANT_BROWSER` is now authoritative, including empty/missing
+registrations. Unset it to restore system discovery. Browser startup now waits
+for actual page readiness within the original deadline. Product path/symlink
+checks and persisted lesson identities were preserved; the runner satisfies their
+strict existing contract instead of changing their meaning.
 
-The Windows runner correction is supported by the [initial failed receipt](ci-windows-initial-failed.json)
-and [path probe](ci-windows-path-diagnostic.json): Node preserved `RUNNER~1`, while
-Git expanded it to `runneradmin`, producing different root/scope identities.
-CI configures a canonical `RUNNER_TEMP/xvant-fixtures` for `TEMP`/`TMP`/`TMPDIR`
-and serializes Windows suites to reduce durable-I/O contention. It reruns the
-original journal-limit test before the full gate. Neither `synchronous=FULL`,
-the 4,096-frame limit, the 15-second journal deadline, nor the process-death
-assertions changed. Changing product path comparison or persisted lesson scope
-was avoided because the runner can satisfy their existing strict contract.
+No state/schema/database migration is required. Rollback by reverting the
+milestone implementation/docs commits or keeping the branch unmerged. Keep
+historical evidence labeled as such. No live account, production service, or
+stored user data was changed.
 
-No product state, schema, database or API migration is required. Rollback by
-reverting the milestone's implementation/docs commits, or keep the branch
-unmerged. Existing evidence remains historical and must not be relabeled.
-There is no mutable runtime state or dependency cache in CI to migrate or erase.
+## Remaining limitations and next task
 
-## Remaining limits and next useful task
+Live providers/models/accounts, unattended Windows operation, hostile worker/
+browser isolation, durable daemon/resume/integration behavior and long release
+fault campaigns are **not run / not qualified**. Installation needs public
+network access; offline fixture verification is not an air-gapped install claim.
+Hosted OS packages/images can change; receipts record observed versions. The
+browser launcher is for trusted fixtures and does not supply a production sandbox.
+Finite observed passes do not establish universal absence of startup failures.
 
-- **Not run:** live provider/model calls, real account/subscription qualification,
-  unattended Windows operation, hostile-worker/browser isolation, autonomous
-  daemon/resume/integration behavior, and long-running release fault campaigns.
-- Installation needs public network access. Offline fixture qualification is not
-  an air-gapped installation claim. Hosted runner images and OS packages can
-  change; receipts record the versions actually observed.
-- The clean local baseline used a fresh checkout/cache on the recorded cloud host;
-  it was not a newly provisioned VM. Hosted CI independently supplies fresh runners.
-- The explicit browser launcher is limited to trusted fixtures. It does not grant
-  a production sandbox or permission to run live workers.
-- Actions downloads expire after 30 days; use the repository archives for durable
-  evidence and promote future qualifying receipts before expiry. Archives preserve
-  each run's declared artifacts; temporary databases and browser profiles are excluded.
+Actions artifacts expire after 30 days. Use the repository archives/checksums for
+durable evidence, and promote future qualifying receipts before expiry. Temporary
+databases, keys and profiles are deliberately excluded. The separately authorized
+live qualification route is in the runner guide and was not executed for A00.
 
-Next useful task, after review/merge of A00 and a separately assigned request:
+Next useful task, after A00 review/merge and a separately assigned request:
 **A01 — Project and completion contracts**, starting with its first work package.
-Do not infer permission to begin it from this handoff.
-
-## Browser readiness follow-up
-
-The [parallel Windows push job](https://github.com/Azrkiel/xvant-agent/actions/runs/43368639732/job/131699032575)
-for `6e5fbff` passed all 1,441 tests but failed the standalone browser check.
-[Receipt](ci-windows-browser-failed.json) and [bundle](ci-windows-browser-failed.tar.gz)
-are retained. The original fixture suppressed the underlying error message, so
-that run does not establish which browser startup boundary failed. It must not
-be hidden by the passing PR run.
-
-A deterministic delayed-page regression reproduces a startup defect in the
-original implementation: DevToolsActivePort can exist before a page target is
-registered, but the tool assumed a fixed 50 ms wait was sufficient. The
-[red regression result](browser-readiness-before.log) records that failure.
-The correction waits for readiness within the existing 15-second launch deadline,
-without relaunching the browser or repeating navigation. It preserves terminal
-protocol failures and timeout/cleanup checks. The fixture now records a bounded,
-redacted underlying error message for future diagnosis. Three new regression
-cases raise the required total to 1,444. Fresh full-gate qualification is pending.
+This handoff does not begin A01 or authorize merging this PR.
