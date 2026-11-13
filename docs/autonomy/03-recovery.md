@@ -1,39 +1,66 @@
-# A03 — Recovery, reconciliation, and effect identity
+# A03 — Recovery and reconciliation
 
-Status: planned. Completion prerequisite: A02. Read [the overall plan](README.md) first.
+Status: planned. Completion prerequisites: **A02**.
+Read [the overall plan](README.md) and this subplan before editing.
 
-## Outcome and boundaries
+## Deliverable
 
-After interruption, establish what happened before deciding whether to continue, retry, repair, or block. Preserve the existing rule that unknown outcomes are never blindly replayed. A finite timeout is not proof that a remote action failed.
+After interruption, XVANT establishes what happened and chooses continue, repair, retry, or block without blindly repeating uncertain effects.
 
-Inspect `packages/storage/src/providers.ts`, `packages/storage/src/store.ts`, `packages/storage/src/integration.ts`, provider controllers, and fault fixtures. Existing recovery marks open operations unknown and retains reservations; build evidence-driven reconciliation above that behavior.
+## Start here
 
-## Execution
+Inspect `packages/storage/src/providers.ts`, `packages/storage/src/store.ts`, `packages/storage/src/integration.ts`, `apps/controller/src`, `tests/faults`. These are starting points, not required locations for new code. Verify prerequisite outcomes and current repository instructions before implementing.
 
-1. Define reconciliation observations: definitely not started, owned and running, completed with verifiable artifacts, stopped incomplete, and unresolved. Store provenance, observation time, actor/probe identity, and resulting decision.
-2. Implement adapter-specific probes and recovery capability declarations. Where reliable reattachment is unsupported, observe or terminate the owned environment, verify it stopped, preserve artifacts, then create an explicit new attempt if policy permits.
-3. Track worker identity beyond PID alone: process start identity, execution environment, lease/generation, provider session/turn, and workspace. PID reuse must not authorize killing or trusting another process.
-4. Reconcile Git integration using expected base/head, patch or operation identity, and recorded commit metadata. Cover commit-created/database-update-lost and patch-partially-applied cases without overwriting unrelated work.
-5. Define the reusable external-effect interface: stable correlation key, idempotency capability, lookup/probe, expected versions, and ambiguity outcome. Provide a fake external service now; concrete GitHub integration follows in A08.
-6. Prevent stale effect execution after lease takeover. Couple dispatch to ownership checks, terminate/fence obsolete workers, and use remote conditional operations where supported. If an old in-flight effect cannot be conclusively fenced, block conflicting promotion and reconcile it.
-7. Schedule reconciliation with bounded backoff and deadlines. Release reservations only with sufficient evidence. Give unresolved cases actionable operator information.
+**First useful change:** Classify recovery outcomes. Finish work package 1 before broadening the implementation. Each package can be one or more reviewable PRs.
 
-## Success criteria
+## Work in this order
 
-- **A03-C1:** Every mandatory crash boundary produces one documented recovery classification, never fabricated success.
-- **A03-C2:** Already integrated work is recognized and not applied twice after a database acknowledgment is lost.
-- **A03-C3:** A still-running or unidentifiable worker prevents conflicting dispatch; a stale worker result cannot authorize promotion.
-- **A03-C4:** Lost external responses do not create duplicate observable effects in the idempotent test service.
-- **A03-C5:** A service without reliable deduplication/lookup remains explicitly blocked when its outcome is ambiguous.
-- **A03-C6:** PID reuse, missing artifacts, dirty workspaces, and unexpected Git heads fail safely without deleting user changes.
-- **A03-C7:** A controller restart can resume a reconciled run without resetting its limits or starting the whole project again.
+### Work package 1: Classify recovery outcomes
 
-## Validation and latitude
+Define not-started, owned/running, completed/verifiable, stopped/incomplete, and unresolved observations. Persist probe provenance and decisions. Identify workers by environment/start identity as well as PID.
 
-Inject death before send, after send, after external commit, before receipt persistence, and after receipt persistence. Assert call counts, remote objects, Git history, ownership, and reservations. Include lease takeover while an old worker remains alive.
+**Deliver:** A recovery state table, probe interfaces, and capability declarations.
 
-Choose reconciliation probes and worker attachment strategies based on qualified provider capabilities. It is acceptable to stop and replace a worker when safe continuation is unavailable. It is not acceptable to convert uncertainty into a retry merely to increase completion rate.
+### Work package 2: Recover worker and Git actions
 
-## Deliverables and handoff
+Probe or stop/reconcile owned workers; preserve incomplete artifacts. Recognize integration commits created before database acknowledgment. Refuse unrelated dirty workspaces or unexpected heads.
 
-Reconciler, effect interface, provider capability matrix, operator-visible blocked reasons, and fault evidence. A04 consumes wake-up and retry contracts; A07/A08 must use the effect interface rather than inventing unjournaled writes.
+**Deliver:** Recovery adapters and crash tests for worker/Git persistence gaps.
+
+### Work package 3: Handle remote ambiguity and takeover
+
+Add stable correlation/idempotency support, conditional operations, bounded probe retries, and reservation release rules. Fence obsolete dispatchers where possible; keep conflicting work blocked when an old external effect cannot be ruled out.
+
+**Deliver:** A fake external-service demonstration and actionable blocked-state information.
+
+## Acceptance checklist
+
+Mark a criterion passed only when the handoff links to its command or artifact and observed result. These IDs are preserved from plan version 1 so existing references remain valid.
+
+- [ ] **A03-C1:** Every mandatory crash boundary produces one documented recovery classification, never fabricated success.
+- [ ] **A03-C2:** Already integrated work is recognized and not applied twice after a database acknowledgment is lost.
+- [ ] **A03-C3:** A still-running or unidentifiable worker prevents conflicting dispatch; a stale worker result cannot authorize promotion.
+- [ ] **A03-C4:** Lost external responses do not create duplicate observable effects in the idempotent test service.
+- [ ] **A03-C5:** A service without reliable deduplication/lookup remains explicitly blocked when its outcome is ambiguous.
+- [ ] **A03-C6:** PID reuse, missing artifacts, dirty workspaces, and unexpected Git heads fail safely without deleting user changes.
+- [ ] **A03-C7:** A controller restart can resume a reconciled run without resetting its limits or starting the whole project again.
+
+## Test these scenarios
+
+These scenarios are a minimum starting set; the acceptance checklist remains binding. Add other cases needed to cover the actual implementation.
+
+| Scenario                | Setup/action                                                                       | Required observation                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Git acknowledgment lost | Commit the patch, then kill before the database records it.                        | Recovery recognizes the commit and does not apply it again.           |
+| Old worker survives     | Lose the lease while a worker remains alive; include PID reuse.                    | No conflicting dispatch or stale-result acceptance occurs.            |
+| Remote response lost    | Execute the action but lose the reply, with and without remote lookup/idempotency. | Recognizable work is reconciled; irreducible ambiguity stays blocked. |
+
+Use the overall plan's validation rules and required integrated gate. Record fixture and live results separately. Select any environment-specific timing/resource thresholds before running the measurement.
+
+## Design freedom
+
+Choose probes and attachment strategies from demonstrated provider capabilities. Safely stopping and replacing a worker is acceptable. A timeout alone cannot establish that the old action never happened.
+
+## Finish and hand off
+
+List completed work packages and the result/evidence for every A03-C criterion. Document interface changes, migration/rollback, remaining limitations, and the next useful task. Update this milestone's row in the [overall plan](README.md). If any required criterion is partial, blocked, or not run, keep the milestone incomplete. Follow the shared handoff requirements in the overall plan.

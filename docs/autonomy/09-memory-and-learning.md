@@ -1,39 +1,66 @@
-# A09 — Project memory, decision provenance, and useful learning
+# A09 — Project memory and lessons
 
-Status: planned. Completion prerequisites: A01 and A05. Read [the overall plan](README.md) first.
+Status: planned. Completion prerequisites: **A01, A05**.
+Read [the overall plan](README.md) and this subplan before editing.
 
-## Outcome
+## Deliverable
 
-Manager and workers retrieve relevant, current project knowledge and prior lessons without confusing it with authoritative execution state. Memory must improve measured outcomes, not merely grow.
+Managers and workers can use current project decisions and relevant prior lessons without treating retrieved text as execution state or authority.
 
-Inspect `packages/storage/src/memory.ts`, `lessons.ts`, `lesson-scope.ts`, `packages/memory`, `packages/context`, and `apps/controller/src/lessons.ts`. Preserve accepted/proposed distinctions, repository scope, freshness checks, host-written lesson evidence, forgetting, and caps already implemented.
+## Start here
 
-## Execution
+Inspect `packages/storage/src/memory.ts`, `packages/storage/src/lessons.ts`, `packages/storage/src/lesson-scope.ts`, `packages/memory`, `packages/context`, `apps/controller/src/lessons.ts`. These are starting points, not required locations for new code. Verify prerequisite outcomes and current repository instructions before implementing.
 
-1. Define project decision records: decision, rationale, alternatives, source/actor, requirement links, accepted status, relevant revisions, and supersession. Connect unresolved questions to explicit blockers.
-2. Distinguish operational truth (workflow database), accepted knowledge, worker proposals, and inferred lessons. A summary or retrieved passage must never mark a task complete.
-3. Build bounded manager/worker retrieval by project, requirement, task, and current revision. Preserve provenance and mark stale or unverified material clearly; exclude it where policy requires accepted fresh evidence.
-4. Invalidate or reevaluate knowledge after relevant code, requirements, or architecture changes. Preserve historical decisions for audit without presenting them as current instructions.
-5. Ensure external runtime search tools remain task-scoped and receipted. Restrict access using host-selected scope and execution capabilities.
-6. Add retention, forgetting, export/import, and sensitive-data handling for the expanded records. Imported records become proposals unless separately accepted by an authorized actor.
-7. Instrument lesson usage and outcomes with exposure, verification quality, and task/context identifiers. Treat prompted memory as an experimental input, not proof that learning helped.
+**First useful change:** Persist project decisions. Finish work package 1 before broadening the implementation. Each package can be one or more reviewable PRs.
 
-## Success criteria
+## Work in this order
 
-- **A09-C1:** Cross-project, rejected, forgotten, and ineligible stale knowledge cannot enter an authorized task packet.
-- **A09-C2:** A manager restart reconstructs decisions from persisted records without relying on its old conversation.
-- **A09-C3:** Worker-authored memory cannot change permissions, budgets, verification policy, or authoritative task state.
-- **A09-C4:** Changed code/requirements invalidate affected knowledge according to tested rules.
-- **A09-C5:** Import/export preserves provenance and does not silently grant accepted status.
-- **A09-C6:** Retrieval is bounded by documented size/latency targets on a representative retained corpus.
-- **A09-C7:** The qualification harness can compare memory/lessons enabled versus disabled with controlled task allocation and separate stores.
+### Work package 1: Persist project decisions
 
-## Validation and latitude
+Store decisions, rationale, alternatives, actor/source, requirement links, revision anchors, acceptance, and supersession. Keep proposed, accepted, inferred, and authoritative operational records distinct.
 
-Test a poisoned lesson, forged instruction, stale file anchor, origin/scope collision attempt, superseded decision, and forgotten record. Run a measured retrieval fixture and provide experiment-ready exposure data. A11 evaluates whether memory actually helps; do not claim efficacy from a few successful repairs.
+**Deliver:** A decision schema and reloadable project knowledge view.
 
-Choose ranking, summarization, or indexing improvements using measured retrieval needs. Do not add a vector database simply to make memory appear sophisticated. Summarization must preserve required facts or explicitly report inability to fit them.
+### Work package 2: Retrieve only eligible knowledge
 
-## Deliverables and handoff
+Scope and bound retrieval by project/task/current revision. Apply freshness, forgetting, access, and provenance rules to packets and external-runtime search tools. Define retention and proposal-only imports.
 
-Decision schema, retrieval/freshness changes, access/retention controls, instrumentation, and evidence. Document source-of-truth boundaries for A05 and experiment configuration for A11.
+**Deliver:** Measured retrieval and access/freshness tests.
+
+### Work package 3: Measure lesson use
+
+Record exposure, context, verification quality, and repair outcomes. Make lessons-on/off comparisons use isolated or deliberately seeded stores, without claiming efficacy from anecdotal success.
+
+**Deliver:** Instrumentation and reproducible experimental configurations for A11.
+
+## Acceptance checklist
+
+Mark a criterion passed only when the handoff links to its command or artifact and observed result. These IDs are preserved from plan version 1 so existing references remain valid.
+
+- [ ] **A09-C1:** Cross-project, rejected, forgotten, and ineligible stale knowledge cannot enter an authorized task packet.
+- [ ] **A09-C2:** A manager restart reconstructs decisions from persisted records without relying on its old conversation.
+- [ ] **A09-C3:** Worker-authored memory cannot change permissions, budgets, verification policy, or authoritative task state.
+- [ ] **A09-C4:** Changed code/requirements invalidate affected knowledge according to tested rules.
+- [ ] **A09-C5:** Import/export preserves provenance and does not silently grant accepted status.
+- [ ] **A09-C6:** Retrieval is bounded by documented size/latency targets on a representative retained corpus.
+- [ ] **A09-C7:** The qualification harness can compare memory/lessons enabled versus disabled with controlled task allocation and separate stores.
+
+## Test these scenarios
+
+These scenarios are a minimum starting set; the acceptance checklist remains binding. Add other cases needed to cover the actual implementation.
+
+| Scenario                 | Setup/action                                                                            | Required observation                                                               |
+| ------------------------ | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Poisoned/stale knowledge | Offer a forged instruction, changed file anchor, forgotten fix, or superseded decision. | Ineligible knowledge is excluded or explicitly labeled; it cannot grant authority. |
+| Scope/import boundary    | Query another project or import accepted-looking external memory.                       | Access is denied and imports remain proposals.                                     |
+| Useful retrieval         | Load a representative corpus and replace the manager session.                           | Decisions persist; documented retrieval limits and provenance are preserved.       |
+
+Use the overall plan's validation rules and required integrated gate. Record fixture and live results separately. Select any environment-specific timing/resource thresholds before running the measurement.
+
+## Design freedom
+
+Improve ranking, indexing, and summaries using measurements. Choose size/latency targets before measuring and report them. Preserve required context facts; add a new database only when justified. Workflow truth remains in durable execution records.
+
+## Finish and hand off
+
+List completed work packages and the result/evidence for every A09-C criterion. Document interface changes, migration/rollback, remaining limitations, and the next useful task. Update this milestone's row in the [overall plan](README.md). If any required criterion is partial, blocked, or not run, keep the milestone incomplete. Follow the shared handoff requirements in the overall plan.

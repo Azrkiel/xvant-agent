@@ -1,40 +1,66 @@
-# A07 — Trusted verification and autonomous promotion
+# A07 — Verification and autonomous integration
 
-Status: planned. Completion prerequisites: A03 and A06. Read [the overall plan](README.md) first.
+Status: planned. Completion prerequisites: **A03, A06**.
+Read [the overall plan](README.md) and this subplan before editing.
 
-## Outcome
+## Deliverable
 
-Work can be accepted and integrated automatically within owner-configured policy, with evidence for the exact resulting revision. Routine intervention is unnecessary for qualifying work. Unverified, stale, rejected, or unauthorized work cannot pass by optimistic interpretation.
+Qualifying changes can be accepted and integrated automatically under project policy, with proof bound to the exact result and target revision.
 
-Inspect the native verifier/review controllers, orchestrator combined checks, integration branch, CLI accept/merge paths, tool receipts, and release/evaluation policies. Reuse their artifact binding and explicit host authority.
+## Start here
 
-## Execution
+Inspect `apps/controller/src/native-verifier.ts`, `apps/controller/src/native-review.ts`, `apps/controller/src/orchestrator.ts`, `packages/storage/src/integration.ts`, `scripts/xvant.mjs`. These are starting points, not required locations for new code. Verify prerequisite outcomes and current repository instructions before implementing.
 
-1. Define task-class verification policies: bug fix, feature, refactor, documentation, dependency update, and investigation. Specify required evidence, scope checks, review rules, and permitted promotion targets.
-2. Separate trusted acceptance checks from worker-proposed tests. Workers may improve tests, but changing required verifier definitions or acceptance policy needs independent authorization and fresh evidence.
-3. Verify artifacts from an immutable candidate snapshot in an appropriate sandbox. Bind receipts to source, dependencies/environment, requirement/spec/policy versions, and verifier versions.
-4. Verify integrated changes and required review after repairs. Reject missing verdicts and enforce independence by actual contribution history, not merely a different alias or model name.
-5. Build an acceptance decision that explains every satisfied or missing requirement. Preserve explicit manual exception semantics from A01.
-6. Implement a serialized integration queue per repository. Compare the target head, update/rebuild the candidate if it moved, and rerun invalidated verification. Promote only the exact accepted result through A03's effect interface.
-7. Separate acceptance, PR delivery, merge, and deployment permissions. Record operation identity and remote revision for every promotion. Provide rollback/revert guidance; database or external side effects may require compensation rather than a Git revert.
-8. Let eligible low-risk policies complete without confirmation; route exceptional cases to a clear blocked/decision queue.
+**First useful change:** Define trusted verification profiles. Finish work package 1 before broadening the implementation. Each package can be one or more reviewable PRs.
 
-## Success criteria
+## Work in this order
 
-- **A07-C1:** Valid authorized work completes through acceptance and integration without routine intervention.
-- **A07-C2:** Empty verification, weakened trusted tests, rejected/missing required review, and stale receipts prevent auto-acceptance.
-- **A07-C3:** A target-head change before promotion invalidates the relevant candidate checks; untested combinations cannot be merged.
-- **A07-C4:** Duplicate commands, crashes around merge, and lost remote replies cause no duplicate logical promotion.
-- **A07-C5:** Every promoted revision is traceable to exact evidence and a policy decision; model summaries alone cannot authorize it.
-- **A07-C6:** Tests and review execute with appropriate isolation; executing repository tests is not treated as harmless host code.
-- **A07-C7:** An explicit manual override remains identifiable and cannot be reused for a different revision or scope.
+### Work package 1: Define trusted verification profiles
 
-## Validation and latitude
+Specify evidence for bug fixes, features, refactors, docs, dependencies, and investigations. Separate worker-proposed tests from trusted criteria. Run repository checks in an appropriate sandbox.
 
-Inject a failing integrated check, rejected review after the repair limit, forged worker receipt, test-removal patch, changed target head, late review result, and uncertain promotion response. Use a local Git remote and fake remote API for deterministic tests, then an authorized disposable hosted repository for live qualification.
+**Deliver:** Versioned task-class verification profiles and immutable receipts.
 
-Choose verification profiles and queue implementation. Prefer fewer trustworthy checks over many checks that mirror implementation. Automatic deployment can remain an unsupported profile for the first release; do not imply that automatic merge grants deployment authority.
+### Work package 2: Evaluate autonomous acceptance
 
-## Deliverables and handoff
+Check source/requirements/policy/verifier versions, integrated checks, required review, scope, and unresolved effects. Track reviewer contribution history; preserve explicit manual exceptions.
 
-Verification policy implementation, acceptance evaluator, integration queue, promotion effect adapter, and evidence explanations. Publish contracts for A08's remote writes and A10's operator decision views.
+**Deliver:** An explainable host acceptance decision that rejects missing or stale proof.
+
+### Work package 3: Serialize integration
+
+Queue candidates per repository, compare target heads, rebuild/reverify changed combinations, and promote the accepted revision through journaled effects. Separate PR, merge, and deployment authority.
+
+**Deliver:** An integration queue with crash/target-drift recovery and compensation guidance.
+
+## Acceptance checklist
+
+Mark a criterion passed only when the handoff links to its command or artifact and observed result. These IDs are preserved from plan version 1 so existing references remain valid.
+
+- [ ] **A07-C1:** Valid authorized work completes through acceptance and integration without routine intervention.
+- [ ] **A07-C2:** Empty verification, weakened trusted tests, rejected/missing required review, and stale receipts prevent auto-acceptance.
+- [ ] **A07-C3:** A target-head change before promotion invalidates the relevant candidate checks; untested combinations cannot be merged.
+- [ ] **A07-C4:** Duplicate commands, crashes around merge, and lost remote replies cause no duplicate logical promotion.
+- [ ] **A07-C5:** Every promoted revision is traceable to exact evidence and a policy decision; model summaries alone cannot authorize it.
+- [ ] **A07-C6:** Tests and review execute with appropriate isolation; executing repository tests is not treated as harmless host code.
+- [ ] **A07-C7:** An explicit manual override remains identifiable and cannot be reused for a different revision or scope.
+
+## Test these scenarios
+
+These scenarios are a minimum starting set; the acceptance checklist remains binding. Add other cases needed to cover the actual implementation.
+
+| Scenario              | Setup/action                                                                                  | Required observation                                                           |
+| --------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| False success         | Return a self-authored receipt, remove trusted tests, omit checks, or reject required review. | Automatic acceptance is refused.                                               |
+| Target moves          | Change the destination branch after the candidate was checked.                                | Affected checks rerun on the actual integration candidate.                     |
+| Promotion interrupted | Lose a reply after merge or repeat the accept command.                                        | No duplicate logical promotion; exact evidence and policy remain attributable. |
+
+Use the overall plan's validation rules and required integrated gate. Record fixture and live results separately. Select any environment-specific timing/resource thresholds before running the measurement.
+
+## Design freedom
+
+Choose task profiles, queue structure, and reviewer composition. Prefer meaningful independent checks. Automatic deployment may remain unsupported; merge authority does not imply permission to deploy or perform unrelated external actions.
+
+## Finish and hand off
+
+List completed work packages and the result/evidence for every A07-C criterion. Document interface changes, migration/rollback, remaining limitations, and the next useful task. Update this milestone's row in the [overall plan](README.md). If any required criterion is partial, blocked, or not run, keep the milestone incomplete. Follow the shared handoff requirements in the overall plan.

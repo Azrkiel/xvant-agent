@@ -1,47 +1,67 @@
-# A11 — Reliability, usefulness, and release qualification
+# A11 — Reliability and release qualification
 
-Status: planned. Completion prerequisites: A00–A10. Read [the overall plan](README.md) first.
-Build the fault fixtures and measurement harness incrementally as earlier milestones land.
+Status: planned. Completion prerequisites: **A00–A10**.
+Read [the overall plan](README.md) and this subplan before editing.
 
-## Outcome
+## Deliverable
 
-Demonstrate that the declared supported profile stays correct through failures, makes bounded autonomous progress, and provides useful results compared with a single capable agent. Publish both favorable and unfavorable outcomes.
+Publish reproducible evidence of the supported system's recovery, unattended behavior, and usefulness relative to a single capable agent.
 
-Inspect `packages/evaluation`, frozen benchmark suites, `scripts/soak.mjs`, `scripts/soak-live.ts`, `scripts/release-policy.ts`, `scripts/release-check.mjs`, and evidence archival. Extend these instead of creating unrelated reporting machinery. Existing offline G10 is necessary baseline evidence, not unattended qualification.
+## Start here
 
-## Reliability campaign
+Inspect `packages/evaluation`, `fixtures/benchmarks`, `scripts/soak.mjs`, `scripts/soak-live.ts`, `scripts/release-policy.ts`, `scripts/release-check.mjs`, `scripts/evidence-bundle.ts`. These are starting points, not required locations for new code. Verify prerequisite outcomes and current repository instructions before implementing.
 
-1. Freeze source, policy, environment, providers, limits, and fault schedule before the campaign. Record every injected fault and expected safe response.
-2. Cover controller/worker death; before/after intent, dispatch, result and acceptance persistence; Git commit/database gap; remote acknowledgment loss; lease takeover; duplicate results/events; target-head change; network/auth/quota outage; clock jump/suspend; disk pressure; backup/restore; interrupted upgrade.
-3. Account for every task/effect as completed, safely resumable, cancelled with established semantics, or explicitly blocked with evidence. Record recovery time and intervention.
-4. Stage 24-hour, 72-hour, and seven-day unattended soaks on the supported deployment profile. Resource trends and queue progress must remain bounded under the declared workload. A finite soak establishes observed reliability, not universal correctness.
-5. Run the overall plan's reference project demonstration, including a case that must block on ambiguity. Detect unsafe completion as a failure, even if the final code looks plausible.
+**First useful change:** Freeze the campaign before running it. Finish work package 1 before broadening the implementation. Each package can be one or more reviewable PRs.
 
-## Usefulness campaign
+## Work in this order
 
-Compare a single capable worker, XVANT orchestration, and controlled lessons-on/off variants. Use the same frozen task distribution and acceptance evaluator, matched resource limits where feasible, and record unavoidable differences. Include larger multi-file tasks and multi-milestone projects, not only tiny edits.
+### Work package 1: Freeze the campaign before running it
 
-Before looking at outcomes, register configurations, repeated-run count, task allocation, held-out split, primary metric, and allowable tradeoffs. Use at least three repeats for the initial comparison; report uncertainty and expand the sample if it cannot support a conclusion. Lessons experiments need isolated stores or deliberate seeding to avoid cross-condition contamination.
+Record source, environment, policy, providers, resource/progress bounds, fault schedule, task allocation, held-out split, comparison metrics, and acceptable tradeoffs. Extend existing evaluation tools incrementally.
 
-Report accepted completion rate, independently assessed escaped defects, wall time, tokens/known spend with missing-usage labels, operator interventions per completed task, recovery time, and blocked/abandoned work. Count missing and incomplete attempts transparently; do not cherry-pick reruns or hide expensive failures.
+**Deliver:** A preregistered qualification configuration and required-evidence checklist.
 
-For an unattended-efficiency claim, require lower interventions per accepted task than the chosen baseline with no unacceptable regression in completion/defects under the preregistered margins. If the data does not establish benefit, publish that conclusion and keep claims/profile defaults narrow. A safe single-worker route can remain the best routing choice.
+### Work package 2: Prove recovery and sustained operation
 
-## Success criteria
+Run every required fault case plus the reference project, fresh-host restore/upgrade drills, and actual 24-hour, 72-hour, and seven-day soaks. Account for every operation and intervention.
 
-- **A11-C1:** Every mandatory fault case has source-bound evidence and an accounted-for outcome.
-- **A11-C2:** The qualification campaigns observe zero lost committed tasks, duplicate logical promotions, stale-evidence acceptance, or unauthorized boundary violations; any such violation blocks qualification and requires repair plus relevant reruns.
-- **A11-C3:** The staged soaks meet preregistered resource/progress bounds, and the multi-milestone restart demonstration completes.
-- **A11-C4:** Backup restore, host reboot, and upgrade drills pass on the actual supported deployment profile.
-- **A11-C5:** Live runtime/profile qualification records exact versions and capabilities; untested routes remain explicitly unsupported.
-- **A11-C6:** Repeated baseline comparisons publish raw outcomes, uncertainty, tradeoffs, and intervention/defect measurements. Product claims do not exceed those results.
-- **A11-C7:** The release policy/checker encodes mandatory evidence requirements and fails for missing, failed, incompatible, or stale qualification evidence.
-- **A11-C8:** A release candidate installs from its published package, identifies its source, and provides a supported-profile matrix and actionable recovery runbook.
+**Deliver:** Source-bound reliability results, resource trends, and supported-profile evidence.
 
-## Deliverables, latitude, and release decision
+### Work package 3: Compare outcomes and qualify release
 
-Publish a qualification report, reproducible commands/configurations, source-bound evidence index, supported-profile matrix, benchmark report, release-check changes, and remaining limitations. Keep secrets/user data out of public artifacts.
+Compare one capable worker, orchestration, and isolated lessons-on/off variants with at least three initial repeats and more if inconclusive. Publish failures, uncertainty, defects, usage, elapsed time, and interventions. Make release checks fail on missing/stale mandatory evidence.
 
-Choose representative tasks and fault injection machinery, but freeze success thresholds before evaluation. Explain any campaign changes and rerun affected comparisons. Do not replace long-duration observation with synthetic timestamps. Do not certify platforms or providers from a different platform's pass.
+**Deliver:** A qualification report, raw outcomes, evidence index, and installable release candidate.
 
-Release a narrow profile when its safety/recovery requirements pass and its capability claims match measured usefulness. Broader autonomy, new providers, or deployment authority require explicit additional qualification. Final publication/merge follows the authority actually granted by the owner; this plan itself does not grant credentials, spending, or deployment access.
+## Acceptance checklist
+
+Mark a criterion passed only when the handoff links to its command or artifact and observed result. These IDs are preserved from plan version 1 so existing references remain valid.
+
+- [ ] **A11-C1:** Every mandatory fault case has source-bound evidence and an accounted-for outcome.
+- [ ] **A11-C2:** The qualification campaigns observe zero lost committed tasks, duplicate logical promotions, stale-evidence acceptance, or unauthorized boundary violations; any such violation blocks qualification and requires repair plus relevant reruns.
+- [ ] **A11-C3:** The staged soaks meet preregistered resource/progress bounds, and the multi-milestone restart demonstration completes.
+- [ ] **A11-C4:** Backup restore, host reboot, and upgrade drills pass on the actual supported deployment profile.
+- [ ] **A11-C5:** Live runtime/profile qualification records exact versions and capabilities; untested routes remain explicitly unsupported.
+- [ ] **A11-C6:** Repeated baseline comparisons publish raw outcomes, uncertainty, tradeoffs, and intervention/defect measurements. Product claims do not exceed those results.
+- [ ] **A11-C7:** The release policy/checker encodes mandatory evidence requirements and fails for missing, failed, incompatible, or stale qualification evidence.
+- [ ] **A11-C8:** A release candidate installs from its published package, identifies its source, and provides a supported-profile matrix and actionable recovery runbook.
+
+## Test these scenarios
+
+These scenarios are a minimum starting set; the acceptance checklist remains binding. Add other cases needed to cover the actual implementation.
+
+| Scenario               | Setup/action                                                                                                                                         | Required observation                                                                                                                          |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mandatory fault matrix | Inject controller/worker death, lost responses, stale ownership, duplicate delivery, moved heads, outages, clock/suspend changes, and disk failures. | Every outcome is completed, safely resumable, cancelled with defined semantics, or explicitly blocked.                                        |
+| Unattended lifecycle   | Observe real-time soaks and execute reboot/restore/upgrade drills.                                                                                   | Declared resource/progress bounds hold with zero observed lost tasks, duplicate logical promotions, stale acceptance, or boundary violations. |
+| Fair comparison        | Use frozen tasks/acceptance with matched limits where feasible and include incomplete attempts.                                                      | Raw outcomes and uncertainty support only the claims actually made.                                                                           |
+
+Use the overall plan's validation rules and required integrated gate. Record fixture and live results separately. Select any environment-specific timing/resource thresholds before running the measurement.
+
+## Design freedom
+
+Choose representative workloads and fault tools, but set thresholds before inspecting results. Do not replace elapsed-time observation with synthetic timestamps or certify untested platforms. If benefit is not established, report that result and keep defaults/claims narrow. Any safety violation blocks qualification until repaired and revalidated.
+
+## Finish and hand off
+
+List completed work packages and the result/evidence for every A11-C criterion. Document interface changes, migration/rollback, remaining limitations, and the next useful task. Update this milestone's row in the [overall plan](README.md). If any required criterion is partial, blocked, or not run, keep the milestone incomplete. Follow the shared handoff requirements in the overall plan.

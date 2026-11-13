@@ -1,40 +1,66 @@
-# A08 — Durable event intake and external integrations
+# A08 — Reliable events and external integrations
 
-Status: planned. Completion prerequisites: A04, A05, and A07. Read [the overall plan](README.md) first.
+Status: planned. Completion prerequisites: **A04, A05, A07**.
+Read [the overall plan](README.md) and this subplan before editing.
 
-## Outcome
+## Deliverable
 
-Repository events, CI results, owner requests, and schedules can create or update authorized work without lost tasks, duplicate actions, or feedback loops. Start with GitHub and internal timers; keep the interfaces reusable.
+GitHub events and schedules reliably create authorized work, and XVANT can deliver verified results without duplicate PRs or self-triggered loops.
 
-Inspect the daemon command surface, storage events, Git operations, and provider/effect interfaces added earlier. Existing UI streams and local sharing are not a durable external event inbox.
+## Start here
 
-## Execution
+Inspect `apps/controller/src/http`, `packages/storage/src`, `scripts/xvant.mjs`, `the daemon and effect interfaces from A03/A04`. These are starting points, not required locations for new code. Verify prerequisite outcomes and current repository instructions before implementing.
 
-1. Create a persisted inbox with source, stable event ID, repository/project identity, source revision, received time, processing status, and deduplication key. Commit receipt before acknowledging delivery.
-2. Authenticate webhook delivery and limit request sizes/rates. Treat titles, issue bodies, comments, and repository files as untrusted content, not permission grants.
-3. Add polling reconciliation with persistent cursors and bounded pagination. Recover from missed webhooks, reordered delivery, source edits, and expired cursors; observe API rate limits.
-4. Map events to manager proposals using explicit project rules. Coalesce redundant changes and distinguish new information from repeated notifications.
-5. Add durable recurring schedules with declared timezone, missed-run policy, pause state, and deduplication. Bound catch-up after downtime so old timers cannot flood the queue.
-6. Implement GitHub PR delivery/update and CI observation through durable effects. Use stable correlation markers and conditional updates where possible; reconcile before replaying uncertain writes.
-7. Track agent-originated changes and causal IDs. Prevent its own PR edits, comments, CI runs, and commits from producing infinite new work.
-8. Apply least required connector permissions and project/repository allowlists. Notifications and external writes need authority in project policy.
+**First useful change:** Persist incoming events. Finish work package 1 before broadening the implementation. Each package can be one or more reviewable PRs.
 
-## Success criteria
+## Work in this order
 
-- **A08-C1:** Duplicate/reordered event delivery creates at most one logical work item per event policy.
-- **A08-C2:** Lost webhook events are recovered by polling without losing newer source state.
-- **A08-C3:** Restart during receipt, processing, or remote response recording preserves the event/effect outcome.
-- **A08-C4:** Agent-generated changes do not produce an unbounded feedback loop.
-- **A08-C5:** Events for unknown repositories or invalid signatures cannot authorize work.
-- **A08-C6:** Missed schedules, timezone changes, and rate-limit outages have deterministic documented behavior.
-- **A08-C7:** A hosted disposable-repository trial demonstrates issue-to-task and verified-candidate-to-PR delivery, with no duplicate PR after a simulated lost acknowledgment.
+### Work package 1: Persist incoming events
 
-## Validation and latitude
+Add source/event/repository identity, source revision, processing state, deduplication, and authenticated size-bounded delivery. Commit receipt before acknowledgment; treat event bodies as untrusted input.
 
-Use recorded/redacted or synthetic event payloads plus a fake paginated/rate-limited API. Test delivery loss, retries, reordered updates, feedback loops, cursor reset, and actor spoofing. Live connector qualification is separate and uses an authorized repository.
+**Deliver:** A durable inbox and event-to-work rules.
 
-Choose webhooks, polling, or both for the first deployment. Prefer a small reliable integration over many incomplete connectors. Do not publish messages merely because an event arrived; the configured action policy must admit the effect.
+### Work package 2: Recover missed information
 
-## Deliverables and handoff
+Implement bounded polling/cursors, ordering/coalescing rules, API rate-limit behavior, and recurring schedules with explicit timezone/missed-run policies.
 
-Inbox, connector interfaces, GitHub adapter, schedule semantics, event-to-work policy, and live integration evidence. A10 displays ingestion lag, cursor health, and pending remote effects.
+**Deliver:** Restartable ingestion and timers without catch-up floods.
+
+### Work package 3: Deliver and observe remote work
+
+Use journaled correlation-aware effects for GitHub PR creation/update and CI observation. Track causality so agent commits, edits, and CI runs do not repeatedly create the same work.
+
+**Deliver:** A disposable hosted-repository issue-to-task and candidate-to-PR trial.
+
+## Acceptance checklist
+
+Mark a criterion passed only when the handoff links to its command or artifact and observed result. These IDs are preserved from plan version 1 so existing references remain valid.
+
+- [ ] **A08-C1:** Duplicate/reordered event delivery creates at most one logical work item per event policy.
+- [ ] **A08-C2:** Lost webhook events are recovered by polling without losing newer source state.
+- [ ] **A08-C3:** Restart during receipt, processing, or remote response recording preserves the event/effect outcome.
+- [ ] **A08-C4:** Agent-generated changes do not produce an unbounded feedback loop.
+- [ ] **A08-C5:** Events for unknown repositories or invalid signatures cannot authorize work.
+- [ ] **A08-C6:** Missed schedules, timezone changes, and rate-limit outages have deterministic documented behavior.
+- [ ] **A08-C7:** A hosted disposable-repository trial demonstrates issue-to-task and verified-candidate-to-PR delivery, with no duplicate PR after a simulated lost acknowledgment.
+
+## Test these scenarios
+
+These scenarios are a minimum starting set; the acceptance checklist remains binding. Add other cases needed to cover the actual implementation.
+
+| Scenario                     | Setup/action                                                        | Required observation                                                        |
+| ---------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Duplicate/out-of-order event | Repeat deliveries and edit the remote object before processing.     | One logical work item reflects the applicable current state.                |
+| Webhook/cursor outage        | Lose deliveries, expire a cursor, and hit rate limits.              | Polling recovers information with bounded work.                             |
+| Remote write feedback        | Lose a PR-create acknowledgment and replay agent-originated events. | Reconciliation finds the result; no duplicate PR or unbounded loop appears. |
+
+Use the overall plan's validation rules and required integrated gate. Record fixture and live results separately. Select any environment-specific timing/resource thresholds before running the measurement.
+
+## Design freedom
+
+Start with polling, webhooks, or both. Keep the first connector small and reliable. Incoming text cannot authorize external writes or work in unknown repositories; admit actions against project policy.
+
+## Finish and hand off
+
+List completed work packages and the result/evidence for every A08-C criterion. Document interface changes, migration/rollback, remaining limitations, and the next useful task. Update this milestone's row in the [overall plan](README.md). If any required criterion is partial, blocked, or not run, keep the milestone incomplete. Follow the shared handoff requirements in the overall plan.

@@ -1,37 +1,65 @@
-# A01 — Project, authority, and completion contracts
+# A01 — Project and completion contracts
 
-Status: planned. Completion prerequisite: A00. Read [the overall plan](README.md) first.
+Status: planned. Completion prerequisites: **A00**.
+Read [the overall plan](README.md) and this subplan before editing.
 
-## Outcome and existing behavior
+## Deliverable
 
-Define the contract between the owner, project manager, host, and workers. The host must be able to decide whether work is authorized and whether it qualifies for completion without trusting a model's self-assessment.
+The host can determine whether a task is authorized and complete from versioned policy and evidence, independently of a model saying it is done.
 
-Inspect `packages/contracts/src`, `packages/core/src/plan.ts`, `apps/controller/src/orchestrator.ts`, `apps/controller/src/app.ts`, `scripts/xvant.mjs`, and `packages/policy/src`. Today an empty check set is allowed, and a root with a rejected review can reach `ready` for human disposition. Preserve useful manual workflows, but never interpret that state as automatic acceptance.
+## Start here
 
-## Execution
+Inspect `packages/contracts/src`, `packages/core/src/plan.ts`, `packages/policy/src`, `apps/controller/src/orchestrator.ts`, `apps/controller/src/app.ts`, `scripts/xvant.mjs`. These are starting points, not required locations for new code. Verify prerequisite outcomes and current repository instructions before implementing.
 
-1. Introduce versioned project specification and autonomy policy schemas. Include objectives, exclusions, milestone criteria, repositories, scopes, verifier references, required review, allowed actions/providers, resource ceilings, escalation rules, and policy owner/version.
-2. Separate workflow phase from verification, review, acceptance, and promotion decisions. Define legal transitions and structured reasons. Suggested phases include queued, running, waiting, reconciling, blocked, completed, cancelled; evidence and acceptance need their own records.
-3. Define immutable task and attempt identities, parent-child relationships, requirement IDs, candidate revision, policy/spec versions, and result envelopes. Child authority and aggregate budgets may only narrow the parent allocation.
-4. Implement a deterministic completion predicate. It must reject missing verification, unknown effects, stale hashes, rejected or unavailable required reviews, and unauthorized scopes. Non-code tasks need an explicit evidence policy rather than a hidden no-op success.
-5. Define manual override semantics separately: actor, authority, reason, exact candidate, expiry/revalidation, and audit record. A manual exception cannot masquerade as autonomous verification.
-6. Define version-upgrade behavior for existing records. Legacy runs retain their original meaning and cannot silently acquire unattended permissions.
+**First useful change:** Define project and task records. Finish work package 1 before broadening the implementation. Each package can be one or more reviewable PRs.
 
-## Success criteria
+## Work in this order
 
-- **A01-C1:** Valid project/task/policy inputs parse; unsupported versions and contradictory or excessive child permissions fail deterministically.
-- **A01-C2:** The completion truth table covers empty checks, stale evidence, modified verifier, missing review, rejection, unknown outcome, changed scope, and valid acceptance.
-- **A01-C3:** A human-review-ready result remains distinct from an automatically acceptable candidate.
-- **A01-C4:** Duplicate commands and stale state versions cannot repeat acceptance or overwrite decisions.
-- **A01-C5:** Legacy data migrations preserve meaning, and an old run cannot gain authority by default.
-- **A01-C6:** Policy changes invalidate relevant outstanding authorizations and evidence according to documented rules.
+### Work package 1: Define project and task records
 
-## Validation and latitude
+Introduce versioned objectives, exclusions, requirement IDs, repository/path scope, verifier references, review requirements, allowed actions/providers, budgets, and escalation rules. Specify immutable task/attempt identities and narrower child authority.
 
-Use table/property tests for legal transitions and policy narrowing; demonstrate that a worker cannot modify acceptance criteria through its result payload. Test a legacy database upgrade and manual acceptance compatibility. Run the applicable integrated gate.
+**Deliver:** Schemas, examples, and a documented compatibility strategy.
 
-Choose schema layout, state names, and whether policy is embedded or referenced by immutable hash. Keep the transition and trust semantics explicit. Do not require routine owner confirmation for decisions already covered by the configured policy.
+### Work package 2: Make completion a host decision
 
-## Deliverables and handoff
+Separate workflow phase, verification, review, acceptance, and integration. Implement a deterministic decision function. Keep human-review readiness distinct from autonomous acceptance; define evidence for non-code tasks too.
 
-Schemas, completion/admission functions, compatibility/migration rules, and a compact state/authority reference. A02, A05, A06, and A07 consume these interfaces. List stable IDs and version rules in the handoff.
+**Deliver:** A completion/admission truth table with behavior tests.
+
+### Work package 3: Preserve legacy meaning
+
+Migrate existing records without silently granting unattended permissions. Define explicit manual exceptions and how policy/verifier changes invalidate outstanding decisions.
+
+**Deliver:** Migration fixtures, legacy workflow coverage, and stable interfaces for A02.
+
+## Acceptance checklist
+
+Mark a criterion passed only when the handoff links to its command or artifact and observed result. These IDs are preserved from plan version 1 so existing references remain valid.
+
+- [ ] **A01-C1:** Valid project/task/policy inputs parse; unsupported versions and contradictory or excessive child permissions fail deterministically.
+- [ ] **A01-C2:** The completion truth table covers empty checks, stale evidence, modified verifier, missing review, rejection, unknown outcome, changed scope, and valid acceptance.
+- [ ] **A01-C3:** A human-review-ready result remains distinct from an automatically acceptable candidate.
+- [ ] **A01-C4:** Duplicate commands and stale state versions cannot repeat acceptance or overwrite decisions.
+- [ ] **A01-C5:** Legacy data migrations preserve meaning, and an old run cannot gain authority by default.
+- [ ] **A01-C6:** Policy changes invalidate relevant outstanding authorizations and evidence according to documented rules.
+
+## Test these scenarios
+
+These scenarios are a minimum starting set; the acceptance checklist remains binding. Add other cases needed to cover the actual implementation.
+
+| Scenario               | Setup/action                                                                                             | Required observation                                                       |
+| ---------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Completion truth table | Try no checks, stale evidence, missing/rejected required review, unknown outcome, and a valid candidate. | Only the qualifying candidate is automatically acceptable.                 |
+| Permission inheritance | A child or worker result requests broader scope or new authority.                                        | Host admission rejects the expansion.                                      |
+| Legacy run             | Upgrade a database and change policy on an outstanding run.                                              | Original meaning is preserved; affected authority/evidence is invalidated. |
+
+Use the overall plan's validation rules and required integrated gate. Record fixture and live results separately. Select any environment-specific timing/resource thresholds before running the measurement.
+
+## Design freedom
+
+Choose schema names and policy storage. Keep manual exceptions explicit and audited. A human-review-ready result must not acquire automatic acceptance merely because it is named ready.
+
+## Finish and hand off
+
+List completed work packages and the result/evidence for every A01-C criterion. Document interface changes, migration/rollback, remaining limitations, and the next useful task. Update this milestone's row in the [overall plan](README.md). If any required criterion is partial, blocked, or not run, keep the milestone incomplete. Follow the shared handoff requirements in the overall plan.

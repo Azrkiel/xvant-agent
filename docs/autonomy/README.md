@@ -1,155 +1,143 @@
-# XVANT autonomous project manager: execution plan
+# XVANT: build an autonomous, persistent project manager
 
-Status: proposed execution roadmap; implementation has not started under this plan.
-Plan version: 1.0, 2026-11-12. Baseline: `68d36e123394002fd9ff5825c3c382745892e3b6`.
+Version 2.0 — clarity and execution rewrite, 2026-11-12.
+Status: planning; the milestones below are not implementation claims.
+Code baseline reviewed: `68d36e123394002fd9ff5825c3c382745892e3b6`.
 
-## Mission
+## 1. What we are building
 
-Build an always-on project manager that accepts an objective and operating boundaries, maintains a backlog, directs subagents, verifies their results, integrates qualifying changes, and continues across process failures and host restarts. It should finish authorized work without routine intervention, or identify a specific, actionable blocker. It should remain idle when there is no useful authorized work.
+Give XVANT a project objective, acceptance criteria, and operating limits. It should:
 
-Persistence belongs to project state and the service. Model conversations and workers are replaceable. Correctness means that state, authority, evidence, and externally visible effects obey explicit contracts. No architecture guarantees that arbitrary generated code satisfies an ambiguous human intention; acceptance checks and live outcome evaluation must address that uncertainty honestly.
+1. Maintain a prioritized backlog and decide what to work on next.
+2. Break work into bounded tasks and assign suitable subagents.
+3. Check the results, repair failures, and integrate qualifying changes.
+4. Recover after a worker, controller, or host stops.
+5. Continue until the agreed objective is satisfied, then become idle.
+6. Ask for help only when a specific missing decision, permission, resource, or unresolved outcome prevents progress.
 
-The initial unattended deployment target is one continuously available Linux host, one authoritative controller, SQLite on local durable storage, and a bounded pool of isolated workers. Design for several projects, but qualify one repository first. Preserve supported Windows workflows and report their qualification separately. Distributed controllers, unrestricted self-modification, arbitrary autonomous spending, and general production deployment are outside the first release.
+The project persists in the database; individual model sessions are replaceable. Correctness comes from explicit requirements, enforceable permissions, and evidence about the actual result. Passing tests does not prove every possible interpretation of a vague objective.
 
-## How an implementation agent should use this plan
+Start with one always-on Linux host, one authoritative controller, SQLite on local durable storage, and a bounded worker pool. Qualify one repository first while keeping project identities separate. Preserve existing supported Windows behavior; qualify unattended Windows operation separately. Distributed controllers and general autonomous production deployment come later, if needed.
 
-Read this file and the assigned subplan in full. Those two documents define the task; follow source links as needed. Inspect the current implementation before editing: this baseline will age. A listed path is a starting point, not a required destination for new code.
+## 2. What exists and what needs to change
 
-1. Check prerequisite outcomes against code and evidence, not a checkbox alone. If they are missing, implement an independently useful slice or report the exact dependency; do not claim downstream completion using mocks alone.
-2. Record a short implementation approach, acceptance-criterion IDs, affected interfaces, migration implications, and intended validation.
-3. Work in a separate implementation branch. Make coherent, reviewable changes. Coordinate changes to shared contracts before dependent work proceeds.
-4. Meet the common invariants below and every acceptance criterion in the assigned subplan. Add behavior tests that detect the failure being addressed. Exercise restart boundaries in real processes where relevant.
-5. Run the relevant checks and required repository gate. Publish a concise handoff with source revision, commands, outcomes, evidence locations, limitations, and next task. Preserve failed-run evidence when it explains a defect or environmental issue.
-6. Update the execution ledger and any affected interface or design decisions. Mark partial work as partial. Do not mark a milestone complete because its happy path passed.
+The reviewed baseline already has provider adapters, SQLite state, events, worktrees, plan validation, worker routing, repair loops, host verification, a local UI, memory, and lessons. Its offline gate passed 31 checks and 1,428 tests; that historical result does not qualify the architecture proposed here.
 
-Suggested invocation:
+| Existing behavior                                            | Required next behavior                                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| One invocation creates and runs a root plan                  | Load a persisted run and advance its next legal step                                       |
+| Progress is saved, but execution also uses in-memory state   | Persist all inputs, assignments, counters, pending actions, and decisions needed to resume |
+| Unknown outcomes are retained for attention                  | Investigate them and continue only when the outcome is established                         |
+| The local app owns active execution in memory                | A daemon owns durable queues and execution independently of clients                        |
+| A planner decomposes one root task                           | A manager maintains milestones and a backlog across many runs                              |
+| `ready` allows a person to decide, including after rejection | Autonomous acceptance requires an explicit evidence/policy decision                        |
+| Worktrees separate edits; native tools may bypass the bridge | Enforce filesystem, network, credential, and resource boundaries around workers            |
 
-```text
-Implement subplan A02 for XVANT.
-Read docs/autonomy/README.md and docs/autonomy/02-durable-workflow.md.
-Inspect current code and prerequisite evidence. Implement the task, validate every
-A02 acceptance criterion, and provide the required handoff. Use your judgment on
-implementation design within the plan's invariants and authorized task scope.
-```
+Inspect the current source before editing. Reuse existing storage, contracts, adapters, and verification rather than rebuilding them without a demonstrated need.
 
-## Creative latitude and decision rules
-
-Agents are encouraged to improve decomposition, interfaces, algorithms, fixtures, operational ergonomics, and implementation order within a milestone. They may replace a proposed design with a simpler or better-supported one, split a milestone into several PRs, and fix adjacent defects necessary to make the deliverable reliable. Avoid permission requests for ordinary implementation decisions already covered by the assigned task.
-
-Outcomes and invariants are binding; suggested APIs, file layout, schemas, and individual PR boundaries are design guidance. Explain material deviations in a decision record: problem, alternatives, chosen approach, invariant impact, evidence, migration, and rollback. Keep such records under `docs/autonomy/decisions/` when needed.
-
-Do not redefine success after seeing results, remove difficult tests to pass, broaden operational authority, discard uncertainty, or silently weaken acceptance, isolation, budgets, or review independence. If a required outcome conflicts with evidence or is infeasible, document a concrete replacement proposal and leave that outcome explicitly unresolved. Owner decisions are needed for new authority, materially changed product scope, or unavoidable destructive operations—not routine engineering choices. Existing session authorization takes precedence over this workflow.
-
-## Starting position
-
-The baseline includes contracts, fenced SQLite transactions, provider journals, immutable artifacts, worktrees, DAG validation, routing, repair loops, host verification, explicit acceptance, a local UI, project memory, and a lessons graph. PRs #5–#9 are integrated. The baseline's offline G10 passed 31 checks and 1,428 tests on Linux using Node 24.21.0 and npm 12.0.2. This is historical verification, not qualification of future changes or unattended live operation.
-
-Key gaps observed in the baseline:
-
-- `apps/controller/src/orchestrator.ts` constructs a fresh root graph and maintains execution counters and sets in memory. It lacks a complete root-workflow resume path.
-- `packages/storage/src/work-graphs.ts` stores graph snapshots and events, but not a fully versioned executable specification and durable action queue.
-- Recovery in `packages/storage/src/providers.ts` preserves uncertainty; it does not automatically investigate all outcomes and continue a project.
-- `ready` means ready for a human decision; a rejected review may still reach it. Empty checks are permitted and a no-op check can serve a worker turn. Neither implies autonomous verification.
-- Provider session resume and the native loop checkpoint do not constitute end-to-end project resume.
-- Worktrees and MCP permissions do not contain native shell, edit, or network tools running outside the bridge.
-- The repository has benchmark and release machinery, but the referenced historical evidence and runbooks are not all published with the source.
-
-## Architecture and ownership
+## 3. The architecture to implement
 
 ```mermaid
 flowchart TD
-  Owner[Owner goals and policy] --> Projects[Durable projects and backlog]
-  Events[Repository events and timers] --> Inbox[Durable inbox]
-  Inbox --> Projects
-  Projects --> PM[Manager proposes next work]
-  PM --> Admission[Host validates scope and budget]
-  Admission --> Engine[Durable workflow engine]
-  Engine --> Workers[Isolated replaceable workers]
-  Workers --> Evidence[Artifacts and verification]
-  Evidence --> Accept[Host acceptance policy]
-  Accept --> Promotion[Serialized integration and promotion]
-  Promotion --> Projects
-  Recovery[Reconciliation and recovery] --> Engine
-  DB[(SQLite and artifact store)] --- Engine
-  DB --- Projects
-  DB --- Evidence
-  UI[Operator controls] --> Engine
+  Owner[Owner objective and limits] --> Project[Durable project and backlog]
+  Events[Timers and repository events] --> Inbox[Durable event inbox]
+  Inbox --> Project
+  Project --> Manager[Manager proposes next work]
+  Manager --> Host[Host validates scope and resources]
+  Host --> Engine[Resumable workflow and scheduler]
+  Engine --> Worker[Isolated subagents]
+  Worker --> Verify[Trusted checks and required review]
+  Verify --> Decision{Host acceptance decision}
+  Decision -->|Repair| Engine
+  Decision -->|Accepted| Integrate[Serialized integration]
+  Decision -->|Blocked| Operator[Actionable operator queue]
+  Integrate --> Project
+  Recovery[Recovery and reconciliation] --> Engine
+  State[(SQLite and immutable artifacts)] --- Engine
+  State --- Project
+  State --- Verify
 ```
 
-The manager proposes priorities, plans, and repairs. The host alone admits work, grants capabilities, records authoritative state, evaluates acceptance, and performs promotion. Workers return proposals and artifacts. Reviewers provide evidence, not unilateral acceptance authority. The service owns execution; CLI/UI clients submit authenticated commands. Provider adapters own protocol handling, not project truth.
+The manager proposes plans, priorities, and repairs. The host decides what may execute, owns authoritative state, and evaluates completion. Workers return artifacts and observations. Reviewers contribute evidence. The daemon owns execution; the CLI and UI are clients.
 
-Prefer extending the current contracts, storage, adapters, policy, and evaluation packages. Extract the orchestrator incrementally, with legacy behavior covered during migration. A pure transition function plus a durable effect dispatcher is the recommended structure; alternatives must demonstrate equivalent recovery and authority guarantees.
+Prefer small deterministic state transitions plus a durable dispatcher for external actions. An equivalent design is welcome if it demonstrates the same guarantees. SQLite and Git do not share a transaction: record intent, perform the action, and reconcile any gap using observable evidence.
 
-## Common invariants
+## 4. Build in five stages
 
-- **I01 — Authority:** model text, retrieved memories, repository instructions, and tool outputs cannot grant permissions or change acceptance policy. Untrusted text remains sourced data.
-- **I02 — Durable intent:** commit state changes and action intents transactionally before dispatch. Persist stable command, operation, attempt, and result identities.
-- **I03 — Ownership:** stale controllers and workers cannot commit results or promote changes. Fence database writes and enforce ownership at effect boundaries; a database token alone does not fence a remote API.
-- **I04 — Uncertainty:** timeouts and lost responses are not proof of failure or success. Retain reservations until evidence establishes a safe next action. Never blindly replay an uncertain external effect.
-- **I05 — Evidence:** acceptance binds the exact candidate revision, requirements, policy version, verifier definitions, and required review. A changed dependency invalidates affected evidence.
-- **I06 — Isolation:** no cross-project workspace, credential, memory, or resource access outside the granted capability. Native tools require an enforced execution boundary.
-- **I07 — Budgets:** dispatch reserves resources durably. Retries, child tasks, and restarts cannot reset limits or expand parent authority.
-- **I08 — Accountability:** explain every terminal outcome, block, retry, replan, and promotion. Deduplicate incoming commands and external events.
-- **I09 — Honest completion:** missing checks, unknown outcomes, rejected required reviews, and partial evidence cannot satisfy autonomous completion. Manual overrides are explicit, scoped, and audited.
-- **I10 — Bounded progress:** authorized runnable work is eventually scheduled under available resources; repeated failures stop within policy; completed or idle projects generate no unbounded work.
+| Stage                          | Milestones         | Demonstration required before moving on                                                            |
+| ------------------------------ | ------------------ | -------------------------------------------------------------------------------------------------- |
+| 1. Establish the rules         | A00, A01           | Reproducible checks and a deterministic completion/admission contract                              |
+| 2. Survive interruption        | A02, A03           | Stop a run between steps; reconstruct it without losing or blindly repeating work                  |
+| 3. Deliver the autonomous core | A04, A05, A06, A07 | A background manager delegates, repairs, verifies, and integrates a small project within policy    |
+| 4. Make it useful to operate   | A08, A09, A10      | External events, current project knowledge, understandable controls, backup and upgrade procedures |
+| 5. Qualify the release         | A11                | Recorded fault campaigns, unattended operation, and honest comparisons with a single agent         |
 
-SQLite and Git cannot share a transaction. Persist intents and reconcile observable commits. Target deduplicated logical acceptance and verified effects, not an impossible universal exactly-once promise for arbitrary external commands.
+A06 can proceed alongside A03–A05 after its prerequisites are met. Build basic observability with the daemon. Do not enable unattended live workers before isolation and autonomous acceptance are qualified. Fixtures allow earlier development without claiming live readiness.
 
-## Milestones and dependency order
+## 5. Assignable subplans and progress
 
-All milestones begin **planned**, with no implementation claim. Each subplan contains its own acceptance criteria and handoff requirements.
+Read this document and the assigned subplan. Each subplan identifies the first useful change, subsequent work packages, success criteria, and concrete test scenarios.
 
-| ID  | Subplan                                                        | Prerequisites for completion | Primary outcome                                   | Status / implementation / evidence      |
-| --- | -------------------------------------------------------------- | ---------------------------- | ------------------------------------------------- | --------------------------------------- |
-| A00 | [Baseline and CI](00-baseline-and-ci.md)                       | None                         | Reproducible checks and retained evidence         | Planned; no implementation evidence yet |
-| A01 | [Project and autonomy contracts](01-project-contracts.md)      | A00                          | Executable authority and completion rules         | Planned; no implementation evidence yet |
-| A02 | [Durable workflow engine](02-durable-workflow.md)              | A01                          | Reconstruct and advance a persisted run           | Planned; no implementation evidence yet |
-| A03 | [Recovery and reconciliation](03-recovery.md)                  | A02                          | Resolve interrupted effects safely                | Planned; no implementation evidence yet |
-| A04 | [Daemon and scheduler](04-daemon-and-scheduler.md)             | A03                          | Continuous service and durable scheduling         | Planned; no implementation evidence yet |
-| A05 | [Project manager](05-project-manager.md)                       | A04                          | Multi-milestone planning and bounded delegation   | Planned; no implementation evidence yet |
-| A06 | [Isolation and budgets](06-isolation-and-budgets.md)           | A01, A02                     | Enforceable worker boundaries and resource limits | Planned; no implementation evidence yet |
-| A07 | [Verification and promotion](07-verification-and-promotion.md) | A03, A06                     | Policy-controlled autonomous integration          | Planned; no implementation evidence yet |
-| A08 | [Events and integrations](08-events-and-integrations.md)       | A04, A05, A07                | Reliable external work intake and delivery        | Planned; no implementation evidence yet |
-| A09 | [Project memory and learning](09-memory-and-learning.md)       | A01, A05                     | Useful, scoped, evidence-aware memory             | Planned; no implementation evidence yet |
-| A10 | [Operator experience and operations](10-operations.md)         | A04, A06, A07                | Operable service, recovery, and upgrade lifecycle | Planned; no implementation evidence yet |
-| A11 | [Qualification and release](11-qualification.md)               | A00–A10                      | Demonstrated reliability and useful autonomy      | Planned; no implementation evidence yet |
+| ID  | Subplan                                                          | Completion prerequisites | Status / implementation / evidence |
+| --- | ---------------------------------------------------------------- | ------------------------ | ---------------------------------- |
+| A00 | [Reproducible checks and CI](00-baseline-and-ci.md)              | None                     | Planned                            |
+| A01 | [Project and completion contracts](01-project-contracts.md)      | A00                      | Planned                            |
+| A02 | [Resumable workflow](02-durable-workflow.md)                     | A01                      | Planned                            |
+| A03 | [Recovery and reconciliation](03-recovery.md)                    | A02                      | Planned                            |
+| A04 | [Daemon and scheduler](04-daemon-and-scheduler.md)               | A03                      | Planned                            |
+| A05 | [Persistent project manager](05-project-manager.md)              | A04                      | Planned                            |
+| A06 | [Isolation and budgets](06-isolation-and-budgets.md)             | A01, A02                 | Planned                            |
+| A07 | [Verification and integration](07-verification-and-promotion.md) | A03, A06                 | Planned                            |
+| A08 | [Events and integrations](08-events-and-integrations.md)         | A04, A05, A07            | Planned                            |
+| A09 | [Memory and lessons](09-memory-and-learning.md)                  | A01, A05                 | Planned                            |
+| A10 | [Controls and operations](10-operations.md)                      | A04, A06, A07            | Planned                            |
+| A11 | [Qualification and release](11-qualification.md)                 | A00–A10                  | Planned                            |
 
-Work can overlap after interfaces are agreed: A06 can proceed alongside A03–A05; A09 alongside A07–A08; early observability from A10 should accompany A04. Completion still requires prerequisite outcomes. Avoid simultaneous uncoordinated edits to shared storage migrations or acceptance contracts.
+**Start with A00, work package 1: reproduce the full offline gate on a clean runner and document its actual requirements.** Then automate that same setup. A00 does not require implementing the daemon or changing orchestration.
 
-Execution sequence:
+Prerequisites describe working outcomes, not just merged documents. Design dependent interfaces early where useful, but do not declare a dependent milestone complete using mocked prerequisites. Keep this table current with implementation commits and evidence links. Use planned, in progress, blocked, or complete; label partial deliveries explicitly.
 
-1. Establish CI and the completion contract, then persist a complete run specification.
-2. Extract transitions and durable dispatch; add reconciliation before automatic restart.
-3. Demonstrate daemon restart and a persistent project manager with synthetic workers.
-4. Complete isolation, budgets, and trusted verification before enabling unattended live work.
-5. Add external events, memory, operator controls, and recovery operations.
-6. Qualify a narrow live profile, then expand only with recorded evidence.
+## 6. Rules every implementation must preserve
 
-## Release definition and reference demonstration
+| Rule              | Required behavior                                                                                                                                                 |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Authority         | Models, memories, and untrusted content cannot grant capabilities or approve themselves. Owner-authorized project policy defines authority.                       |
+| Durable intent    | Commit the state change and action intent together before dispatch. Use stable command, action, attempt, and result IDs.                                          |
+| Ownership         | Obsolete controllers and workers cannot advance current state or authorize integration. Enforce ownership at external action boundaries too.                      |
+| Uncertainty       | A timeout or lost reply is not proof that an action failed. Establish its outcome before retrying a potentially repeated effect.                                  |
+| Evidence          | Bind acceptance to the exact revision, requirements, verifier configuration, policy version, and required review. Invalidate affected evidence when these change. |
+| Isolation         | Enforce workspace, network, credential, and project boundaries around native tools as well as bridge tools.                                                       |
+| Limits            | Reserve resources before dispatch. Restarts, repairs, and child tasks cannot replenish budgets or expand parent permissions.                                      |
+| Honest completion | Missing verification, unresolved effects, rejected required review, and partial evidence cannot become autonomous success. Record manual exceptions separately.   |
+| Bounded progress  | Schedule eligible work fairly, limit repeated failures, explain blocks, and avoid model calls when no useful authorized work exists.                              |
 
-The first release is an autonomous repository-maintenance and bounded feature-development service within an owner-configured scope. It can plan, execute, verify, and integrate approved classes of work without routine human confirmation. Deployment authority is separate and optional. Human intervention is appropriate for unresolved ambiguity, required authority, invalid credentials, and exhausted budgets; these must be actionable blocks, not silent hangs.
+Do not claim universal exactly-once execution of arbitrary external commands. Provide deduplicated logical decisions, supported remote idempotency, and explicit reconciliation where outcomes can be ambiguous.
 
-Reference demonstration: assign a small project with at least three dependent milestones, a parallel implementation opportunity, a failing acceptance check, and a subsequent repair. Interrupt a worker and restart the controller during the project. Change the target branch before promotion. XVANT recovers, reevaluates stale evidence, completes authorized integration, records its decisions, selects the next milestone, and finally becomes idle. Include a second scenario whose ambiguous external effect must remain blocked rather than be duplicated.
+## 7. How an agent should execute a subplan
 
-Release requires: all milestone criteria evidenced; mandatory fault cases accounted for; zero observed lost committed tasks, duplicate logical promotions, stale-evidence acceptances, or boundary violations in the declared qualification campaign; successful restore and upgrade drills; and repeated live comparisons reporting completion, escaped defects, usage, latency, and interventions. Zero observed violations in a finite campaign is evidence, not a universal guarantee.
+1. Read the two documents, repository instructions, current code, and prerequisite evidence.
+2. Identify the first work package and the criterion IDs it will satisfy. State the approach and validation briefly.
+3. Create an implementation branch. Deliver small coherent changes in the listed order; splitting or combining packages is allowed.
+4. Add tests for the actual required behavior and relevant failure boundaries. Run focused checks during development and the repository's integrated gate for implementation completion.
+5. Report each criterion as pass, partial, blocked, or not run, with commands/artifacts. Never infer a live pass from a fixture pass.
+6. Update the progress table and leave a handoff that allows another agent to continue.
 
-## Common validation and handoff
+Use the pinned toolchain. The reviewed baseline's integrated command is `npm run gate -- --phase 10 --offline`. Browser fixtures require Chromium; signing fixtures require the OpenSSH client; process-death tests in a container require an init or subreaper that reaps orphaned children. Record environment fixes rather than weakening behavioral checks. Documentation-only changes need formatting and link checks.
 
-Use the repository's pinned toolchain. At this baseline the full offline command is `npm run gate -- --phase 10 --offline`; future automation may replace its implementation but must retain meaningful coverage and evidence. Run focused checks during development and the required integrated gate before declaring an implementation milestone complete. Documentation-only changes require formatting and link validation, not a model campaign. Never label a fixture pass as a live provider pass.
+Each handoff must identify the milestone, completed packages, implementation/prerequisite commits, criterion-to-evidence results, runtime/host versions, migration and rollback instructions, remaining blockers, and next useful task. Keep evidence accessible after temporary CI artifacts expire and keep credentials/private user data out of public artifacts.
 
-On Linux containers, use a real init/subreaper for process-death tests. The baseline container's PID 1 did not reap orphaned children; changing test expectations to ignore running descendants is not an acceptable substitute. Browser checks require Chromium and release-signing fixtures require the OpenSSH client. Record runtime versions and host constraints.
+## 8. Where agents may use their judgment
 
-Every implementation handoff must include:
+Choose APIs, file layout, algorithms, fixtures, prompts, and operational tools that best meet the outcomes. Improve decomposition and fix adjacent defects needed for a reliable result. Prefer a simpler design when it provides equivalent guarantees. Listed source paths and work packages are starting guidance, not compulsory code structure.
 
-```text
-Milestone / scope:
-Implementation commit and prerequisite commits:
-Acceptance criterion ID -> command or artifact -> result:
-Source/evidence hashes and runtime/host versions:
-Changed interfaces and migration/rollback procedure:
-Design deviations and rationale:
-Remaining risks, unsupported cases, and blockers:
-Next recommended task:
-```
+Document material design changes with the reason, alternatives, impact on guarantees, and migration/rollback implications. Routine implementation decisions do not need repeated owner confirmation. New operational authority, materially changed product scope, and unavoidable destructive actions require the authorization appropriate to that change.
 
-Store durable decision/handoff records under this directory or publish stable links to CI artifacts. Keep sensitive prompts, credentials, and user data out of public evidence. Evidence must remain identifiable after temporary CI artifacts expire. Add implementation commit and evidence links to the milestone row when work completes; an agent starting later must still verify that the current tree preserves those outcomes.
+Do not redefine success after seeing results, hide failing tests, expand permissions, or weaken required evidence to finish a milestone. If a criterion proves infeasible, explain the conflict and propose a concrete replacement; keep it unresolved until that change is agreed. Existing owner/session authorization takes precedence over this workflow.
+
+## 9. Definition of the first successful system
+
+Assign a small project with three dependent milestones, one parallel opportunity, and an acceptance check that initially fails. During execution, stop a worker, restart the controller, and move the target branch before integration.
+
+XVANT must preserve the project, determine what happened, repair or replace the affected work, rerun invalidated checks, integrate under policy, select the next milestone, and finally become idle. Run a second case where an unresolvable external effect must stay blocked rather than be repeated.
+
+This core demonstration is an intermediate milestone. Release additionally requires A08–A11: usable controls and integrations, backup/upgrade drills, fault accounting, staged 24-hour/72-hour/seven-day soaks, and repeated live comparisons. Measure accepted results, defects, time, usage, and operator interventions. Publish unfavorable results too; a finite campaign establishes observed behavior, not permanent correctness.

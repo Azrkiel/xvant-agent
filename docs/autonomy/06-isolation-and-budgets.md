@@ -1,41 +1,66 @@
-# A06 — Worker isolation and durable resource budgets
+# A06 — Isolation and resource budgets
 
-Status: planned. Completion prerequisites: A01 and A02. Read [the overall plan](README.md) first.
-This can proceed alongside A03–A05; unattended live execution must wait for its outcome.
+Status: planned. Completion prerequisites: **A01, A02**.
+Read [the overall plan](README.md) and this subplan before editing.
 
-## Outcome
+## Deliverable
 
-A worker can exercise only its granted capabilities and resources. Native provider shell/edit/network tools run inside the same enforced boundary as other worker actions. Worktrees and permission prompts alone do not qualify isolation.
+Every worker, including native provider tools, is confined to its granted environment and resources; restarts and child tasks cannot expand its allocation.
 
-Inspect `packages/supervisor`, `packages/policy`, `packages/tools`, `packages/contracts/src/live.ts`, provider controllers, and the native loop limits. Existing native-loop step limits are useful but do not provide aggregate project budgets or contain external runtimes.
+## Start here
 
-## Execution
+Inspect `packages/supervisor`, `packages/policy`, `packages/tools`, `packages/contracts/src/live.ts`, `packages/native-agent/src/loop.ts`, `apps/controller/src`. These are starting points, not required locations for new code. Verify prerequisite outcomes and current repository instructions before implementing.
 
-1. Define an execution-environment contract: identity, allowed mounts, temporary storage, network policy, credential references, resource ceilings, lifecycle, and artifact export.
-2. Implement and qualify one Linux isolation backend. Prevent access to other projects, controller state, host sockets, home credentials, and privileged host interfaces. Select a mechanism appropriate to the claimed threat model.
-3. Run native provider CLIs inside the boundary. Supply minimal credentials/configuration; verify their required auth flow works without silently opening host access. Declare unsupported provider/profile combinations.
-4. Enforce CPU, memory, process count, workspace/disk growth, wall time, and descendant termination. Define cleanup and reconciliation after worker death or service restart.
-5. Add transactional project/global budget reservations. Include child tasks, retries, repairs, model calls, and concurrent workers. Reconcile reported usage without releasing uncertain reservations prematurely.
-6. Distinguish measured, estimated, partial, and unknown usage. Exact monetary guarantees require enforceable provider limits or conservative maximum reservations; missing telemetry must not become zero cost.
-7. Implement quota/auth/network failure classes, bounded backoff, circuit breakers, and explicit unblock rules. Never rotate accounts or enable a paid fallback merely to bypass a block.
-8. Inspect exported artifacts and enforce path/symlink/size rules before host integration. A patch may be correct syntactically yet outside task ownership.
+**First useful change:** Define and implement one worker boundary. Finish work package 1 before broadening the implementation. Each package can be one or more reviewable PRs.
 
-## Success criteria
+## Work in this order
 
-- **A06-C1:** Adversarial workers cannot read/write another workspace, controller database, unrelated secrets, or prohibited network endpoints.
-- **A06-C2:** Native provider tools obey the enforced boundary in live qualification for each admitted profile.
-- **A06-C3:** Deadline/resource violations terminate the whole owned execution environment and preserve recoverable state.
-- **A06-C4:** Concurrent dispatch cannot oversubscribe reserved limits; restarts and child tasks cannot replenish them.
-- **A06-C5:** Unknown usage is visible and handled conservatively; claimed financial caps match actual enforcement.
-- **A06-C6:** Credential material is absent from persistent prompts, public logs, and exported evidence.
-- **A06-C7:** Unsupported isolation/auth routes fail closed with an actionable capability report.
+### Work package 1: Define and implement one worker boundary
 
-## Validation and latitude
+Specify workspace mounts, network access, secret references, environment identity, lifecycle, and artifact export. Qualify one Linux backend without unrelated host files, controller state, or host sockets.
 
-Exercise cross-project access, symlink escape, host-socket access, network egress, fork/process growth, disk exhaustion, stale-worker execution, and concurrent budget claims. Use isolated disposable fixtures. Report exact host/backend/provider versions and the limits of containment; a container label is not proof.
+**Deliver:** A disposable execution environment with an explicit threat model.
 
-Choose containers, OS isolation, or a stricter sandbox; document tradeoffs. Support only qualified profiles initially. Do not weaken TLS, mount broad host credentials, or declare prompt instructions to be an enforcement boundary.
+### Work package 2: Run real provider tools inside it
 
-## Deliverables and handoff
+Launch native CLIs inside the boundary with minimal credentials/configuration. Enforce CPU, memory, process, disk, duration, and descendant termination limits. Validate exported artifacts before host integration.
 
-Execution backend, budget ledger, capability/admission matrix, resource/reaping tests, and live boundary evidence. A07 consumes artifact and usage receipts; A10 consumes cleanup, health, and configuration interfaces.
+**Deliver:** A provider/profile capability matrix backed by actual boundary checks.
+
+### Work package 3: Reserve project resources durably
+
+Add transactional global/project/child budget allocation, usage reconciliation, conservative handling of unknown usage, bounded backoff, and circuit breakers. Preserve uncertain reservations.
+
+**Deliver:** A budget ledger and concurrency/restart tests.
+
+## Acceptance checklist
+
+Mark a criterion passed only when the handoff links to its command or artifact and observed result. These IDs are preserved from plan version 1 so existing references remain valid.
+
+- [ ] **A06-C1:** Adversarial workers cannot read/write another workspace, controller database, unrelated secrets, or prohibited network endpoints.
+- [ ] **A06-C2:** Native provider tools obey the enforced boundary in live qualification for each admitted profile.
+- [ ] **A06-C3:** Deadline/resource violations terminate the whole owned execution environment and preserve recoverable state.
+- [ ] **A06-C4:** Concurrent dispatch cannot oversubscribe reserved limits; restarts and child tasks cannot replenish them.
+- [ ] **A06-C5:** Unknown usage is visible and handled conservatively; claimed financial caps match actual enforcement.
+- [ ] **A06-C6:** Credential material is absent from persistent prompts, public logs, and exported evidence.
+- [ ] **A06-C7:** Unsupported isolation/auth routes fail closed with an actionable capability report.
+
+## Test these scenarios
+
+These scenarios are a minimum starting set; the acceptance checklist remains binding. Add other cases needed to cover the actual implementation.
+
+| Scenario                    | Setup/action                                                                              | Required observation                                                           |
+| --------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Boundary attack             | Try other project paths, secrets, symlinks, prohibited network targets, and host sockets. | The declared boundary is enforced, including native tools.                     |
+| Resource exhaustion         | Grow processes, disk use, memory, or runtime beyond limits.                               | The owned environment stops with recoverable state and no escaped descendants. |
+| Concurrent/resumed spending | Race dispatches, restart, and create child tasks with partial usage telemetry.            | Limits are not replenished or oversubscribed; unknown usage is not zero.       |
+
+Use the overall plan's validation rules and required integrated gate. Record fixture and live results separately. Select any environment-specific timing/resource thresholds before running the measurement.
+
+## Design freedom
+
+Choose containers, OS isolation, or a stronger sandbox appropriate to the claim. Support only qualified provider/auth routes. Do not promise an exact monetary cap without an enforceable mechanism, disable TLS, or bypass quota blocks through another account.
+
+## Finish and hand off
+
+List completed work packages and the result/evidence for every A06-C criterion. Document interface changes, migration/rollback, remaining limitations, and the next useful task. Update this milestone's row in the [overall plan](README.md). If any required criterion is partial, blocked, or not run, keep the milestone incomplete. Follow the shared handoff requirements in the overall plan.
