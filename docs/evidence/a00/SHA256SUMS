@@ -7,6 +7,7 @@ e804b72a02490c7ad3d7136585598577c8a9fdfe8b3ba4ae719f24077f4a36c6  docs/evidence/
 c9d39f478d3bd47f2d73a27bf226d235e922235884a9b7423eec751f7f0b8745  docs/evidence/a00/baseline-install.log
 3aae83fb34c709e5179ccf01d5a564b582538e04bc8801a6dc07da15b782a247  docs/evidence/a00/baseline-passed.json
 da72ee41e20c3cd5a10878d9a15689ae1d69325e620550df3a57ffeec712e1b7  docs/evidence/a00/baseline-passed.tar.gz
+1fcf24bda75acb7148c49bef5380f5b9dec7a7628f76c7a09ff66d5189d19af8  docs/evidence/a00/browser-readiness-before.log
 9c1b31fa13e367188f7e6d2d95d41cf6911dbb801dc2d74536a3b115cd2e9d28  docs/evidence/a00/ci-failing-fixture-setup.log
 360241e77903b0153b995aacf451290404bfc41c34c7a288d826a02134e44fea  docs/evidence/a00/ci-failing-fixture-source-validation.json
 a8aa66d90d980191f3ebae4479e7d5d193e7c0745aa04bee6f34a00008b2b8a5  docs/evidence/a00/ci-failing-fixture.json
@@ -30,6 +31,9 @@ c27a2c5a46e413dcdcd697855f22a4821bb0edc2e9b4d630e33a9cada88ba5d0  docs/evidence/
 618831ebe294b8a87361e9c16c46df488cfadad0ff640719e29e4083a3e890dd  docs/evidence/a00/ci-missing-suite.json
 edc0df8bb4d362a4c62948ad6642ca4c99b38d201be3dae9e2832fd5bbc7f531  docs/evidence/a00/ci-missing-suite.tar.gz
 c56b5337bdd823e7aa448c5220b3f1681c14d79ba4c9fd8dad9def40233dcfda  docs/evidence/a00/ci-runner-permissions.log
+55e23efcf7a634e5ac2ee0e88594200e1b2bc5b189330ee43d2933a5dcbe7977  docs/evidence/a00/ci-windows-browser-failed-setup.log
+bde392070eb2d6cece571ac5113f88afd080a6c7f32b18cd3c8539b3cb8fac15  docs/evidence/a00/ci-windows-browser-failed.json
+b22a8a294e389aaffa5e40e7d811aff39130c3871fbface7739b19fc03e01611  docs/evidence/a00/ci-windows-browser-failed.tar.gz
 fbe8fed6b849b963b643680a8cacfbec86754d5b8020d38bdaf700ed8944fbb1  docs/evidence/a00/ci-windows-initial-failed-setup.log
 7e7563691cea747dd3df16e7b360d293b0b04fac0490e0c176e15f5e1f3716f7  docs/evidence/a00/ci-windows-initial-failed-source-validation.json
 ed530f982a78b8865372a2d9ab16832eb08732476ca44f83b225f13915a811cf  docs/evidence/a00/ci-windows-initial-failed.json
@@ -42,7 +46,7 @@ f50439916c975c940a269f1d4a0b860ab9ac0f1846bff95f40af2648f228ca33  docs/evidence/
 a989cb8ed87ac16f70e34d494869c40a4198520c917a535ef43f95e5a2a1c7af  docs/evidence/a00/ci-windows-qualified-setup.log
 fd6d234543001802a248919e9f1f0e29132378d831318e104e7533ea977b79d6  docs/evidence/a00/ci-windows-qualified.json
 9e12accad6da2c6af53c2cb8c6fcbbe91d36d0c6ea06e53b75dfbb4887611cc0  docs/evidence/a00/ci-windows-qualified.tar.gz
-9b0b9d42465640dca08b9c80b73ffb3e4d2dfc41ca0621e3fed3f8e99bf04958  docs/evidence/a00/handoff.md
+c5db2f68ce07b5d6007dd7fb7ce99a0014e92d87431e6263559b8fca99a4f435  docs/evidence/a00/handoff.md
 d683bbca263c5bd23daf1a9e3d06cf0673550f69d5204946d710bce663bdc0a1  docs/evidence/a00/implementation-gate.log
 73c4741e45daade594193ff6060f4983cbb87692a139e64a0747468517e71286  docs/evidence/a00/implementation-linux-local.json
 a86d48fb453c432dacb44ca00d12d613e4ce0b24fa26c40e906e8c4851472d2f  docs/evidence/a00/implementation-linux-local.tar.gz

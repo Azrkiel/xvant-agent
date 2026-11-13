@@ -144,7 +144,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'packages/tools/src/process.test.ts': 12,
               'packages/tools/src/controller.test.ts': 7,
               'packages/tools/src/mcp.test.ts': 9,
-              'packages/tools/src/browser.test.ts': 8,
+              'packages/tools/src/browser.test.ts': 11,
               'packages/skills/src/catalog.test.ts': 12,
               'packages/skills/src/hooks.test.ts': 4,
               'packages/skills/src/bundled.test.ts': 13,

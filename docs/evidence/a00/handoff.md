@@ -1,6 +1,6 @@
 # A00 handoff
 
-Status: complete. Work packages 1–3 delivered. No prerequisite milestones.
+Status: in progress. Browser readiness follow-up is awaiting fresh CI. No prerequisite milestones.
 The PR targets `codex/autonomous-agent-plan` and must remain unmerged for owner
 review. A01 has not begun.
 
@@ -135,3 +135,22 @@ There is no mutable runtime state or dependency cache in CI to migrate or erase.
 Next useful task, after review/merge of A00 and a separately assigned request:
 **A01 — Project and completion contracts**, starting with its first work package.
 Do not infer permission to begin it from this handoff.
+
+## Browser readiness follow-up
+
+The [parallel Windows push job](https://github.com/Azrkiel/xvant-agent/actions/runs/43368639732/job/131699032575)
+for `6e5fbff` passed all 1,441 tests but failed the standalone browser check.
+[Receipt](ci-windows-browser-failed.json) and [bundle](ci-windows-browser-failed.tar.gz)
+are retained. The original fixture suppressed the underlying error message, so
+that run does not establish which browser startup boundary failed. It must not
+be hidden by the passing PR run.
+
+A deterministic delayed-page regression reproduces a startup defect in the
+original implementation: DevToolsActivePort can exist before a page target is
+registered, but the tool assumed a fixed 50 ms wait was sufficient. The
+[red regression result](browser-readiness-before.log) records that failure.
+The correction waits for readiness within the existing 15-second launch deadline,
+without relaunching the browser or repeating navigation. It preserves terminal
+protocol failures and timeout/cleanup checks. The fixture now records a bounded,
+redacted underlying error message for future diagnosis. Three new regression
+cases raise the required total to 1,444. Fresh full-gate qualification is pending.

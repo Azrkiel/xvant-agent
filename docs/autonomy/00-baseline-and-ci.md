@@ -1,7 +1,8 @@
 # A00 — Reproducible checks and CI
 
-Status: complete. Work packages 1–3 passed, including independent Linux/Windows
-CI and controlled-failure evidence. See the [runner guide](a00-runner.md) and
+Status: in progress. Independent Linux/Windows passes and controlled-failure
+evidence are retained. A parallel Windows push exposed a standalone browser
+startup failure; a bounded readiness correction is awaiting fresh CI. See the [runner guide](a00-runner.md) and
 [evidence handoff](../evidence/a00/handoff.md). Completion prerequisites: **None**.
 Read [the overall plan](README.md) and this subplan before editing.
 
@@ -40,10 +41,10 @@ Add an evidence index with source/runtime/host details and retention rules. Labe
 Mark a criterion passed only when the handoff links to its command or artifact and observed result. These IDs are preserved from plan version 1 so existing references remain valid.
 
 - [x] **A00-C1:** A clean documented runner installs and passes the baseline gate without developer-local files. [Observed receipt](../evidence/a00/baseline-passed.json).
-- [x] **A00-C2:** CI exercises the submitted revision and identifies its source hash; missing or failing required checks fail the job.
+- [ ] **A00-C2:** CI exercises the submitted revision and identifies its source hash; missing or failing required checks fail the job.
 - [x] **A00-C3:** A deliberate failing fixture produces a failed job and useful retained evidence; an unavailable browser cannot produce a green result.
 - [x] **A00-C4:** No live calls or write credentials are needed for ordinary PR checks.
-- [x] **A00-C5:** Linux and Windows results are labeled independently. Reaping/setup defects are documented and corrected in the runner.
+- [ ] **A00-C5:** Linux and Windows results are labeled independently. Reaping/setup defects are documented and corrected in the runner.
 - [x] **A00-C6:** An evidence index links commands, source, runtime, results, and known limits, without secrets.
 
 ## Test these scenarios

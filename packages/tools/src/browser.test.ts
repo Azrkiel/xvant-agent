@@ -46,14 +46,20 @@ afterEach(() => {
   store.close();
   rmSync(root, { recursive: true, force: true });
 });
-function call(input: unknown, timeoutMs?: number) {
+function call(
+  input: unknown,
+  timeoutMs?: number,
+  browserArgs: string[] = [],
+  launchTimeoutMs?: number,
+) {
   const tool = createBrowserTool({
-    browser: { program: process.execPath, args: [fake] },
+    browser: { program: process.execPath, args: [fake, ...browserArgs] },
     allowedOrigins: ['http://127.0.0.1:4173'],
     supervisor,
     store,
     objects,
     ...(timeoutMs ? { loadTimeoutMs: timeoutMs } : {}),
+    ...(launchTimeoutMs ? { launchTimeoutMs } : {}),
   });
   const context: ToolContext = {
     projectId: 'project',
@@ -72,6 +78,37 @@ function call(input: unknown, timeoutMs?: number) {
 }
 
 describe('browser.inspect', () => {
+  it('waits for a page registered after the DevTools port without relaunching', async () => {
+    const receipt = await call(
+      { url: 'http://127.0.0.1:4173/app' },
+      undefined,
+      ['--fake-target-delay-ms=500'],
+      5000,
+    );
+    expect(receipt.status).toBe('succeeded');
+    expect(supervisor.activeCount).toBe(0);
+  });
+  it('fails and cleans up when no page becomes ready before the launch deadline', async () => {
+    const before = profilesBefore();
+    const receipt = await call(
+      { url: 'http://127.0.0.1:4173/app' },
+      undefined,
+      ['--fake-target-delay-ms=30000'],
+      1000,
+    );
+    expect(receipt).toMatchObject({ status: 'failed', code: 'TIMEOUT' });
+    expect(profilesBefore()).toEqual(before);
+    expect(supervisor.activeCount).toBe(0);
+  });
+  it('fails on a DevTools protocol error instead of treating it as readiness', async () => {
+    const receipt = await call(
+      { url: 'http://127.0.0.1:4173/app' },
+      undefined,
+      ['--fake-target-status=invalid'],
+    );
+    expect(receipt).toMatchObject({ status: 'failed', code: 'TOOL_FAILED' });
+    expect(supervisor.activeCount).toBe(0);
+  });
   it('captures page evidence in an isolated, deleted profile', async () => {
     const before = profilesBefore();
     const receipt = await call({ url: 'http://127.0.0.1:4173/app' });

@@ -11,6 +11,7 @@ const flag = (name) =>
     .find((arg) => arg.startsWith(name + '='))
     ?.slice(name.length + 1);
 const profile = flag('--user-data-dir');
+const targetReadyAt = Date.now() + Number(flag('--fake-target-delay-ms') ?? 0);
 if (process.env.FAKE_BROWSER_ARGS_OUT)
   writeFileSync(
     process.env.FAKE_BROWSER_ARGS_OUT,
@@ -19,6 +20,15 @@ if (process.env.FAKE_BROWSER_ARGS_OUT)
 const PNG = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
 const server = createServer((req, res) => {
   if (req.url === '/json/list') {
+    if (flag('--fake-target-status') === 'invalid') {
+      res.statusCode = 503;
+      res.end('unavailable');
+      return;
+    }
+    if (Date.now() < targetReadyAt) {
+      res.end('[]');
+      return;
+    }
     const { port } = server.address();
     res.end(
       JSON.stringify([
