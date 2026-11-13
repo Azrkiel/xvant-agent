@@ -4,8 +4,10 @@ import { existsSync } from 'node:fs';
 // preference. Shared by scripts/browser-fixture.mjs and tests/e2e/ui.test.ts so
 // the two cannot disagree about which hosts have a browser.
 export function browserCandidates(env = process.env): string[] {
+  // An explicit registration is authoritative. A typo must not silently
+  // select an unrelated installed browser and produce misleading evidence.
+  if (env.XVANT_BROWSER !== undefined) return [env.XVANT_BROWSER];
   return [
-    env.XVANT_BROWSER,
     'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
     'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',

@@ -1,0 +1,30 @@
+commit ec49dda8b03cfcf1a21431bc10f91e106ef4f440
+Author:     Azrkiel <azrkiel@gmail.com>
+AuthorDate: Thu Nov 12 23:43:17 2026 -0500
+Commit:     Azrkiel <azrkiel@gmail.com>
+CommitDate: Thu Nov 12 23:43:17 2026 -0500
+
+    test(a00-proof): require unavailable browser to fail Linux CI
+
+diff --git a/.github/workflows/offline.yml b/.github/workflows/offline.yml
+index 79d287b..c1609ef 100644
+--- a/.github/workflows/offline.yml
++++ b/.github/workflows/offline.yml
+@@ -20,7 +20,7 @@ jobs:
+     strategy:
+       fail-fast: false
+       matrix:
+-        os: [ubuntu-24.04, windows-2025]
++        os: [ubuntu-24.04]
+     defaults:
+       run:
+         shell: bash
+@@ -82,6 +82,8 @@ jobs:
+             browser="$launcher"
+           fi
+           echo "XVANT_BROWSER=$browser" >> "$GITHUB_ENV"
++      - name: Deliberately register an unavailable browser for A00 proof
++        run: echo "XVANT_BROWSER=$RUNNER_TEMP/a00-browser-does-not-exist" >> "$GITHUB_ENV"
+       - name: Run full offline gate
+         run: |
+           set -euo pipefail

@@ -1,0 +1,126 @@
+{
+  "gateId": "G10",
+  "status": "failed",
+  "generatedAt": "2026-11-13T04:44:07.545Z",
+  "sourceRevision": "f40ffa9fb3065c036dce0800fb28f1c315f45354",
+  "branch": "",
+  "ci": {
+    "repository": "Azrkiel/xvant-agent",
+    "runId": "43367338919",
+    "runAttempt": "1",
+    "event": "push",
+    "eventRevision": "f40ffa9fb3065c036dce0800fb28f1c315f45354",
+    "expectedRevision": "f40ffa9fb3065c036dce0800fb28f1c315f45354",
+    "job": "offline",
+    "runnerOS": "Linux",
+    "runnerArch": "X64"
+  },
+  "dirtyTreeHash": "f7b8b94e5614a48b47551eb928dbccf7507cf53395ff8d873f04a8896c831faa",
+  "sourceHashScope": "All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.",
+  "operatingSystem": "linux 7.0.0-1017-azure",
+  "executionHost": "runnervm8axu0",
+  "nodeVersion": "v24.21.0",
+  "npmVersion": "npm/12.0.2 node/v24.21.0 linux x64 workspaces/false ci/github-actions/dotcom-hosted",
+  "gitVersion": "git version 2.56.1",
+  "classification": "offline",
+  "qualificationScope": "offline-release",
+  "runtimeKind": "simulated",
+  "liveProvidersTested": [],
+  "checks": [
+    {
+      "id": "typecheck",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:44:07.583Z",
+      "finishedAt": "2026-11-13T04:44:13.486Z",
+      "exitCode": 0
+    },
+    {
+      "id": "lint",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "node_modules/eslint/bin/eslint.js",
+        "packages",
+        "apps",
+        "scripts",
+        "tests"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:44:13.488Z",
+      "finishedAt": "2026-11-13T04:44:17.760Z",
+      "exitCode": 0
+    },
+    {
+      "id": "format",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "."
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:44:17.760Z",
+      "finishedAt": "2026-11-13T04:44:22.771Z",
+      "exitCode": 0
+    },
+    {
+      "id": "tests",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--coverage",
+        "--reporter=default",
+        "--reporter=json",
+        "--outputFile=.artifacts/tests.json"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:44:22.771Z",
+      "finishedAt": "2026-11-13T04:46:38.196Z",
+      "exitCode": 0
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".artifacts/typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".artifacts/lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".artifacts/format.log",
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    },
+    {
+      "path": ".artifacts/tests.log",
+      "sha256": "5201aa13d4b622925c22207f9dc595d3016a734d4c016535f48ef882bca9c63d"
+    },
+    {
+      "path": ".artifacts/tests.json",
+      "sha256": "54895faab015fab687ca945a193a32e6b1ba833442781c1ec15d8247cce93a9c"
+    },
+    {
+      "path": "coverage/coverage-summary.json",
+      "sha256": "a327cacf252383c8ec3a2fac9cf3bcd13372914542ff4296dedeb4d938f8cef2"
+    },
+    {
+      "path": ".artifacts/source-manifest.json",
+      "sha256": "d3f1cea06d54e0387eca0c75ec063d5365b7ec4b8f56b15d7a7efa848cef60f5"
+    }
+  ],
+  "limitations": [
+    "This report qualifies only its recorded host and platform; other CI jobs need their own reports.",
+    "Simulation fixtures do not qualify provider protocols, subscriptions, or real coding ability.",
+    "Process supervision is trusted-local only. No hostile-code, filesystem, network, or escaped-descendant containment is qualified.",
+    "Linux and Windows qualification are independent; this receipt is not a live-provider or unattended-operation qualification."
+  ],
+  "rollbackProcedure": "Keep the branch unmerged; no external service or data migration was changed.",
+  "lastKnownGoodVersion": null,
+  "failure": "Missing or reduced suite: tests/release-sign.test.ts"
+}

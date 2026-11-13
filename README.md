@@ -6,6 +6,9 @@ Original local agent harness. Phase 2 adds durable SQLite state, supervised simu
 
 ## Run
 
+For the full offline gate and Linux/Windows CI requirements, follow the
+[A00 runner guide](docs/autonomy/a00-runner.md).
+
 Install Node **24.21.0** and npm **12.0.2**, then run from this directory:
 
 ```sh

@@ -1,0 +1,140 @@
+name: Offline gate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline:
+    name: Offline / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025]
+    defaults:
+      run:
+        shell: bash
+    env:
+      CI: 'true'
+      # Test the submitted head, recording the event's merge SHA separately.
+      XVANT_EXPECTED_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Check out submitted source without persisted credentials
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ env.XVANT_EXPECTED_REVISION }}
+          persist-credentials: false
+      - name: Install pinned Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - name: Install pinned npm and dependencies without lifecycle scripts
+        run: |
+          set -euo pipefail
+          mkdir -p .artifacts
+          {
+            npm install --global npm@12.0.2 --ignore-scripts --no-audit --no-fund
+            node --version
+            npm --version
+            test "$(node --version)" = "v$(cat .node-version)"
+            test "npm@$(npm --version)" = "$(node -p 'require("./package.json").packageManager')"
+            git rev-parse HEAD
+            git --version
+            ssh -V
+            npm ci --ignore-scripts --no-audit --no-fund
+            node --input-type=module -e 'import Database from "better-sqlite3"; const db=new Database(":memory:"); console.log(db.prepare("select sqlite_version() version").get()); db.close()'
+          } 2>&1 | tee .artifacts/setup.log
+      - name: Use canonical runner temp storage for fixtures
+        run: |
+          set -euo pipefail
+          node --input-type=module -e 'import {appendFileSync,mkdirSync,realpathSync} from "node:fs"; import {join} from "node:path"; const path=join(process.env.RUNNER_TEMP,"xvant-fixtures"); mkdirSync(path,{recursive:true}); const canonical=realpathSync.native(path); for(const key of ["TMP","TEMP","TMPDIR"]) appendFileSync(process.env.GITHUB_ENV,key+"="+canonical+"\n"); console.log("Fixture temp: "+canonical)' 2>&1 | tee -a .artifacts/setup.log
+      - name: Install Linux init and browser dependencies
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          {
+            sudo apt-get update
+            sudo apt-get install -y tini openssh-client
+            tini --version
+            node node_modules/playwright-core/cli.js install --with-deps chromium
+          } 2>&1 | tee -a .artifacts/setup.log
+      - name: Install Windows browser
+        if: runner.os == 'Windows'
+        run: |
+          set -euo pipefail
+          node node_modules/playwright-core/cli.js install chromium 2>&1 | tee -a .artifacts/setup.log
+      - name: Register fixture browser
+        run: |
+          set -euo pipefail
+          browser="$(node --input-type=module -e 'import {chromium} from "playwright-core"; console.log(chromium.executablePath())')"
+          node --input-type=module -e 'import {chromium} from "playwright-core"; const b=await chromium.launch(); console.log({browser:chromium.executablePath(),version:b.version()}); await b.close()' 2>&1 | tee -a .artifacts/setup.log
+          if [ "$RUNNER_OS" = Linux ]; then
+            # Trusted local fixtures only. See docs/autonomy/a00-runner.md.
+            launcher="$RUNNER_TEMP/xvant-chromium"
+            printf '#!/bin/sh\nexec "%s" --no-sandbox "$@"\n' "$browser" > "$launcher"
+            chmod +x "$launcher"
+            browser="$launcher"
+          fi
+          echo "XVANT_BROWSER=$browser" >> "$GITHUB_ENV"
+      - name: Verify Git worktree path identities
+        run: |
+          set -euo pipefail
+          node scripts/runner-preflight.mjs 2>&1 | tee .artifacts/runner-preflight.log
+      - name: Check Windows durable journal deadline before the full gate
+        if: runner.os == 'Windows'
+        run: |
+          set -euo pipefail
+          node node_modules/vitest/vitest.mjs run packages/storage/src/providers.test.ts -t 'bounds journal growth and poisons the connection at the limit' 2>&1 | tee .artifacts/journal-preflight.log
+      - name: Verify standalone browser readiness before the full gate
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = Linux ]; then
+            tini -s -- node scripts/browser-fixture.mjs 2>&1 | tee .artifacts/browser-preflight.log
+          else
+            node scripts/browser-fixture.mjs 2>&1 | tee .artifacts/browser-preflight.log
+          fi
+      - name: Run full offline gate
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = Linux ]; then
+            tini -s -- npm run gate -- --phase 10 --offline 2>&1 | tee .artifacts/gate.log
+          else
+            npm run gate -- --phase 10 --offline 2>&1 | tee .artifacts/gate.log
+          fi
+      - name: Validate source-bound receipt and immutable bundle
+        if: always()
+        run: node scripts/ci-evidence.mjs
+      - name: Retain fixture evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: offline-${{ runner.os }}-${{ env.XVANT_EXPECTED_REVISION }}-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 30
+          if-no-files-found: error
+          include-hidden-files: true
+          # Explicitly exclude runtime databases, profiles, keys, and homes.
+          path: |
+            .artifacts/*.log
+            .artifacts/tests.json
+            .artifacts/source-manifest.json
+            .artifacts/ci-summary.json
+            .artifacts/runner-preflight.json
+            .artifacts/benchmark-fixture.json
+            .artifacts/audit.json
+            coverage/coverage-summary.json
+            docs/evidence/G10.json
+            docs/evidence/runs/**/bundle.json
+            docs/evidence/runs/**/receipt.json
+            docs/evidence/runs/**/artifacts/.artifacts/*.log
+            docs/evidence/runs/**/artifacts/.artifacts/*.json
+            docs/evidence/runs/**/artifacts/coverage/coverage-summary.json

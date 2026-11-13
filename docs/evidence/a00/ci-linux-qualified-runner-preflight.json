@@ -1,0 +1,26 @@
+{
+  "platform": "linux",
+  "tempDirectory": "/home/runner/work/_temp/xvant-fixtures",
+  "inheritedGitDir": false,
+  "inheritedGitWorkTree": false,
+  "tree": {
+    "registered": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-YBYsmt/tree",
+    "real": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-YBYsmt/tree",
+    "native": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-YBYsmt/tree",
+    "gitTop": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-YBYsmt/tree",
+    "topReal": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-YBYsmt/tree",
+    "topNative": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-YBYsmt/tree"
+  },
+  "repositoryCommon": {
+    "raw": ".git",
+    "real": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-YBYsmt/repo/.git",
+    "native": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-YBYsmt/repo/.git"
+  },
+  "worktreeCommon": {
+    "raw": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-YBYsmt/repo/.git",
+    "real": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-YBYsmt/repo/.git",
+    "native": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-YBYsmt/repo/.git"
+  },
+  "repositoryScope": "repo_39a3de2df9d0f755",
+  "worktreeScope": "repo_39a3de2df9d0f755"
+}

@@ -8,6 +8,7 @@ import { WorkerSupervisor } from '../packages/supervisor/src/index.ts';
 import { ToolRegistry } from '../packages/tools/src/registry.ts';
 import { createBrowserTool } from '../packages/tools/src/browser.ts';
 import { findBrowser } from './browser-path.ts';
+import { redactSecrets } from '../packages/context/src/secrets.ts';
 
 // Real-browser qualification for browser.inspect on this host. A missing
 // browser is reported as unavailable, never as a pass.
@@ -56,7 +57,23 @@ try {
     store,
     objects,
   });
-  const receipt = await new ToolRegistry([tool], { record: () => {} }).invoke(
+  let diagnostic = null;
+  const observedTool = {
+    ...tool,
+    execute: async (...args) => {
+      try {
+        return await tool.execute(...args);
+      } catch (error) {
+        diagnostic = redactSecrets(
+          String(error.message ?? error).slice(0, 500),
+        );
+        throw error;
+      }
+    },
+  };
+  const receipt = await new ToolRegistry([observedTool], {
+    record: () => {},
+  }).invoke(
     { tool: 'browser.inspect', input: { url: origin + '/', waitMs: 500 } },
     {
       projectId: 'project',
@@ -78,6 +95,7 @@ try {
     browser: executable.split(/[\\/]/).at(-1),
     status: receipt.status,
     code: receipt.code ?? null,
+    diagnostic,
     title: result.title ?? null,
     httpStatus: result.status ?? null,
     textSeen: String(result.text ?? '').includes('Local inspection fixture'),
