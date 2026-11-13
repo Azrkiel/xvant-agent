@@ -78,20 +78,20 @@ A06 can proceed alongside A03–A05 after its prerequisites are met. Build basic
 
 Read this document and the assigned subplan. Each subplan identifies the first useful change, subsequent work packages, success criteria, and concrete test scenarios.
 
-| ID  | Subplan                                                          | Completion prerequisites | Status / implementation / evidence |
-| --- | ---------------------------------------------------------------- | ------------------------ | ---------------------------------- |
-| A00 | [Reproducible checks and CI](00-baseline-and-ci.md)              | None                     | Planned                            |
-| A01 | [Project and completion contracts](01-project-contracts.md)      | A00                      | Planned                            |
-| A02 | [Resumable workflow](02-durable-workflow.md)                     | A01                      | Planned                            |
-| A03 | [Recovery and reconciliation](03-recovery.md)                    | A02                      | Planned                            |
-| A04 | [Daemon and scheduler](04-daemon-and-scheduler.md)               | A03                      | Planned                            |
-| A05 | [Persistent project manager](05-project-manager.md)              | A04                      | Planned                            |
-| A06 | [Isolation and budgets](06-isolation-and-budgets.md)             | A01, A02                 | Planned                            |
-| A07 | [Verification and integration](07-verification-and-promotion.md) | A03, A06                 | Planned                            |
-| A08 | [Events and integrations](08-events-and-integrations.md)         | A04, A05, A07            | Planned                            |
-| A09 | [Memory and lessons](09-memory-and-learning.md)                  | A01, A05                 | Planned                            |
-| A10 | [Controls and operations](10-operations.md)                      | A04, A06, A07            | Planned                            |
-| A11 | [Qualification and release](11-qualification.md)                 | A00–A10                  | Planned                            |
+| ID  | Subplan                                                          | Completion prerequisites | Status / implementation / evidence                                                    |
+| --- | ---------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------- |
+| A00 | [Reproducible checks and CI](00-baseline-and-ci.md)              | None                     | In progress: [runner](a00-runner.md), [baseline/evidence](../evidence/a00/handoff.md) |
+| A01 | [Project and completion contracts](01-project-contracts.md)      | A00                      | Planned                                                                               |
+| A02 | [Resumable workflow](02-durable-workflow.md)                     | A01                      | Planned                                                                               |
+| A03 | [Recovery and reconciliation](03-recovery.md)                    | A02                      | Planned                                                                               |
+| A04 | [Daemon and scheduler](04-daemon-and-scheduler.md)               | A03                      | Planned                                                                               |
+| A05 | [Persistent project manager](05-project-manager.md)              | A04                      | Planned                                                                               |
+| A06 | [Isolation and budgets](06-isolation-and-budgets.md)             | A01, A02                 | Planned                                                                               |
+| A07 | [Verification and integration](07-verification-and-promotion.md) | A03, A06                 | Planned                                                                               |
+| A08 | [Events and integrations](08-events-and-integrations.md)         | A04, A05, A07            | Planned                                                                               |
+| A09 | [Memory and lessons](09-memory-and-learning.md)                  | A01, A05                 | Planned                                                                               |
+| A10 | [Controls and operations](10-operations.md)                      | A04, A06, A07            | Planned                                                                               |
+| A11 | [Qualification and release](11-qualification.md)                 | A00–A10                  | Planned                                                                               |
 
 **Start with A00, work package 1: reproduce the full offline gate on a clean runner and document its actual requirements.** Then automate that same setup. A00 does not require implementing the daemon or changing orchestration.
 

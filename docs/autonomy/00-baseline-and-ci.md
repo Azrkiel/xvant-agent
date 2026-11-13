@@ -1,6 +1,8 @@
 # A00 — Reproducible checks and CI
 
-Status: planned. Completion prerequisites: **None**.
+Status: in progress. Work package 1 passed; CI execution and retained failure
+proofs are pending. See the [runner guide](a00-runner.md) and
+[evidence handoff](../evidence/a00/handoff.md). Completion prerequisites: **None**.
 Read [the overall plan](README.md) and this subplan before editing.
 
 ## Deliverable
@@ -37,7 +39,7 @@ Add an evidence index with source/runtime/host details and retention rules. Labe
 
 Mark a criterion passed only when the handoff links to its command or artifact and observed result. These IDs are preserved from plan version 1 so existing references remain valid.
 
-- [ ] **A00-C1:** A clean documented runner installs and passes the baseline gate without developer-local files.
+- [x] **A00-C1:** A clean documented runner installs and passes the baseline gate without developer-local files. [Observed receipt](../evidence/a00/baseline-passed.json).
 - [ ] **A00-C2:** CI exercises the submitted revision and identifies its source hash; missing or failing required checks fail the job.
 - [ ] **A00-C3:** A deliberate failing fixture produces a failed job and useful retained evidence; an unavailable browser cannot produce a green result.
 - [ ] **A00-C4:** No live calls or write credentials are needed for ordinary PR checks.

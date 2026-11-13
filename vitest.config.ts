@@ -24,6 +24,8 @@ export default defineConfig({
         'apps/controller/src/service.ts',
         'apps/controller/src/http/**/*.ts',
         'scripts/gate-policy.ts',
+        'scripts/ci-policy.ts',
+        'scripts/browser-path.ts',
         'scripts/probe-policy.ts',
       ],
       exclude: ['**/*.test.ts'],
