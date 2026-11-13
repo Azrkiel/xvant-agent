@@ -95,6 +95,14 @@ jobs:
         run: |
           set -euo pipefail
           node node_modules/vitest/vitest.mjs run packages/storage/src/providers.test.ts -t 'bounds journal growth and poisons the connection at the limit' 2>&1 | tee .artifacts/journal-preflight.log
+      - name: Verify standalone browser readiness before the full gate
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = Linux ]; then
+            tini -s -- node scripts/browser-fixture.mjs 2>&1 | tee .artifacts/browser-preflight.log
+          else
+            node scripts/browser-fixture.mjs 2>&1 | tee .artifacts/browser-preflight.log
+          fi
       - name: Run full offline gate
         run: |
           set -euo pipefail
