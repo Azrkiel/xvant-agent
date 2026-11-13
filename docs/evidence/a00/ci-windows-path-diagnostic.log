@@ -1,0 +1,37 @@
+{
+  "platform": "win32",
+  "tempDirectory": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp",
+  "inheritedGitDir": false,
+  "inheritedGitWorkTree": false,
+  "tree": {
+    "registered": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\xvant-preflight-9xnPEp\\tree",
+    "real": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\xvant-preflight-9xnPEp\\tree",
+    "native": "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\xvant-preflight-9xnPEp\\tree",
+    "gitTop": "C:/Users/runneradmin/AppData/Local/Temp/xvant-preflight-9xnPEp/tree",
+    "topReal": "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\xvant-preflight-9xnPEp\\tree",
+    "topNative": "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\xvant-preflight-9xnPEp\\tree"
+  },
+  "repositoryCommon": {
+    "raw": ".git",
+    "real": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\xvant-preflight-9xnPEp\\repo\\.git",
+    "native": "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\xvant-preflight-9xnPEp\\repo\\.git"
+  },
+  "worktreeCommon": {
+    "raw": "C:/Users/runneradmin/AppData/Local/Temp/xvant-preflight-9xnPEp/repo/.git",
+    "real": "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\xvant-preflight-9xnPEp\\repo\\.git",
+    "native": "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\xvant-preflight-9xnPEp\\repo\\.git"
+  },
+  "repositoryScope": "repo_2a52f91229866cc3",
+  "worktreeScope": "repo_b6bd051801291d68"
+}
+file:///D:/a/xvant-agent/xvant-agent/scripts/runner-preflight.mjs:71
+    throw new Error(
+          ^
+
+Error: Git and Node disagree about canonical worktree identity; inspect runner-preflight.json
+    at file:///D:/a/xvant-agent/xvant-agent/scripts/runner-preflight.mjs:71:11
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.21.0

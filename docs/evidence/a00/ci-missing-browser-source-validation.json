@@ -1,0 +1,8 @@
+{
+  "sourceRevision": "ec49dda8b03cfcf1a21431bc10f91e106ef4f440",
+  "expectedRevision": "ec49dda8b03cfcf1a21431bc10f91e106ef4f440",
+  "status": "failed",
+  "problems": [
+    "[\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"passed\"\n    ],\n    \"path\": [\n      \"status\"\n    ],\n    \"message\": \"Invalid input: expected \\\"passed\\\"\"\n  },\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      0\n    ],\n    \"path\": [\n      \"checks\",\n      3,\n      \"exitCode\"\n    ],\n    \"message\": \"Invalid input: expected 0\"\n  },\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      0\n    ],\n    \"path\": [\n      \"checks\",\n      26,\n      \"exitCode\"\n    ],\n    \"message\": \"Invalid input: expected 0\"\n  }\n]"
+  ]
+}

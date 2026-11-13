@@ -1,0 +1,1067 @@
+[
+  {
+    "runId": 43367284166,
+    "runUrl": "https://github.com/Azrkiel/xvant-agent/actions/runs/43367284166",
+    "jobs": [
+      {
+        "id": 131694576307,
+        "name": "Offline / windows-2025",
+        "status": "completed",
+        "conclusion": "failure",
+        "run_id": 43367284166,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Install pinned Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Install pinned npm and dependencies without lifecycle scripts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Install Linux init and browser dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 5
+          },
+          {
+            "name": "Install Windows browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Register fixture browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Run full offline gate",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 8
+          },
+          {
+            "name": "Validate source-bound receipt and immutable bundle",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 9
+          },
+          {
+            "name": "Retain fixture evidence even on failure",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10
+          },
+          {
+            "name": "Post Install pinned Node",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 19
+          },
+          {
+            "name": "Post Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21
+          }
+        ]
+      },
+      {
+        "id": 131694576532,
+        "name": "Offline / ubuntu-24.04",
+        "status": "completed",
+        "conclusion": "success",
+        "run_id": 43367284166,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Install pinned Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Install pinned npm and dependencies without lifecycle scripts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Install Linux init and browser dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Install Windows browser",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6
+          },
+          {
+            "name": "Register fixture browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Run full offline gate",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8
+          },
+          {
+            "name": "Validate source-bound receipt and immutable bundle",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9
+          },
+          {
+            "name": "Retain fixture evidence even on failure",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10
+          },
+          {
+            "name": "Post Install pinned Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19
+          },
+          {
+            "name": "Post Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 14010742926,
+        "name": "offline-Windows-7bb00ada15cf912ed4cbcb2cd367ffa2328f0db7-43367284166-1",
+        "size_in_bytes": 780392,
+        "url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14010742926",
+        "archive_download_url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14010742926/zip",
+        "expired": false,
+        "created_at": "2026-11-13T04:51:32Z",
+        "expires_at": "2026-12-13T04:51:30Z",
+        "updated_at": "2026-11-13T04:51:32Z",
+        "digest": "sha256:b868286d1ecada3e0f34ddd740ffaa8f4bcf14db379f27b19a40f76d2218a8fa",
+        "workflow_run": {
+          "id": 43367284166,
+          "repository_id": 1390879074,
+          "head_repository_id": 1390879074,
+          "head_branch": "codex/a00-reproducible-checks-ci",
+          "head_sha": "7bb00ada15cf912ed4cbcb2cd367ffa2328f0db7"
+        }
+      },
+      {
+        "id": 14010414324,
+        "name": "offline-Linux-7bb00ada15cf912ed4cbcb2cd367ffa2328f0db7-43367284166-1",
+        "size_in_bytes": 742968,
+        "url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14010414324",
+        "archive_download_url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14010414324/zip",
+        "expired": false,
+        "created_at": "2026-11-13T04:47:24Z",
+        "expires_at": "2026-12-13T04:47:22Z",
+        "updated_at": "2026-11-13T04:47:24Z",
+        "digest": "sha256:b1b447f44abc9b22e31501fecb0c944a28663e8887ec6f9fbd156b77873c1df3",
+        "workflow_run": {
+          "id": 43367284166,
+          "repository_id": 1390879074,
+          "head_repository_id": 1390879074,
+          "head_branch": "codex/a00-reproducible-checks-ci",
+          "head_sha": "7bb00ada15cf912ed4cbcb2cd367ffa2328f0db7"
+        }
+      }
+    ]
+  },
+  {
+    "runId": 43367338498,
+    "runUrl": "https://github.com/Azrkiel/xvant-agent/actions/runs/43367338498",
+    "jobs": [
+      {
+        "id": 131694746990,
+        "name": "Offline / ubuntu-24.04",
+        "status": "completed",
+        "conclusion": "failure",
+        "run_id": 43367338498,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Install pinned Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Install pinned npm and dependencies without lifecycle scripts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Install Linux init and browser dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Install Windows browser",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6
+          },
+          {
+            "name": "Register fixture browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Deliberately register an unavailable browser for A00 proof",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8
+          },
+          {
+            "name": "Run full offline gate",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 9
+          },
+          {
+            "name": "Validate source-bound receipt and immutable bundle",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 10
+          },
+          {
+            "name": "Retain fixture evidence even on failure",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11
+          },
+          {
+            "name": "Post Install pinned Node",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 21
+          },
+          {
+            "name": "Post Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 14011376939,
+        "name": "offline-Linux-ec49dda8b03cfcf1a21431bc10f91e106ef4f440-43367338498-1",
+        "size_in_bytes": 722004,
+        "url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14011376939",
+        "archive_download_url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14011376939/zip",
+        "expired": false,
+        "created_at": "2026-11-13T04:46:03Z",
+        "expires_at": "2026-12-13T04:46:02Z",
+        "updated_at": "2026-11-13T04:46:03Z",
+        "digest": "sha256:00fb198d54c12f19b83f2389afa7a88ea4e26d061a6b288acbf52713750621ef",
+        "workflow_run": {
+          "id": 43367338498,
+          "repository_id": 1390879074,
+          "head_repository_id": 1390879074,
+          "head_branch": "codex/a00-proof-missing-browser",
+          "head_sha": "ec49dda8b03cfcf1a21431bc10f91e106ef4f440"
+        }
+      }
+    ]
+  },
+  {
+    "runId": 43367338919,
+    "runUrl": "https://github.com/Azrkiel/xvant-agent/actions/runs/43367338919",
+    "jobs": [
+      {
+        "id": 131694748385,
+        "name": "Offline / ubuntu-24.04",
+        "status": "completed",
+        "conclusion": "failure",
+        "run_id": 43367338919,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Install pinned Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Install pinned npm and dependencies without lifecycle scripts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Install Linux init and browser dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Install Windows browser",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6
+          },
+          {
+            "name": "Register fixture browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Run full offline gate",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 8
+          },
+          {
+            "name": "Validate source-bound receipt and immutable bundle",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 9
+          },
+          {
+            "name": "Retain fixture evidence even on failure",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10
+          },
+          {
+            "name": "Post Install pinned Node",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 19
+          },
+          {
+            "name": "Post Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 14010807244,
+        "name": "offline-Linux-f40ffa9fb3065c036dce0800fb28f1c315f45354-43367338919-1",
+        "size_in_bytes": 702162,
+        "url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14010807244",
+        "archive_download_url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14010807244/zip",
+        "expired": false,
+        "created_at": "2026-11-13T04:46:39Z",
+        "expires_at": "2026-12-13T04:46:38Z",
+        "updated_at": "2026-11-13T04:46:39Z",
+        "digest": "sha256:13716ffa828be86baf16ac4d9ac41a69071178e1e153a3976c8938102b6c6210",
+        "workflow_run": {
+          "id": 43367338919,
+          "repository_id": 1390879074,
+          "head_repository_id": 1390879074,
+          "head_branch": "codex/a00-proof-missing-suite",
+          "head_sha": "f40ffa9fb3065c036dce0800fb28f1c315f45354"
+        }
+      }
+    ]
+  },
+  {
+    "runId": 43367338661,
+    "runUrl": "https://github.com/Azrkiel/xvant-agent/actions/runs/43367338661",
+    "jobs": [
+      {
+        "id": 131694747425,
+        "name": "Offline / ubuntu-24.04",
+        "status": "completed",
+        "conclusion": "failure",
+        "run_id": 43367338661,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Install pinned Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Install pinned npm and dependencies without lifecycle scripts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Install Linux init and browser dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Install Windows browser",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6
+          },
+          {
+            "name": "Register fixture browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Run full offline gate",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 8
+          },
+          {
+            "name": "Validate source-bound receipt and immutable bundle",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 9
+          },
+          {
+            "name": "Retain fixture evidence even on failure",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10
+          },
+          {
+            "name": "Post Install pinned Node",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 19
+          },
+          {
+            "name": "Post Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 14010264145,
+        "name": "offline-Linux-636c007f1640f86b6d48496d51bd6ee165aa5111-43367338661-1",
+        "size_in_bytes": 737166,
+        "url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14010264145",
+        "archive_download_url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14010264145/zip",
+        "expired": false,
+        "created_at": "2026-11-13T04:47:43Z",
+        "expires_at": "2026-12-13T04:47:41Z",
+        "updated_at": "2026-11-13T04:47:43Z",
+        "digest": "sha256:2d7bc6b9047e84bb62aea68eab53ec5b9cd1c1a2c64096499c8dbdbb9dc5bfa0",
+        "workflow_run": {
+          "id": 43367338661,
+          "repository_id": 1390879074,
+          "head_repository_id": 1390879074,
+          "head_branch": "codex/a00-proof-failing-fixture",
+          "head_sha": "636c007f1640f86b6d48496d51bd6ee165aa5111"
+        }
+      }
+    ]
+  },
+  {
+    "runId": 43368401826,
+    "runUrl": "https://github.com/Azrkiel/xvant-agent/actions/runs/43368401826",
+    "jobs": [
+      {
+        "id": 131698165447,
+        "name": "Offline / windows-2025",
+        "status": "completed",
+        "conclusion": "failure",
+        "run_id": 43368401826,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Install pinned Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Install pinned npm and dependencies without lifecycle scripts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Install Linux init and browser dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 5
+          },
+          {
+            "name": "Install Windows browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Register fixture browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Verify Git worktree path identities",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 8
+          },
+          {
+            "name": "Run full offline gate",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9
+          },
+          {
+            "name": "Validate source-bound receipt and immutable bundle",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 10
+          },
+          {
+            "name": "Retain fixture evidence even on failure",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11
+          },
+          {
+            "name": "Post Install pinned Node",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 21
+          },
+          {
+            "name": "Post Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23
+          }
+        ]
+      },
+      {
+        "id": 131698165683,
+        "name": "Offline / ubuntu-24.04",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "run_id": 43368401826,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Install pinned Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Install pinned npm and dependencies without lifecycle scripts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Install Linux init and browser dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Install Windows browser",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6
+          },
+          {
+            "name": "Register fixture browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Verify Git worktree path identities",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8
+          },
+          {
+            "name": "Run full offline gate",
+            "status": "completed",
+            "conclusion": "cancelled",
+            "number": 9
+          },
+          {
+            "name": "Validate source-bound receipt and immutable bundle",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 10
+          },
+          {
+            "name": "Retain fixture evidence even on failure",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11
+          },
+          {
+            "name": "Post Install pinned Node",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 21
+          },
+          {
+            "name": "Post Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 14011104118,
+        "name": "offline-Linux-29101ca629fb110a864779ca6c836ec0d97160d8-43368401826-1",
+        "size_in_bytes": 37776,
+        "url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14011104118",
+        "archive_download_url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14011104118/zip",
+        "expired": false,
+        "created_at": "2026-11-13T04:55:56Z",
+        "expires_at": "2026-12-13T04:55:55Z",
+        "updated_at": "2026-11-13T04:55:56Z",
+        "digest": "sha256:c946e49f2478c1e7f2ea9f0e63b62f4b5826aea59cb4734cdc06ce59780fbf3f",
+        "workflow_run": {
+          "id": 43368401826,
+          "repository_id": 1390879074,
+          "head_repository_id": 1390879074,
+          "head_branch": "codex/a00-reproducible-checks-ci",
+          "head_sha": "29101ca629fb110a864779ca6c836ec0d97160d8"
+        }
+      },
+      {
+        "id": 14010284919,
+        "name": "offline-Windows-29101ca629fb110a864779ca6c836ec0d97160d8-43368401826-1",
+        "size_in_bytes": 2512,
+        "url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14010284919",
+        "archive_download_url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14010284919/zip",
+        "expired": false,
+        "created_at": "2026-11-13T04:54:25Z",
+        "expires_at": "2026-12-13T04:54:25Z",
+        "updated_at": "2026-11-13T04:54:25Z",
+        "digest": "sha256:d45a948eae0a734603cb26b8d305ac24522858420b55ef6851ada9f5d2f9b942",
+        "workflow_run": {
+          "id": 43368401826,
+          "repository_id": 1390879074,
+          "head_repository_id": 1390879074,
+          "head_branch": "codex/a00-reproducible-checks-ci",
+          "head_sha": "29101ca629fb110a864779ca6c836ec0d97160d8"
+        }
+      }
+    ]
+  },
+  {
+    "runId": 43368644128,
+    "runUrl": "https://github.com/Azrkiel/xvant-agent/actions/runs/43368644128",
+    "jobs": [
+      {
+        "id": 131699034676,
+        "name": "Offline / windows-2025",
+        "status": "completed",
+        "conclusion": "success",
+        "run_id": 43368644128,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Install pinned Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Install pinned npm and dependencies without lifecycle scripts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Use canonical runner temp storage for fixtures",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Install Linux init and browser dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6
+          },
+          {
+            "name": "Install Windows browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Register fixture browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8
+          },
+          {
+            "name": "Verify Git worktree path identities",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9
+          },
+          {
+            "name": "Check Windows durable journal deadline before the full gate",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10
+          },
+          {
+            "name": "Run full offline gate",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11
+          },
+          {
+            "name": "Validate source-bound receipt and immutable bundle",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12
+          },
+          {
+            "name": "Retain fixture evidence even on failure",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13
+          },
+          {
+            "name": "Post Install pinned Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 25
+          },
+          {
+            "name": "Post Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 26
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 27
+          }
+        ]
+      },
+      {
+        "id": 131699034967,
+        "name": "Offline / ubuntu-24.04",
+        "status": "completed",
+        "conclusion": "success",
+        "run_id": 43368644128,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Install pinned Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Install pinned npm and dependencies without lifecycle scripts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Use canonical runner temp storage for fixtures",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Install Linux init and browser dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Install Windows browser",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 7
+          },
+          {
+            "name": "Register fixture browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8
+          },
+          {
+            "name": "Verify Git worktree path identities",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9
+          },
+          {
+            "name": "Check Windows durable journal deadline before the full gate",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 10
+          },
+          {
+            "name": "Run full offline gate",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11
+          },
+          {
+            "name": "Validate source-bound receipt and immutable bundle",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12
+          },
+          {
+            "name": "Retain fixture evidence even on failure",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13
+          },
+          {
+            "name": "Post Install pinned Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 25
+          },
+          {
+            "name": "Post Check out submitted source without persisted credentials",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 26
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 27
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 14012565339,
+        "name": "offline-Windows-6e5fbffb23c0765b2b3b8c4dd0d4d1dd41678c8a-43368644128-1",
+        "size_in_bytes": 746620,
+        "url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14012565339",
+        "archive_download_url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14012565339/zip",
+        "expired": false,
+        "created_at": "2026-11-13T05:08:55Z",
+        "expires_at": "2026-12-13T05:08:53Z",
+        "updated_at": "2026-11-13T05:08:55Z",
+        "digest": "sha256:ffecdda77c2c4d3f3b0526922c3c9d7e2409967b18462b2a5ebd7e3c49cab34d",
+        "workflow_run": {
+          "id": 43368644128,
+          "repository_id": 1390879074,
+          "head_repository_id": 1390879074,
+          "head_branch": "codex/a00-reproducible-checks-ci",
+          "head_sha": "6e5fbffb23c0765b2b3b8c4dd0d4d1dd41678c8a"
+        }
+      },
+      {
+        "id": 14012130510,
+        "name": "offline-Linux-6e5fbffb23c0765b2b3b8c4dd0d4d1dd41678c8a-43368644128-1",
+        "size_in_bytes": 745903,
+        "url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14012130510",
+        "archive_download_url": "https://api.github.com/repos/Azrkiel/xvant-agent/actions/artifacts/14012130510/zip",
+        "expired": false,
+        "created_at": "2026-11-13T05:00:30Z",
+        "expires_at": "2026-12-13T05:00:28Z",
+        "updated_at": "2026-11-13T05:00:30Z",
+        "digest": "sha256:d9405eca03239a71a9ed5d33b9f81e0e41a32878f7a2c9660980ac2cd80de802",
+        "workflow_run": {
+          "id": 43368644128,
+          "repository_id": 1390879074,
+          "head_repository_id": 1390879074,
+          "head_branch": "codex/a00-reproducible-checks-ci",
+          "head_sha": "6e5fbffb23c0765b2b3b8c4dd0d4d1dd41678c8a"
+        }
+      }
+    ]
+  }
+]

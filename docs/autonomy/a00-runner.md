@@ -20,7 +20,8 @@ Tests whose names contain `live` use local fake peers, not paid sessions.
   `tail -f /dev/null` as PID 1 is insufficient. Keep the process-death assertions.
 - Writable checkout, temporary/profile/cache directories, and loopback listeners.
   Use local nonsynchronized storage. The observed runner had 3 CPUs / 9.7 GiB;
-  Vitest remains bounded to two workers. The gate allows 20 minutes for coverage
+  Vitest uses two workers on Linux and one on Windows to bound durable-I/O
+  contention without relaxing test deadlines or SQLite durability. The gate allows 20 minutes for coverage
   and 3 minutes per other stage; CI has a separate total job deadline.
 
 `npm ci --ignore-scripts --no-audit --no-fund` works with this lockfile.
@@ -94,6 +95,36 @@ Install Chromium with `node node_modules/playwright-core/cli.js install chromium
 and set `XVANT_BROWSER` to its reported executable, or use an installed Edge or
 Chrome. Run `npm run gate -- --phase 10 --offline` directly; Tini is Linux-only.
 The process supervision tests use Windows `taskkill /T /F` on that platform.
+
+Use a canonical local temp path rather than an 8.3 alias such as `RUNNER~1`.
+On the hosted Windows runner, Node's JavaScript `realpathSync` preserved that
+short spelling while Git returned `runneradmin`; strict worktree identity and
+repository lesson scopes therefore disagreed. CI creates `xvant-fixtures` under
+`RUNNER_TEMP`, canonicalizes it with `realpathSync.native`, and registers it as
+`TEMP`, `TMP`, and `TMPDIR` before fixtures run. This also moves durable SQLite
+fixtures off the default profile temp storage. For a local PowerShell session:
+
+```powershell
+$fixtureBase = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { [System.IO.Path]::GetTempPath() }
+$fixtureTemp = Join-Path $fixtureBase 'xvant-fixtures'
+New-Item -ItemType Directory -Force $fixtureTemp | Out-Null
+New-Item -ItemType Directory -Force '.artifacts' | Out-Null
+$fixtureTemp = node -e 'console.log(require("node:fs").realpathSync.native(process.argv[1]))' $fixtureTemp
+$env:TEMP = $fixtureTemp
+$env:TMP = $fixtureTemp
+$env:TMPDIR = $fixtureTemp
+node scripts/runner-preflight.mjs
+npm run gate -- --phase 10 --offline
+```
+
+Keep fixture temp storage outside every Git checkout, since tests also require
+non-repository directories. The preflight creates real Git repositories/worktrees and checks their path and
+lesson-scope identities. Its JSON/log explain a disagreement before a long gate.
+It does not loosen product path/symlink checks or change stored lesson identities.
+Windows CI first runs the journal-limit test against the selected temp storage;
+its original 4,096-frame limit, `synchronous=FULL`, and 15-second deadline remain
+unchanged. The full gate then runs every test with one worker. A faster focused
+probe is not a substitute for the full gate.
 Linux evidence never establishes a Windows pass, and neither establishes
 unattended Windows operation. Consult the evidence index for actual results.
 
