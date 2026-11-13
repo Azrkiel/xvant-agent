@@ -48,7 +48,9 @@ node --input-type=module -e 'import {chromium} from "playwright-core"; console.l
 ```
 
 Set `XVANT_BROWSER` to that executable, or leave it unset to discover a supported
-system browser. Set writable `XDG_CONFIG_HOME` and `XDG_CACHE_HOME` when the
+system browser. An explicitly set `XVANT_BROWSER`, including an empty value, is
+authoritative: invalid registrations fail instead of selecting a different browser.
+Set writable `XDG_CONFIG_HOME` and `XDG_CACHE_HOME` when the
 runner's normal directories are unavailable. Check SQLite before the long gate:
 
 ```sh
@@ -67,17 +69,17 @@ For **trusted local fixtures in a disposable runner only**, a reproducible
 launcher resolves this host limitation:
 
 ```sh
-mkdir -p work
-cat > work/chromium-trusted-fixtures <<'SH'
+mkdir -p .artifacts
+cat > .artifacts/chromium-trusted-fixtures <<'SH'
 #!/bin/sh
 exec /usr/bin/chromium --no-sandbox "$@"
 SH
-chmod +x work/chromium-trusted-fixtures
-export XVANT_BROWSER="$PWD/work/chromium-trusted-fixtures"
+chmod +x .artifacts/chromium-trusted-fixtures
+export XVANT_BROWSER="$PWD/.artifacts/chromium-trusted-fixtures"
 ```
 
-Create that launcher outside the checkout (or in an ignored directory) before
-running the gate: untracked source files belong to the source hash. Adjust its
+The example uses the ignored `.artifacts/` directory so the launcher does not
+change the submitted source. Create it before running the gate. Adjust its
 absolute Chromium path for your installation. CI records its chosen browser and
 uses the same trusted-fixture setting. This does not qualify browser sandboxing,
 hostile content, hostile workers, or network containment. DevTools request

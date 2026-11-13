@@ -82,6 +82,10 @@ jobs:
             browser="$launcher"
           fi
           echo "XVANT_BROWSER=$browser" >> "$GITHUB_ENV"
+      - name: Verify Git worktree path identities
+        run: |
+          set -euo pipefail
+          node scripts/runner-preflight.mjs 2>&1 | tee .artifacts/runner-preflight.log
       - name: Run full offline gate
         run: |
           set -euo pipefail
@@ -107,6 +111,7 @@ jobs:
             .artifacts/tests.json
             .artifacts/source-manifest.json
             .artifacts/ci-summary.json
+            .artifacts/runner-preflight.json
             .artifacts/benchmark-fixture.json
             .artifacts/audit.json
             coverage/coverage-summary.json
