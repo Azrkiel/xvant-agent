@@ -77,6 +77,8 @@ interface Options {
   owner: string;
   now?: () => number;
   leaseMs?: number;
+  /** Reconcile abandoned runs when starting a run-capable controller. */
+  recoverWorkGraphs?: boolean;
   fault?: (point: string) => void;
   migrations?: { version: number; sql: string }[];
   /** Live lesson nodes kept per scope; defaults to DEFAULT_LESSON_CAP. */
@@ -161,6 +163,9 @@ export class Store {
     )
       throw new StorageError('INVALID_INPUT');
     this.#db = new Database(path, { timeout: 1000 });
+    this.graphs = new WorkGraphs(this.#db, {
+      transaction: (fn) => this.#transaction(fn),
+    });
     try {
       this.#db.pragma('foreign_keys=ON');
       this.#db.pragma('journal_mode=WAL');
@@ -204,15 +209,14 @@ export class Store {
               "INSERT INTO ownership VALUES('controller',?,?,?) ON CONFLICT(resource) DO UPDATE SET owner=excluded.owner,generation=excluded.generation,expires=excluded.expires",
             )
             .run(this.#owner, this.#generation, this.#now() + this.#ttl);
+          if (old && options.recoverWorkGraphs)
+            this.graphs.reconcileInterrupted();
         })
         .immediate();
     } catch (error) {
       this.#db.close();
       throw error;
     }
-    this.graphs = new WorkGraphs(this.#db, {
-      transaction: (fn) => this.#transaction(fn),
-    });
     this.lessons = new LessonGraph(this.#db, {
       transaction: (fn) => this.#transaction(fn),
       now: () => this.#now(),

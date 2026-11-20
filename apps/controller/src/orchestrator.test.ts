@@ -175,8 +175,12 @@ it('plans, runs parallel nodes, integrates, verifies and reviews independently',
     const label = byLabel(request);
     if (label === 'plan')
       return { finalText: '```json\n' + JSON.stringify(plan) + '\n```' };
-    if (label === 'review')
+    if (label === 'review') {
+      expect(store.graphs.get<{ phase: string }>('feature').state.phase).toBe(
+        'reviewing',
+      );
       return { finalText: '```json\n{"approve":true,"findings":[]}\n```' };
+    }
     return {
       write: { [label + '.txt']: label + ' by ' + request.alias + '\n' },
     };
@@ -184,6 +188,15 @@ it('plans, runs parallel nodes, integrates, verifies and reviews independently',
   const state = await orchestrate(runner);
   expect(state.reason).toBeUndefined();
   expect(state.phase).toBe('ready');
+  const kinds = store.graphs.events('feature').map((e) => e.kind);
+  for (const [start, end] of [
+    ['graph.initialized', 'graph.planned'],
+    ['graph.verifying', 'graph.checked'],
+    ['graph.reviewing', 'graph.reviewed'],
+  ] as const) {
+    expect(kinds).toContain(start);
+    expect(kinds.indexOf(start)).toBeLessThan(kinds.indexOf(end));
+  }
   expect(Object.values(state.nodes).map((n) => n.status)).toEqual([
     'integrated',
     'integrated',
@@ -1293,4 +1306,15 @@ it('routes a light node to the light worker and escalates it after a failure', a
     store.graphs.events('tiered').find((e) => e.kind === 'node.repair')!
       .payload,
   ).toMatchObject({ escalated: true });
+});
+
+it('records an integration setup failure instead of leaving a planning graph', async () => {
+  const runner = new FakeRunner(() => ({}));
+  const result = await orchestrate(runner, { baseRevision: 'missing-ref' });
+  expect(result).toMatchObject({ phase: 'needs_attention', integration: null });
+  expect(store.graphs.get('feature').state).toEqual(result);
+  expect(store.graphs.events('feature').at(-1)?.kind).toBe(
+    'graph.needs_attention',
+  );
+  expect(runner.calls).toHaveLength(0);
 });

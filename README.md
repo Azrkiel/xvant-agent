@@ -290,3 +290,15 @@ the last save. Check the controller separately for current worker liveness.
 Acceptance and merging remain explicit operations.
 
 The [architecture comparison](docs/architecture-comparison.md) maps the skill kit, runtime and Firstmate supervision model.
+
+When a new run controller acquires the state directory, it reconciles graphs
+left in planning, execution, verification or review. Those runs move to
+`needs_attention` and receive a `graph.interrupted` event. Running nodes also
+move to `needs_attention`. The handoff includes the last recorded phase and
+affected node IDs so an operator can inspect the preserved worktrees and
+evidence before retrying. A writer lease establishes which controller can
+save state. Worker shutdown still needs its own evidence.
+
+Run setup, verification, review and repair now record their start before
+performing the corresponding work. The app event stream and CLI status
+display these events from the same stored history.

@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
-import { Store } from './store.ts';
+import { inspectWorkGraphs, Store } from './store.ts';
 const input = {
   id: 'task',
   projectId: 'project',
@@ -15,11 +15,16 @@ let root: string;
 let store: Store;
 let now: number;
 const stores: Store[] = [];
-function open(owner = 'controller', fault?: (point: string) => void) {
+function open(
+  owner = 'controller',
+  fault?: (point: string) => void,
+  recoverWorkGraphs = false,
+) {
   const s = new Store(join(root, 'state.sqlite'), {
     owner,
     now: () => now,
     leaseMs: 1000,
+    recoverWorkGraphs,
     ...(fault ? { fault } : {}),
   });
   stores.push(s);
@@ -347,4 +352,76 @@ it('finds the latest event of a kind for a task beyond the first page', () => {
       .at(-1)?.sequence,
   ).toBe(last?.sequence);
   expect(store.lastEvent('task', 'never')).toBeUndefined();
+});
+
+it('reconciles unfinished runs once at takeover without changing terminal outcomes', () => {
+  const active = ['planning', 'running', 'verifying', 'reviewing'];
+  const finished = [
+    'ready',
+    'accepted',
+    'failed',
+    'cancelled',
+    'needs_attention',
+  ];
+  const integration = { head: 'last-saved-commit', path: '/preserved' };
+  const create = (phase: string) =>
+    store.graphs.create(
+      phase,
+      'project',
+      {
+        phase,
+        integration,
+        nodes: {
+          executing: { status: 'running', attempts: [{ id: 'prior-attempt' }] },
+          pending: { status: 'pending' },
+        },
+      },
+      {},
+    );
+  for (const phase of [...active, ...finished]) create(phase);
+  expect(() => open('live', undefined, true)).toThrow('LEASE_BUSY');
+  expect(
+    inspectWorkGraphs(
+      join(root, 'state.sqlite'),
+      (graphs) => graphs?.get<{ phase: string }>('running').state.phase,
+    ),
+  ).toBe('running');
+
+  now += 1001;
+  const newOwner = open('restart', undefined, true);
+  for (const previousPhase of active) {
+    const interruption = { previousPhase, runningNodeIds: ['executing'] };
+    expect(newOwner.graphs.get(previousPhase)).toMatchObject({
+      rowVersion: 2,
+      state: {
+        phase: 'needs_attention',
+        integration,
+        interruption,
+        nodes: {
+          executing: {
+            status: 'needs_attention',
+            attempts: [{ id: 'prior-attempt' }],
+          },
+          pending: { status: 'pending' },
+        },
+      },
+    });
+    expect(newOwner.graphs.events(previousPhase)).toMatchObject([
+      { kind: 'graph.created' },
+      { kind: 'graph.interrupted', payload: interruption },
+    ]);
+  }
+  for (const phase of finished) {
+    expect(newOwner.graphs.get(phase)).toMatchObject({
+      rowVersion: 1,
+      state: { phase },
+    });
+    expect(newOwner.graphs.events(phase)).toHaveLength(1);
+  }
+  expect(() =>
+    store.graphs.update('running', 1, { phase: 'ready' }, 'graph.ready', {}),
+  ).toThrow('STALE_FENCE');
+  newOwner.close();
+  const again = open('again', undefined, true);
+  expect(again.graphs.events('running')).toHaveLength(2);
 });

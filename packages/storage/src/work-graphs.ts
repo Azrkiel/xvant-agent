@@ -12,6 +12,13 @@ export interface WorkGraphRecord<T> {
   rowVersion: number;
   state: T;
 }
+const activePhases = ['planning', 'running', 'verifying', 'reviewing'] as const;
+
+export interface RunInterruption {
+  previousPhase: (typeof activePhases)[number];
+  runningNodeIds: string[];
+}
+
 export interface WorkEvent {
   sequence: number;
   graphId: string;
@@ -128,6 +135,50 @@ export class WorkGraphs {
       return structuredClone(next);
     });
   }
+  /** Called while a new writer acquires the lease, before it can start any runs. */
+  reconcileInterrupted(): void {
+    this.#host.transaction(() => {
+      type ActiveState = {
+        phase: RunInterruption['previousPhase'];
+        nodes?: Record<string, { status: string }>;
+      };
+      const rows = this.#db
+        .prepare(
+          "SELECT id FROM work_graphs WHERE json_extract(body, '$.state.phase') IN (?, ?, ?, ?) ORDER BY rowid",
+        )
+        .all(...activePhases) as { id: string }[];
+      for (const { id } of rows) {
+        const { state, rowVersion } = this.get<ActiveState>(id);
+        const runningNodeIds = Object.entries(state.nodes ?? {})
+          .filter(([, node]) => node.status === 'running')
+          .map(([nodeId, node]) => {
+            node.status = 'needs_attention';
+            return nodeId;
+          });
+        const interruption: RunInterruption = {
+          previousPhase: state.phase,
+          runningNodeIds,
+        };
+        const reason =
+          'The previous run was interrupted while ' +
+          state.phase +
+          '. Check its worker outcomes and worktrees before retrying.';
+        this.update(
+          id,
+          rowVersion,
+          {
+            ...state,
+            phase: 'needs_attention',
+            reason,
+            interruption,
+          },
+          'graph.interrupted',
+          { ...interruption, reason },
+        );
+      }
+    });
+  }
+
   events(id: string, after = 0): WorkEvent[] {
     return (
       this.#db
