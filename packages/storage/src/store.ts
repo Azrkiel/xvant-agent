@@ -1,3 +1,4 @@
+import { statSync } from 'node:fs';
 import Database from 'better-sqlite3';
 import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
@@ -108,6 +109,32 @@ function canonical(value: unknown): string {
 }
 /** The newest schema this code writes; a database beyond it is refused. */
 export const SCHEMA_VERSION = 5;
+
+/** Observe one committed snapshot, including while another process owns the controller. */
+export function inspectWorkGraphs<T>(
+  path: string,
+  read: (graphs: Pick<WorkGraphs, 'get' | 'list' | 'events'> | null) => T,
+): T {
+  if (!statSync(path, { throwIfNoEntry: false })) return read(null);
+  const db = new Database(path, { readonly: true, fileMustExist: true });
+  try {
+    return db.transaction(() => {
+      const version = Number(db.pragma('user_version', { simple: true }));
+      if (version > SCHEMA_VERSION)
+        throw new StorageError('SCHEMA_UNSUPPORTED');
+      if (version < 4) return read(null);
+      return read(
+        new WorkGraphs(db, {
+          transaction: () => {
+            throw new StorageError('READ_ONLY');
+          },
+        }),
+      );
+    })();
+  } finally {
+    db.close();
+  }
+}
 
 export class Store {
   readonly providers: ProviderJournal;

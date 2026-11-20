@@ -274,3 +274,19 @@ Replace `<path-to-opencode.exe>` with the full path to your installed OpenCode C
 This runs two real model turns, checks token recall on the same native session, reopens SQLite before each explicit fixture acceptance, and writes `docs/evidence/G03-opencode-live.json`. State and workspace artifacts remain under `.artifacts/opencode-live-*`. No paid fallback is configured. This provider-specific receipt does not complete the mixed-provider live G03 milestone.
 
 The CLI inherits standard OpenCode configuration and permissions; it is not sandboxed. No automatic permission approval is supplied. Tool events and unknown output fail the text protocol, but rejecting an event cannot undo a tool already run. Use only trusted local workspaces. A controller permits one active run at a time. Interrupts, timeouts, and uncertain shutdown retain reservations for trusted reconciliation. The HTTP and offline fixture controllers remain separate and cannot qualify live evidence.
+
+## Inspect and hand off a run
+
+From the harness checkout, run `npm run xvant -- status` to list runs, or
+`npm run xvant -- status ID` to inspect one. A separate terminal can read the
+same XVANT_HOME while the controller is working.
+
+Use `npm run --silent xvant -- handoff ID` for a JSON snapshot, or
+`/handoff [ID]` in the interactive shell. The snapshot names the objective,
+acceptance criteria, graph revision, worker assignments, dependencies, last
+attempts, checks, review, integration commit and next operator action. Open
+the same ID again to see newer committed state. The recorded phase describes
+the last save. Check the controller separately for current worker liveness.
+Acceptance and merging remain explicit operations.
+
+The [architecture comparison](docs/architecture-comparison.md) maps the skill kit, runtime and Firstmate supervision model.

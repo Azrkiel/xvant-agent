@@ -52,6 +52,7 @@ export const HELP = [
   '  /settings           show the current settings',
   '  /runtimes           which runtimes are usable',
   '  /status [ID]        list runs, or show one (default: the last)',
+  '  /handoff [ID]       show a durable run snapshot (default: the last)',
   '  /diff               what the last run changed',
   '  /accept [ID]        accept a ready result',
   '  /merge [ID]         merge an accepted run (default: the last run)',
@@ -167,10 +168,11 @@ export function interpret(input: string, session: Session): Action {
       const id = rest || session.lastId;
       return { kind: 'xvant', args: id ? ['status', id] : ['status'] };
     }
+    case '/handoff':
     case '/accept': {
       const id = rest || session.lastId;
       return id
-        ? { kind: 'xvant', args: ['accept', id] }
+        ? { kind: 'xvant', args: [name.slice(1), id] }
         : say('No run yet. Give an ID from /status.');
     }
     case '/diff':
