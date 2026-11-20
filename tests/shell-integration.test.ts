@@ -1,6 +1,7 @@
 import { afterEach, expect, it } from 'vitest';
 import { spawn, spawnSync } from 'node:child_process';
 import {
+  existsSync,
   mkdtempSync,
   mkdirSync,
   realpathSync,
@@ -504,3 +505,90 @@ it('lessons forget hides a node from list, keeps it for audit and shows the mark
   expect(f.run('lessons', 'export').stdout).toContain('0 challenges');
   expect(f.run('lessons', 'export', '--all').stdout).toContain('1 challenges');
 }, 60000);
+
+it('reads status and a versioned handoff while the writer holds its lease', () => {
+  const f = fixture();
+  const writer = new Store(join(f.home, 'state.sqlite'), { owner: 'writer' });
+  try {
+    writer.graphs.create('live', 'test', f.state, {});
+    expect(f.run('status').stdout).toContain('live');
+    expect(f.run('status', 'live').stdout).toContain('graph.created');
+    const read = () => {
+      const result = f.run('handoff', 'live');
+      expect(result.status, result.stderr).toBe(0);
+      return JSON.parse(result.stdout);
+    };
+    expect(read()).toMatchObject({
+      id: 'live',
+      rowVersion: 1,
+      objective: f.state.objective,
+      acceptanceCriteria: f.state.acceptanceCriteria,
+      phase: 'ready',
+      integration: { head: f.state.integration!.head },
+      checks: [],
+      review: null,
+    });
+    writer.graphs.update(
+      'live',
+      1,
+      {
+        ...f.state,
+        phase: 'needs_attention',
+        reason: 'unknown outcome',
+        nodes: {
+          fix: {
+            node: {
+              id: 'fix',
+              title: 'Repair parser',
+              dependsOn: ['inspect'],
+              writablePaths: ['src/parser.ts'],
+            },
+            status: 'needs_attention',
+            route: { alias: 'worker1' },
+            attempts: [{ taskId: 'attempt1' }],
+            lastFailure: 'worker disconnected',
+          },
+        },
+      },
+      'graph.needs_attention',
+      {},
+    );
+    expect(read()).toMatchObject({
+      rowVersion: 2,
+      reason: 'unknown outcome',
+      nodes: [
+        {
+          id: 'fix',
+          title: 'Repair parser',
+          dependsOn: ['inspect'],
+          writablePaths: ['src/parser.ts'],
+          status: 'needs_attention',
+          worker: 'worker1',
+          lastAttempt: 'attempt1',
+          lastFailure: 'worker disconnected',
+        },
+      ],
+      next: expect.stringMatching(/reconcile/i),
+    });
+    expect(writer.graphs.events('live')).toHaveLength(2);
+  } finally {
+    writer.close();
+  }
+});
+
+it('inspects an empty home without creating a database and requires a handoff ID', () => {
+  const f = fixture();
+  expect(f.run('status').status).toBe(0);
+  expect(f.run('handoff', 'missing').stderr).toContain('No run named missing');
+  expect(f.run('handoff').status).toBe(2);
+  expect(existsSync(join(f.home, 'state.sqlite'))).toBe(false);
+  const session = { ...shell.newSession(f.repo), lastId: 'latest' };
+  expect(shell.interpret('/handoff', session)).toEqual({
+    kind: 'xvant',
+    args: ['handoff', 'latest'],
+  });
+  expect(shell.interpret('/handoff earlier', session)).toEqual({
+    kind: 'xvant',
+    args: ['handoff', 'earlier'],
+  });
+});

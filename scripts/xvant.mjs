@@ -12,6 +12,7 @@
 //                        [--tier light=MODEL] [--tier standard=MODEL]
 //                        [--tandem opus|sol]
 //   npm run xvant -- status [ID]
+//   npm run xvant -- handoff ID
 //   npm run xvant -- accept ID
 //   npm run xvant -- merge ID [--repo PATH]
 //   npm run xvant -- share --repo PATH --branch NAME [--remote origin]
@@ -25,8 +26,9 @@ import { mkdirSync, readFileSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
+import { runHandoff } from '../apps/controller/src/run-handoff.ts';
 import { lessonsLine } from '../packages/memory/src/lessons.ts';
-import { Store } from '../packages/storage/src/store.ts';
+import { Store, inspectWorkGraphs } from '../packages/storage/src/store.ts';
 import { ArtifactStore } from '../packages/storage/src/artifacts.ts';
 import { discoverRuntime } from '../packages/adapters/src/live/discover.ts';
 import { acceptedVersions } from '../packages/contracts/src/live.ts';
@@ -370,55 +372,69 @@ if (command === undefined || command === 'shell') {
         ' holds the combined work.\nInspect: git -C "' +
         repository +
         '" diff HEAD...' +
-        state.integration.branch +
-        '\nAccept:  npm run xvant -- accept ' +
-        id,
+        state.integration.branch,
     );
+  if (state.phase === 'ready')
+    console.log('Accept:  npm run xvant -- accept ' + id);
   process.exitCode = state.phase === 'ready' ? 0 : 1;
-} else if (command === 'status') {
-  const { store } = open();
+} else if (command === 'status' || command === 'handoff') {
+  if (command === 'handoff' && (rest.length !== 1 || !rest[0]?.trim())) {
+    console.error('Usage: handoff ID');
+    process.exit(2);
+  }
   try {
-    const id = rest[0];
-    if (id) {
-      const record = store.graphs.get(id);
-      console.log(
-        JSON.stringify(
-          {
-            phase: record.state.phase,
-            reason: record.state.reason,
-            nodes: Object.fromEntries(
-              Object.entries(record.state.nodes).map(([k, n]) => [k, n.status]),
-            ),
-            checks: record.state.checks,
-            review: record.state.review,
-            branch: record.state.integration?.branch,
-          },
-          null,
-          2,
-        ),
-      );
-      const learned = lessonsLine(record.state.lessons);
-      if (learned) console.log(learned);
-      for (const e of store.graphs.events(id))
-        console.log(String(e.sequence).padStart(5), e.kind);
-    } else
-      for (const g of store.graphs.list()) {
-        const record = store.graphs.get(g.id);
-        console.log(
-          g.id.padEnd(42),
-          record.state.phase.padEnd(16),
-          record.state.integration?.branch ?? '',
-        );
+    inspectWorkGraphs(join(home, 'state.sqlite'), (graphs) => {
+      const id = rest[0];
+      if (!graphs) {
+        if (id) throw new Error('NOT_FOUND');
+        return;
       }
+      if (id) {
+        const record = graphs.get(id);
+        if (command === 'handoff') {
+          console.log(JSON.stringify(runHandoff(record), null, 2));
+          return;
+        }
+        console.log(
+          JSON.stringify(
+            {
+              phase: record.state.phase,
+              reason: record.state.reason,
+              nodes: Object.fromEntries(
+                Object.entries(record.state.nodes).map(([k, n]) => [
+                  k,
+                  n.status,
+                ]),
+              ),
+              checks: record.state.checks,
+              review: record.state.review,
+              branch: record.state.integration?.branch,
+            },
+            null,
+            2,
+          ),
+        );
+        const learned = lessonsLine(record.state.lessons);
+        if (learned) console.log(learned);
+        for (const e of graphs.events(id))
+          console.log(String(e.sequence).padStart(5), e.kind);
+      } else
+        for (const g of graphs.list()) {
+          const record = graphs.get(g.id);
+          console.log(
+            g.id.padEnd(42),
+            record.state.phase.padEnd(16),
+            record.state.integration?.branch ?? '',
+          );
+        }
+    });
   } catch (error) {
     console.error(
       error.message === 'NOT_FOUND'
         ? 'No run named ' + rest[0] + '. List them with: status'
-        : 'Status failed: ' + error.message,
+        : command + ' failed: ' + error.message,
     );
     process.exitCode = 1;
-  } finally {
-    store.close();
   }
 } else if (command === 'accept') {
   const { store } = open();
@@ -743,7 +759,7 @@ if (command === undefined || command === 'shell') {
   }
 } else {
   console.error(
-    'Commands: shell | ui | runtimes | run | status [ID] | accept ID | merge ID [--repo PATH] | share | backup | restore | lessons',
+    'Commands: shell | ui | runtimes | run | status [ID] | handoff ID | accept ID | merge ID [--repo PATH] | share | backup | restore | lessons',
   );
   process.exit(2);
 }
