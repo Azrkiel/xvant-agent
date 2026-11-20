@@ -126,6 +126,7 @@ export async function startApp(options: {
   mkdirSync(options.home, { recursive: true });
   const store = new Store(join(options.home, 'state.sqlite'), {
     owner: 'xvant-app',
+    recoverWorkGraphs: true,
   });
   const objects = new ArtifactStore(join(options.home, 'objects'));
   const heartbeat = setInterval(() => {

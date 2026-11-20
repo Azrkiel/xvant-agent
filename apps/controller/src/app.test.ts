@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { LIVE_ROUTES } from '../../../packages/contracts/src/live.ts';
 import type { ProviderKind } from '../../../packages/contracts/src/providers.ts';
 import { startApp } from './app.ts';
+import { Store } from '../../../packages/storage/src/store.ts';
 import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
 
 vi.setConfig({ testTimeout: 120000 });
@@ -505,4 +506,41 @@ it('returns lesson text from workers as inert data and ships a client that only 
   expect(script).not.toMatch(
     /innerHTML|outerHTML|insertAdjacentHTML|document\.write/,
   );
+});
+
+it('shows interrupted graphs when a replacement app starts', async () => {
+  await app.close();
+  const home = join(root, 'home');
+  const writer = new Store(join(home, 'state.sqlite'), { owner: 'previous' });
+  try {
+    writer.graphs.create(
+      'stalled',
+      'app',
+      {
+        phase: 'verifying',
+        repository: repo,
+        objective,
+        nodes: {},
+      },
+      {},
+    );
+  } finally {
+    writer.close();
+  }
+  const runner = vi.fn(() => {
+    throw new Error('Unexpected runner creation');
+  });
+  app = await startApp({ home, runner });
+  const session = await login();
+  const response = await session.get('/api/v1/roots/stalled');
+  expect(response.status).toBe(200);
+  expect(JSON.parse(response.body)).toMatchObject({
+    rowVersion: 2,
+    state: {
+      phase: 'needs_attention',
+      interruption: { previousPhase: 'verifying', runningNodeIds: [] },
+    },
+    events: [{ kind: 'graph.created' }, { kind: 'graph.interrupted' }],
+  });
+  expect(runner).not.toHaveBeenCalled();
 });

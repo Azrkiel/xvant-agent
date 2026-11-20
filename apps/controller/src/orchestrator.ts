@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { WorkerSupervisor } from '../../../packages/supervisor/src/index.ts';
+import type { RunInterruption } from '../../../packages/storage/src/work-graphs.ts';
 import type { Store } from '../../../packages/storage/src/store.ts';
 import { createWorktree } from '../../../packages/storage/src/git-workspace.ts';
 import { IntegrationBranch } from '../../../packages/storage/src/integration.ts';
@@ -157,6 +158,7 @@ export interface RootState {
   /** What this run recorded in, and used from, the lesson graph. */
   lessons?: LessonStats;
   reason?: string;
+  interruption?: RunInterruption;
 }
 /** A repository's lesson scope; a run that cannot derive one keeps its project's. */
 const scopeOf = (repository: string, fallback: string) => {
@@ -300,88 +302,91 @@ export class Orchestrator {
       );
       this.#onChange(structuredClone(state), kind);
     };
-    const integration = IntegrationBranch.create(
-      spec.repository,
-      spec.baseRevision,
-      join(this.#root, spec.id, 'integration'),
-      'xvant/' + spec.id,
-    );
-    state.integration = {
-      branch: integration.branch,
-      path: integration.path,
-      baseCommit: integration.baseCommit,
-      head: integration.head(),
-    };
-    let turnCount = 0;
-    // Runners derive idempotency keys such as 'create-<id>' that must fit
-    // idSchema's 64 characters. The counter keeps a shortened ID unique.
-    const turnId = (label: string) => {
-      const suffix = '-' + ++turnCount;
-      return (spec.id + '-' + label).slice(0, 57 - suffix.length) + suffix;
-    };
-    const busy = new Set<string>();
-    const completed = new Map<string, string[]>();
-    const worktree = (label: string) =>
-      createWorktree(
-        spec.repository,
-        integration.head(),
-        join(this.#root, spec.id, 'wt', label),
-        // Separate namespace: a branch cannot nest under the integration branch.
-        'xvant-work/' + spec.id + '/' + label,
-      );
-    const turnLessonScope =
-      spec.lessons === false
-        ? null
-        : (spec.lessonScope ?? scopeOf(spec.repository, spec.projectId));
-    // Nodes whose current repair prompt carried lessons.
-    const hintedNodes = new Set<string>();
-    const noop = { reply: { executable: process.execPath, args: ['-e', ''] } };
-    const turn = async (
-      alias: string,
-      label: string,
-      prompt: string,
-      checks: Record<string, Check>,
-      writablePaths: string[] = [],
-    ) => {
-      const taskId = turnId(label);
-      const tree = worktree(taskId);
-      busy.add(alias);
-      this.#running.set(taskId, alias);
-      try {
-        const outcome = await this.#runner.run({
-          taskId,
-          projectId: spec.projectId,
-          alias,
-          prompt,
-          workspace: tree,
-          checks: Object.keys(checks).length ? checks : noop,
-          ...(writablePaths.length ? { writablePaths } : {}),
-          lessonScope: turnLessonScope,
-        });
-        return { taskId, outcome };
-      } finally {
-        busy.delete(alias);
-        this.#running.delete(taskId);
-      }
-    };
-    const routable = () =>
-      this.#workers.map((w) => ({
-        alias: w.alias,
-        runtimeKind: w.runtimeKind,
-        quotaGroupId: w.quotaGroupId,
-        busy: busy.has(w.alias),
-        healthy: true,
-        blocked: !!this.#store.providers.blocked(w.quotaGroupId),
-        completed: completed.get(w.alias) ?? [],
-        roles: w.roles.filter(
-          (r): r is 'worker' | 'reviewer' => r !== 'planner',
-        ),
-        ...(w.preferredReviewer !== undefined
-          ? { preferredReviewer: w.preferredReviewer }
-          : {}),
-        ...(w.tier ? { tier: w.tier } : {}),
-      }));
     try {
+      const integration = IntegrationBranch.create(
+        spec.repository,
+        spec.baseRevision,
+        join(this.#root, spec.id, 'integration'),
+        'xvant/' + spec.id,
+      );
+      state.integration = {
+        branch: integration.branch,
+        path: integration.path,
+        baseCommit: integration.baseCommit,
+        head: integration.head(),
+      };
+      save('graph.initialized', { ...state.integration });
+      let turnCount = 0;
+      // Runners derive idempotency keys such as 'create-<id>' that must fit
+      // idSchema's 64 characters. The counter keeps a shortened ID unique.
+      const turnId = (label: string) => {
+        const suffix = '-' + ++turnCount;
+        return (spec.id + '-' + label).slice(0, 57 - suffix.length) + suffix;
+      };
+      const busy = new Set<string>();
+      const completed = new Map<string, string[]>();
+      const worktree = (label: string) =>
+        createWorktree(
+          spec.repository,
+          integration.head(),
+          join(this.#root, spec.id, 'wt', label),
+          // Separate namespace: a branch cannot nest under the integration branch.
+          'xvant-work/' + spec.id + '/' + label,
+        );
+      const turnLessonScope =
+        spec.lessons === false
+          ? null
+          : (spec.lessonScope ?? scopeOf(spec.repository, spec.projectId));
+      // Nodes whose current repair prompt carried lessons.
+      const hintedNodes = new Set<string>();
+      const noop = {
+        reply: { executable: process.execPath, args: ['-e', ''] },
+      };
+      const turn = async (
+        alias: string,
+        label: string,
+        prompt: string,
+        checks: Record<string, Check>,
+        writablePaths: string[] = [],
+      ) => {
+        const taskId = turnId(label);
+        const tree = worktree(taskId);
+        busy.add(alias);
+        this.#running.set(taskId, alias);
+        try {
+          const outcome = await this.#runner.run({
+            taskId,
+            projectId: spec.projectId,
+            alias,
+            prompt,
+            workspace: tree,
+            checks: Object.keys(checks).length ? checks : noop,
+            ...(writablePaths.length ? { writablePaths } : {}),
+            lessonScope: turnLessonScope,
+          });
+          return { taskId, outcome };
+        } finally {
+          busy.delete(alias);
+          this.#running.delete(taskId);
+        }
+      };
+      const routable = () =>
+        this.#workers.map((w) => ({
+          alias: w.alias,
+          runtimeKind: w.runtimeKind,
+          quotaGroupId: w.quotaGroupId,
+          busy: busy.has(w.alias),
+          healthy: true,
+          blocked: !!this.#store.providers.blocked(w.quotaGroupId),
+          completed: completed.get(w.alias) ?? [],
+          roles: w.roles.filter(
+            (r): r is 'worker' | 'reviewer' => r !== 'planner',
+          ),
+          ...(w.preferredReviewer !== undefined
+            ? { preferredReviewer: w.preferredReviewer }
+            : {}),
+          ...(w.tier ? { tier: w.tier } : {}),
+        }));
       // 1. Plan.
       if (spec.plan) state.plan = validatePlan(spec.plan).plan;
       else {
@@ -706,6 +711,7 @@ export class Orchestrator {
         for (let fixes = 0; ; fixes++) {
           state.phase = 'verifying';
           const head = integration.head();
+          save('graph.verifying', { head });
           const results = await this.#runChecks(
             integration.path,
             spec.checks,
@@ -775,6 +781,8 @@ export class Orchestrator {
             routable(),
           );
           if (!fixer.alias) throw new Error('ROUTING_STALLED');
+          state.phase = 'running';
+          save('graph.repairing', { alias: fixer.alias, source: 'checks' });
           const fixHint = lessons.hints(failures);
           const { taskId, outcome } = await turn(
             fixer.alias,
@@ -853,6 +861,10 @@ export class Orchestrator {
             { implementerRuntimes: [...implementers] },
           );
           if (reviewer.alias) {
+            save('graph.reviewing', {
+              alias: reviewer.alias,
+              head: integration.head(),
+            });
             const diff = integration.diff();
             const { outcome } = await turn(
               reviewer.alias,
@@ -987,6 +999,7 @@ export class Orchestrator {
         );
         if (!fixer.alias) break;
         state.phase = 'running';
+        save('graph.repairing', { alias: fixer.alias, source: 'review' });
         const reviewHint = lessons.hints(review.findings);
         const { taskId, outcome } = await turn(
           fixer.alias,

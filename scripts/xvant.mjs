@@ -46,10 +46,13 @@ const [command, ...rest] = process.argv.slice(2);
 const values = (name) =>
   rest.flatMap((arg, i) => (arg === name ? [rest[i + 1]] : [])).filter(Boolean);
 const value = (name) => values(name)[0];
-const open = () => {
+const open = (recoverWorkGraphs = false) => {
   mkdirSync(home, { recursive: true });
   return {
-    store: new Store(join(home, 'state.sqlite'), { owner: 'xvant-cli' }),
+    store: new Store(join(home, 'state.sqlite'), {
+      owner: 'xvant-cli',
+      recoverWorkGraphs,
+    }),
     objects: new ArtifactStore(join(home, 'objects')),
   };
 };
@@ -288,7 +291,7 @@ if (command === undefined || command === 'shell') {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
       .slice(0, 24);
-  const { store, objects } = open();
+  const { store, objects } = open(true);
   const runner = new LiveTurnRunner(store, objects, workers, runtimes, {
     onEvent: (alias, _taskId, event) => {
       if (event.kind === 'activity' || event.kind === 'auth')

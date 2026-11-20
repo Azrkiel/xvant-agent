@@ -33,6 +33,7 @@ export function runHandoff({
     acceptanceCriteria: state.acceptanceCriteria,
     phase: state.phase,
     reason: state.reason ?? null,
+    ...(state.interruption ? { interruption: state.interruption } : {}),
     nodes: Object.values(state.nodes).map(
       ({ node, status, route, attempts, lastFailure }) => ({
         id: node.id,
