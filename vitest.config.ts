@@ -1,10 +1,14 @@
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     include: [
       'packages/**/*.test.ts',
       'apps/**/*.test.ts',
       'tests/**/*.test.ts',
+    ],
+    exclude: [
+      ...configDefaults.exclude,
+      ...(process.platform === 'linux' ? [] : ['tests/faults/daemon.test.ts']),
     ],
     // Tests that spawn Git or child processes take several seconds on a loaded Windows host.
     testTimeout: 15000,

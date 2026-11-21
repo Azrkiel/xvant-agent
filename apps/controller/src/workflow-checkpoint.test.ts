@@ -158,7 +158,7 @@ it('migrates schema 6 without treating a legacy node as a redispatchable action'
   try {
     const old = new Database(path);
     old.exec(
-      'DROP TABLE work_recoveries; DROP TABLE work_dispatches; DROP TABLE work_actions; DROP TABLE work_checkpoints; PRAGMA user_version=6;',
+      'DROP TABLE schedule_jobs; DROP TABLE schedule_control; DROP TABLE schedule_projects; ALTER TABLE ownership DROP COLUMN boot; ALTER TABLE ownership DROP COLUMN uptimeExpiry; DROP TABLE work_recoveries; DROP TABLE work_dispatches; DROP TABLE work_actions; DROP TABLE work_checkpoints; PRAGMA user_version=6;',
     );
     old.close();
 
@@ -167,7 +167,7 @@ it('migrates schema 6 without treating a legacy node as a redispatchable action'
       recoverWorkGraphs: true,
     });
     try {
-      expect(upgraded.schemaVersion()).toBe(8);
+      expect(upgraded.schemaVersion()).toBe(9);
       expect(upgraded.graphs.get('legacy').state).toMatchObject({
         phase: 'needs_attention',
         nodes: {

@@ -143,6 +143,18 @@ export class Workflows {
     return row ? this.#decode(row) : null;
   }
 
+  interrupted(): string[] {
+    return (
+      this.#db
+        .prepare(
+          `
+      SELECT DISTINCT graph_id FROM work_actions WHERE json_extract(body,'$.status')='dispatching'
+    `,
+        )
+        .all() as { graph_id: string }[]
+    ).map(({ graph_id }) => graph_id);
+  }
+
   actions(id: string): WorkAction[] {
     const rows = this.#db
       .prepare(
@@ -290,23 +302,28 @@ export class Workflows {
   }
 
   /** Legacy provider admissions also respect a workflow holding that worker. */
-  occupied(resource: string, ownAttempt?: string): boolean {
+  occupied(resource: string, ownAttempt?: string, ignoreGraph = ''): boolean {
     return (
       !!this.#db
         .prepare(
           `
       SELECT 1 FROM work_dispatches d, json_each(d.body, '$.resources') r
-      WHERE r.value=? AND json_extract(d.body,'$.armed')=1 AND json_extract(d.body,'$.released')=0
+      WHERE r.value=? AND graph_id<>? AND json_extract(d.body,'$.armed')=1 AND json_extract(d.body,'$.released')=0
         AND NOT (json_extract(d.body,'$.attemptId')=? AND json_extract(d.body,'$.generation')=?)
       LIMIT 1
     `,
         )
-        .get(resource, ownAttempt ?? '', this.#host.generation()) ||
+        .get(
+          resource,
+          ignoreGraph,
+          ownAttempt ?? '',
+          this.#host.generation(),
+        ) ||
       !!this.#db
         .prepare(
           `
       SELECT 1 FROM work_actions
-      WHERE json_extract(body,'$.kind')='turn' AND json_extract(body,'$.status')='dispatching'
+      WHERE graph_id<>? AND json_extract(body,'$.kind')='turn' AND json_extract(body,'$.status')='dispatching'
         AND json_extract(body,'$.dispatchId') IS NULL AND ? IN (
           'worker:' || json_extract(body,'$.input.alias'),
           'workspace:' || json_extract(body,'$.input.taskId'),
@@ -315,7 +332,7 @@ export class Workflows {
       LIMIT 1
     `,
         )
-        .get(resource)
+        .get(ignoreGraph, resource)
     );
   }
 

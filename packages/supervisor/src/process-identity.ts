@@ -44,6 +44,10 @@ export function captureProcess(pid: number): ProcessStartIdentity | null {
   }
 }
 
+export function currentProcess(): ProcessStartIdentity {
+  return { pid: process.pid, ...environment(), start: stat(process.pid).start };
+}
+
 export type ProcessObservation =
   'running' | 'exited' | 'pid_reused' | 'environment_changed' | 'unavailable';
 

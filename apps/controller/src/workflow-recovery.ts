@@ -132,6 +132,8 @@ export async function recoverWorkflowAction(
   integration: RootState['integration'],
   action: DispatchingAction,
   remote: RemoteTurnRecovery | undefined,
+  now: () => number = Date.now,
+  allowReplay = true,
 ): Promise<RecoveryDecision> {
   const { id, repository, baseRevision } = checkpoint.spec;
   const workflows = store.workflows;
@@ -358,6 +360,8 @@ export async function recoverWorkflowAction(
           input,
           remote,
           objects,
+          now,
+          allowReplay,
         );
       }
     }
@@ -400,6 +404,8 @@ async function recoverRemote(
   input: ReturnType<typeof turnIntentSchema.parse>,
   remote: RemoteTurnRecovery,
   objects: ArtifactStore,
+  now: () => number,
+  allowReplay: boolean,
 ): Promise<RecoveryDecision> {
   const { operationId, attemptId } = dispatch;
   const key = { operationId, attemptId };
@@ -430,8 +436,14 @@ async function recoverRemote(
       code = errorCode(error);
     }
   }
-  const remaining = input.deadlineAt - Date.now();
-  if (!result && remote.replay && remaining > 0 && code !== 'STALE_EVIDENCE') {
+  const remaining = input.deadlineAt - now();
+  if (
+    !result &&
+    allowReplay &&
+    remote.replay &&
+    remaining > 0 &&
+    code !== 'STALE_EVIDENCE'
+  ) {
     source = 'remote_idempotent_replay';
     store.workflows.reconcile(
       id,

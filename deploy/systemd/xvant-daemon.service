@@ -1,0 +1,17 @@
+[Unit]
+Description=XVANT local workflow daemon
+
+[Service]
+Type=exec
+UMask=0077
+WorkingDirectory=%h/.local/share/xvant/source
+Environment=XVANT_HOME=%h/.xvant
+EnvironmentFile=-%h/.config/xvant/daemon.env
+ExecStart=/usr/bin/tini -s -- %h/.local/share/xvant/node/bin/node scripts/xvant.mjs daemon serve
+Restart=on-failure
+RestartSec=3s
+TimeoutStopSec=10s
+KillMode=mixed
+
+[Install]
+WantedBy=default.target
