@@ -24,6 +24,11 @@ import {
   decideCompletion,
   reportRevision,
 } from '../../../packages/policy/src/project.ts';
+import {
+  ArtifactStore,
+  backupSnapshot,
+  restoreSnapshot,
+} from '../../../packages/storage/src/artifacts.ts';
 import { SCHEMA_VERSION, Store } from '../../../packages/storage/src/store.ts';
 import { startApp } from './app.ts';
 import { Orchestrator, type RootState } from './orchestrator.ts';
@@ -199,6 +204,42 @@ const saveBacklog = (backlog: ProjectBacklog, commandId = 'save-backlog') => ({
 });
 
 describe('project backlog', () => {
+  it('upgrades schema 9 and preserves backlog rows through a verified snapshot', async () => {
+    const { project, policy } = setup();
+    store.close();
+    const previous = new Database(join(root, 'state.sqlite'));
+    try {
+      previous.exec('DROP TABLE contract_backlogs; PRAGMA user_version=9;');
+    } finally {
+      previous.close();
+    }
+    store = open();
+    expect(store.schemaVersion()).toBe(10);
+    expect(store.contracts.getProject(project.id)).toEqual({ project, policy });
+    const backlog = backlogPlan();
+    store.contracts.apply(saveBacklog(backlog));
+    const backup = join(root, 'backlog-backup');
+    const restore = join(root, 'backlog-restore');
+    await backupSnapshot(
+      store,
+      new ArtifactStore(join(root, 'objects')),
+      backup,
+    );
+    await restoreSnapshot(backup, restore);
+    const restored = new Database(join(restore, 'state.sqlite'), {
+      readonly: true,
+    });
+    try {
+      const rows = restored
+        .prepare('SELECT body FROM contract_backlogs')
+        .all() as { body: string }[];
+      expect(rows.map(({ body }) => JSON.parse(body))).toEqual([backlog]);
+      expect(restored.pragma('foreign_key_check')).toEqual([]);
+    } finally {
+      restored.close();
+    }
+  });
+
   it('recovers immutable plans, rationale, notes and authorized ceilings after reopening the host', () => {
     const { project, policy } = setup();
     expect(store.contracts.getBacklog(project.id).status).toBe('unplanned');

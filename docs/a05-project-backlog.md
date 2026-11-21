@@ -67,7 +67,9 @@ current owner objective, requirements and policy budget ceilings.
 ## Handoff and compatibility
 
 Schema 10 adds the `contract_backlogs` table. It preserves roots, queued work,
-the effect journal and legacy manual acceptance. Take a pre-upgrade backup
+the effect journal and legacy manual acceptance. Verified snapshots check
+both composite references from backlog revisions to their project and policy
+records. Take a pre-upgrade backup
 with the service stopped. Roll back by restoring it to a separate state
 directory for the older binary. Keep the upgraded store and original
 worktrees available for reconciliation.
