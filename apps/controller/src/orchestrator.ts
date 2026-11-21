@@ -1,11 +1,13 @@
 import { createHash } from 'node:crypto';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
+import { realpathSync } from 'node:fs';
 import { WorkerSupervisor } from '../../../packages/supervisor/src/index.ts';
 import type { RunInterruption } from '../../../packages/storage/src/work-graphs.ts';
 import type { Store } from '../../../packages/storage/src/store.ts';
 import {
   contractGitResult,
   createWorktree,
+  resolveGitCommit,
 } from '../../../packages/storage/src/git-workspace.ts';
 import { IntegrationBranch } from '../../../packages/storage/src/integration.ts';
 import {
@@ -27,10 +29,16 @@ import {
   sourcedReportSchema,
 } from '../../../packages/contracts/src/project.ts';
 import { reportRevision } from '../../../packages/policy/src/project.ts';
+import {
+  createCheckpoint,
+  parseCheckpoint,
+  type WorkflowCheckpoint,
+} from './workflow-checkpoint.ts';
 
 export interface Check {
   executable: string;
   args: readonly string[];
+  windowsVerbatimArguments?: boolean | undefined;
 }
 export interface WorkerSpec {
   alias: string;
@@ -285,6 +293,8 @@ export class Orchestrator {
   readonly #runner: TurnRunner;
   readonly #workers: WorkerSpec[];
   readonly #root: string;
+  readonly #runtimeBindings: WorkflowCheckpoint['runtimeBindings'];
+  readonly #turnTimeoutMs: number;
   readonly #supervisor = new WorkerSupervisor();
   readonly #onChange: (state: RootState, kind: string) => void;
   #cancelled = false;
@@ -295,6 +305,8 @@ export class Orchestrator {
     workers: WorkerSpec[],
     options: {
       stateRoot: string;
+      runtimeBindings?: WorkflowCheckpoint['runtimeBindings'];
+      turnTimeoutMs?: number;
       onChange?: (state: RootState, kind: string) => void;
     },
   ) {
@@ -303,7 +315,9 @@ export class Orchestrator {
     this.#store = store;
     this.#runner = runner;
     this.#workers = workers;
-    this.#root = options.stateRoot;
+    this.#root = resolve(options.stateRoot);
+    this.#runtimeBindings = options.runtimeBindings ?? {};
+    this.#turnTimeoutMs = options.turnTimeoutMs ?? 60 * 60 * 1000;
     this.#onChange = options.onChange ?? (() => {});
   }
   cancel(): void {
@@ -329,9 +343,29 @@ export class Orchestrator {
       clearInterval(beat);
     }
   }
-  async #run(spec: RootSpec): Promise<RootState> {
-    const maxActive = spec.maxActive ?? 3;
-    const maxRepairs = spec.maxRepairs ?? 2;
+  static checkpoint(store: Store, id: string): WorkflowCheckpoint {
+    return parseCheckpoint(store.workflows.read(id));
+  }
+
+  async #run(input: RootSpec): Promise<RootState> {
+    const repository = realpathSync(input.repository);
+    const checkpoint = createCheckpoint({
+      spec: {
+        ...input,
+        repository,
+        baseRevision: resolveGitCommit(repository, input.baseRevision),
+        lessonScope:
+          input.lessons === false
+            ? null
+            : (input.lessonScope ?? scopeOf(repository, input.projectId)),
+      },
+      workers: this.#workers,
+      runtimeBindings: this.#runtimeBindings,
+      stateRoot: this.#root,
+      turnTimeoutMs: this.#turnTimeoutMs,
+    });
+    const spec = checkpoint.spec;
+    const { maxActive, maxRepairs } = spec;
     const state: RootState = {
       phase: 'planning',
       repository: spec.repository,
@@ -364,17 +398,29 @@ export class Orchestrator {
       taskId,
       alias,
     });
-    let record = this.#store.graphs.create(spec.id, spec.projectId, state, {
-      objective: spec.objective,
+    let record = this.#store.workflows.atomic(() => {
+      const created = this.#store.graphs.create(
+        spec.id,
+        spec.projectId,
+        state,
+        {
+          objective: spec.objective,
+        },
+      );
+      this.#store.workflows.write(spec.id, checkpoint);
+      return created;
     });
     const save = (kind: string, payload: unknown = {}) => {
-      record = this.#store.graphs.update(
-        spec.id,
-        record.rowVersion,
-        state,
-        kind,
-        payload,
-      );
+      record = this.#store.workflows.atomic(() => {
+        this.#store.workflows.write(spec.id, checkpoint);
+        return this.#store.graphs.update(
+          spec.id,
+          record.rowVersion,
+          state,
+          kind,
+          payload,
+        );
+      });
       this.#onChange(structuredClone(state), kind);
     };
     try {
@@ -391,11 +437,11 @@ export class Orchestrator {
         head: integration.head(),
       };
       save('graph.initialized', { ...state.integration });
-      let turnCount = 0;
+      checkpoint.progress.step = 'plan';
       // Runners derive idempotency keys such as 'create-<id>' that must fit
       // idSchema's 64 characters. The counter keeps a shortened ID unique.
       const turnId = (label: string) => {
-        const suffix = '-' + ++turnCount;
+        const suffix = '-' + ++checkpoint.progress.turnCount;
         return (spec.id + '-' + label).slice(0, 57 - suffix.length) + suffix;
       };
       const busy = new Set<string>();
@@ -1173,7 +1219,11 @@ export class Orchestrator {
     }[] = [];
     for (const [id, check] of Object.entries(checks)) {
       const result = await this.#supervisor.start({
-        ...check,
+        executable: check.executable,
+        args: check.args,
+        ...(check.windowsVerbatimArguments === undefined
+          ? {}
+          : { windowsVerbatimArguments: check.windowsVerbatimArguments }),
         cwd,
         workerId: 'integration_checks',
         attemptId: 'combined',

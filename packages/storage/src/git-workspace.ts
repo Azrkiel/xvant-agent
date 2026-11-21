@@ -29,6 +29,15 @@ function git(
 const text = (cwd: string, args: readonly string[]) =>
   git(cwd, args).toString('utf8').trim();
 
+export function resolveGitCommit(repository: string, revision: string): string {
+  return text(repository, [
+    'rev-parse',
+    '--verify',
+    '--end-of-options',
+    revision + '^{commit}',
+  ]);
+}
+
 /**
  * A writer's isolated Git worktree on a new branch at a recorded base commit.
  * Never resets, stashes or touches the source checkout's working tree.
@@ -42,12 +51,7 @@ export function createWorktree(
   if (!isAbsolute(repository) || !isAbsolute(path)) fail('INVALID_INPUT');
   if (!/^[A-Za-z0-9._/-]{1,128}$/.test(branch) || branch.includes('..'))
     fail('INVALID_INPUT');
-  const baseCommit = text(repository, [
-    'rev-parse',
-    '--verify',
-    '--end-of-options',
-    baseRevision + '^{commit}',
-  ]);
+  const baseCommit = resolveGitCommit(repository, baseRevision);
   git(repository, ['worktree', 'add', '-b', branch, resolve(path), baseCommit]);
   return { path: realpathSync(resolve(path)), baseCommit, branch };
 }

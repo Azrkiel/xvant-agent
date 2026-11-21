@@ -160,6 +160,7 @@ const manifestSchema = z.strictObject({
     z.literal(4),
     z.literal(5),
     z.literal(6),
+    z.literal(7),
   ]),
   database: z.strictObject({
     file: z.literal('state.sqlite'),
@@ -193,6 +194,7 @@ const tables: Record<string, string[]> = {
   ],
   work_graphs: ['id', 'project_id', 'body'],
   work_events: ['sequence', 'graph_id', 'kind', 'payload'],
+  work_checkpoints: ['graph_id', 'body'],
   contract_projects: ['project_id', 'version', 'body'],
   contract_policies: ['project_id', 'version', 'body'],
   contract_tasks: ['id', 'project_id', 'body'],
@@ -224,6 +226,7 @@ const primaryKeys: Record<string, string[]> = {
   memory_records: ['project_id', 'id'],
   work_graphs: ['id'],
   work_events: ['sequence'],
+  work_checkpoints: ['graph_id'],
   contract_projects: ['project_id', 'version'],
   contract_policies: ['project_id', 'version'],
   contract_tasks: ['id'],
@@ -262,6 +265,7 @@ const foreignKeys: Record<string, { from: string; table: string }[]> = {
   memory_records: [],
   work_graphs: [],
   work_events: [{ from: 'graph_id', table: 'work_graphs' }],
+  work_checkpoints: [{ from: 'graph_id', table: 'work_graphs' }],
   contract_projects: [],
   contract_policies: [],
   contract_tasks: [],
@@ -359,7 +363,8 @@ function validateDatabase(path: string): {
   const db = new Database(path, { readonly: true, fileMustExist: true });
   try {
     const schemaVersion = db.pragma('user_version', { simple: true }) as number;
-    if (![1, 2, 3, 4, 5, 6].includes(schemaVersion)) fail('SCHEMA_UNSUPPORTED');
+    if (![1, 2, 3, 4, 5, 6, 7].includes(schemaVersion))
+      fail('SCHEMA_UNSUPPORTED');
     if (
       db.pragma('integrity_check', { simple: true }) !== 'ok' ||
       (db.pragma('foreign_key_check') as unknown[]).length !== 0
@@ -371,6 +376,7 @@ function validateDatabase(path: string): {
       if (schemaVersion < 4 && table.startsWith('work_')) continue;
       if (schemaVersion < 5 && table.startsWith('lesson_')) continue;
       if (schemaVersion < 6 && table.startsWith('contract_')) continue;
+      if (schemaVersion < 7 && table === 'work_checkpoints') continue;
       validateTable(db, table, columns);
     }
     if (schemaVersion >= 3) {

@@ -20,6 +20,7 @@ import { createTask, transitionTask } from '../../core/src/task.ts';
 import { ProviderJournal, providerMigration } from './providers.ts';
 import { MemoryRecords, memoryMigration } from './memory.ts';
 import { WorkGraphs, workGraphMigration } from './work-graphs.ts';
+import { Workflows, workflowMigration } from './workflows.ts';
 import { LessonGraph, lessonMigration } from './lessons.ts';
 import {
   ProjectContracts,
@@ -114,7 +115,7 @@ function canonical(value: unknown): string {
   return json(value);
 }
 /** The newest schema this code writes; a database beyond it is refused. */
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 /** Observe one committed snapshot, including while another process owns the controller. */
 export function inspectWorkGraphs<T>(
@@ -146,6 +147,7 @@ export class Store {
   readonly providers: ProviderJournal;
   readonly memory: MemoryRecords;
   readonly graphs: WorkGraphs;
+  readonly workflows: Workflows;
   readonly lessons: LessonGraph;
   readonly contracts: ProjectContracts;
   readonly #db: Database.Database;
@@ -168,6 +170,7 @@ export class Store {
     )
       throw new StorageError('INVALID_INPUT');
     this.#db = new Database(path, { timeout: 1000 });
+    this.workflows = new Workflows(this.#db, (fn) => this.#transaction(fn));
     this.graphs = new WorkGraphs(this.#db, {
       transaction: (fn) => this.#transaction(fn),
     });
@@ -182,6 +185,7 @@ export class Store {
         { version: 4, sql: workGraphMigration },
         { version: 5, sql: lessonMigration },
         { version: 6, sql: projectContractsMigration },
+        { version: 7, sql: workflowMigration },
         ...(options.migrations ?? []),
       ];
       if (this.schemaVersion() > migrations.at(-1)!.version)
