@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
-import { Store } from './store.ts';
+import { SCHEMA_VERSION, Store } from './store.ts';
 import { ArtifactStore, backupSnapshot, restoreSnapshot } from './artifacts.ts';
 import { durableCodexChannel } from '../../adapters/src/codex/durable.ts';
 
@@ -427,7 +427,7 @@ it('migrates an existing v1 database without losing its tasks', () => {
   );
   db.close();
   store = open();
-  expect(store.schemaVersion()).toBe(9);
+  expect(store.schemaVersion()).toBe(SCHEMA_VERSION);
   expect(store.getTask('task').state).toBe('queued');
   expect(store.providers.reserve(spec).workRevision).toBe(0);
 });
@@ -532,7 +532,7 @@ it('restores a legacy v1 snapshot then migrates it on open', async () => {
     now: () => 2000,
   });
   stores.push(restored);
-  expect(restored.schemaVersion()).toBe(9);
+  expect(restored.schemaVersion()).toBe(SCHEMA_VERSION);
   expect(restored.getTask('task').state).toBe('queued');
 });
 it.each(['completed', 'cancelled', 'failed'] as const)(

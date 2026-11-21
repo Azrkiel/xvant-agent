@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
-import { inspectWorkGraphs, Store } from './store.ts';
+import { inspectWorkGraphs, SCHEMA_VERSION, Store } from './store.ts';
 const input = {
   id: 'task',
   projectId: 'project',
@@ -223,7 +223,7 @@ describe('durable store', () => {
           owner: 'next',
           migrations: [
             {
-              version: 10,
+              version: SCHEMA_VERSION + 1,
               sql: 'CREATE TABLE broken(id TEXT); THIS IS INVALID;',
             },
           ],
@@ -231,7 +231,7 @@ describe('durable store', () => {
     ).toThrow();
     store = open('next');
     expect(store.getTask('task').id).toBe('task');
-    expect(store.schemaVersion()).toBe(9);
+    expect(store.schemaVersion()).toBe(SCHEMA_VERSION);
     const db = new Database(join(root, 'state.sqlite'));
     expect(
       db.prepare("select name from sqlite_master where name='broken'").get(),
@@ -252,10 +252,15 @@ it('does not migrate a database owned by another live controller', () => {
       new Store(join(root, 'state.sqlite'), {
         owner: 'second',
         now: () => now,
-        migrations: [{ version: 10, sql: 'CREATE TABLE surprise(id TEXT);' }],
+        migrations: [
+          {
+            version: SCHEMA_VERSION + 1,
+            sql: 'CREATE TABLE surprise(id TEXT);',
+          },
+        ],
       }),
   ).toThrow('LEASE_BUSY');
-  expect(store.schemaVersion()).toBe(9);
+  expect(store.schemaVersion()).toBe(SCHEMA_VERSION);
   const db = new Database(join(root, 'state.sqlite'));
   expect(
     db.prepare("select name from sqlite_master where name='surprise'").get(),

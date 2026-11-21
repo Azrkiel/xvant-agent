@@ -647,6 +647,15 @@ export async function startApp(options: AppOptions) {
       },
       {
         method: 'GET',
+        path: /^\/api\/v1\/contracts\/projects\/([A-Za-z][A-Za-z0-9_-]{0,63})\/backlog(?:\/([1-9]\d{0,15}))?$/,
+        handle: async ({ match }) =>
+          store.contracts.getBacklog(
+            match[1]!,
+            match[2] === undefined ? undefined : Number(match[2]),
+          ),
+      },
+      {
+        method: 'GET',
         path: /^\/api\/v1\/contracts\/tasks\/([A-Za-z][A-Za-z0-9_-]{0,63})$/,
         handle: async ({ match }) => store.contracts.getTask(match[1]!),
       },

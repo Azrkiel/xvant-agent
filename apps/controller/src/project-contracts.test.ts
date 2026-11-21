@@ -18,6 +18,7 @@ import {
   type ProjectPolicy,
   type ProjectTask,
 } from '../../../packages/contracts/src/project.ts';
+import type { ProjectBacklog } from '../../../packages/contracts/src/project-backlog.ts';
 import {
   completionSubject,
   decideCompletion,
@@ -124,6 +125,182 @@ function setup(value = records()) {
     store.contracts.apply(cmd);
   return value;
 }
+
+function backlogPlan(): ProjectBacklog {
+  return {
+    schemaVersion: 1,
+    projectId: 'flaky',
+    projectVersion: 1,
+    policyVersion: 1,
+    revision: 1,
+    reason: 'Investigate before repairing the order dependency',
+    milestones: [
+      {
+        id: 'investigate',
+        title: 'Investigate',
+        priority: 2,
+        dependsOn: [],
+        requirementIds,
+        reason: 'Find the shared state',
+      },
+      {
+        id: 'repair',
+        title: 'Repair',
+        priority: 1,
+        dependsOn: ['investigate'],
+        requirementIds,
+        reason: 'Apply the observed correction',
+      },
+      {
+        id: 'verify',
+        title: 'Verify',
+        priority: 1,
+        dependsOn: ['repair', 'control'],
+        requirementIds,
+        reason: 'Compare both test orders',
+      },
+      {
+        id: 'control',
+        title: 'Prepare a control',
+        priority: 0,
+        dependsOn: [],
+        requirementIds,
+        reason: 'Keep the original failure reproducible',
+      },
+    ],
+    notes: [
+      {
+        id: 'fixture-only',
+        kind: 'decision',
+        summary: 'Use disposable test files',
+      },
+      {
+        id: 'setup',
+        kind: 'question',
+        summary: 'Is test isolation configurable?',
+        nextAction: 'Inspect test setup',
+      },
+      {
+        id: 'missing-env',
+        kind: 'blocker',
+        summary: 'Original environment missing',
+        milestoneId: 'investigate',
+        nextAction: 'Find the frozen fixture',
+      },
+    ],
+  };
+}
+
+const saveBacklog = (backlog: ProjectBacklog, commandId = 'save-backlog') => ({
+  kind: 'backlog',
+  commandId,
+  expectedRevision: backlog.revision - 1,
+  backlog,
+});
+
+describe('project backlog', () => {
+  it('recovers immutable plans, rationale, notes and authorized ceilings after reopening the host', () => {
+    const { project, policy } = setup();
+    expect(store.contracts.getBacklog(project.id).status).toBe('unplanned');
+    const original = backlogPlan();
+    expect(store.contracts.apply(saveBacklog(original))).toEqual(original);
+    const next = {
+      ...original,
+      revision: 2,
+      reason: 'Record the frozen fixture',
+      notes: [],
+    };
+    expect(store.contracts.apply(saveBacklog(next, 'frozen-fixture'))).toEqual(
+      next,
+    );
+    store.close();
+    store = open();
+    expect(store.contracts.getBacklog(project.id)).toEqual({
+      projectId: project.id,
+      ownerIntent: project.ownerIntent,
+      requirements: project.requirements,
+      projectVersion: project.version,
+      policyVersion: policy.version,
+      budgetCeilings: policy.authority.budget,
+      status: 'current',
+      backlog: next,
+    });
+    expect(store.contracts.getBacklog(project.id, 1)).toMatchObject({
+      backlog: original,
+      status: 'superseded',
+    });
+    expect(() => store.contracts.getBacklog(project.id, 3)).toThrow(
+      'NOT_FOUND',
+    );
+    expect(store.contracts.apply(saveBacklog(original))).toEqual(original);
+    expect(() =>
+      store.contracts.apply(saveBacklog({ ...original, reason: 'changed' })),
+    ).toThrow('CONFLICT');
+    expect(() =>
+      store.contracts.apply(saveBacklog(next, 'stale-revision')),
+    ).toThrow('CONFLICT');
+  });
+
+  it('denies unknown requirements, invalid dependencies, and stale authority', () => {
+    const { project, policy } = setup();
+    const unknown = backlogPlan();
+    unknown.milestones[0]!.requirementIds = ['unapproved'];
+    expect(() => store.contracts.apply(saveBacklog(unknown))).toThrow(
+      'POLICY_DENIED',
+    );
+    const cycle = backlogPlan();
+    cycle.milestones[0]!.dependsOn = ['verify'];
+    expect(() => store.contracts.apply(saveBacklog(cycle))).toThrow(
+      'GRAPH_INVALID',
+    );
+    const badNote = backlogPlan();
+    badNote.notes[0]!.milestoneId = 'missing';
+    expect(() => store.contracts.apply(saveBacklog(badNote))).toThrow(
+      'CONFLICT',
+    );
+    const original = backlogPlan();
+    store.contracts.apply(saveBacklog(original));
+    store.contracts.apply({
+      kind: 'project',
+      commandId: 'new-scope',
+      expectedVersion: 1,
+      project: { ...project, version: 2 },
+    });
+    expect(store.contracts.getBacklog(project.id)).toMatchObject({
+      status: 'stale',
+      projectVersion: 2,
+      budgetCeilings: null,
+      backlog: original,
+    });
+    expect(() =>
+      store.contracts.apply(
+        saveBacklog(
+          {
+            ...original,
+            revision: 2,
+            projectVersion: 2,
+          },
+          'pending-policy',
+        ),
+      ),
+    ).toThrow('POLICY_DENIED');
+    store.contracts.apply({
+      kind: 'policy',
+      commandId: 'new-policy',
+      expectedVersion: 1,
+      policy: { ...policy, projectVersion: 2, version: 2 },
+    });
+    const next = {
+      ...original,
+      revision: 2,
+      projectVersion: 2,
+      policyVersion: 2,
+    };
+    expect(
+      store.contracts.apply(saveBacklog(next, 'with-current-policy')),
+    ).toEqual(next);
+  });
+});
 
 function valid(
   { task, policy }: Records,
@@ -815,6 +992,15 @@ it('A01 offline fixture reports on the flaky test and then ships only with separ
     };
     for (const command of [...ownerCommands(fixture), createTask(scout)])
       expect((await post(command)).status).toBe(202);
+    const backlogPath = path + '/projects/' + fixture.project.id + '/backlog';
+    expect((await fetch(backlogPath)).status).toBe(401);
+    expect((await post(saveBacklog(backlogPlan()))).status).toBe(202);
+    const backlogView = await fetch(backlogPath, { headers: { cookie } });
+    expect(backlogView.status).toBe(200);
+    expect(await backlogView.json()).toMatchObject({
+      status: 'current',
+      backlog: backlogPlan(),
+    });
     expect((await post(createTask(ship))).status).toBe(403);
     expect(
       (await post({ kind: 'observe', attemptId: 'scout-attempt' })).status,
@@ -953,6 +1139,12 @@ it('A01 offline fixture reports on the flaky test and then ships only with separ
   });
   expect(JSON.parse(cli('contracts', 'task', ship.id))).toMatchObject({
     delivery: ship.authority.delivery,
+  });
+  expect(
+    JSON.parse(cli('contracts', 'backlog', fixture.project.id, '1')),
+  ).toMatchObject({
+    status: 'current',
+    backlog: backlogPlan(),
   });
   expect(git('rev-parse', 'main')).toBe(baseRevision);
   expect(git('remote')).toBe('');

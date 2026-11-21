@@ -533,4 +533,111 @@ describe('A04 daemon process fixtures', () => {
       stopped: true,
     });
   }, 25_000);
+
+  it('stores an owner backlog through the daemon without submitting work', async () => {
+    const repository = repo('backlog');
+    const first = launch();
+    await ready(first);
+    const project = {
+      schemaVersion: 1,
+      id: 'backlog',
+      version: 1,
+      ownerIntent: {
+        actorId: 'owner',
+        objective: 'Prepare an offline fixture',
+      },
+      requirements: [{ id: 'fixture', description: 'Confirm the fixture' }],
+      exclusions: [],
+      scope: { repository, paths: ['.'], excludedPaths: [] },
+    };
+    const policy = {
+      schemaVersion: 1,
+      projectId: project.id,
+      projectVersion: project.version,
+      version: 1,
+      ownerId: 'owner',
+      authority: {
+        scope: project.scope,
+        actions: ['read', 'report'],
+        providers: ['codex'],
+        budget: { attempts: 1, wallTimeMs: 1000, tokens: 0, costMicros: 0 },
+        delivery: { localCandidate: false, createPr: false, merge: false },
+      },
+      verifier: { id: 'fixture', configHash: 'a'.repeat(64), checks: [] },
+      review: { required: false },
+      automaticAcceptance: false,
+      escalation: { onBlock: 'stop', allowManualException: false },
+    };
+    expect(
+      (
+        await api('contracts', {
+          kind: 'project',
+          commandId: 'owner-project',
+          expectedVersion: 0,
+          project,
+        })
+      ).status,
+    ).toBe(202);
+    expect(
+      (
+        await api('contracts', {
+          kind: 'policy',
+          commandId: 'owner-policy',
+          expectedVersion: 0,
+          policy,
+        })
+      ).status,
+    ).toBe(202);
+    const backlog = {
+      schemaVersion: 1,
+      projectId: project.id,
+      projectVersion: project.version,
+      policyVersion: policy.version,
+      revision: 1,
+      reason: 'Record the requested fixture',
+      milestones: [
+        {
+          id: 'confirm',
+          title: 'Confirm fixture',
+          reason: 'Observe it first',
+          priority: 0,
+          dependsOn: [],
+          requirementIds: ['fixture'],
+        },
+      ],
+      notes: [],
+    };
+    const path = join(dir, 'backlog.json');
+    writeFileSync(
+      path,
+      JSON.stringify({
+        kind: 'backlog',
+        commandId: 'owner-backlog',
+        expectedRevision: 0,
+        backlog,
+      }),
+    );
+    const applied = await exec(
+      process.execPath,
+      [script, 'contracts', 'apply', '--file', path],
+      { env, timeout: stopMs },
+    );
+    expect(JSON.parse(applied.stdout)).toEqual(backlog);
+    await cli('stop', '--id', 'stop-backlog');
+    expect(await first.exit).toBe(0);
+    const next = launch();
+    const scheduler = await ready(next);
+    expect(scheduler.jobs).toEqual([]);
+    const inspected = await exec(
+      process.execPath,
+      [script, 'contracts', 'backlog', project.id],
+      { env, timeout: stopMs },
+    );
+    expect(JSON.parse(inspected.stdout)).toMatchObject({
+      status: 'current',
+      backlog,
+    });
+    expect(calls()).toEqual([]);
+    await cli('stop', '--id', 'stop-backlog-next');
+  }, 25_000);
 });
