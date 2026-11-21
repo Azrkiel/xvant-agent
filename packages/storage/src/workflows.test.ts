@@ -2,6 +2,8 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
+import Database from 'better-sqlite3';
+import { ArtifactStore, backupSnapshot, restoreSnapshot } from './artifacts.ts';
 import { Store } from './store.ts';
 
 it('atomically records progress and intent, fences claims, and deduplicates exact results', () => {
@@ -77,6 +79,196 @@ it('atomically records progress and intent, fences claims, and deduplicates exac
     ).toThrow('STALE_FENCE');
   } finally {
     writer.close();
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it('keeps original intent and fences superseded dispatch IDs within one generation', () => {
+  const store = new Store(':memory:', { owner: 'controller' });
+  try {
+    const { workflows } = store;
+    store.graphs.create('root', 'project', { phase: 'running' }, {});
+    const input = { taskId: 'task', deadlineAt: 12345 };
+    workflows.prepare('root', 'node', 'turn', input);
+    const descriptor = {
+      attemptId: 'task-a1',
+      resources: ['worker:worker'],
+      adapter: null,
+    };
+    const first = workflows.claim('root', 'node', descriptor);
+    const snapshot = workflows.dispatch('root', first);
+    const decision = workflows.reconcile('root', first, snapshot, {
+      classification: 'not_started',
+      source: 'sqlite_dispatch',
+      evidence: { armed: false },
+      detail: 'Unarmed claim',
+    });
+    expect(decision).toMatchObject({
+      decision: 'retry',
+      attemptId: 'task-a1',
+      dispatchId: first.dispatchId,
+    });
+    expect(workflows.action('root', 'node')).toMatchObject({
+      input,
+      status: 'prepared',
+    });
+    const second = workflows.claim('root', 'node', descriptor);
+    expect(second.generation).toBe(first.generation);
+    expect(second.dispatchId).not.toBe(first.dispatchId);
+    expect(second.operationId).toBe(first.operationId);
+    expect(() => workflows.arm('root', first, () => false)).toThrow(
+      'STALE_FENCE',
+    );
+    workflows.arm('root', second, () => false);
+    expect(workflows.occupied('worker:worker')).toBe(true);
+    expect(() => workflows.observe('root', first, { accepted: true })).toThrow(
+      'STALE_FENCE',
+    );
+    expect(() =>
+      workflows.complete(
+        'root',
+        'node',
+        first.generation,
+        { accepted: true },
+        first.dispatchId,
+      ),
+    ).toThrow('STALE_FENCE');
+    const stale = workflows.dispatch('root', second);
+    workflows.observe('root', second, { accepted: false });
+    expect(() =>
+      workflows.reconcile('root', second, stale, {
+        classification: 'unresolved',
+        source: 'fixture',
+        evidence: {},
+        detail: 'stale probe',
+      }),
+    ).toThrow('STALE_FENCE');
+    expect(() =>
+      workflows.complete(
+        'root',
+        'node',
+        second.generation,
+        { accepted: true },
+        second.dispatchId,
+      ),
+    ).toThrow('CONFLICT');
+    workflows.complete(
+      'root',
+      'node',
+      second.generation,
+      { accepted: false },
+      second.dispatchId,
+    );
+    expect(workflows.occupied('worker:worker')).toBe(false);
+    expect(workflows.recoveries('root')).toEqual([decision]);
+  } finally {
+    store.close();
+  }
+});
+
+it('upgrades schema 7 dispatches without inventing receipts or releasing reservations', () => {
+  const root = mkdtempSync(join(tmpdir(), 'xvant-recovery-upgrade-'));
+  const path = join(root, 'state.sqlite');
+  let store = new Store(path, { owner: 'legacy' });
+  try {
+    store.graphs.create('root', 'project', { phase: 'running' }, {});
+    store.workflows.prepare('root', 'node', 'turn', {
+      taskId: 'task',
+      alias: 'worker',
+    });
+    const dispatch = store.workflows.claim('root', 'node');
+    delete dispatch.operationId;
+    store.close();
+    const db = new Database(path);
+    try {
+      db.exec(
+        "DROP TABLE work_recoveries; DROP TABLE work_dispatches; UPDATE work_actions SET body=json_remove(body,'$.operationId'); PRAGMA user_version=7;",
+      );
+    } finally {
+      db.close();
+    }
+    store = new Store(path, { owner: 'replacement' });
+    const { workflows } = store;
+    expect(store.schemaVersion()).toBe(8);
+    expect(workflows.actions('root')).toEqual([dispatch]);
+    expect(workflows.dispatch('root', dispatch)).toBeNull();
+    expect(workflows.occupied('worker:worker')).toBe(true);
+    const probe = {
+      classification: 'unresolved',
+      source: 'legacy_action',
+      evidence: {},
+      detail: 'Missing receipt',
+    } as const;
+    const decision = workflows.reconcile('root', dispatch, null, probe);
+    expect(workflows.reconcile('root', dispatch, null, probe)).toEqual(
+      decision,
+    );
+    expect(workflows.recoveries('root')).toEqual([decision]);
+    expect(decision).toMatchObject({
+      decision: 'block',
+      attemptId: 'task-a1',
+      dispatchId: null,
+    });
+    expect(workflows.actions('root')).toEqual([dispatch]);
+    expect(workflows.occupied('worker:worker')).toBe(true);
+  } finally {
+    store.close();
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it('preserves staged patch evidence and audit decisions in a verified snapshot', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'xvant-recovery-backup-'));
+  const store = new Store(join(root, 'state.sqlite'), { owner: 'controller' });
+  try {
+    const { workflows } = store;
+    const objects = new ArtifactStore(join(root, 'objects'));
+    const patch = Buffer.from('original patch');
+    const patchHash = objects.put(patch);
+    store.graphs.create('root', 'project', { phase: 'running' }, {});
+    workflows.prepare('root', 'node', 'turn', {
+      taskId: 'task',
+      alias: 'worker',
+    });
+    const action = workflows.claim('root', 'node', {
+      attemptId: 'task-a1',
+      resources: ['worker:worker'],
+      adapter: null,
+    });
+    const dispatch = workflows.arm('root', action, () => false);
+    const decision = workflows.reconcile('root', action, dispatch, {
+      classification: 'unresolved',
+      source: 'fixture',
+      evidence: {},
+      detail: 'Waiting for receipt',
+    });
+    workflows.observe('root', action, { patchHash });
+    const snapshot = join(root, 'snapshot');
+    await backupSnapshot(store, objects, snapshot);
+    const destination = join(root, 'restored');
+    await restoreSnapshot(snapshot, destination);
+    const restored = new Store(join(destination, 'state.sqlite'), {
+      owner: 'restored',
+      now: () => Date.now() + 60_000,
+    });
+    try {
+      expect(restored.workflows.recoveries('root')).toEqual([decision]);
+      expect(restored.workflows.dispatch('root', action)).toMatchObject({
+        observation: { patchHash },
+      });
+      expect(restored.workflows.occupied('worker:worker')).toBe(true);
+      expect(
+        new ArtifactStore(join(destination, 'artifacts')).get(patchHash),
+      ).toEqual(patch);
+    } finally {
+      restored.close();
+    }
+    rmSync(join(root, 'objects', patchHash));
+    await expect(
+      backupSnapshot(store, objects, join(root, 'missing-patch')),
+    ).rejects.toThrow('ARTIFACT_MISSING');
+  } finally {
+    store.close();
     rmSync(root, { recursive: true, force: true });
   }
 });

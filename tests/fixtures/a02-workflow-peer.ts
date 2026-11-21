@@ -2,6 +2,7 @@
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
+import { WorkerSupervisor } from '../../packages/supervisor/src/index.ts';
 import { Store } from '../../packages/storage/src/store.ts';
 import {
   Orchestrator,
@@ -42,8 +43,33 @@ const workers: WorkerSpec[] = [
 ];
 const runner: TurnRunner = {
   interrupt: () => false,
-  run: async ({ taskId, workspace }) => {
+  run: async ({ taskId, workspace }, execution) => {
     appendFileSync(calls, 'turn ' + taskId + '\n');
+    if (
+      taskId.includes('-first-') &&
+      (stopAt === 'hold-worker' || stopAt === 'hold-unidentified-worker')
+    ) {
+      await new WorkerSupervisor().start({
+        executable: process.execPath,
+        args: [
+          '-e',
+          'const fs = require("node:fs"); fs.writeFileSync("partial.txt", "partial"); ' +
+            'fs.writeFileSync(process.argv[1], String(process.pid)); ' +
+            'const timer = setInterval(() => { if (fs.existsSync(process.argv[2])) clearInterval(timer) }, 20);',
+          join(root, 'worker-started'),
+          join(root, 'worker-release'),
+        ],
+        cwd: workspace.path,
+        workerId: 'worker',
+        attemptId: execution!.attemptId,
+        generation: 1,
+        timeoutMs: 10_000,
+        maxOutputBytes: 1024,
+        userApprovedTrustedLocal: true,
+        onProcess: stopAt === 'hold-worker' ? execution!.onProcess : undefined,
+      }).result;
+      appendFileSync(calls, 'late ' + taskId + '\n');
+    }
     const empty = { status: 'accepted' as const, files: [], patch: null };
     if (taskId.includes('-plan-'))
       return {
@@ -100,9 +126,7 @@ const runner: TurnRunner = {
 };
 const controller = new Orchestrator(store, runner, workers, {
   stateRoot: join(root, 'runs'),
-  runtimeBindings: {
-    'native-local': { fingerprint: 'fixture-1', model: null },
-  },
+  runtimeBindings: {},
 });
 try {
   const result =

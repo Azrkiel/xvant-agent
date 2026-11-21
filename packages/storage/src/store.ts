@@ -20,7 +20,11 @@ import { createTask, transitionTask } from '../../core/src/task.ts';
 import { ProviderJournal, providerMigration } from './providers.ts';
 import { MemoryRecords, memoryMigration } from './memory.ts';
 import { WorkGraphs, workGraphMigration } from './work-graphs.ts';
-import { Workflows, workflowMigration } from './workflows.ts';
+import {
+  Workflows,
+  recoveryMigration,
+  workflowMigration,
+} from './workflows.ts';
 import { LessonGraph, lessonMigration } from './lessons.ts';
 import {
   ProjectContracts,
@@ -115,7 +119,7 @@ function canonical(value: unknown): string {
   return json(value);
 }
 /** The newest schema this code writes; a database beyond it is refused. */
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 
 /** Observe one committed snapshot, including while another process owns the controller. */
 export function inspectWorkGraphs<T>(
@@ -173,6 +177,8 @@ export class Store {
     this.workflows = new Workflows(this.#db, {
       transaction: (fn) => this.#transaction(fn),
       generation: () => this.#generation,
+      owner: this.#owner,
+      now: this.#now,
       fault: this.#fault,
     });
     this.graphs = new WorkGraphs(this.#db, {
@@ -190,6 +196,7 @@ export class Store {
         { version: 5, sql: lessonMigration },
         { version: 6, sql: projectContractsMigration },
         { version: 7, sql: workflowMigration },
+        { version: 8, sql: recoveryMigration },
         ...(options.migrations ?? []),
       ];
       if (this.schemaVersion() > migrations.at(-1)!.version)
@@ -248,6 +255,8 @@ export class Store {
     });
     this.providers = new ProviderJournal(this.#db, {
       transaction: (fn) => this.#transaction(fn),
+      workflowOccupied: (resource, attempt) =>
+        this.workflows.occupied(resource, attempt),
       generation: this.#generation,
       fault: this.#fault,
       task: (id) => this.getTask(id),
@@ -314,6 +323,14 @@ export class Store {
         .prepare("UPDATE ownership SET expires=? WHERE resource='controller'")
         .run(this.#now() + this.#ttl);
     });
+  }
+  legacyResourceOccupied(resource: string): boolean {
+    return (
+      this.providers.occupied(resource) ||
+      !!this.#db
+        .prepare('SELECT resource FROM reservations WHERE resource=?')
+        .get(resource)
+    );
   }
   close(): void {
     if (this.#closed) return;
@@ -470,10 +487,8 @@ export class Store {
         ];
         for (const resource of resources)
           if (
-            this.providers.occupied(resource) ||
-            this.#db
-              .prepare('SELECT resource FROM reservations WHERE resource=?')
-              .get(resource)
+            this.workflows.occupied(resource) ||
+            this.legacyResourceOccupied(resource)
           )
             throw new StorageError('LEASE_BUSY');
         const next = transitionTask(

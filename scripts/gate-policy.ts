@@ -164,7 +164,7 @@ export function phaseSuites(phase: string): Record<string, number> {
           : {}),
         ...(Number(phase) >= 7
           ? {
-              'apps/controller/src/app.test.ts': 7,
+              'apps/controller/src/app.test.ts': 8,
               'tests/e2e/ui.test.ts': 4,
             }
           : {}),
@@ -195,8 +195,9 @@ export function phaseSuites(phase: string): Record<string, number> {
               'tests/shell-integration.test.ts': 23,
               'apps/controller/src/project-contracts.test.ts': 36,
               'apps/controller/src/workflow-checkpoint.test.ts': 2,
-              'apps/controller/src/workflow-resume.test.ts': 8,
-              'packages/storage/src/workflows.test.ts': 1,
+              'apps/controller/src/workflow-resume.test.ts': 20,
+              'packages/storage/src/workflows.test.ts': 4,
+              'tests/faults/workflow-remote.test.ts': 5,
             }
           : {}),
       };
