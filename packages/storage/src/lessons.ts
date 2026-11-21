@@ -218,6 +218,23 @@ export class LessonGraph {
       return node;
     });
   }
+  /** Attach a later host check to the recorded change when the lesson still exists. */
+  verifySolution(
+    projectId: string,
+    id: string,
+    checks: readonly string[],
+  ): void {
+    const qualified = solutionInputSchema.shape.checks.parse(checks);
+    this.#host.transaction(() => {
+      const node = this.#load(projectId, id);
+      if (node?.kind === 'solution')
+        this.#put({
+          ...node,
+          checks: [...new Set([...node.checks, ...qualified])],
+        });
+    });
+  }
+
   /**
    * Soft delete: marks a node as forgotten, with when and why. The node, its
    * edges and its text stay for audit, but it is never matched or offered

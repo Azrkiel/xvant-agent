@@ -18,7 +18,11 @@ import {
   type TurnRunner,
   type WorkerSpec,
 } from './orchestrator.ts';
-import { LiveTurnRunner } from './turn-runner.ts';
+import {
+  LiveTurnRunner,
+  restoreWorkflowModels,
+  workflowRuntimeBindings,
+} from './turn-runner.ts';
 import { activeRouting, applyRouting } from './routing-default.ts';
 import type { RosterRuntime } from './live-roster.ts';
 import { HttpError, startAppServer, type Asset } from './http/app-server.ts';
@@ -161,6 +165,57 @@ export async function startApp(options: {
         .map((d) => d.runtimeKind),
     );
 
+  const availableRuntimes = (): Partial<Record<ProviderKind, RosterRuntime>> =>
+    Object.fromEntries(
+      discovered
+        .filter((d) => d.status === 'qualified')
+        .map((d) => [
+          d.runtimeKind,
+          {
+            executable: d.executable!,
+            version: d.version!,
+            ...(d.prefixArgs ? { prefixArgs: d.prefixArgs } : {}),
+          },
+        ]),
+    );
+
+  const controllerFor = (
+    id: string,
+    pool: WorkerSpec[],
+    runtimes: Partial<Record<ProviderKind, RosterRuntime>>,
+    turnTimeoutMs?: number,
+  ) => {
+    const runner = options.runner
+      ? options.runner(store, objects, pool, runtimes)
+      : new LiveTurnRunner(
+          store,
+          objects,
+          pool,
+          runtimes,
+          turnTimeoutMs === undefined ? {} : { timeoutMs: turnTimeoutMs },
+        );
+    const tracked: TurnRunner = {
+      run: async (request) => {
+        busy.set(request.alias, { rootId: id });
+        try {
+          return await runner.run(request);
+        } finally {
+          busy.delete(request.alias);
+        }
+      },
+      interrupt: (taskId) => runner.interrupt(taskId),
+    };
+    return new Orchestrator(store, tracked, pool, {
+      stateRoot: join(options.home, 'runs'),
+      objects,
+      runtimeBindings: workflowRuntimeBindings(pool, runtimes),
+      ...(turnTimeoutMs === undefined ? {} : { turnTimeoutMs }),
+      onChange: (state) => {
+        const entry = active.get(id);
+        if (entry) entry.state = state;
+      },
+    });
+  };
   const start = async (input: z.infer<typeof startSchema>) => {
     const id =
       'r' +
@@ -187,19 +242,7 @@ export async function startApp(options: {
     if (top.status !== 0) throw new HttpError(400, 'INVALID_REPOSITORY');
     const pool = workers();
     if (!pool.length) throw new HttpError(409, 'NO_RUNTIME');
-    const runtimes: Partial<Record<ProviderKind, RosterRuntime>> =
-      Object.fromEntries(
-        discovered
-          .filter((d) => d.status === 'qualified')
-          .map((d) => [
-            d.runtimeKind,
-            {
-              executable: d.executable!,
-              version: d.version!,
-              ...(d.prefixArgs ? { prefixArgs: d.prefixArgs } : {}),
-            },
-          ]),
-      );
+    const runtimes = availableRuntimes();
     // The promoted routing default, if this state directory recorded one.
     let routing: ReturnType<typeof activeRouting>;
     try {
@@ -209,28 +252,7 @@ export async function startApp(options: {
       throw new HttpError(409, 'ROUTING_DEFAULT_INVALID');
     }
     if (routing) applyRouting(pool, runtimes, routing.settings);
-    const runner = options.runner
-      ? options.runner(store, objects, pool, runtimes)
-      : new LiveTurnRunner(store, objects, pool, runtimes);
-    // Track which worker is busy on which run, for the roster view.
-    const tracked: TurnRunner = {
-      run: async (request) => {
-        busy.set(request.alias, { rootId: id });
-        try {
-          return await runner.run(request);
-        } finally {
-          busy.delete(request.alias);
-        }
-      },
-      interrupt: (taskId) => runner.interrupt(taskId),
-    };
-    const orchestrator = new Orchestrator(store, tracked, pool, {
-      stateRoot: join(options.home, 'runs'),
-      onChange: (state) => {
-        const entry = active.get(id);
-        if (entry) entry.state = state;
-      },
-    });
+    const orchestrator = controllerFor(id, pool, runtimes);
     meta.set(id, { repository });
     active.set(id, { orchestrator, workers: pool, state: null });
     void orchestrator
@@ -260,6 +282,26 @@ export async function startApp(options: {
       }
     }
     return { id, created: true };
+  };
+  const resume = async (id: string) => {
+    if (active.has(id)) throw new HttpError(409, 'CONFLICT');
+    const checkpoint = Orchestrator.checkpoint(store, id);
+    const runtimes = availableRuntimes();
+    const pool = checkpoint.workers;
+    restoreWorkflowModels(runtimes, checkpoint.runtimeBindings);
+    const orchestrator = controllerFor(
+      id,
+      pool,
+      runtimes,
+      checkpoint.turnTimeoutMs,
+    );
+    active.set(id, { orchestrator, workers: pool, state: null });
+    try {
+      const state = await orchestrator.resume(id);
+      return { id, phase: state.phase, reason: state.reason ?? null };
+    } finally {
+      active.delete(id);
+    }
   };
   const rootView = (id: string) => {
     const record = store.graphs.get<RootState & { repository?: string }>(id);
@@ -313,6 +355,18 @@ export async function startApp(options: {
         if (code === 'CONFLICT' || code === 'DUPLICATE_IDENTITY')
           return { status: 409, code };
         if (code === 'POLICY_DENIED') return { status: 403, code };
+        const conflict = code.split(':')[0]!;
+        if (
+          [
+            'CHECKPOINT_INVALID',
+            'CHECKPOINT_INCOMPLETE',
+            'CHECKPOINT_UNAVAILABLE',
+            'WORKFLOW_BINDINGS_CHANGED',
+            'WORKFLOW_ACTION_INVALID',
+            'UNRESOLVED_WORKFLOW_ACTION',
+          ].includes(conflict)
+        )
+          return { status: 409, code: conflict };
         if (code === 'INVALID_INPUT') return { status: 400, code };
       }
       return undefined;
@@ -434,6 +488,11 @@ export async function startApp(options: {
         method: 'POST',
         path: /^\/api\/v1\/roots$/,
         handle: async ({ body }) => start(startSchema.parse(body)),
+      },
+      {
+        method: 'POST',
+        path: /^\/api\/v1\/roots\/([A-Za-z][A-Za-z0-9_-]{0,63})\/resume$/,
+        handle: async ({ match }) => resume(match[1]!),
       },
       {
         method: 'GET',

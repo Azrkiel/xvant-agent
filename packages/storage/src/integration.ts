@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { rmSync, writeFileSync } from 'node:fs';
+import { realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createWorktree } from './git-workspace.ts';
@@ -67,7 +67,27 @@ export class IntegrationBranch {
     path: string,
     branch: string,
     baseCommit: string,
+    expected?: { repository: string; head: string },
   ): IntegrationBranch {
+    if (expected) {
+      const common = (cwd: string) =>
+        realpathSync(
+          git(cwd, [
+            'rev-parse',
+            '--path-format=absolute',
+            '--git-common-dir',
+          ]).stdout.trim(),
+        );
+      if (
+        realpathSync(path) !== path ||
+        realpathSync(
+          git(path, ['rev-parse', '--show-toplevel']).stdout.trim(),
+        ) !== path ||
+        common(path) !== common(expected.repository) ||
+        git(path, ['rev-parse', 'HEAD']).stdout.trim() !== expected.head
+      )
+        fail('INTEGRATION_CHANGED');
+    }
     const current = git(path, [
       'rev-parse',
       '--abbrev-ref',
