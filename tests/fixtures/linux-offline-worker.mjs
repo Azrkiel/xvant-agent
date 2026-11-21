@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import {
   copyFileSync,
@@ -7,8 +8,8 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
-  readlinkSync,
   rmSync,
+  statSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
@@ -107,12 +108,18 @@ function rejectedRequests() {
   assert.equal(supervisor.activeCount, 0);
 }
 
-function hasProcess(namespace) {
+function hasDescendant(marker) {
   return readdirSync('/proc')
     .filter((name) => /^\d+$/.test(name))
     .some((pid) => {
       try {
-        return readlinkSync('/proc/' + pid + '/ns/pid') === namespace;
+        const path = '/proc/' + pid;
+        return (
+          statSync(path).uid === process.getuid() &&
+          readFileSync(path + '/cmdline', 'utf8')
+            .split('\0')
+            .includes(marker)
+        );
       } catch (error) {
         if (!['ENOENT', 'EACCES', 'EPERM'].includes(error.code)) throw error;
         return false;
@@ -189,25 +196,37 @@ try {
   assert.equal(readFileSync(join(stagedInput, 'granted'), 'utf8'), marker);
   assert.equal(connections, 0);
 
-  const expired = await launch(
+  const identifier = randomUUID();
+  const descendantMarker = 'xvant-descendant-' + identifier;
+  const running = launch(
     `import { spawn } from 'node:child_process';
     import { readlinkSync } from 'node:fs';
-    const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
-      detached: true, stdio: 'ignore',
-    });
+    const child = spawn(process.execPath, [
+      '-e', 'setInterval(() => {}, 1000)', '--', 'xvant-descendant-' + process.argv[1],
+    ], { detached: true, stdio: 'ignore' });
     child.once('spawn', () => console.log(readlinkSync('/proc/self/ns/pid')));
     child.unref();
     setInterval(() => {}, 1000);`,
-    [],
+    [identifier],
     1500,
-  ).result;
-  assert.equal(expired.reason, 'timeout', expired.stderr);
-  const namespace = expired.stdout.trim();
-  assert.match(namespace, /^pid:\[\d+\]$/);
-  const reapingDeadline = performance.now() + 2000;
-  while (hasProcess(namespace) && performance.now() < reapingDeadline)
+  );
+  const startupDeadline = performance.now() + 1000;
+  while (
+    !hasDescendant(descendantMarker) &&
+    performance.now() < startupDeadline
+  )
     await delay(25);
-  assert.equal(hasProcess(namespace), false);
+  assert.ok(
+    hasDescendant(descendantMarker),
+    'detached descendant was never observed',
+  );
+  const expired = await running.result;
+  assert.equal(expired.reason, 'timeout', expired.stderr);
+  assert.match(expired.stdout.trim(), /^pid:\[\d+\]$/);
+  const reapingDeadline = performance.now() + 2000;
+  while (hasDescendant(descendantMarker) && performance.now() < reapingDeadline)
+    await delay(25);
+  assert.equal(hasDescendant(descendantMarker), false);
   console.log(
     JSON.stringify({
       ...observations,
