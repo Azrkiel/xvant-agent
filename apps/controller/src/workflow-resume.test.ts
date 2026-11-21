@@ -66,7 +66,13 @@ const run = (operation: 'start' | 'resume', stopAt = '') =>
 function crash(operation: 'start' | 'resume', stopAt: string) {
   const result = run(operation, stopAt);
   expect(result.error, result.stderr).toBeUndefined();
-  expect(result.signal, result.stderr).toBe('SIGKILL');
+  expect(result.stderr).toContain('Forced termination at ' + stopAt + '\n');
+  // Windows reports forced self-termination as an exit status.
+  if (process.platform === 'win32' && result.signal === null) {
+    expect(result.status, result.stderr).not.toBe(0);
+  } else {
+    expect(result.signal, result.stderr).toBe('SIGKILL');
+  }
 }
 function snapshot() {
   const now = ++lease * 100000;

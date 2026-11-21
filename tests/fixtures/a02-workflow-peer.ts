@@ -20,7 +20,10 @@ const store = new Store(join(root, 'state.sqlite'), {
   now: () => Number(lease) * 100000,
   recoverWorkGraphs: true,
   fault: (point) => {
-    if (point === stopAt) process.kill(process.pid, 'SIGKILL');
+    if (point === stopAt) {
+      appendFileSync(2, 'Forced termination at ' + point + '\n');
+      process.kill(process.pid, 'SIGKILL');
+    }
   },
 });
 const workers: WorkerSpec[] = [
