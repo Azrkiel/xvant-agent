@@ -29,6 +29,7 @@ interface Options {
   gitBases?: Record<string, string>;
   /** XVANT's task-scoped MCP bridge; the token stays in the child's environment. */
   mcp?: { url: string; token: string; tools: readonly string[] };
+  onProcess?: Parameters<WorkerSupervisor['start']>[0]['onProcess'];
   onEvent?: (event: LiveEvent) => void;
   fault?: (point: string) => void;
 }
@@ -260,6 +261,7 @@ export class LiveOpenCodeController {
           this.store.providers.assertWritable(id, token);
           if (this.stopped) throw new Error('CONTROLLER_STOPPED');
           run = this.supervisor.start({
+            onProcess: this.options.onProcess,
             executable: this.options.executable,
             args: createArgs,
             cwd: root,
@@ -332,6 +334,7 @@ export class LiveOpenCodeController {
         this.store.providers.assertWritable(id, token);
         if (this.stopped) throw new Error('CONTROLLER_STOPPED');
         run = this.supervisor.start({
+          onProcess: this.options.onProcess,
           executable: this.options.executable,
           args,
           cwd: root,

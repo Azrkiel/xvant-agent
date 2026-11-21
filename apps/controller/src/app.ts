@@ -27,6 +27,7 @@ import { activeRouting, applyRouting } from './routing-default.ts';
 import type { RosterRuntime } from './live-roster.ts';
 import { HttpError, startAppServer, type Asset } from './http/app-server.ts';
 import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
+import { RecoveryBlockedError } from './workflow-recovery.ts';
 import { lessonsView } from './lessons-view.ts';
 
 const POOL: Record<ProviderKind, [string, WorkerSpec['roles']][]> = {
@@ -185,7 +186,7 @@ export async function startApp(options: {
     runtimes: Partial<Record<ProviderKind, RosterRuntime>>,
     turnTimeoutMs?: number,
   ) => {
-    const runner = options.runner
+    const runner: TurnRunner = options.runner
       ? options.runner(store, objects, pool, runtimes)
       : new LiveTurnRunner(
           store,
@@ -195,10 +196,13 @@ export async function startApp(options: {
           turnTimeoutMs === undefined ? {} : { timeoutMs: turnTimeoutMs },
         );
     const tracked: TurnRunner = {
-      run: async (request) => {
+      ...(runner.remoteRecovery
+        ? { remoteRecovery: runner.remoteRecovery }
+        : {}),
+      run: async (request, execution) => {
         busy.set(request.alias, { rootId: id });
         try {
-          return await runner.run(request);
+          return await runner.run(request, execution);
         } finally {
           busy.delete(request.alias);
         }
@@ -305,11 +309,31 @@ export async function startApp(options: {
   };
   const rootView = (id: string) => {
     const record = store.graphs.get<RootState & { repository?: string }>(id);
+    const checkpoint = store.workflows.read(id) as {
+      progress?: { step?: string };
+    } | null;
+    const resumable =
+      !active.has(id) &&
+      !!checkpoint?.progress?.step &&
+      checkpoint.progress.step !== 'done';
+    const latest = new Map(
+      store.workflows.recoveries(id).map((entry) => [entry.slot, entry]),
+    );
+    const recovery = store.workflows.actions(id).flatMap((action) => {
+      const entry = latest.get(action.slot);
+      return action.status === 'dispatching' &&
+        entry?.decision === 'block' &&
+        entry.dispatchId === (action.dispatchId ?? null)
+        ? [entry]
+        : [];
+    });
     return {
       id,
       rowVersion: record.rowVersion,
       repository: meta.get(id)?.repository ?? record.state.repository ?? null,
       state: record.state,
+      ...(resumable ? { resumable: true } : {}),
+      ...(recovery.length ? { recovery } : {}),
       events: store.graphs.events(id).slice(-300),
     };
   };
@@ -343,6 +367,8 @@ export async function startApp(options: {
     ...(options.port === undefined ? {} : { port: options.port }),
     assets: loadAssets(),
     toError: (error) => {
+      if (error instanceof RecoveryBlockedError)
+        return { status: 409, code: error.code, recovery: error.recovery };
       if (error instanceof z.ZodError)
         return { status: 400, code: 'INVALID_INPUT' };
       if (
@@ -364,6 +390,7 @@ export async function startApp(options: {
             'WORKFLOW_BINDINGS_CHANGED',
             'WORKFLOW_ACTION_INVALID',
             'UNRESOLVED_WORKFLOW_ACTION',
+            'STALE_FENCE',
           ].includes(conflict)
         )
           return { status: 409, code: conflict };

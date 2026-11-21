@@ -1,5 +1,6 @@
 import {
   appendFileSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -7,11 +8,13 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
+import { setTimeout as delay } from 'node:timers/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, expect, it } from 'vitest';
+import Database from 'better-sqlite3';
 import { Store } from '../../../packages/storage/src/store.ts';
 import { Orchestrator, type RootState } from './orchestrator.ts';
 
@@ -54,10 +57,10 @@ beforeEach(() => {
 });
 afterEach(() => rmSync(root, { recursive: true, force: true }));
 
-const run = (operation: 'start' | 'resume', stopAt = '') =>
+const run = (operation: 'start' | 'resume', stopAt = '', id = 'root') =>
   spawnSync(
     process.execPath,
-    [peer, root, operation, String(++lease), stopAt],
+    [peer, root, operation, String(++lease), stopAt, id],
     {
       encoding: 'utf8',
       timeout: 15000,
@@ -86,6 +89,7 @@ function snapshot() {
       graph: store.graphs.get<RootState>('root'),
       checkpoint: Orchestrator.checkpoint(store, 'root'),
       actions: store.workflows.actions('root'),
+      recoveries: store.workflows.recoveries('root'),
       events: store.graphs.events('root'),
       graphs: store.graphs.list(),
     };
@@ -208,13 +212,7 @@ it('resumes the same graph after real crashes in planning, node integration, che
   expect(snapshot().graph.rowVersion).toBe(done.graph.rowVersion);
 }, 60000);
 
-it.each([
-  'plan:0',
-  'node:first:0',
-  'apply:node:first:0',
-  'check:0:0:verify',
-  'review:0',
-])(
+it.each(['plan:0', 'node:first:0', 'check:0:0:verify', 'review:0'])(
   'leaves %s unresolved when a process dies after dispatch and before receipt',
   (slot) => {
     crash('start', 'workflow.result.before_commit:' + slot);
@@ -227,7 +225,17 @@ it.each([
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('UNRESOLVED_WORKFLOW_ACTION: ' + slot);
     expect(calls()).toEqual(effects);
-    expect(snapshot().graph).toEqual(interrupted.graph);
+    const blocked = snapshot();
+    expect(blocked.graph).toEqual(interrupted.graph);
+    expect(blocked.recoveries.at(-1)).toMatchObject({
+      slot,
+      decision: 'block',
+      classification:
+        slot.startsWith('check:') && process.platform === 'linux'
+          ? 'stopped_incomplete'
+          : 'unresolved',
+      operatorAction: expect.any(String),
+    });
   },
   30000,
 );
@@ -282,3 +290,317 @@ it('reports a changed integration checkout and preserves its contents', () => {
   expect(calls()).toEqual([]);
   expect(readFileSync(join(path, 'a.txt'), 'utf8')).toBe('local edit\n');
 });
+
+it('recovers the committed Git effect once, even when killed again before the cursor advances', () => {
+  const slot = 'apply:node:second:0';
+  crash('start', 'workflow.result.before_commit:' + slot);
+  const before = snapshot();
+  const action = before.actions.find((action) => action.slot === slot)!;
+  expect(action.status).toBe('dispatching');
+  const identity = before.graph.state.integration!;
+  const applied = git(identity.path, 'rev-parse', 'HEAD');
+  expect(git(identity.path, 'rev-parse', 'HEAD^')).toBe(identity.head);
+  expect(before.graph.state.nodes.first!.status).toBe('integrated');
+  expect(calls()).toEqual([
+    'turn root-plan-1',
+    'turn root-first-2',
+    'turn root-second-3',
+  ]);
+
+  crash('resume', 'workflow.recovery.after_commit:' + slot);
+  const reconciled = snapshot();
+  expect(reconciled.checkpoint).toEqual(before.checkpoint);
+  expect(reconciled.graph).toEqual(before.graph);
+  expect(reconciled.actions.find((action) => action.slot === slot)).toEqual({
+    ...action,
+    status: 'completed',
+    result: { status: 'applied', commit: applied, files: ['b.txt'] },
+  });
+  expect(reconciled.recoveries).toEqual([
+    expect.objectContaining({
+      slot,
+      classification: 'completed_verifiable',
+      decision: 'resume',
+      source: 'git',
+      dispatchGeneration: action.generation,
+      generation: expect.any(Number),
+      evidence: expect.objectContaining({
+        parent: identity.head,
+        head: applied,
+        tree: expect.any(String),
+      }),
+    }),
+  ]);
+  expect(reconciled.recoveries[0]!.generation).toBeGreaterThan(
+    action.generation,
+  );
+  expect(git(identity.path, 'rev-parse', 'HEAD')).toBe(applied);
+
+  const result = run('resume');
+  expect(result.status, result.stderr).toBe(0);
+  expect(JSON.parse(result.stdout)).toMatchObject({
+    phase: 'ready',
+    integration: {
+      path: identity.path,
+      branch: identity.branch,
+      baseCommit: identity.baseCommit,
+    },
+  });
+  const done = snapshot();
+  expect(done.checkpoint.spec).toEqual(before.checkpoint.spec);
+  expect(done.checkpoint.progress).toMatchObject({
+    step: 'done',
+    turnCount: 7,
+    checkRound: 0,
+    reviewRound: 1,
+  });
+  expect(done.graphs).toHaveLength(1);
+  expect(done.graph.state.nodes.first).toEqual(before.graph.state.nodes.first);
+  expect(
+    done.actions.slice(0, before.actions.length).map((action) => action.input),
+  ).toEqual(before.actions.map((action) => action.input));
+  expect(done.recoveries).toEqual(reconciled.recoveries);
+  expect(git(identity.path, 'rev-list', '--count', base + '..HEAD')).toBe('4');
+  expect(
+    git(identity.path, 'rev-list', 'HEAD')
+      .split('\n')
+      .filter((commit) => commit === applied),
+  ).toHaveLength(1);
+  expect(calls().filter((call) => call === 'turn root-second-3')).toHaveLength(
+    1,
+  );
+  expect(run('resume').status).toBe(0);
+  expect(snapshot().graph).toEqual(done.graph);
+}, 30_000);
+
+it.each([
+  ['dispatch.after_claim:plan:0', 'not_started', 'retry'],
+  ['result.before_commit:initialize', 'completed_verifiable', 'resume'],
+  ['result.after_observation:plan:0', 'completed_verifiable', 'resume'],
+  ['result.after_observation:check:0:0:verify', 'stopped_incomplete', 'resume'],
+])(
+  'classifies a real crash at %s and resumes with the original intent',
+  (point, classification, decision) => {
+    crash('start', 'workflow.' + point);
+    const before = snapshot();
+    const original = before.actions.find(
+      (action) => action.status === 'dispatching',
+    )!;
+    expect(original).toBeDefined();
+    const result = run('resume');
+    expect(result.status, result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({ phase: 'ready' });
+    const after = snapshot();
+    const consumed = after.actions.find(
+      (action) => action.slot === original.slot,
+    )!;
+    expect(consumed.input).toEqual(original.input);
+    expect(consumed.status).toBe('completed');
+    expect(after.recoveries).toEqual([
+      expect.objectContaining({
+        slot: original.slot,
+        classification,
+        decision,
+      }),
+    ]);
+    expect(calls().filter((call) => call === 'turn root-plan-1')).toHaveLength(
+      1,
+    );
+  },
+  30_000,
+);
+
+it('blocks a crash after the authorization marker when there is no effect receipt', () => {
+  crash('start', 'workflow.dispatch.after_arm:plan:0');
+  expect(calls()).toEqual([]);
+  const result = run('resume');
+  expect(result.status).toBe(1);
+  expect(result.stderr).toContain('UNRESOLVED_WORKFLOW_ACTION: plan:0');
+  expect(calls()).toEqual([]);
+  expect(snapshot().recoveries).toEqual([
+    expect.objectContaining({
+      classification: 'unresolved',
+      decision: 'block',
+    }),
+  ]);
+  const cliResult = spawnSync(process.execPath, [cli, 'resume', 'root'], {
+    env: { ...process.env, XVANT_HOME: root },
+    encoding: 'utf8',
+    timeout: 10_000,
+  });
+  expect(cliResult.status).toBe(1);
+  expect(cliResult.stderr).toContain('plan:0 (root-plan-1-a1)');
+  expect(cliResult.stderr).toContain('trustworthy worker identity');
+  expect(cliResult.stderr).toContain('Inspect the original worker environment');
+}, 30_000);
+
+it.each([
+  ['missing patch', 'ARTIFACT_MISSING'],
+  ['dirty worktree', 'WORKSPACE_CHANGED'],
+  ['unexpected head', 'INTEGRATION_CHANGED'],
+  ['wrong committed tree', 'INTEGRATION_PATCH_MISMATCH'],
+])(
+  'blocks Git reconciliation with %s and keeps user files and refs',
+  (scenario, code) => {
+    const slot = 'apply:node:first:0';
+    crash('start', 'workflow.result.before_commit:' + slot);
+    const before = snapshot();
+    const action = before.actions.find((action) => action.slot === slot)!;
+    const { path } = before.graph.state.integration!;
+    const repo = join(root, 'repo');
+    writeFileSync(join(repo, 'user.txt'), 'user checkout\n');
+    if (scenario === 'missing patch')
+      rmSync(
+        join(
+          root,
+          'objects',
+          (action.input as { patchHash: string }).patchHash,
+        ),
+      );
+    if (scenario === 'dirty worktree')
+      writeFileSync(join(path, 'a.txt'), 'user worktree\n');
+    if (scenario === 'unexpected head')
+      git(path, 'commit', '--allow-empty', '-qm', 'unrelated');
+    if (scenario === 'wrong committed tree') {
+      writeFileSync(join(path, 'a.txt'), 'unrelated tree\n');
+      git(path, 'add', 'a.txt');
+      git(path, 'commit', '--amend', '--no-edit', '-q');
+    }
+    const head = git(path, 'rev-parse', 'HEAD');
+    const effects = calls();
+    const result = run('resume');
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(code);
+    const after = snapshot();
+    expect(after.graph).toEqual(before.graph);
+    expect(after.actions).toEqual(before.actions);
+    expect(after.recoveries.at(-1)).toMatchObject({
+      slot,
+      decision: 'block',
+      evidence: { code },
+    });
+    expect(calls()).toEqual(effects);
+    expect(git(path, 'rev-parse', 'HEAD')).toBe(head);
+    expect(readFileSync(join(repo, 'user.txt'), 'utf8')).toBe(
+      'user checkout\n',
+    );
+    expect(readFileSync(join(path, 'a.txt'), 'utf8')).toBe(
+      scenario === 'dirty worktree'
+        ? 'user worktree\n'
+        : scenario === 'wrong committed tree'
+          ? 'unrelated tree\n'
+          : 'first\n',
+    );
+  },
+  30_000,
+);
+
+it.each([
+  ['hold-worker', 'owned_running', 'running'],
+  ['hold-unidentified-worker', 'unresolved', null],
+  ['reuse-pid', 'unresolved', 'pid_reused'],
+])(
+  'fences a late worker result and retains the reservation for %s',
+  async (mode, classification, processState) => {
+    const child = spawn(
+      process.execPath,
+      [
+        peer,
+        root,
+        'start',
+        String(++lease),
+        mode === 'reuse-pid' ? 'hold-worker' : mode,
+      ],
+      {
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    );
+    let output = '';
+    let diagnostics = '';
+    child.stdout.on('data', (chunk) => {
+      output += chunk.toString();
+    });
+    child.stderr.on('data', (chunk) => {
+      diagnostics += chunk.toString();
+    });
+    const exited = new Promise<number | null>((resolve, reject) => {
+      child.once('error', reject);
+      child.once('close', resolve);
+    });
+    const started = join(root, 'worker-started');
+    let pid: number | undefined;
+    try {
+      const deadline = Date.now() + 10_000;
+      while (!existsSync(started) && Date.now() < deadline) await delay(20);
+      expect(existsSync(started), diagnostics).toBe(true);
+      pid = Number(readFileSync(started, 'utf8'));
+      const before = snapshot();
+      const slot = 'node:first:0';
+      const action = before.actions.find((action) => action.slot === slot)!;
+      const workspace = (action.input as { workspace: { path: string } })
+        .workspace.path;
+      const linux = process.platform === 'linux';
+      if (mode === 'reuse-pid' && linux) {
+        // This live PID belongs to a different start tick than the persisted attempt.
+        const writer = new Database(db());
+        try {
+          writer
+            .prepare(
+              "UPDATE work_dispatches SET body=json_set(body,'$.processes[0].start','0') WHERE id=?",
+            )
+            .run((action as { dispatchId: string }).dispatchId);
+        } finally {
+          writer.close();
+        }
+      }
+      expect(run('resume').status).toBe(1);
+      expect(snapshot().recoveries.at(-1)).toMatchObject({
+        slot,
+        classification: linux ? classification : 'unresolved',
+        decision: 'block',
+        evidence: {
+          processes:
+            linux && processState
+              ? [expect.objectContaining({ pid, observed: processState })]
+              : [],
+        },
+      });
+      const conflict = run('start', '', 'conflicting');
+      expect(conflict.status, conflict.stderr).toBe(0);
+      expect(JSON.parse(conflict.stdout)).toMatchObject({
+        phase: 'needs_attention',
+        reason: 'RECOVERY_RESOURCE_BUSY: plan:0',
+      });
+      expect(calls()).toEqual(['turn root-plan-1', 'turn root-first-2']);
+      expect(readFileSync(join(workspace, 'partial.txt'), 'utf8')).toBe(
+        'partial',
+      );
+      expect(() => process.kill(pid!, 0)).not.toThrow();
+
+      writeFileSync(join(root, 'worker-release'), '');
+      expect(await exited, diagnostics).toBe(0);
+      expect(JSON.parse(output)).toMatchObject({
+        phase: 'needs_attention',
+        reason: 'STALE_FENCE',
+      });
+      expect(calls()).toEqual([
+        'turn root-plan-1',
+        'turn root-first-2',
+        'late root-first-2',
+      ]);
+      expect(readFileSync(join(workspace, 'a.txt'), 'utf8')).toBe('first\n');
+      const after = snapshot();
+      expect(after.actions).toEqual(before.actions);
+      expect(after.checkpoint).toEqual(before.checkpoint);
+      expect(after.graph).toEqual(before.graph);
+      expect(
+        git(before.graph.state.integration!.path, 'rev-parse', 'HEAD'),
+      ).toBe(base);
+    } finally {
+      writeFileSync(join(root, 'worker-release'), '');
+      if (child.exitCode === null) child.kill();
+      await exited;
+    }
+  },
+  30_000,
+);

@@ -6,7 +6,11 @@ import type { RunInterruption } from '../../../packages/storage/src/work-graphs.
 import type { Store } from '../../../packages/storage/src/store.ts';
 import { ArtifactStore } from '../../../packages/storage/src/artifacts.ts';
 import type { WorkGraphRecord } from '../../../packages/storage/src/work-graphs.ts';
-import type { WorkAction } from '../../../packages/storage/src/workflows.ts';
+import type {
+  DispatchingAction,
+  RecoveryDecision,
+  WorkAction,
+} from '../../../packages/storage/src/workflows.ts';
 import {
   contractGitResult,
   createWorktree,
@@ -51,6 +55,14 @@ import {
   parseCheckpoint,
   type WorkflowCheckpoint,
 } from './workflow-checkpoint.ts';
+import {
+  captureTurn,
+  recoverWorkflowAction,
+  RecoveryBlockedError,
+  remoteRecoveryBinding,
+  type RemoteTurnRecovery,
+  type TurnExecution,
+} from './workflow-recovery.ts';
 
 export interface Check {
   executable: string;
@@ -99,7 +111,8 @@ export interface TurnOutcome {
 }
 /** Runs one worker turn and returns the host-verified outcome. */
 export interface TurnRunner {
-  run(request: TurnRequest): Promise<TurnOutcome>;
+  run(request: TurnRequest, execution?: TurnExecution): Promise<TurnOutcome>;
+  readonly remoteRecovery?: RemoteTurnRecovery;
   interrupt(taskId: string): boolean;
 }
 export interface RootSpec {
@@ -396,11 +409,8 @@ export class Orchestrator {
         checkpoint.turnTimeoutMs !== this.#turnTimeoutMs
       )
         throw new Error('WORKFLOW_BINDINGS_CHANGED');
-      for (const action of this.#store.workflows.actions(id)) {
-        validateWorkflowAction(action);
-        if (action.status === 'dispatching')
-          throw new Error('UNRESOLVED_WORKFLOW_ACTION: ' + action.slot);
-      }
+      const actions = this.#store.workflows.actions(id);
+      for (const action of actions) validateWorkflowAction(action);
       if (
         (step !== 'initialize' && !graph.state.integration) ||
         (step !== 'initialize' && step !== 'plan' && !graph.state.plan)
@@ -426,6 +436,21 @@ export class Orchestrator {
         )
           throw new Error('CHECKPOINT_INCOMPLETE');
       }
+      const blocked: RecoveryDecision[] = [];
+      for (const action of actions) {
+        if (action.status !== 'dispatching') continue;
+        const recovery = await recoverWorkflowAction(
+          this.#store,
+          this.#objects,
+          checkpoint,
+          graph.state.integration,
+          action,
+          this.#runner.remoteRecovery,
+        );
+        this.#store.workflows.boundary('recovery.after_commit', action.slot);
+        if (recovery.decision === 'block') blocked.push(recovery);
+      }
+      if (blocked.length) throw new RecoveryBlockedError(blocked);
       return this.#run(checkpoint, graph);
     });
   }
@@ -626,17 +651,57 @@ export class Orchestrator {
       this.#onChange(structuredClone(state), event);
       return created;
     };
-    const claim = (slot: string) => {
-      const claimed = workflows.claim(spec.id, slot);
+    const claim = (action: WorkAction) => {
+      const { slot } = action;
+      let attemptId: string | undefined;
+      let adapter: string | null = null;
+      const resources = [
+        'worktree:' + join(this.#root, spec.id, 'integration'),
+      ];
+      if (action.kind === 'turn') {
+        const input = turnIntentSchema.parse(action.input);
+        attemptId = input.taskId + '-a1';
+        resources.splice(
+          0,
+          1,
+          'worker:' + input.alias,
+          'workspace:' + input.taskId,
+          'worktree:' + input.workspace.path,
+        );
+        if (this.#runner.remoteRecovery) {
+          adapter = remoteRecoveryBinding(this.#runner.remoteRecovery);
+          resources.push('remote:' + this.#runner.remoteRecovery.scope);
+        }
+      }
+      const claimed = workflows.claim(spec.id, slot, {
+        attemptId,
+        resources,
+        adapter,
+      });
       workflows.boundary('dispatch.after_claim', slot);
-      return claimed;
+      const dispatch = workflows.arm(spec.id, claimed, (resource) =>
+        this.#store.legacyResourceOccupied(resource),
+      );
+      workflows.boundary('dispatch.after_arm', slot);
+      return { claimed, dispatch };
     };
     const receive = (
-      action: Pick<WorkAction, 'slot' | 'generation'>,
+      action: DispatchingAction,
       result: unknown,
+      capture = false,
     ) => {
       workflows.boundary('result.before_commit', action.slot);
-      workflows.complete(spec.id, action.slot, action.generation, result);
+      if (capture) {
+        workflows.observe(spec.id, action, result);
+        workflows.boundary('result.after_observation', action.slot);
+      }
+      workflows.complete(
+        spec.id,
+        action.slot,
+        action.generation,
+        result,
+        action.dispatchId,
+      );
       workflows.boundary('result.after_commit', action.slot);
       return result;
     };
@@ -652,15 +717,18 @@ export class Orchestrator {
         if (initial.status === 'completed') {
           state.integration = integrationIdentitySchema.parse(initial.result);
         } else {
-          const dispatched = claim('initialize');
-          const created = IntegrationBranch.create(
-            spec.repository,
-            target.baseCommit,
-            target.path,
-            target.branch,
+          const { claimed, dispatch } = claim(initial);
+          const created = workflows.effect(spec.id, claimed, () =>
+            IntegrationBranch.create(
+              spec.repository,
+              target.baseCommit,
+              target.path,
+              target.branch,
+              dispatch.id,
+            ),
           );
           state.integration = integrationIdentitySchema.parse(
-            receive(dispatched, {
+            receive(claimed, {
               branch: created.branch,
               path: created.path,
               baseCommit: created.baseCommit,
@@ -732,10 +800,11 @@ export class Orchestrator {
         const patch = input.patchHash
           ? this.#objects.get(input.patchHash)
           : Buffer.alloc(0);
-        const dispatched = claim(slot);
-        return integrationResultSchema.parse(
-          receive(dispatched, integration.apply(patch, input.message)),
+        const { claimed, dispatch } = claim(action);
+        const result = workflows.effect(spec.id, claimed, () =>
+          integration.apply(patch, input.message, dispatch.id, input.before),
         );
+        return integrationResultSchema.parse(receive(claimed, result));
       };
       // Runners derive idempotency keys such as 'create-<id>' that must fit
       // idSchema's 64 characters. The counter keeps a shortened ID unique.
@@ -786,7 +855,7 @@ export class Orchestrator {
         if (action.status === 'completed') {
           result = action.result;
         } else {
-          const dispatched = claim(slot);
+          const { claimed, dispatch } = claim(action);
           let outcome: TurnOutcome;
           busy.add(input.alias);
           this.#running.set(taskId, input.alias);
@@ -800,16 +869,30 @@ export class Orchestrator {
                 failure: 'TIMEOUT',
               };
             else {
-              const tree = createWorktree(
-                spec.repository,
-                input.workspace.baseCommit,
-                input.workspace.path,
-                input.workspace.branch,
+              const tree = workflows.effect(spec.id, claimed, () =>
+                createWorktree(
+                  spec.repository,
+                  input.workspace.baseCommit,
+                  input.workspace.path,
+                  input.workspace.branch,
+                ),
               );
-              outcome = await this.#runner.run({
-                ...input,
-                workspace: { path: tree.path, baseCommit: tree.baseCommit },
+              let turnResult!: Promise<TurnOutcome>;
+              workflows.effect(spec.id, claimed, () => {
+                turnResult = this.#runner.run(
+                  {
+                    ...input,
+                    workspace: { path: tree.path, baseCommit: tree.baseCommit },
+                  },
+                  {
+                    operationId: dispatch.operationId,
+                    attemptId: dispatch.attemptId,
+                    onProcess: (identity) =>
+                      workflows.registerProcess(spec.id, claimed, identity),
+                  },
+                );
               });
+              outcome = await turnResult;
             }
           } catch (error) {
             outcome = {
@@ -823,15 +906,30 @@ export class Orchestrator {
             busy.delete(input.alias);
             this.#running.delete(taskId);
           }
-          const { patch, failure, finalText, ...observed } = outcome;
-          result = receive(dispatched, {
-            ...observed,
-            finalText: redactSecrets(finalText),
-            ...(failure === undefined
-              ? {}
-              : { failure: redactSecrets(failure) }),
-            patchHash: patch === null ? null : this.#objects.put(patch),
-          });
+          if (dispatch.adapter && outcome.status === 'unknown') {
+            const recovery = workflows.reconcile(
+              spec.id,
+              claimed,
+              workflows.dispatch(spec.id, claimed),
+              {
+                classification: 'unresolved',
+                source: 'remote_dispatch',
+                evidence: {
+                  operationId: dispatch.operationId,
+                  adapter: dispatch.adapter,
+                },
+                detail: 'The service response did not establish the outcome.',
+                operatorAction:
+                  'Resume to check for a correlated service receipt.',
+              },
+            );
+            throw new RecoveryBlockedError([recovery]);
+          }
+          result = receive(
+            claimed,
+            captureTurn(this.#objects, outcome),
+            outcome.status !== 'unknown',
+          );
         }
         const { patchHash, ...observed } = turnResultSchema.parse(result);
         const outcome: TurnOutcome = {
@@ -1261,10 +1359,20 @@ export class Orchestrator {
           } else {
             if (input.head !== integration.head())
               throw new Error('INTEGRATION_CHANGED');
-            const dispatched = claim(slot);
-            const result = await this.#runCheck(input, dispatched.generation);
+            const { claimed, dispatch } = claim(action);
+            let check!: Promise<ReturnType<typeof checkedResultSchema.parse>>;
+            workflows.effect(spec.id, claimed, () => {
+              check = this.#runCheck(
+                input,
+                claimed.generation,
+                dispatch.attemptId,
+                (identity) =>
+                  workflows.registerProcess(spec.id, claimed, identity),
+              );
+            });
+            const result = await check;
             results.push(
-              checkedResultSchema.parse(receive(dispatched, result)),
+              checkedResultSchema.parse(receive(claimed, result, true)),
             );
           }
         }
@@ -1739,6 +1847,8 @@ export class Orchestrator {
   async #runCheck(
     input: ReturnType<typeof checkIntentSchema.parse>,
     generation: number,
+    attemptId: string,
+    onProcess: TurnExecution['onProcess'],
   ) {
     const { id, cwd, check } = input;
     const timeoutMs = input.deadlineAt - Date.now();
@@ -1756,12 +1866,15 @@ export class Orchestrator {
         : { windowsVerbatimArguments: check.windowsVerbatimArguments }),
       cwd,
       workerId: 'integration_checks',
-      attemptId: 'combined',
+      attemptId,
+      onProcess,
       generation,
       timeoutMs,
       maxOutputBytes: 1048576,
       userApprovedTrustedLocal: true,
     }).result;
+    if (result.reason === 'needs_attention')
+      throw new Error('UNRESOLVED_WORKFLOW_ACTION: ' + id);
     return {
       id,
       status:

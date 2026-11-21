@@ -99,7 +99,9 @@ export async function startAppServer(options: {
   assets: Record<string, Asset>;
   port?: number;
   maxBodyBytes?: number;
-  toError?: (error: unknown) => { status: number; code: string } | undefined;
+  toError?: (
+    error: unknown,
+  ) => { status: number; code: string; recovery?: unknown } | undefined;
 }): Promise<{
   origin: string;
   bootstrapToken: string;
@@ -239,7 +241,11 @@ export async function startAppServer(options: {
               status: 500,
               code: 'INTERNAL_ERROR',
             });
-      if (!res.headersSent) send(res, mapped.status, { error: mapped.code });
+      if (!res.headersSent)
+        send(res, mapped.status, {
+          error: mapped.code,
+          ...('recovery' in mapped ? { recovery: mapped.recovery } : {}),
+        });
       else res.end();
     }
   };

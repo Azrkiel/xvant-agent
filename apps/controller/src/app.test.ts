@@ -551,3 +551,74 @@ it('shows interrupted graphs when a replacement app starts', async () => {
   });
   expect(runner).not.toHaveBeenCalled();
 });
+
+it('reports persisted recovery actions through authenticated resume and run details', async () => {
+  await app.close();
+  const home = join(root, 'home');
+  const dispatch = vi.fn(async () => ({
+    status: 'unknown' as const,
+    finalText: '',
+    patch: null,
+    files: [],
+  }));
+  const launch = () =>
+    startApp({
+      home,
+      discover: (kind) => ({
+        runtimeKind: kind,
+        status: 'qualified',
+        executable: process.execPath,
+        version: LIVE_ROUTES[kind].runtimeVersion,
+        expectedVersion: LIVE_ROUTES[kind].runtimeVersion,
+        candidates: 1,
+      }),
+      runner: () => ({
+        remoteRecovery: {
+          identity: 'app-fixture-service',
+          scope: 'app-effect',
+        },
+        run: dispatch,
+        interrupt: () => false,
+      }),
+    });
+  app = await launch();
+  const first = await login();
+  const started = await first.post('/api/v1/roots', {
+    commandId: 'remote-effect',
+    repository: repo,
+    objective,
+  });
+  expect(started.status).toBe(202);
+  const path = '/api/v1/roots/' + JSON.parse(started.body).id;
+  await until(
+    async () => JSON.parse((await first.get(path)).body),
+    (record) => record.resumable === true,
+  );
+  await app.close();
+  app = await launch();
+  const second = await login();
+  expect(
+    (await send(path + '/resume', 'POST', { origin: app.origin }, {})).status,
+  ).toBe(401);
+  const blocked = await second.post(path + '/resume', {});
+  expect(blocked.status).toBe(409);
+  const response = JSON.parse(blocked.body);
+  expect(response).toMatchObject({
+    error: 'UNRESOLVED_WORKFLOW_ACTION',
+    recovery: [
+      {
+        slot: 'plan:0',
+        attemptId: expect.stringMatching(/-a1$/),
+        classification: 'unresolved',
+        decision: 'block',
+        detail: expect.stringContaining('REMOTE_LOOKUP_UNAVAILABLE'),
+        operatorAction: expect.stringContaining('recorded IDs'),
+      },
+    ],
+  });
+  expect(JSON.parse((await second.get(path)).body)).toMatchObject({
+    resumable: true,
+    recovery: response.recovery,
+  });
+  expect(dispatch).toHaveBeenCalledTimes(1);
+});

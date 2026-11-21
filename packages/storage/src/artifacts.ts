@@ -161,6 +161,7 @@ const manifestSchema = z.strictObject({
     z.literal(5),
     z.literal(6),
     z.literal(7),
+    z.literal(8),
   ]),
   database: z.strictObject({
     file: z.literal('state.sqlite'),
@@ -196,6 +197,8 @@ const tables: Record<string, string[]> = {
   work_events: ['sequence', 'graph_id', 'kind', 'payload'],
   work_checkpoints: ['graph_id', 'body'],
   work_actions: ['graph_id', 'slot', 'body'],
+  work_dispatches: ['id', 'graph_id', 'body'],
+  work_recoveries: ['id', 'graph_id', 'body'],
   contract_projects: ['project_id', 'version', 'body'],
   contract_policies: ['project_id', 'version', 'body'],
   contract_tasks: ['id', 'project_id', 'body'],
@@ -229,6 +232,8 @@ const primaryKeys: Record<string, string[]> = {
   work_events: ['sequence'],
   work_checkpoints: ['graph_id'],
   work_actions: ['graph_id', 'slot'],
+  work_dispatches: ['id'],
+  work_recoveries: ['id'],
   contract_projects: ['project_id', 'version'],
   contract_policies: ['project_id', 'version'],
   contract_tasks: ['id'],
@@ -269,6 +274,8 @@ const foreignKeys: Record<string, { from: string; table: string }[]> = {
   work_events: [{ from: 'graph_id', table: 'work_graphs' }],
   work_checkpoints: [{ from: 'graph_id', table: 'work_graphs' }],
   work_actions: [{ from: 'graph_id', table: 'work_graphs' }],
+  work_dispatches: [{ from: 'graph_id', table: 'work_graphs' }],
+  work_recoveries: [{ from: 'graph_id', table: 'work_graphs' }],
   contract_projects: [],
   contract_policies: [],
   contract_tasks: [],
@@ -366,7 +373,7 @@ function validateDatabase(path: string): {
   const db = new Database(path, { readonly: true, fileMustExist: true });
   try {
     const schemaVersion = db.pragma('user_version', { simple: true }) as number;
-    if (![1, 2, 3, 4, 5, 6, 7].includes(schemaVersion))
+    if (![1, 2, 3, 4, 5, 6, 7, 8].includes(schemaVersion))
       fail('SCHEMA_UNSUPPORTED');
     if (
       db.pragma('integrity_check', { simple: true }) !== 'ok' ||
@@ -379,6 +386,11 @@ function validateDatabase(path: string): {
       if (schemaVersion < 4 && table.startsWith('work_')) continue;
       if (schemaVersion < 5 && table.startsWith('lesson_')) continue;
       if (schemaVersion < 6 && table.startsWith('contract_')) continue;
+      if (
+        schemaVersion < 8 &&
+        ['work_dispatches', 'work_recoveries'].includes(table)
+      )
+        continue;
       if (
         schemaVersion < 7 &&
         ['work_checkpoints', 'work_actions'].includes(table)
@@ -410,6 +422,15 @@ function validateDatabase(path: string): {
         )
         .all() as Array<{ hash: unknown }>;
       references.push(...patches);
+    }
+    if (schemaVersion >= 8) {
+      references.push(
+        ...(db
+          .prepare(
+            "SELECT DISTINCT json_extract(body, '$.observation.patchHash') AS hash FROM work_dispatches WHERE json_type(body, '$.observation.patchHash')='text'",
+          )
+          .all() as Array<{ hash: unknown }>),
+      );
     }
     return {
       references: references.map(({ hash }) => hashSchema.parse(hash)),
