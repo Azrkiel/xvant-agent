@@ -40,6 +40,7 @@ export interface LiveCodexOptions {
   gitBases?: Record<string, string>;
   /** XVANT's task-scoped MCP bridge; the token reaches Codex only by environment. */
   mcp?: { url: string; token: string; tools: readonly string[] };
+  onProcess?: Parameters<WorkerSupervisor['start']>[0]['onProcess'];
   onEvent?: (event: LiveEvent) => void;
   fault?: (point: string) => void;
 }
@@ -330,6 +331,7 @@ export class LiveCodexController {
     });
     try {
       run = this.supervisor.start({
+        onProcess: this.options.onProcess,
         executable: this.options.executable,
         // The worker sees XVANT's bridge or no MCP servers at all, never the user's.
         args: [
