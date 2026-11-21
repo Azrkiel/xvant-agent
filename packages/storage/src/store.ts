@@ -170,7 +170,11 @@ export class Store {
     )
       throw new StorageError('INVALID_INPUT');
     this.#db = new Database(path, { timeout: 1000 });
-    this.workflows = new Workflows(this.#db, (fn) => this.#transaction(fn));
+    this.workflows = new Workflows(this.#db, {
+      transaction: (fn) => this.#transaction(fn),
+      generation: () => this.#generation,
+      fault: this.#fault,
+    });
     this.graphs = new WorkGraphs(this.#db, {
       transaction: (fn) => this.#transaction(fn),
     });

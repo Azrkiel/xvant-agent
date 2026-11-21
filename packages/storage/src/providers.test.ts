@@ -423,7 +423,7 @@ it('migrates an existing v1 database without losing its tasks', () => {
   store.close();
   const db = new Database(join(root, 'state.sqlite'));
   db.exec(
-    'DROP TABLE work_checkpoints; DROP TABLE contract_attempts; DROP TABLE contract_tasks; DROP TABLE contract_policies; DROP TABLE contract_projects; DROP TABLE lesson_text; DROP TABLE lesson_edges; DROP TABLE lesson_nodes; DROP TABLE work_events; DROP TABLE work_graphs; DROP TABLE memory_text; DROP TABLE memory_records; DROP TABLE provider_entries; DROP TABLE provider_reservations; DROP TABLE provider_connections; PRAGMA user_version=1',
+    'DROP TABLE work_actions; DROP TABLE work_checkpoints; DROP TABLE contract_attempts; DROP TABLE contract_tasks; DROP TABLE contract_policies; DROP TABLE contract_projects; DROP TABLE lesson_text; DROP TABLE lesson_edges; DROP TABLE lesson_nodes; DROP TABLE work_events; DROP TABLE work_graphs; DROP TABLE memory_text; DROP TABLE memory_records; DROP TABLE provider_entries; DROP TABLE provider_reservations; DROP TABLE provider_connections; PRAGMA user_version=1',
   );
   db.close();
   store = open();
@@ -511,7 +511,7 @@ it('restores a legacy v1 snapshot then migrates it on open', async () => {
   store.close();
   const db = new Database(join(root, 'state.sqlite'));
   db.exec(
-    'DROP TABLE work_checkpoints; DROP TABLE contract_attempts; DROP TABLE contract_tasks; DROP TABLE contract_policies; DROP TABLE contract_projects; DROP TABLE lesson_text; DROP TABLE lesson_edges; DROP TABLE lesson_nodes; DROP TABLE work_events; DROP TABLE work_graphs; DROP TABLE memory_text; DROP TABLE memory_records; DROP TABLE provider_entries; DROP TABLE provider_reservations; DROP TABLE provider_connections; PRAGMA user_version=1',
+    'DROP TABLE work_actions; DROP TABLE work_checkpoints; DROP TABLE contract_attempts; DROP TABLE contract_tasks; DROP TABLE contract_policies; DROP TABLE contract_projects; DROP TABLE lesson_text; DROP TABLE lesson_edges; DROP TABLE lesson_nodes; DROP TABLE work_events; DROP TABLE work_graphs; DROP TABLE memory_text; DROP TABLE memory_records; DROP TABLE provider_entries; DROP TABLE provider_reservations; DROP TABLE provider_connections; PRAGMA user_version=1',
   );
   try {
     await backupSnapshot(

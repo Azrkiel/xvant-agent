@@ -253,3 +253,49 @@ export const rootProgressSchema = z.strictObject({
   reason: z.string().optional(),
   lessons: lessonSnapshot.shape.stats.optional(),
 });
+
+export const turnIntentSchema = z.strictObject({
+  taskId: idSchema,
+  projectId: idSchema,
+  alias: idSchema,
+  prompt: z.string(),
+  workspace: integrationIdentitySchema.omit({ head: true }),
+  deadlineAt: positive,
+  checks: z.record(z.string(), checkSchema),
+  writablePaths: z.array(z.string()),
+  lessonScope: z.string().nullable(),
+});
+export const turnResultSchema = z.strictObject({
+  status: z.enum([
+    'accepted',
+    'verification_failed',
+    'failed',
+    'cancelled',
+    'unknown',
+  ]),
+  finalText: z.string(),
+  patchHash: hashSchema.nullable(),
+  files: z.array(z.string()),
+  failure: z.string().optional(),
+});
+export const integrationResultSchema = z.discriminatedUnion('status', [
+  z.strictObject({
+    status: z.literal('applied'),
+    commit: revisionSchema,
+    files: z.array(z.string()),
+  }),
+  z.strictObject({ status: z.literal('empty'), commit: revisionSchema }),
+  z.strictObject({ status: z.literal('conflict'), files: z.array(z.string()) }),
+]);
+export const applyIntentSchema = z.strictObject({
+  before: revisionSchema,
+  patchHash: hashSchema.nullable(),
+  message: z.string(),
+});
+export const checkIntentSchema = z.strictObject({
+  id: z.string(),
+  cwd: text,
+  head: revisionSchema,
+  check: checkSchema,
+  deadlineAt: positive,
+});

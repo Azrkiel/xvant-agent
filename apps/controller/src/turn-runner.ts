@@ -147,6 +147,18 @@ export class LiveTurnRunner implements TurnRunner {
     }
   }
   async run(request: TurnRequest): Promise<TurnOutcome> {
+    const timeoutMs = Math.min(
+      this.#timeoutMs,
+      (request.deadlineAt ?? Infinity) - Date.now(),
+    );
+    if (timeoutMs <= 0)
+      return {
+        status: 'failed',
+        patch: null,
+        files: [],
+        finalText: '',
+        failure: 'TIMEOUT',
+      };
     const worker = this.#workers.get(request.alias);
     if (!worker) throw new Error('NOT_FOUND');
     if (worker.runtimeKind === 'native-local') {
@@ -171,7 +183,7 @@ export class LiveTurnRunner implements TurnRunner {
     const common = {
       executable: runtime.executable,
       prefixArgs: runtime.prefixArgs ?? [],
-      timeoutMs: this.#timeoutMs,
+      timeoutMs,
       gitBases: { [workspaceId]: request.workspace.baseCommit },
       onEvent: (event: LiveEvent) =>
         this.#onEvent(request.alias, request.taskId, event),

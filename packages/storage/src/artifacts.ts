@@ -195,6 +195,7 @@ const tables: Record<string, string[]> = {
   work_graphs: ['id', 'project_id', 'body'],
   work_events: ['sequence', 'graph_id', 'kind', 'payload'],
   work_checkpoints: ['graph_id', 'body'],
+  work_actions: ['graph_id', 'slot', 'body'],
   contract_projects: ['project_id', 'version', 'body'],
   contract_policies: ['project_id', 'version', 'body'],
   contract_tasks: ['id', 'project_id', 'body'],
@@ -227,6 +228,7 @@ const primaryKeys: Record<string, string[]> = {
   work_graphs: ['id'],
   work_events: ['sequence'],
   work_checkpoints: ['graph_id'],
+  work_actions: ['graph_id', 'slot'],
   contract_projects: ['project_id', 'version'],
   contract_policies: ['project_id', 'version'],
   contract_tasks: ['id'],
@@ -266,6 +268,7 @@ const foreignKeys: Record<string, { from: string; table: string }[]> = {
   work_graphs: [],
   work_events: [{ from: 'graph_id', table: 'work_graphs' }],
   work_checkpoints: [{ from: 'graph_id', table: 'work_graphs' }],
+  work_actions: [{ from: 'graph_id', table: 'work_graphs' }],
   contract_projects: [],
   contract_policies: [],
   contract_tasks: [],
@@ -376,7 +379,11 @@ function validateDatabase(path: string): {
       if (schemaVersion < 4 && table.startsWith('work_')) continue;
       if (schemaVersion < 5 && table.startsWith('lesson_')) continue;
       if (schemaVersion < 6 && table.startsWith('contract_')) continue;
-      if (schemaVersion < 7 && table === 'work_checkpoints') continue;
+      if (
+        schemaVersion < 7 &&
+        ['work_checkpoints', 'work_actions'].includes(table)
+      )
+        continue;
       validateTable(db, table, columns);
     }
     if (schemaVersion >= 3) {
@@ -396,6 +403,14 @@ function validateDatabase(path: string): {
     const references = db
       .prepare('SELECT DISTINCT hash FROM artifacts')
       .all() as Array<{ hash: unknown }>;
+    if (schemaVersion >= 7) {
+      const patches = db
+        .prepare(
+          "SELECT DISTINCT json_extract(body, '$.result.patchHash') AS hash FROM work_actions WHERE json_extract(body, '$.kind')='turn' AND json_type(body, '$.result.patchHash')='text'",
+        )
+        .all() as Array<{ hash: unknown }>;
+      references.push(...patches);
+    }
     return {
       references: references.map(({ hash }) => hashSchema.parse(hash)),
       schemaVersion,
