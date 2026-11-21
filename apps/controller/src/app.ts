@@ -310,7 +310,10 @@ export async function startApp(options: {
       ) {
         const code = (error as { code?: string }).code ?? error.message;
         if (code === 'NOT_FOUND') return { status: 404, code };
-        if (code === 'CONFLICT') return { status: 409, code };
+        if (code === 'CONFLICT' || code === 'DUPLICATE_IDENTITY')
+          return { status: 409, code };
+        if (code === 'POLICY_DENIED') return { status: 403, code };
+        if (code === 'INVALID_INPUT') return { status: 400, code };
       }
       return undefined;
     },
@@ -336,6 +339,21 @@ export async function startApp(options: {
         method: 'GET',
         path: /^\/api\/v1\/csrf$/,
         handle: async () => ({ csrfToken: server.csrfToken() }),
+      },
+      {
+        method: 'POST',
+        path: /^\/api\/v1\/contracts$/,
+        handle: async ({ body }) => store.contracts.apply(body),
+      },
+      {
+        method: 'GET',
+        path: /^\/api\/v1\/contracts\/projects\/([A-Za-z][A-Za-z0-9_-]{0,63})$/,
+        handle: async ({ match }) => store.contracts.getProject(match[1]!),
+      },
+      {
+        method: 'GET',
+        path: /^\/api\/v1\/contracts\/tasks\/([A-Za-z][A-Za-z0-9_-]{0,63})$/,
+        handle: async ({ match }) => store.contracts.getTask(match[1]!),
       },
       {
         method: 'GET',

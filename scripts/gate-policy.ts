@@ -193,6 +193,7 @@ export function phaseSuites(phase: string): Record<string, number> {
               'apps/controller/src/share.test.ts': 9,
               'apps/controller/src/shell.test.ts': 4,
               'tests/shell-integration.test.ts': 23,
+              'apps/controller/src/project-contracts.test.ts': 36,
             }
           : {}),
       };
