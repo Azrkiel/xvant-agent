@@ -144,7 +144,7 @@ export class WorkGraphs {
       };
       const rows = this.#db
         .prepare(
-          "SELECT id FROM work_graphs WHERE json_extract(body, '$.state.phase') IN (?, ?, ?, ?) ORDER BY rowid",
+          "SELECT id FROM work_graphs WHERE json_extract(body, '$.state.phase') IN (?, ?, ?, ?) AND NOT EXISTS(SELECT 1 FROM work_checkpoints WHERE graph_id=work_graphs.id) ORDER BY rowid",
         )
         .all(...activePhases) as { id: string }[];
       for (const { id } of rows) {

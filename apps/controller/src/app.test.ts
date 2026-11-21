@@ -201,6 +201,13 @@ it('runs a task end to end, once per submission, and accepts only what was revie
     (await s.get('/api/v1/roots/' + first.id + '/diff')).body,
   );
   expect(diff.diff).toContain('+hello app');
+  const resumed = await s.post('/api/v1/roots/' + first.id + '/resume', {});
+  expect(resumed.status).toBe(202);
+  expect(JSON.parse(resumed.body)).toEqual({
+    id: first.id,
+    phase: 'ready',
+    reason: null,
+  });
   // A stale version or head is refused; the reviewed pair is accepted.
   expect(
     (

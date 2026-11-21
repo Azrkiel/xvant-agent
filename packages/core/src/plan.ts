@@ -114,8 +114,8 @@ export function planningPrompt(input: {
     alias: string;
     runtimeKind: string;
     roles?: readonly string[];
-    tier?: 'light' | 'standard';
-    model?: string;
+    tier?: 'light' | 'standard' | undefined;
+    model?: string | undefined;
   }[];
   repositorySummary: string;
   maxNodes: number;

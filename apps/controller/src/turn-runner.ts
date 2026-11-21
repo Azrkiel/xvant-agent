@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { realpathSync } from 'node:fs';
 import type { Store } from '../../../packages/storage/src/store.ts';
 import type { ArtifactStore } from '../../../packages/storage/src/artifacts.ts';
@@ -12,6 +12,7 @@ import { LiveCodexController, type LiveEvent } from './codex-live.ts';
 import { LiveClaudeController } from './claude-live.ts';
 import { LiveOpenCodeController } from './opencode-live.ts';
 import type { RosterRuntime } from './live-roster.ts';
+import type { WorkflowCheckpoint } from './workflow-checkpoint.ts';
 import type {
   TurnOutcome,
   TurnRequest,
@@ -24,6 +25,43 @@ type Controller =
   LiveCodexController | LiveClaudeController | LiveOpenCodeController;
 /** Controller tools offered to workers: read-only lookups, nothing that writes. */
 export const CONTROLLER_READS = ['lessons.search', 'memory.search'];
+/** Runtime identity is captured without persisting launch arguments or credentials. */
+export function workflowRuntimeBindings(
+  workers: WorkerSpec[],
+  runtimes: Partial<Record<ExternalKind, RosterRuntime>>,
+): WorkflowCheckpoint['runtimeBindings'] {
+  const kinds = new Set(workers.map(({ runtimeKind }) => runtimeKind));
+  return Object.fromEntries(
+    Object.entries(runtimes)
+      .filter(([kind]) => kinds.has(kind as ExternalKind))
+      .map(([kind, runtime]) => [
+        kind,
+        {
+          fingerprint: createHash('sha256')
+            .update(
+              JSON.stringify([
+                runtime.executable,
+                runtime.version,
+                runtime.prefixArgs ?? [],
+              ]),
+            )
+            .digest('hex'),
+          model: runtime.model ?? null,
+        },
+      ]),
+  );
+}
+
+export function restoreWorkflowModels(
+  runtimes: Partial<Record<ExternalKind, RosterRuntime>>,
+  bindings: WorkflowCheckpoint['runtimeBindings'],
+): void {
+  for (const [kind, runtime] of Object.entries(runtimes)) {
+    const model = bindings[kind as ExternalKind]?.model;
+    if (model) runtime.model = model;
+  }
+}
+
 /**
  * The host picks the lesson scope from the turn's repository; a worker cannot
  * name one. Without a derivable scope the task's project is used (`undefined`).

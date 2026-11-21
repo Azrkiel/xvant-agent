@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { expect, it } from 'vitest';
+import Database from 'better-sqlite3';
 import { Store } from '../../../packages/storage/src/store.ts';
 import { Orchestrator, type TurnRunner } from './orchestrator.ts';
 
@@ -57,7 +58,9 @@ it('round-trips the resolved executable spec and worker bindings in the graph tr
     const orchestrator = new Orchestrator(store, runner, [worker], {
       stateRoot: join(root, 'runs'),
       turnTimeoutMs: 9000,
-      runtimeBindings: { 'native-local': 'fixture' },
+      runtimeBindings: {
+        'native-local': { fingerprint: 'fixture', model: null },
+      },
     });
     expect(
       await orchestrator.run({
@@ -99,7 +102,9 @@ it('round-trips the resolved executable spec and worker bindings in the graph tr
         workers: [worker],
         stateRoot: join(root, 'runs'),
         turnTimeoutMs: 9000,
-        runtimeBindings: { 'native-local': 'fixture' },
+        runtimeBindings: {
+          'native-local': { fingerprint: 'fixture', model: null },
+        },
         spec: {
           repository,
           baseRevision: head,
@@ -130,6 +135,58 @@ it('round-trips the resolved executable spec and worker bindings in the graph tr
     }
   } finally {
     store.close();
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it('migrates schema 6 without treating a legacy node as a redispatchable action', () => {
+  const root = mkdtempSync(join(tmpdir(), 'xvant-workflow-schema-'));
+  const path = join(root, 'state.sqlite');
+  const previous = new Store(path, { owner: 'legacy' });
+  previous.graphs.create(
+    'legacy',
+    'project',
+    {
+      phase: 'running',
+      nodes: {
+        child: { status: 'running', repairs: 2, attempts: ['first', 'second'] },
+      },
+    },
+    {},
+  );
+  previous.close();
+  try {
+    const old = new Database(path);
+    old.exec(
+      'DROP TABLE work_actions; DROP TABLE work_checkpoints; PRAGMA user_version=6;',
+    );
+    old.close();
+
+    const upgraded = new Store(path, {
+      owner: 'upgrade',
+      recoverWorkGraphs: true,
+    });
+    try {
+      expect(upgraded.schemaVersion()).toBe(7);
+      expect(upgraded.graphs.get('legacy').state).toMatchObject({
+        phase: 'needs_attention',
+        nodes: {
+          child: {
+            status: 'needs_attention',
+            repairs: 2,
+            attempts: ['first', 'second'],
+          },
+        },
+        interruption: { previousPhase: 'running', runningNodeIds: ['child'] },
+      });
+      expect(upgraded.workflows.actions('legacy')).toEqual([]);
+      expect(() => Orchestrator.checkpoint(upgraded, 'legacy')).toThrow(
+        'CHECKPOINT_UNAVAILABLE',
+      );
+    } finally {
+      upgraded.close();
+    }
+  } finally {
     rmSync(root, { recursive: true, force: true });
   }
 });

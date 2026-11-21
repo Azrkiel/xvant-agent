@@ -50,7 +50,12 @@ export class Workflows {
     const row = this.#db
       .prepare('SELECT body FROM work_checkpoints WHERE graph_id=?')
       .get(idSchema.parse(id)) as { body: string } | undefined;
-    return row ? (JSON.parse(row.body) as unknown) : null;
+    if (!row) return null;
+    try {
+      return JSON.parse(row.body) as unknown;
+    } catch {
+      throw new Error('CHECKPOINT_INVALID');
+    }
   }
 
   write(id: string, value: unknown): void {
@@ -65,23 +70,29 @@ export class Workflows {
 
   action(id: string, slot: string): WorkAction | null {
     const row = this.#db
-      .prepare('SELECT body FROM work_actions WHERE graph_id=? AND slot=?')
+      .prepare('SELECT slot,body FROM work_actions WHERE graph_id=? AND slot=?')
       .get(idSchema.parse(id), slotSchema.parse(slot)) as
-      { body: string } | undefined;
+      { slot: string; body: string } | undefined;
     return row ? this.#decode(row) : null;
   }
 
   actions(id: string): WorkAction[] {
     const rows = this.#db
-      .prepare('SELECT body FROM work_actions WHERE graph_id=? ORDER BY rowid')
-      .all(idSchema.parse(id)) as { body: string }[];
+      .prepare(
+        'SELECT slot,body FROM work_actions WHERE graph_id=? ORDER BY rowid',
+      )
+      .all(idSchema.parse(id)) as { slot: string; body: string }[];
     return rows.map((row) => this.#decode(row));
   }
 
-  #decode(row: { body: string }): WorkAction {
-    const parsed = actionSchema.safeParse(JSON.parse(row.body));
-    if (!parsed.success) throw new Error('WORKFLOW_ACTION_INVALID');
-    return parsed.data;
+  #decode(row: { slot: string; body: string }): WorkAction {
+    try {
+      const action = actionSchema.parse(JSON.parse(row.body));
+      if (action.slot !== row.slot) throw new Error('ACTION_SLOT_MISMATCH');
+      return action;
+    } catch {
+      throw new Error('WORKFLOW_ACTION_INVALID');
+    }
   }
 
   prepare(

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { hashSchema, idSchema } from '../../../packages/contracts/src/index.ts';
 import { revisionSchema } from '../../../packages/contracts/src/context.ts';
 import { runtimeKindSchema } from '../../../packages/contracts/src/providers.ts';
-import { solutionInputSchema } from '../../../packages/contracts/src/lessons.ts';
+import type { WorkAction } from '../../../packages/storage/src/workflows.ts';
 import { planSchema } from '../../../packages/core/src/plan.ts';
 
 const count = z.number().int().nonnegative();
@@ -32,14 +32,14 @@ const specSchema = z
     objective: text,
     acceptanceCriteria: z.array(z.string()),
     checks: z.record(z.string().min(1).max(64), checkSchema),
-    nodeChecks: z.array(z.string()).default([]),
+    nodeChecks: z.array(z.string()),
     plan: z.json().optional(),
-    maxActive: positive.default(3),
-    maxRepairs: count.default(2),
-    maxReviewRepairs: count.default(1),
-    checkTimeoutMs: positive.default(10 * 60 * 1000),
-    review: z.boolean().default(true),
-    lessons: z.boolean().default(true),
+    maxActive: positive,
+    maxRepairs: count,
+    maxReviewRepairs: count,
+    checkTimeoutMs: positive,
+    review: z.boolean(),
+    lessons: z.boolean(),
     lessonScope: text.nullable(),
   })
   .refine(({ nodeChecks, checks }) =>
@@ -56,7 +56,7 @@ const lessonSnapshot = z.strictObject({
     errors: count,
     repairs: z.strictObject({ hinted: lessonCount, unhinted: lessonCount }),
   }),
-  unverified: z.array(solutionInputSchema),
+  unverified: z.array(idSchema),
 });
 const pendingRepair = z.strictObject({
   challenges: z.array(z.tuple([z.string(), z.string()])),
@@ -79,7 +79,13 @@ const workflowSchema = z.strictObject({
   authority: z.literal('legacy-manual'),
   spec: specSchema,
   workers: z.array(workerSchema),
-  runtimeBindings: z.record(runtimeKindSchema.or(z.string()), z.string()),
+  runtimeBindings: z.partialRecord(
+    runtimeKindSchema,
+    z.strictObject({
+      fingerprint: text,
+      model: text.nullable(),
+    }),
+  ),
   verifierConfigHash: hashSchema,
   stateRoot: text,
   turnTimeoutMs: positive,
@@ -106,7 +112,10 @@ const workflowSchema = z.strictObject({
     pendingReviewFix: pendingRepair.nullable(),
     checkChallenges: z.array(z.tuple([z.string(), z.string()])),
     reviewChallenges: z.array(z.tuple([z.string(), z.string()])),
-    rejected: z.boolean(),
+    repairHint: z.strictObject({
+      hinted: z.boolean(),
+      suggested: z.array(z.string()),
+    }),
     lessonSnapshot: lessonSnapshot.optional(),
   }),
 });
@@ -129,7 +138,13 @@ export function parseCheckpoint(value: unknown): WorkflowCheckpoint {
   const result = workflowSchema.safeParse(value);
   if (!result.success) throw new Error('CHECKPOINT_INVALID');
   const checkpoint = result.data;
-  if (checkpoint.verifierConfigHash !== verifierHash(checkpoint.spec))
+  const { spec, progress } = checkpoint;
+  if (
+    checkpoint.verifierConfigHash !== verifierHash(spec) ||
+    progress.plannerTries > 2 ||
+    progress.checkRound > spec.maxRepairs ||
+    progress.reviewRound > spec.maxReviewRepairs
+  )
     throw new Error('CHECKPOINT_INVALID');
   return checkpoint;
 }
@@ -170,7 +185,7 @@ export function createCheckpoint(
       pendingReviewFix: null,
       checkChallenges: [],
       reviewChallenges: [],
-      rejected: false,
+      repairHint: { hinted: false, suggested: [] },
     },
   });
 }
@@ -181,8 +196,14 @@ export const integrationIdentitySchema = z.strictObject({
   baseCommit: revisionSchema,
   head: revisionSchema,
 });
+const settledPlanNode = planSchema.shape.nodes.element.required({
+  dependsOn: true,
+  role: true,
+  assignee: true,
+  writablePaths: true,
+});
 const nodeStateSchema = z.strictObject({
-  node: planSchema.shape.nodes.element,
+  node: settledPlanNode,
   status: z.enum([
     'pending',
     'running',
@@ -234,7 +255,9 @@ export const rootProgressSchema = z.strictObject({
   repository: text,
   objective: text,
   acceptanceCriteria: z.array(z.string()),
-  plan: planSchema.nullable(),
+  plan: planSchema
+    .extend({ nodes: z.array(settledPlanNode).min(1).max(20) })
+    .nullable(),
   nodes: z.record(idSchema, nodeStateSchema),
   integration: integrationIdentitySchema.nullable(),
   checks: z.array(
@@ -299,3 +322,18 @@ export const checkIntentSchema = z.strictObject({
   check: checkSchema,
   deadlineAt: positive,
 });
+
+export function validateWorkflowAction(action: WorkAction): void {
+  const shapes = {
+    initialize: [integrationIdentitySchema, integrationIdentitySchema],
+    turn: [turnIntentSchema, turnResultSchema],
+    apply: [applyIntentSchema, integrationResultSchema],
+    check: [checkIntentSchema, checkedResultSchema],
+  } as const;
+  const [intent, result] = shapes[action.kind];
+  if (
+    !intent.safeParse(action.input).success ||
+    (action.status === 'completed' && !result.safeParse(action.result).success)
+  )
+    throw new Error('WORKFLOW_ACTION_INVALID');
+}

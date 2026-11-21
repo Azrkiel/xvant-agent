@@ -12,6 +12,7 @@
 //                        [--tier light=MODEL] [--tier standard=MODEL]
 //                        [--tandem opus|sol]
 //   npm run xvant -- status [ID]
+//   npm run xvant -- resume ID
 //   npm run xvant -- handoff ID
 //   npm run xvant -- contracts apply --file PATH | contracts project ID | contracts task ID
 //   npm run xvant -- accept ID
@@ -34,7 +35,11 @@ import { ArtifactStore } from '../packages/storage/src/artifacts.ts';
 import { discoverRuntime } from '../packages/adapters/src/live/discover.ts';
 import { acceptedVersions } from '../packages/contracts/src/live.ts';
 import { Orchestrator } from '../apps/controller/src/orchestrator.ts';
-import { LiveTurnRunner } from '../apps/controller/src/turn-runner.ts';
+import {
+  LiveTurnRunner,
+  restoreWorkflowModels,
+  workflowRuntimeBindings,
+} from '../apps/controller/src/turn-runner.ts';
 import { defaultWorkers, shellCheck } from '../apps/controller/src/app.ts';
 import {
   activeRouting,
@@ -301,6 +306,8 @@ if (command === undefined || command === 'shell') {
   });
   const orchestrator = new Orchestrator(store, runner, workers, {
     stateRoot: join(home, 'runs'),
+    objects,
+    runtimeBindings: workflowRuntimeBindings(workers, runtimes),
     onChange: (state, kind) => {
       if (kind === 'graph.planned')
         for (const n of state.plan.nodes)
@@ -381,6 +388,54 @@ if (command === undefined || command === 'shell') {
   if (state.phase === 'ready')
     console.log('Accept:  npm run xvant -- accept ' + id);
   process.exitCode = state.phase === 'ready' ? 0 : 1;
+} else if (command === 'resume') {
+  if (rest.length !== 1) {
+    console.error('Usage: resume ID');
+    process.exit(2);
+  }
+  const id = rest[0];
+  const { store, objects } = open(true);
+  try {
+    const checkpoint = Orchestrator.checkpoint(store, id);
+    const workers = checkpoint.workers;
+    const { runtimes } =
+      checkpoint.progress.step === 'done'
+        ? { runtimes: {} }
+        : discover(
+            [...new Set(workers.map((worker) => worker.runtimeKind))].filter(
+              (kind) => KINDS.includes(kind),
+            ),
+          );
+    restoreWorkflowModels(runtimes, checkpoint.runtimeBindings);
+    const runner = new LiveTurnRunner(store, objects, workers, runtimes, {
+      timeoutMs: checkpoint.turnTimeoutMs,
+    });
+    const orchestrator = new Orchestrator(store, runner, workers, {
+      stateRoot: join(home, 'runs'),
+      objects,
+      runtimeBindings: workflowRuntimeBindings(workers, runtimes),
+      turnTimeoutMs: checkpoint.turnTimeoutMs,
+      onChange: (state, kind) => console.log(kind.padEnd(22) + state.phase),
+    });
+    const cancel = () => orchestrator.cancel();
+    process.on('SIGINT', cancel);
+    try {
+      const state = await orchestrator.resume(id);
+      console.log(
+        'Result: ' + state.phase + (state.reason ? ' — ' + state.reason : ''),
+      );
+      if (state.phase === 'ready')
+        console.log('Accept:  npm run xvant -- accept ' + id);
+      process.exitCode = ['ready', 'accepted'].includes(state.phase) ? 0 : 1;
+    } finally {
+      process.off('SIGINT', cancel);
+    }
+  } catch (error) {
+    console.error('resume failed: ' + error.message);
+    process.exitCode = 1;
+  } finally {
+    store.close();
+  }
 } else if (command === 'status' || command === 'handoff') {
   if (command === 'handoff' && (rest.length !== 1 || !rest[0]?.trim())) {
     console.error('Usage: handoff ID');
@@ -788,7 +843,7 @@ if (command === undefined || command === 'shell') {
   }
 } else {
   console.error(
-    'Commands: shell | ui | runtimes | run | status [ID] | handoff ID | contracts | accept ID | merge ID [--repo PATH] | share | backup | restore | lessons',
+    'Commands: shell | ui | runtimes | run | resume ID | status [ID] | handoff ID | contracts | accept ID | merge ID [--repo PATH] | share | backup | restore | lessons',
   );
   process.exit(2);
 }

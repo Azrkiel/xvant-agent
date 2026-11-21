@@ -6,6 +6,7 @@ import type {
   RunLessonStats,
   SolutionInput,
 } from '../../../packages/contracts/src/lessons.ts';
+import type { LessonSnapshot } from './workflow-checkpoint.ts';
 import { renderLessons } from '../../../packages/memory/src/lessons.ts';
 
 export type LessonStats = RunLessonStats;
@@ -31,13 +32,25 @@ export class RunLessons {
   readonly #projectId: string;
   readonly #graphId: string;
   /** Repairs recorded without checks this run, as sent, to verify later. */
-  #unverified: SolutionInput[] = [];
-  constructor(store: Store | null, projectId: string, graphId: string) {
+  #unverified: string[] = [];
+  constructor(
+    store: Store | null,
+    projectId: string,
+    graphId: string,
+    snapshot?: LessonSnapshot,
+  ) {
     this.#store = store;
     this.#projectId = projectId;
     this.#graphId = graphId;
     // A run with lessons off has no scope and records no repairs.
     if (store) this.stats.scope = projectId;
+    if (snapshot) {
+      Object.assign(this.stats, structuredClone(snapshot.stats));
+      this.#unverified = structuredClone(snapshot.unverified);
+    }
+  }
+  snapshot(): LessonSnapshot {
+    return { stats: this.stats, unverified: this.#unverified };
   }
   #try<T>(fn: (store: Store) => T): T | undefined {
     if (!this.#store) return undefined;
@@ -105,7 +118,7 @@ export class RunLessons {
       };
       const solution = store.lessons.recordSolution(input);
       if (relation === 'solved_by' && !input.checks.length)
-        this.#unverified.push(input);
+        this.#unverified.push(solution.id);
       for (const id of new Set(challengeIds)) {
         store.lessons.link(this.#projectId, id, solution.id, relation);
         this.stats.solutions++;
@@ -115,18 +128,17 @@ export class RunLessons {
   /**
    * Marks the repairs of this run that were recorded without checks as
    * verified by `passed`, the checks that just passed on the combined result.
-   * The same input arrives again, so the graph merges the check ids into the
-   * solution it already holds.
+   * The graph attaches the check IDs to the same recorded solution.
    */
   verify(passed: readonly string[]): void {
     const checks = passed.slice(0, 32);
     if (!checks.length || !this.#unverified.length) return;
     const pending = this.#unverified;
     this.#unverified = [];
-    for (const input of pending)
-      this.#try((store) => {
-        store.lessons.recordSolution({ ...input, checks: [...checks] });
-      });
+    for (const id of new Set(pending))
+      this.#try((store) =>
+        store.lessons.verifySolution(this.#projectId, id, checks),
+      );
   }
   followedBy(from: string | undefined, to: string | undefined): void {
     if (!from || !to || from === to) return;

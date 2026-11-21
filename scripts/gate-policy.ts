@@ -194,6 +194,9 @@ export function phaseSuites(phase: string): Record<string, number> {
               'apps/controller/src/shell.test.ts': 4,
               'tests/shell-integration.test.ts': 23,
               'apps/controller/src/project-contracts.test.ts': 36,
+              'apps/controller/src/workflow-checkpoint.test.ts': 2,
+              'apps/controller/src/workflow-resume.test.ts': 8,
+              'packages/storage/src/workflows.test.ts': 1,
             }
           : {}),
       };
