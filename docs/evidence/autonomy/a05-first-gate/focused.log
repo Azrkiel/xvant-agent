@@ -1,0 +1,11 @@
+npm notice run xvant@0.1.0 test
+npm notice run vitest run apps/controller/src/project-contracts.test.ts packages/storage/src/store.test.ts tests/faults/daemon.test.ts
+
+ RUN  v5.0.1 /workspace/work/a05-qualification
+
+
+ Test Files  3 passed (3)
+      Tests  66 passed (66)
+   Start at  12:29:37
+   Duration  29.54s (tests 96%, transform 3%, import 1%)
+
