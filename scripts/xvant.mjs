@@ -13,6 +13,7 @@
 //                        [--tandem opus|sol]
 //   npm run xvant -- status [ID]
 //   npm run xvant -- handoff ID
+//   npm run xvant -- contracts apply --file PATH | contracts project ID | contracts task ID
 //   npm run xvant -- accept ID
 //   npm run xvant -- merge ID [--repo PATH]
 //   npm run xvant -- share --repo PATH --branch NAME [--remote origin]
@@ -439,6 +440,31 @@ if (command === undefined || command === 'shell') {
     );
     process.exitCode = 1;
   }
+} else if (command === 'contracts') {
+  const { store } = open();
+  try {
+    const [action, id] = rest;
+    let result;
+    if (action === 'apply' && value('--file'))
+      result = store.contracts.apply(
+        JSON.parse(readFileSync(value('--file'), 'utf8')),
+      );
+    else if (action === 'project' && id)
+      result = store.contracts.getProject(id);
+    else if (action === 'task' && id) result = store.contracts.getTask(id);
+    else
+      throw new Error(
+        'Usage: contracts apply --file PATH | contracts project ID | contracts task ID',
+      );
+    console.log(JSON.stringify(result, null, 2));
+    if (action === 'apply' && result.acceptance?.accepted === false)
+      process.exitCode = 1;
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  } finally {
+    store.close();
+  }
 } else if (command === 'accept') {
   const { store } = open();
   try {
@@ -762,7 +788,7 @@ if (command === undefined || command === 'shell') {
   }
 } else {
   console.error(
-    'Commands: shell | ui | runtimes | run | status [ID] | handoff ID | accept ID | merge ID [--repo PATH] | share | backup | restore | lessons',
+    'Commands: shell | ui | runtimes | run | status [ID] | handoff ID | contracts | accept ID | merge ID [--repo PATH] | share | backup | restore | lessons',
   );
   process.exit(2);
 }

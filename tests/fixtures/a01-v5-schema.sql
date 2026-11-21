@@ -1,0 +1,21 @@
+-- Pre-A01 Store schema from main c872e9a1f7d7e7823f44173d6d013ec34bf72779.
+CREATE TABLE tasks(id TEXT PRIMARY KEY, project_id TEXT NOT NULL, body TEXT NOT NULL);
+CREATE TABLE commands(project_id TEXT NOT NULL, kind TEXT NOT NULL, key TEXT NOT NULL, hash TEXT NOT NULL, result TEXT NOT NULL, PRIMARY KEY(project_id,kind,key));
+CREATE TABLE events(sequence INTEGER PRIMARY KEY AUTOINCREMENT, task_id TEXT NOT NULL REFERENCES tasks(id), kind TEXT NOT NULL, payload TEXT NOT NULL);
+CREATE TABLE operations(id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id), body TEXT NOT NULL);
+CREATE TABLE outbox(operation_id TEXT PRIMARY KEY REFERENCES operations(id), status TEXT NOT NULL);
+CREATE TABLE ownership(resource TEXT PRIMARY KEY, owner TEXT NOT NULL, generation INTEGER NOT NULL, expires INTEGER NOT NULL);
+CREATE TABLE reservations(resource TEXT PRIMARY KEY, operation_id TEXT NOT NULL REFERENCES operations(id));
+CREATE TABLE evidence(task_id TEXT PRIMARY KEY REFERENCES tasks(id), body TEXT NOT NULL);
+CREATE TABLE artifacts(hash TEXT NOT NULL, task_id TEXT NOT NULL REFERENCES tasks(id), work_revision INTEGER NOT NULL, PRIMARY KEY(hash,task_id,work_revision));
+CREATE TABLE provider_connections(id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id), body TEXT NOT NULL);
+CREATE TABLE provider_entries(sequence INTEGER PRIMARY KEY AUTOINCREMENT, connection_id TEXT NOT NULL REFERENCES provider_connections(id), body TEXT NOT NULL);
+CREATE TABLE provider_reservations(resource TEXT PRIMARY KEY, connection_id TEXT NOT NULL REFERENCES provider_connections(id));
+CREATE TABLE memory_records(project_id TEXT NOT NULL, id TEXT NOT NULL, namespace TEXT NOT NULL, status TEXT NOT NULL, proposal_hash TEXT NOT NULL, body TEXT NOT NULL, PRIMARY KEY(project_id, id));
+CREATE VIRTUAL TABLE memory_text USING fts5(content);
+CREATE TABLE work_graphs(id TEXT PRIMARY KEY, project_id TEXT NOT NULL, body TEXT NOT NULL);
+CREATE TABLE work_events(sequence INTEGER PRIMARY KEY AUTOINCREMENT, graph_id TEXT NOT NULL REFERENCES work_graphs(id), kind TEXT NOT NULL, payload TEXT NOT NULL);
+CREATE TABLE lesson_nodes(project_id TEXT NOT NULL, id TEXT NOT NULL, kind TEXT NOT NULL, body TEXT NOT NULL, PRIMARY KEY(project_id, id));
+CREATE TABLE lesson_edges(project_id TEXT NOT NULL, from_id TEXT NOT NULL, to_id TEXT NOT NULL, relation TEXT NOT NULL, count INTEGER NOT NULL, first_at INTEGER NOT NULL, last_at INTEGER NOT NULL, PRIMARY KEY(project_id, from_id, to_id, relation));
+CREATE VIRTUAL TABLE lesson_text USING fts5(text);
+PRAGMA user_version=5;

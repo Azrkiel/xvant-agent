@@ -3,7 +3,10 @@ import { join } from 'node:path';
 import { WorkerSupervisor } from '../../../packages/supervisor/src/index.ts';
 import type { RunInterruption } from '../../../packages/storage/src/work-graphs.ts';
 import type { Store } from '../../../packages/storage/src/store.ts';
-import { createWorktree } from '../../../packages/storage/src/git-workspace.ts';
+import {
+  contractGitResult,
+  createWorktree,
+} from '../../../packages/storage/src/git-workspace.ts';
 import { IntegrationBranch } from '../../../packages/storage/src/integration.ts';
 import {
   extractJson,
@@ -19,6 +22,11 @@ import {
 } from '../../../packages/core/src/router.ts';
 import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
 import { RunLessons, type LessonStats } from './lessons.ts';
+import {
+  type CompletionObservation,
+  sourcedReportSchema,
+} from '../../../packages/contracts/src/project.ts';
+import { reportRevision } from '../../../packages/policy/src/project.ts';
 
 export interface Check {
   executable: string;
@@ -205,7 +213,74 @@ const signature = (text: string) =>
 /** Names the orchestration behaviour in benchmark records; bumped when it changes. Version 2 added the repair after a rejecting review. */
 export const ORCHESTRATION_VERSION = '2';
 
+type ContractOutcome = CompletionObservation['outcome'];
+type ObservedOutcome =
+  | Extract<ContractOutcome, { status: 'failed' | 'unknown' }>
+  | Omit<
+      Extract<ContractOutcome, { status: 'report' }>,
+      'repository' | 'baseRevision' | 'revision' | 'changedPaths'
+    >
+  | Omit<
+      Extract<ContractOutcome, { status: 'candidate' }>,
+      'repository' | 'baseRevision' | 'changedPaths'
+    >;
+
 export class Orchestrator {
+  /**
+   * Host-only completion entry point. Receipts come from trusted verification
+   * and review adapters. Derive the output identity and path evidence here.
+   */
+  static observeContractResult(
+    store: Store,
+    input: {
+      commandId: string;
+      taskId: string;
+      expectedVersion: number;
+    } & Omit<CompletionObservation, 'outcome'> & { outcome: ObservedOutcome },
+  ) {
+    const { task } = store.contracts.getTask(input.taskId).record;
+    const { outcome } = input;
+    let observed: CompletionObservation['outcome'];
+    if (outcome.status === 'unknown' || outcome.status === 'failed') {
+      observed = outcome;
+    } else {
+      const repository = task.authority.scope.repository;
+      const baseRevision = task.baseRevision;
+      const { producers, provider } = outcome;
+      const result = { repository, baseRevision, producers, provider };
+      if (outcome.status === 'report') {
+        const report = sourcedReportSchema.parse(outcome.report);
+        observed = {
+          ...result,
+          status: 'report',
+          report,
+          revision: reportRevision(repository, baseRevision, report),
+          changedPaths: contractGitResult(repository, baseRevision, {
+            sources: report.sources.map(({ path }) => path),
+          }),
+        };
+      } else {
+        observed = {
+          ...result,
+          status: 'candidate',
+          revision: outcome.revision,
+          changedPaths: contractGitResult(repository, baseRevision, outcome),
+        };
+      }
+    }
+    return store.contracts.recordObservation(
+      input.commandId,
+      input.taskId,
+      input.expectedVersion,
+      {
+        attemptId: input.attemptId,
+        outcome: observed,
+        verification: input.verification,
+        review: input.review,
+      },
+    );
+  }
+
   readonly #store: Store;
   readonly #runner: TurnRunner;
   readonly #workers: WorkerSpec[];

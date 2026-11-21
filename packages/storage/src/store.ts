@@ -22,6 +22,10 @@ import { MemoryRecords, memoryMigration } from './memory.ts';
 import { WorkGraphs, workGraphMigration } from './work-graphs.ts';
 import { LessonGraph, lessonMigration } from './lessons.ts';
 import {
+  ProjectContracts,
+  projectContractsMigration,
+} from './project-contracts.ts';
+import {
   nativeAcceptanceSchema,
   nativeEvidenceSchema,
 } from '../../contracts/src/native-evidence.ts';
@@ -110,7 +114,7 @@ function canonical(value: unknown): string {
   return json(value);
 }
 /** The newest schema this code writes; a database beyond it is refused. */
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 /** Observe one committed snapshot, including while another process owns the controller. */
 export function inspectWorkGraphs<T>(
@@ -143,6 +147,7 @@ export class Store {
   readonly memory: MemoryRecords;
   readonly graphs: WorkGraphs;
   readonly lessons: LessonGraph;
+  readonly contracts: ProjectContracts;
   readonly #db: Database.Database;
   readonly #owner: string;
   readonly #now: () => number;
@@ -176,6 +181,7 @@ export class Store {
         { version: 3, sql: memoryMigration },
         { version: 4, sql: workGraphMigration },
         { version: 5, sql: lessonMigration },
+        { version: 6, sql: projectContractsMigration },
         ...(options.migrations ?? []),
       ];
       if (this.schemaVersion() > migrations.at(-1)!.version)
@@ -217,6 +223,11 @@ export class Store {
       this.#db.close();
       throw error;
     }
+    this.contracts = new ProjectContracts(this.#db, {
+      command: (project, kind, key, input, fn) =>
+        this.#command(project, kind, key, input, fn),
+      snapshot: (fn) => this.#db.transaction(fn)(),
+    });
     this.lessons = new LessonGraph(this.#db, {
       transaction: (fn) => this.#transaction(fn),
       now: () => this.#now(),

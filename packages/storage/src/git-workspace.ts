@@ -1,3 +1,4 @@
+import { isUtf8 } from 'node:buffer';
 import { spawnSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import { realpathSync, rmSync } from 'node:fs';
@@ -143,4 +144,78 @@ export function captureGitWorkspace(
     artifactHashes: [...new Set([...hashes, artifactSetHash])].sort(),
     workspaceRootHash: createHash('sha256').update(absolute).digest('hex'),
   };
+}
+
+/** Observe the exact Git objects for a contract result in its authorized checkout. */
+export function contractGitResult(
+  repository: string,
+  baseCommit: string,
+  candidate: { revision: string } | { sources: readonly string[] },
+): string[] {
+  if (
+    !isAbsolute(repository) ||
+    realpathSync(safePath(repository)) !== repository
+  )
+    fail('UNSAFE_PATH');
+
+  const read = (args: string[]) =>
+    git(repository, args, { GIT_NO_REPLACE_OBJECTS: '1' });
+  const verify = (revision: string) => {
+    if (
+      !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(revision) ||
+      read(['rev-parse', '--verify', revision + '^{commit}'])
+        .toString()
+        .trim() !== revision
+    )
+      fail('INVALID_INPUT');
+  };
+  if (
+    realpathSync(read(['rev-parse', '--show-toplevel']).toString().trim()) !==
+    repository
+  )
+    fail('UNSAFE_PATH');
+  verify(baseCommit);
+  if ('sources' in candidate) {
+    if (
+      read(['rev-parse', 'HEAD']).toString().trim() !== baseCommit ||
+      read([
+        'status',
+        '--porcelain=v1',
+        '-z',
+        '--untracked-files=all',
+        '--ignore-submodules=none',
+      ]).length
+    )
+      fail('REPORT_CODE_CHANGED');
+    for (const path of candidate.sources) {
+      if (
+        read(['cat-file', '-t', baseCommit + ':' + path])
+          .toString()
+          .trim() !== 'blob'
+      )
+        fail('INVALID_SOURCE');
+    }
+    return [];
+  }
+  verify(candidate.revision);
+  read(['merge-base', '--is-ancestor', baseCommit, candidate.revision]);
+  // Include paths from all introduced commits, even edits later reverted.
+  const paths = read([
+    'log',
+    '--format=',
+    '--no-notes',
+    '--no-show-signature',
+    '--name-only',
+    '--no-renames',
+    '--no-ext-diff',
+    '--no-textconv',
+    '--ignore-submodules=none',
+    '-m',
+    '-z',
+    baseCommit + '..' + candidate.revision,
+  ]);
+  if (!isUtf8(paths)) fail('INVALID_INPUT');
+  return [
+    ...new Set(paths.toString('utf8').split('\0').filter(Boolean)),
+  ].sort();
 }
