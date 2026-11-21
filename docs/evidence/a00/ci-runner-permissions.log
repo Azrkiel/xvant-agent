@@ -1,0 +1,19 @@
+2026-11-13T04:43:24.6463247Z Version: 20261028.624
+2026-11-13T04:43:24.6467541Z Ubuntu
+2026-11-13T04:43:24.6467856Z 24.04.5
+2026-11-13T04:43:24.6469419Z Image: ubuntu-24.04
+2026-11-13T04:43:24.6469757Z Version: 20261101.360.1
+2026-11-13T04:43:24.6470554Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261101.360/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-13T04:43:24.6472869Z ##[group]GITHUB_TOKEN Permissions
+2026-11-13T04:43:24.6474274Z Contents: read
+2026-11-13T04:43:24.6474623Z Metadata: read
+2026-11-13T04:43:25.3643746Z Complete job name: Offline / ubuntu-24.04
+2026-11-13T04:43:34.8574283Z OpenSSH_9.6p1 Ubuntu-3ubuntu13.20, OpenSSL 3.0.13 30 Jan 2024
+2026-11-13T04:43:36.9512382Z Get:6 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+2026-11-13T04:43:37.0194999Z Get:7 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [767 kB]
+2026-11-13T04:43:37.0351832Z Get:8 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [697 kB]
+2026-11-13T04:43:37.0403000Z Get:9 https://packages.microsoft.com/ubuntu/24.04/prod noble/main armhf Packages [12.6 kB]
+2026-11-13T04:43:44.3875368Z Hit:6 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease
+2026-11-13T04:43:45.6807118Z libdrm2 is already the newest version (2.4.125-1ubuntu0.1~24.04.2).
+2026-11-13T04:43:45.6807840Z libgbm1 is already the newest version (25.2.8-0ubuntu0.24.04.4).
+2026-11-13T04:43:45.6818018Z fonts-noto-color-emoji is already the newest version (2.047-0ubuntu0.24.04.1).

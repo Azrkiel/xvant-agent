@@ -1,6 +1,12 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import {
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  existsSync,
+  rmSync,
+} from 'node:fs';
 import { dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hostname, platform, release } from 'node:os';
@@ -29,6 +35,14 @@ const expectedSuites = phaseSuites(phase);
 const artifacts = resolve(root, '.artifacts');
 mkdirSync(artifacts, { recursive: true });
 mkdirSync(resolve(root, 'docs/evidence'), { recursive: true });
+// A failed test process may never emit JSON or coverage. Never archive a
+// previous invocation's results as evidence about this one.
+for (const path of [
+  '.artifacts/tests.json',
+  'coverage/coverage-summary.json',
+  '.artifacts/source-manifest.json',
+])
+  rmSync(resolve(root, path), { force: true });
 const hash = (contents) => createHash('sha256').update(contents).digest('hex');
 const git = (args) =>
   spawnSync('git', args, {
@@ -63,6 +77,20 @@ const report = {
   generatedAt: new Date().toISOString(),
   sourceRevision: git(['rev-parse', '--verify', 'HEAD']).stdout.trim() || null,
   branch: git(['branch', '--show-current']).stdout.trim(),
+  ci:
+    process.env.GITHUB_ACTIONS === 'true'
+      ? {
+          repository: process.env.GITHUB_REPOSITORY,
+          runId: process.env.GITHUB_RUN_ID,
+          runAttempt: process.env.GITHUB_RUN_ATTEMPT,
+          event: process.env.GITHUB_EVENT_NAME,
+          eventRevision: process.env.GITHUB_SHA,
+          expectedRevision: process.env.XVANT_EXPECTED_REVISION,
+          job: process.env.GITHUB_JOB,
+          runnerOS: process.env.RUNNER_OS,
+          runnerArch: process.env.RUNNER_ARCH,
+        }
+      : null,
   dirtyTreeHash: null,
   sourceHashScope:
     'All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.',
@@ -98,7 +126,7 @@ const report = {
     'This report qualifies only its recorded host and platform; other CI jobs need their own reports.',
     'Simulation fixtures do not qualify provider protocols, subscriptions, or real coding ability.',
     'Process supervision is trusted-local only. No hostile-code, filesystem, network, or escaped-descendant containment is qualified.',
-    'Linux code and CI are configured but require their own observed run.',
+    'Linux and Windows qualification are independent; this receipt is not a live-provider or unattended-operation qualification.',
   ],
   rollbackProcedure:
     'Keep the branch unmerged; no external service or data migration was changed.',
@@ -135,6 +163,11 @@ async function check(id, args) {
 try {
   const before = snapshot();
   report.dirtyTreeHash = before.sha256;
+  // Preserve source identity even when tests/discovery fail before runtime.
+  writeFileSync(
+    resolve(artifacts, 'source-manifest.json'),
+    JSON.stringify(before, null, 2) + '\n',
+  );
   const pinned = readFileSync(resolve(root, '.node-version'), 'utf8').trim();
   if (process.version !== 'v' + pinned)
     throw new Error('Use pinned Node ' + pinned + '; found ' + process.version);
@@ -192,16 +225,6 @@ try {
         runtime.artifactVerified !== true)
   )
     throw new Error('Demo failed to reach verified simulated readiness');
-  for (const path of [
-    '.artifacts/tests.json',
-    'coverage/coverage-summary.json',
-  ]) {
-    if (existsSync(resolve(root, path)))
-      report.artifacts.push({
-        path,
-        sha256: hash(readFileSync(resolve(root, path))),
-      });
-  }
   if (Number(phase) >= 3) {
     await check('provider-fixtures', [
       'scripts/probe.mjs',
@@ -529,14 +552,6 @@ try {
   const after = snapshot();
   if (after.sha256 !== before.sha256)
     throw new Error('Source changed during verification');
-  writeFileSync(
-    resolve(artifacts, 'source-manifest.json'),
-    JSON.stringify(before, null, 2) + '\n',
-  );
-  report.artifacts.push({
-    path: '.artifacts/source-manifest.json',
-    sha256: hash(readFileSync(resolve(artifacts, 'source-manifest.json'))),
-  });
   if (
     report.checks.every((check) => check.exitCode === 0) &&
     tests.observedCount
@@ -545,6 +560,18 @@ try {
 } catch (error) {
   report.failure = error instanceof Error ? error.message : 'Gate failed';
   console.error(report.failure);
+}
+// Failed runs need structured diagnostics too, not just the console tail.
+for (const path of [
+  '.artifacts/tests.json',
+  'coverage/coverage-summary.json',
+  '.artifacts/source-manifest.json',
+]) {
+  if (existsSync(resolve(root, path)))
+    report.artifacts.push({
+      path,
+      sha256: hash(readFileSync(resolve(root, path))),
+    });
 }
 const receiptFile = resolve(root, 'docs/evidence/' + gateId + '.json');
 writeFileSync(receiptFile, JSON.stringify(report, null, 2) + '\n');

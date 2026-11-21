@@ -1,0 +1,500 @@
+{
+  "gateId": "G10",
+  "status": "failed",
+  "generatedAt": "2026-11-13T04:43:57.475Z",
+  "sourceRevision": "ec49dda8b03cfcf1a21431bc10f91e106ef4f440",
+  "branch": "",
+  "ci": {
+    "repository": "Azrkiel/xvant-agent",
+    "runId": "43367338498",
+    "runAttempt": "1",
+    "event": "push",
+    "eventRevision": "ec49dda8b03cfcf1a21431bc10f91e106ef4f440",
+    "expectedRevision": "ec49dda8b03cfcf1a21431bc10f91e106ef4f440",
+    "job": "offline",
+    "runnerOS": "Linux",
+    "runnerArch": "X64"
+  },
+  "dirtyTreeHash": "b67dfa2724f4cea5445bbe558199f8d0748ef5f48cb417e9942d55fe40a3674e",
+  "sourceHashScope": "All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.",
+  "operatingSystem": "linux 7.0.0-1017-azure",
+  "executionHost": "runnervm7aw5e",
+  "nodeVersion": "v24.21.0",
+  "npmVersion": "npm/12.0.2 node/v24.21.0 linux x64 workspaces/false ci/github-actions/dotcom-hosted",
+  "gitVersion": "git version 2.56.0",
+  "classification": "offline",
+  "qualificationScope": "offline-release",
+  "runtimeKind": "simulated",
+  "liveProvidersTested": [],
+  "checks": [
+    {
+      "id": "typecheck",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:43:57.506Z",
+      "finishedAt": "2026-11-13T04:44:01.484Z",
+      "exitCode": 0
+    },
+    {
+      "id": "lint",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "node_modules/eslint/bin/eslint.js",
+        "packages",
+        "apps",
+        "scripts",
+        "tests"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:44:01.485Z",
+      "finishedAt": "2026-11-13T04:44:04.341Z",
+      "exitCode": 0
+    },
+    {
+      "id": "format",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "."
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:44:04.342Z",
+      "finishedAt": "2026-11-13T04:44:07.826Z",
+      "exitCode": 0
+    },
+    {
+      "id": "tests",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--coverage",
+        "--reporter=default",
+        "--reporter=json",
+        "--outputFile=.artifacts/tests.json"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:44:07.826Z",
+      "finishedAt": "2026-11-13T04:45:55.112Z",
+      "exitCode": 1
+    },
+    {
+      "id": "runtime",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "apps/controller/src/durable-demo.ts"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:55.113Z",
+      "finishedAt": "2026-11-13T04:45:55.429Z",
+      "exitCode": 0
+    },
+    {
+      "id": "provider-fixtures",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/probe.mjs",
+        "--offline",
+        "--runtime",
+        "all"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:55.429Z",
+      "finishedAt": "2026-11-13T04:45:55.546Z",
+      "exitCode": 0
+    },
+    {
+      "id": "controller-roster",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/roster-fixture.mjs"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:55.546Z",
+      "finishedAt": "2026-11-13T04:45:56.342Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-http-permission",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/opencode-http-fixture.mjs",
+        "permission"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:56.342Z",
+      "finishedAt": "2026-11-13T04:45:56.641Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-http-interrupt",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/opencode-http-fixture.mjs",
+        "interrupt"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:56.641Z",
+      "finishedAt": "2026-11-13T04:45:56.917Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-http-no-auth",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/opencode-http-fixture.mjs",
+        "no-auth"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:56.917Z",
+      "finishedAt": "2026-11-13T04:45:57.162Z",
+      "exitCode": 0
+    },
+    {
+      "id": "codex-transport",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/codex-fixture.mjs",
+        "success"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:57.162Z",
+      "finishedAt": "2026-11-13T04:45:57.389Z",
+      "exitCode": 0
+    },
+    {
+      "id": "claude-native-stream",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/native-fixture.mjs",
+        "claude",
+        "permission"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:57.389Z",
+      "finishedAt": "2026-11-13T04:45:57.622Z",
+      "exitCode": 0
+    },
+    {
+      "id": "claude-native-controller",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "claude"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:57.622Z",
+      "finishedAt": "2026-11-13T04:45:57.958Z",
+      "exitCode": 0
+    },
+    {
+      "id": "claude-native-interrupt",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "claude",
+        "interrupt"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:57.958Z",
+      "finishedAt": "2026-11-13T04:45:58.267Z",
+      "exitCode": 0
+    },
+    {
+      "id": "claude-native-quota",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "claude",
+        "quota-error"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:58.267Z",
+      "finishedAt": "2026-11-13T04:45:58.574Z",
+      "exitCode": 0
+    },
+    {
+      "id": "claude-create-permission",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "claude",
+        "permission",
+        "create"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:58.574Z",
+      "finishedAt": "2026-11-13T04:45:58.913Z",
+      "exitCode": 0
+    },
+    {
+      "id": "claude-create-interrupt",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "claude",
+        "interrupt",
+        "create"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:58.913Z",
+      "finishedAt": "2026-11-13T04:45:59.228Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-native-stream",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/native-fixture.mjs",
+        "opencode",
+        "permission"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:59.228Z",
+      "finishedAt": "2026-11-13T04:45:59.459Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-native-controller",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "opencode"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:59.459Z",
+      "finishedAt": "2026-11-13T04:45:59.784Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-native-interrupt",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "opencode",
+        "interrupt"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:45:59.784Z",
+      "finishedAt": "2026-11-13T04:46:00.081Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-native-quota",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "opencode",
+        "quota-error"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:46:00.081Z",
+      "finishedAt": "2026-11-13T04:46:00.374Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-create-permission",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "opencode",
+        "permission",
+        "create"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:46:00.374Z",
+      "finishedAt": "2026-11-13T04:46:00.708Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-create-interrupt",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "opencode",
+        "interrupt",
+        "create"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:46:00.708Z",
+      "finishedAt": "2026-11-13T04:46:01.010Z",
+      "exitCode": 0
+    },
+    {
+      "id": "handoff-fixture",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/handoff-fixture.mjs"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:46:01.010Z",
+      "finishedAt": "2026-11-13T04:46:01.347Z",
+      "exitCode": 0
+    },
+    {
+      "id": "tools-fixture",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/tools-fixture.mjs"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:46:01.347Z",
+      "finishedAt": "2026-11-13T04:46:01.598Z",
+      "exitCode": 0
+    },
+    {
+      "id": "compatibility-report",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/compatibility-report.mjs"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:46:01.598Z",
+      "finishedAt": "2026-11-13T04:46:01.750Z",
+      "exitCode": 0
+    },
+    {
+      "id": "browser-fixture",
+      "command": [
+        "/opt/hostedtoolcache/node/24.21.0/x64/bin/node",
+        "scripts/browser-fixture.mjs"
+      ],
+      "workingDirectory": "/home/runner/work/xvant-agent/xvant-agent",
+      "startedAt": "2026-11-13T04:46:01.750Z",
+      "finishedAt": "2026-11-13T04:46:01.908Z",
+      "exitCode": 2
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".artifacts/typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".artifacts/lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".artifacts/format.log",
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    },
+    {
+      "path": ".artifacts/tests.log",
+      "sha256": "3331bdbcb7b390d8cfff9049931f0acf1f09b4bf3992bcd8ac79c44700f4a143"
+    },
+    {
+      "path": ".artifacts/runtime.log",
+      "sha256": "755e552194933b546cb44ad3fbc23b45b96842302b774b8e2fce07d49e89ad4c"
+    },
+    {
+      "path": ".artifacts/provider-fixtures.log",
+      "sha256": "bed319a96216d716f6a5c0cf98f77fdd52f5ace2888544fa7bb0b514493c5030"
+    },
+    {
+      "path": ".artifacts/controller-roster.log",
+      "sha256": "6e66aeebf0f7a909ec769b79a070b32fdbd055e9dcb7665496d71a8532da18d2"
+    },
+    {
+      "path": ".artifacts/opencode-http-permission.log",
+      "sha256": "fc021bf766a3fd34a8193308680745846139d1282ecb824fc1938d8e230c503e"
+    },
+    {
+      "path": ".artifacts/opencode-http-interrupt.log",
+      "sha256": "de2eb35f7a1b57a8141b4171fda7543bda20aaa4a370f76ef2aa38bc1815ae48"
+    },
+    {
+      "path": ".artifacts/opencode-http-no-auth.log",
+      "sha256": "31bb25f0690ed48231c8096dcabc226321c5d4fbfc95385379b46c1a88d546ed"
+    },
+    {
+      "path": ".artifacts/codex-transport.log",
+      "sha256": "6c50e061191a1287a4dfc71f851681d36a4f794d7f19cd8516213cecbafb59dc"
+    },
+    {
+      "path": ".artifacts/claude-native-stream.log",
+      "sha256": "fd1d3bf77046466ae498086c2e84a08af9b0c114cd57f289db5ff7cf348ffcd9"
+    },
+    {
+      "path": ".artifacts/claude-native-controller.log",
+      "sha256": "328e4c78c0691e1b486dade21e94080e05d95e555e701d7cb589426df07de3ba"
+    },
+    {
+      "path": ".artifacts/claude-native-interrupt.log",
+      "sha256": "5e11ab33ecf29eb9465c0d9e18980c7781cae6fb00894b74c16b87f20a62afeb"
+    },
+    {
+      "path": ".artifacts/claude-native-quota.log",
+      "sha256": "8158e33ae4a1c85340df743eceff0c82ea7457e2ecd33fa77d1faa64a2797337"
+    },
+    {
+      "path": ".artifacts/claude-create-permission.log",
+      "sha256": "82545343fb6cebd25a8ca67ac971a023b81299198040ee94f5fee9cbe17a0730"
+    },
+    {
+      "path": ".artifacts/claude-create-interrupt.log",
+      "sha256": "209649cd68fac6e3709dd7ff2b8d3c1b487a291e6f06eabc91349f47594f21e0"
+    },
+    {
+      "path": ".artifacts/opencode-native-stream.log",
+      "sha256": "fa923d0a0b0c3c55d8c33ae8dbdd8863e07c1b468eb49a67e7d7ef37aa393c72"
+    },
+    {
+      "path": ".artifacts/opencode-native-controller.log",
+      "sha256": "0a29b143e9ad2487980a77725d49b5b63aa2b661b5ab491a1861d80ddcb0f19c"
+    },
+    {
+      "path": ".artifacts/opencode-native-interrupt.log",
+      "sha256": "cf6b2e962037476547e7074a8a52abf4dc1e41fca6d11027d35992732ba2165c"
+    },
+    {
+      "path": ".artifacts/opencode-native-quota.log",
+      "sha256": "c162b90727ce455714dd0c5f09cefb018554c8062d08664dd5380cb91fcb2f92"
+    },
+    {
+      "path": ".artifacts/opencode-create-permission.log",
+      "sha256": "a5058266dd3a001aaa77baaebca42fc2958832aff7f3175c35677c2a8d31976f"
+    },
+    {
+      "path": ".artifacts/opencode-create-interrupt.log",
+      "sha256": "a6b49d132558b44fb223f7c1180c0e38cee4cbb9e884e142394a15707de6ad6f"
+    },
+    {
+      "path": ".artifacts/handoff-fixture.log",
+      "sha256": "0378316f0034acff5c5a54881619f1bf2591fa8f9af9d1f3bb3c3023c9e69d86"
+    },
+    {
+      "path": ".artifacts/tools-fixture.log",
+      "sha256": "39d7aac1903c0c9621057ea8d68c328a26ecc0efeea6973b8edc0d45ae63a4aa"
+    },
+    {
+      "path": ".artifacts/compatibility-report.log",
+      "sha256": "bd62f98f96601da16576b91557f2bb2811f46278c92b68400229b514994817c5"
+    },
+    {
+      "path": ".artifacts/browser-fixture.log",
+      "sha256": "9c8dd70f8b39ed558cc20fcaa3b949ce56590a0d8bcedbe30159bb54c23f91c2"
+    },
+    {
+      "path": ".artifacts/tests.json",
+      "sha256": "558e601bc3529cdd57f694f09eb4c9b909d48f81cc480dc34b699fe0bf35a66c"
+    },
+    {
+      "path": ".artifacts/source-manifest.json",
+      "sha256": "bb1888be38879e714998d6baccb9fe8878d4c545695866fc572f70cac9248065"
+    }
+  ],
+  "limitations": [
+    "This report qualifies only its recorded host and platform; other CI jobs need their own reports.",
+    "Simulation fixtures do not qualify provider protocols, subscriptions, or real coding ability.",
+    "Process supervision is trusted-local only. No hostile-code, filesystem, network, or escaped-descendant containment is qualified.",
+    "Linux and Windows qualification are independent; this receipt is not a live-provider or unattended-operation qualification."
+  ],
+  "rollbackProcedure": "Keep the branch unmerged; no external service or data migration was changed.",
+  "lastKnownGoodVersion": null,
+  "failure": "Browser fixture failed"
+}

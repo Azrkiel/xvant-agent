@@ -1,0 +1,35 @@
+npm notice run xvant@0.1.0 gate
+npm notice run node scripts/gate.mjs --phase 10 --offline
+typecheck: passed
+lint: passed
+format: passed
+tests: passed
+runtime: passed
+provider-fixtures: passed
+controller-roster: passed
+opencode-http-permission: passed
+opencode-http-interrupt: passed
+opencode-http-no-auth: passed
+codex-transport: passed
+claude-native-stream: passed
+claude-native-controller: passed
+claude-native-interrupt: passed
+claude-native-quota: passed
+claude-create-permission: passed
+claude-create-interrupt: passed
+opencode-native-stream: passed
+opencode-native-controller: passed
+opencode-native-interrupt: passed
+opencode-native-quota: passed
+opencode-create-permission: passed
+opencode-create-interrupt: passed
+handoff-fixture: passed
+tools-fixture: passed
+compatibility-report: passed
+browser-fixture: passed
+orchestration-fixture: passed
+native-loop-fixture: passed
+benchmark-fixture: passed
+release-audit: passed
+G10: passed
+evidence bundle: G10-20261113T052113363Z-e2c5a5bfd0bb complete

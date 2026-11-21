@@ -1,0 +1,26 @@
+{
+  "platform": "linux",
+  "tempDirectory": "/home/runner/work/_temp/xvant-fixtures",
+  "inheritedGitDir": false,
+  "inheritedGitWorkTree": false,
+  "tree": {
+    "registered": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-RtznFF/tree",
+    "real": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-RtznFF/tree",
+    "native": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-RtznFF/tree",
+    "gitTop": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-RtznFF/tree",
+    "topReal": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-RtznFF/tree",
+    "topNative": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-RtznFF/tree"
+  },
+  "repositoryCommon": {
+    "raw": ".git",
+    "real": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-RtznFF/repo/.git",
+    "native": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-RtznFF/repo/.git"
+  },
+  "worktreeCommon": {
+    "raw": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-RtznFF/repo/.git",
+    "real": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-RtznFF/repo/.git",
+    "native": "/home/runner/work/_temp/xvant-fixtures/xvant-preflight-RtznFF/repo/.git"
+  },
+  "repositoryScope": "repo_7a84b19eba8ee62a",
+  "worktreeScope": "repo_7a84b19eba8ee62a"
+}

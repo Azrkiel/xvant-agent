@@ -1,0 +1,31 @@
+
+ RUN  v5.0.1 /workspace/work/xvant-agent
+
+ ❯ packages/tools/src/browser.test.ts (11 tests | 1 failed | 10 skipped) 244ms
+   ❯ browser.inspect (11)
+     × waits for a page registered after the DevTools port without relaunching 242ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/tools/src/browser.test.ts > browser.inspect > waits for a page registered after the DevTools port without relaunching
+AssertionError: expected 'failed' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "failed"
+
+ ❯ packages/tools/src/browser.test.ts:88:28
+     86|       5000,
+     87|     );
+     88|     expect(receipt.status).toBe('succeeded');
+       |                            ^
+     89|     expect(supervisor.activeCount).toBe(0);
+     90|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 skipped (11)
+   Start at  00:16:08
+   Duration  805ms (transform 42%, tests 36%, import 21%, worker 1%)
+

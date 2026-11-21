@@ -205,3 +205,12 @@ it('Phase 2 gate requires storage, process, auth, recovery and service suites', 
     Object.values(phaseSuites('01')).reduce((a, b) => a + b, 0),
   ).toBeGreaterThanOrEqual(110);
 });
+
+import { execFileSync } from 'node:child_process';
+it('requires every checked-in test suite in the full offline gate', () => {
+  const paths = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+    .split('\0')
+    .filter((path) => /^(packages|apps|tests)\/.*\.test\.ts$/.test(path));
+  const suites = phaseSuites('10');
+  for (const path of paths) expect(suites[path], path).toBeGreaterThan(0);
+});

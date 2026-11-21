@@ -4,3 +4,6 @@
 
 # Evidence bundles are verified by exact byte hashes; never convert line endings.
 docs/evidence/runs/** -text
+docs/evidence/a00/** -text
+# Raw terminal logs include carriage-return progress output; preserve as artifacts.
+docs/evidence/a00/*.log -diff

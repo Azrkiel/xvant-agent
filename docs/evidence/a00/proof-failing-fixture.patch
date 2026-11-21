@@ -1,0 +1,33 @@
+commit 636c007f1640f86b6d48496d51bd6ee165aa5111
+Author:     Azrkiel <azrkiel@gmail.com>
+AuthorDate: Thu Nov 12 23:43:17 2026 -0500
+Commit:     Azrkiel <azrkiel@gmail.com>
+CommitDate: Thu Nov 12 23:43:17 2026 -0500
+
+    test(a00-proof): deliberately fail a fixture in Linux CI
+
+diff --git a/.github/workflows/offline.yml b/.github/workflows/offline.yml
+index 79d287b..e4385d5 100644
+--- a/.github/workflows/offline.yml
++++ b/.github/workflows/offline.yml
+@@ -20,7 +20,7 @@ jobs:
+     strategy:
+       fail-fast: false
+       matrix:
+-        os: [ubuntu-24.04, windows-2025]
++        os: [ubuntu-24.04]
+     defaults:
+       run:
+         shell: bash
+diff --git a/tests/browser-path.test.ts b/tests/browser-path.test.ts
+index 256bf6e..78d7881 100644
+--- a/tests/browser-path.test.ts
++++ b/tests/browser-path.test.ts
+@@ -20,3 +20,7 @@ it('retains system discovery when there is no explicit registration', () => {
+     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+   );
+ });
++
++it('A00 controlled failing fixture remains a real failure', () => {
++  expect('controlled failure').toBe('passed');
++});

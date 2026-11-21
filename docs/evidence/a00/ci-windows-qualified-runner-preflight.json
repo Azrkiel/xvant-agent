@@ -1,0 +1,26 @@
+{
+  "platform": "win32",
+  "tempDirectory": "D:\\a\\_temp\\xvant-fixtures",
+  "inheritedGitDir": false,
+  "inheritedGitWorkTree": false,
+  "tree": {
+    "registered": "D:\\a\\_temp\\xvant-fixtures\\xvant-preflight-eGqJya\\tree",
+    "real": "D:\\a\\_temp\\xvant-fixtures\\xvant-preflight-eGqJya\\tree",
+    "native": "D:\\a\\_temp\\xvant-fixtures\\xvant-preflight-eGqJya\\tree",
+    "gitTop": "D:/a/_temp/xvant-fixtures/xvant-preflight-eGqJya/tree",
+    "topReal": "D:\\a\\_temp\\xvant-fixtures\\xvant-preflight-eGqJya\\tree",
+    "topNative": "D:\\a\\_temp\\xvant-fixtures\\xvant-preflight-eGqJya\\tree"
+  },
+  "repositoryCommon": {
+    "raw": ".git",
+    "real": "D:\\a\\_temp\\xvant-fixtures\\xvant-preflight-eGqJya\\repo\\.git",
+    "native": "D:\\a\\_temp\\xvant-fixtures\\xvant-preflight-eGqJya\\repo\\.git"
+  },
+  "worktreeCommon": {
+    "raw": "D:/a/_temp/xvant-fixtures/xvant-preflight-eGqJya/repo/.git",
+    "real": "D:\\a\\_temp\\xvant-fixtures\\xvant-preflight-eGqJya\\repo\\.git",
+    "native": "D:\\a\\_temp\\xvant-fixtures\\xvant-preflight-eGqJya\\repo\\.git"
+  },
+  "repositoryScope": "repo_aa47ab8b693d4abb",
+  "worktreeScope": "repo_aa47ab8b693d4abb"
+}

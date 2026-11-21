@@ -210,25 +210,57 @@ export function createBrowserTool(services: {
       try {
         const portFile = join(profile, 'DevToolsActivePort');
         const launchDeadline = Date.now() + launchTimeoutMs;
-        while (!existsSync(portFile)) {
+        let page: { type: string; webSocketDebuggerUrl: string } | undefined;
+        // ActivePort announces the endpoint, not that Chromium has registered
+        // its initial page. Wait for that readiness within the same launch
+        // deadline; never relaunch a failed browser or retry a navigation.
+        while (!page) {
           if (exited)
             throw new DomainError('TOOL_FAILED', 'Browser exited at launch');
           if (Date.now() > launchDeadline || signal.aborted)
             throw new DomainError('TIMEOUT', 'Browser did not start');
-          await delay(50);
+          if (!existsSync(portFile)) {
+            await delay(50);
+            continue;
+          }
+          const port = Number(readFileSync(portFile, 'utf8').split('\n')[0]);
+          if (!Number.isInteger(port) || port < 1 || port > 65535)
+            throw new DomainError('TOOL_FAILED', 'Invalid DevTools port');
+          let response: Response;
+          try {
+            response = await fetch(`http://127.0.0.1:${port}/json/list`, {
+              signal: AbortSignal.any([
+                signal,
+                AbortSignal.timeout(Math.max(1, launchDeadline - Date.now())),
+              ]),
+            });
+          } catch (error) {
+            // A published port can precede the listener accepting requests.
+            // Protocol/status/JSON errors below remain terminal failures.
+            if (!(error instanceof TypeError) && Date.now() < launchDeadline)
+              throw error;
+            await delay(50);
+            continue;
+          }
+          if (!response.ok)
+            throw new DomainError(
+              'TOOL_FAILED',
+              'DevTools target request failed',
+            );
+          const targets: unknown = await response.json();
+          if (!Array.isArray(targets))
+            throw new DomainError(
+              'TOOL_FAILED',
+              'Invalid DevTools target list',
+            );
+          page = targets.find(
+            (target) =>
+              target?.type === 'page' &&
+              typeof target.webSocketDebuggerUrl === 'string',
+          );
+          if (!page) await delay(50);
         }
-        await delay(50);
-        const port = Number(readFileSync(portFile, 'utf8').split('\n')[0]);
-        if (!Number.isInteger(port) || port < 1 || port > 65535)
-          throw new DomainError('TOOL_FAILED', 'Invalid DevTools port');
-        const targets = (await (
-          await fetch(`http://127.0.0.1:${port}/json/list`)
-        ).json()) as { type: string; webSocketDebuggerUrl?: string }[];
-        const page = targets.find(
-          (target) => target.type === 'page' && target.webSocketDebuggerUrl,
-        );
-        if (!page) throw new DomainError('TOOL_FAILED', 'No page target');
-        devtools = await DevTools.connect(page.webSocketDebuggerUrl!);
+        devtools = await DevTools.connect(page.webSocketDebuggerUrl);
         const tools = devtools;
         const blockedRequests: string[] = [];
         const consoleErrors: string[] = [];
