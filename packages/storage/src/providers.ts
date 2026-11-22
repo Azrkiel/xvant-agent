@@ -96,6 +96,7 @@ export interface ProviderEntry {
   frame?: string;
 }
 interface Host {
+  workflowOccupied: (resource: string, attempt: string) => boolean;
   transaction: <T>(fn: () => T) => T;
   generation: number;
   start: (spec: ProviderDispatch) => number;
@@ -193,6 +194,7 @@ export class ProviderJournal {
       ];
       for (const resource of resources)
         if (
+          this.host.workflowOccupied(resource, spec.attemptId) ||
           this.occupied(resource) ||
           this.db
             .prepare('SELECT resource FROM reservations WHERE resource=?')

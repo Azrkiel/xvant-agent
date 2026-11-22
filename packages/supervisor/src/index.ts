@@ -1,6 +1,10 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { join, isAbsolute } from 'node:path';
+import {
+  captureProcess,
+  type ProcessStartIdentity,
+} from './process-identity.ts';
 import { authorizeExecution } from '../../policy/src/index.ts';
 
 export interface RunIdentity {
@@ -21,12 +25,14 @@ export interface ProcessRequest {
   maxOutputBytes: number;
   userApprovedTrustedLocal: boolean;
   signal?: AbortSignal;
+  /** Host journal callback, called before this supervisor returns the child handle. */
+  onProcess?: ((identity: ProcessStartIdentity) => void) | undefined;
   /** Extra variables layered over the inherited environment (e.g. a per-launch secret). */
   env?: Readonly<Record<string, string>>;
-  /** Start with an empty environment before applying the launch variables. */
-  inheritEnv?: false;
   /** Pass args to the Windows command line unquoted (for cmd.exe /s /c). */
   windowsVerbatimArguments?: boolean;
+  /** Start with an empty environment before applying the launch variables. */
+  inheritEnv?: false;
   /** Inherited variables to remove, e.g. API keys that would change billing. */
   unsetEnv?: readonly string[];
   /**
@@ -237,6 +243,17 @@ export class WorkerSupervisor {
     });
     deadline = setTimeout(() => stop('timeout'), request.timeoutMs);
     signal?.addEventListener('abort', onAbort, { once: true });
+    if (request.onProcess && child.pid) {
+      const started = captureProcess(child.pid);
+      if (started) {
+        try {
+          request.onProcess(started);
+        } catch (error) {
+          stop('cancelled');
+          throw error;
+        }
+      }
+    }
     return {
       identity,
       result,

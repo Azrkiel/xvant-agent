@@ -12,6 +12,7 @@ import { LiveCodexController, type LiveEvent } from './codex-live.ts';
 import { LiveClaudeController } from './claude-live.ts';
 import { LiveOpenCodeController } from './opencode-live.ts';
 import type { RosterRuntime } from './live-roster.ts';
+import type { TurnExecution } from './workflow-recovery.ts';
 import type { WorkflowCheckpoint } from './workflow-checkpoint.ts';
 import type {
   TurnOutcome,
@@ -184,7 +185,10 @@ export class LiveTurnRunner implements TurnRunner {
       return undefined;
     }
   }
-  async run(request: TurnRequest): Promise<TurnOutcome> {
+  async run(
+    request: TurnRequest,
+    execution?: TurnExecution,
+  ): Promise<TurnOutcome> {
     const timeoutMs = Math.min(
       this.#timeoutMs,
       (request.deadlineAt ?? Infinity) - Date.now(),
@@ -201,7 +205,7 @@ export class LiveTurnRunner implements TurnRunner {
     if (!worker) throw new Error('NOT_FOUND');
     if (worker.runtimeKind === 'native-local') {
       if (!this.#native) throw new Error('RUNTIME_UNAVAILABLE');
-      return this.#native.run(request);
+      return this.#native.run(request, execution);
     }
     const runtime = this.#runtimes[worker.runtimeKind];
     if (!runtime) throw new Error('RUNTIME_UNAVAILABLE');
@@ -222,6 +226,7 @@ export class LiveTurnRunner implements TurnRunner {
       executable: runtime.executable,
       prefixArgs: runtime.prefixArgs ?? [],
       timeoutMs,
+      onProcess: execution?.onProcess,
       gitBases: { [workspaceId]: request.workspace.baseCommit },
       onEvent: (event: LiveEvent) =>
         this.#onEvent(request.alias, request.taskId, event),
@@ -230,7 +235,7 @@ export class LiveTurnRunner implements TurnRunner {
     const input = {
       connectionId: request.taskId,
       taskId: request.taskId,
-      attemptId: request.taskId + '-a1',
+      attemptId: execution?.attemptId ?? request.taskId + '-a1',
       workspaceId,
       expectedVersion: store.getTask(request.taskId).rowVersion,
       classification: 'live' as const,

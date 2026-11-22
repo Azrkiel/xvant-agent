@@ -87,6 +87,8 @@ const ERRORS = {
   INVALID_REPOSITORY: 'That folder is not a Git repository.',
   NO_RUNTIME: 'No supported runtime is installed and signed in.',
   UNKNOWN_REPOSITORY: 'XVANT has not worked in that repository.',
+  UNRESOLVED_WORKFLOW_ACTION:
+    'Recovery is blocked. See the action details for what to check.',
 };
 const explain = (error) =>
   ERRORS[error.message] ?? 'Request failed: ' + error.message;
@@ -323,6 +325,24 @@ function runDetail(root) {
     { 'aria-labelledby': 'run-title' },
     h('h2', { class: 'title', id: 'run-title', tabindex: '-1' }, s.objective),
     h('p', {}, badge(s.phase), ' ', s.reason ? h('span', {}, s.reason) : ''),
+    root.recovery?.length
+      ? h(
+          'ul',
+          { class: 'notice error', 'aria-label': 'Recovery details' },
+          root.recovery.map((entry) =>
+            h(
+              'li',
+              {},
+              h('code', {}, entry.slot),
+              ' (',
+              entry.attemptId,
+              ') ',
+              entry.detail,
+              entry.operatorAction ? ' ' + entry.operatorAction : '',
+            ),
+          ),
+        )
+      : null,
     s.integration
       ? h(
           'p',
@@ -338,7 +358,36 @@ function runDetail(root) {
     h(
       'div',
       { class: 'actions' },
-      active
+      root.resumable
+        ? h(
+            'button',
+            {
+              type: 'button',
+              onclick: async (event) => {
+                event.currentTarget.disabled = true;
+                try {
+                  const result = await api('/roots/' + root.id + '/resume', {
+                    method: 'POST',
+                    body: view.overview.daemon
+                      ? JSON.stringify({
+                          commandId: 'ui-' + crypto.randomUUID(),
+                        })
+                      : '{}',
+                  });
+                  announce(
+                    'Run is now: ' + (LABELS[result.phase] ?? result.phase),
+                  );
+                } catch (error) {
+                  announce(explain(error));
+                } finally {
+                  await openRun(root.id);
+                }
+              },
+            },
+            'Resume run',
+          )
+        : null,
+      active && !root.resumable
         ? h(
             'button',
             {
@@ -355,7 +404,9 @@ function runDetail(root) {
                   return;
                 await api('/roots/' + root.id + '/cancel', {
                   method: 'POST',
-                  body: '{}',
+                  body: view.overview.daemon
+                    ? JSON.stringify({ commandId: 'ui-' + crypto.randomUUID() })
+                    : '{}',
                 });
                 announce('Stopping the run.');
               },
@@ -388,6 +439,9 @@ function runDetail(root) {
                     method: 'POST',
                     body: JSON.stringify({
                       expectedVersion: root.rowVersion,
+                      ...(view.overview.daemon
+                        ? { commandId: 'ui-' + crypto.randomUUID() }
+                        : {}),
                       head,
                     }),
                   });
@@ -900,6 +954,25 @@ $('open-lessons').addEventListener('click', () =>
   openLessons().catch((error) => announce(explain(error))),
 );
 $('stop-all').addEventListener('click', async () => {
+  if (view.overview?.daemon) {
+    if (
+      await confirm(
+        'Drain the daemon?',
+        'Running work can finish. Intake and new dispatch pause until the daemon is continued.',
+        'Drain',
+      )
+    ) {
+      await api('/daemon/control', {
+        method: 'POST',
+        body: JSON.stringify({
+          commandId: 'ui-' + crypto.randomUUID(),
+          action: 'drain',
+        }),
+      });
+      announce('Daemon is draining.');
+    }
+    return;
+  }
   if (
     !(await confirm(
       'Stop all work?',
@@ -914,6 +987,7 @@ $('stop-all').addEventListener('click', async () => {
 try {
   await connect();
   await refreshOverview();
+  if (view.overview.daemon) $('stop-all').textContent = 'Drain daemon';
   if (view.overview.roots.length) await openRun(view.overview.roots[0].id);
   else showComposer();
   listen();

@@ -1,12 +1,15 @@
 import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { Store, StorageError } from '../../../packages/storage/src/store.ts';
 import { ArtifactStore } from '../../../packages/storage/src/artifacts.ts';
-import { DomainError } from '../../../packages/contracts/src/index.ts';
+import {
+  DomainError,
+  idSchema,
+} from '../../../packages/contracts/src/index.ts';
 import type { ProviderKind } from '../../../packages/contracts/src/providers.ts';
 import {
   discoverRuntime,
@@ -27,7 +30,10 @@ import { activeRouting, applyRouting } from './routing-default.ts';
 import type { RosterRuntime } from './live-roster.ts';
 import { HttpError, startAppServer, type Asset } from './http/app-server.ts';
 import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
+import { RecoveryBlockedError } from './workflow-recovery.ts';
 import { lessonsView } from './lessons-view.ts';
+import { DaemonScheduler } from './daemon-scheduler.ts';
+import type { DaemonClock } from './daemon-clock.ts';
 
 const POOL: Record<ProviderKind, [string, WorkerSpec['roles']][]> = {
   codex: [
@@ -82,6 +88,28 @@ const startSchema = z.strictObject({
   maxActive: z.number().int().min(1).max(10).default(3),
   review: z.boolean().default(true),
 });
+const daemonStartSchema = startSchema.extend({
+  priority: z.number().int().min(-100).max(100).default(0),
+  dueAt: z.number().int().nonnegative().optional(),
+  runtimes: z
+    .array(z.enum(['codex', 'claude', 'opencode']))
+    .min(1)
+    .max(3)
+    .optional(),
+});
+const daemonCommandSchema = z.strictObject({ commandId: idSchema });
+const daemonResumeSchema = daemonCommandSchema.extend({
+  retryAt: z.number().int().nonnegative().optional(),
+});
+const lifecycleSchema = daemonCommandSchema.extend({
+  action: z.enum([
+    'pause-intake',
+    'pause-dispatch',
+    'drain',
+    'continue',
+    'shutdown',
+  ]),
+});
 const acceptSchema = z.strictObject({
   expectedVersion: z.number().int().positive(),
   head: z.string().regex(/^[a-f0-9]{40}([a-f0-9]{24})?$/),
@@ -113,7 +141,7 @@ function loadAssets(): Record<string, Asset> {
  * orchestrations and the authenticated loopback UI/API. Trusted-local: check
  * commands typed in the UI run on this machine inside XVANT worktrees.
  */
-export async function startApp(options: {
+export interface AppOptions {
   home: string;
   port?: number;
   /** Tests inject synthetic runtimes; production discovers installed ones. */
@@ -126,28 +154,67 @@ export async function startApp(options: {
     workers: WorkerSpec[],
     runtimes: Partial<Record<ProviderKind, RosterRuntime>>,
   ) => TurnRunner;
-}) {
+  daemon?: {
+    operatorToken: string;
+    clock: DaemonClock;
+    slots: number;
+    shutdown: () => void;
+    onError: (error: unknown) => void;
+  };
+}
+export async function startApp(options: AppOptions) {
   mkdirSync(options.home, { recursive: true });
+  const daemon = options.daemon;
   const store = new Store(join(options.home, 'state.sqlite'), {
-    owner: 'xvant-app',
+    owner: daemon ? 'daemon_' + randomUUID() : 'xvant-app',
+    ...(daemon
+      ? {
+          leaseClock: daemon.clock.host,
+          leaseMs: 3_000,
+          now: daemon.clock.now,
+          recordClock: () => daemon.clock.sample(),
+        }
+      : {}),
     recoverWorkGraphs: true,
   });
+  daemon?.clock.restore(store.schedule.clock());
+  let scheduler: DaemonScheduler | undefined;
   const objects = new ArtifactStore(join(options.home, 'objects'));
   const heartbeat = setInterval(() => {
     try {
-      store.heartbeat();
-    } catch {
+      if (scheduler) scheduler.pulse();
+      else store.heartbeat();
+    } catch (error) {
+      daemon?.onError(error);
       /* A replaced controller loses its lease; runs record the failure. */
     }
   }, store.heartbeatIntervalMs);
   heartbeat.unref();
-  const discover = options.discover ?? ((kind) => discoverRuntime(kind));
+  const discover =
+    (!daemon || options.runner ? options.discover : undefined) ??
+    ((kind) =>
+      daemon
+        ? {
+            runtimeKind: kind,
+            status: 'unavailable' as const,
+            executable: null,
+            version: null,
+            expectedVersion: '',
+            candidates: 0,
+          }
+        : discoverRuntime(kind));
   let discovered: (DiscoveredRuntime & { prefixArgs?: string[] })[] = [];
   const refreshRuntimes = () =>
     (discovered = (['codex', 'claude', 'opencode'] as const).map((kind) =>
       discover(kind),
     ));
-  refreshRuntimes();
+  try {
+    refreshRuntimes();
+  } catch (error) {
+    clearInterval(heartbeat);
+    store.close();
+    throw error;
+  }
   const active = new Map<
     string,
     {
@@ -158,10 +225,13 @@ export async function startApp(options: {
   >();
   const busy = new Map<string, { rootId: string }>();
   const meta = new Map<string, { repository: string }>();
-  const workers = () =>
+  const workers = (only?: readonly ProviderKind[]) =>
     defaultWorkers(
       discovered
-        .filter((d) => d.status === 'qualified')
+        .filter(
+          (d) =>
+            d.status === 'qualified' && (!only || only.includes(d.runtimeKind)),
+        )
         .map((d) => d.runtimeKind),
     );
 
@@ -185,7 +255,7 @@ export async function startApp(options: {
     runtimes: Partial<Record<ProviderKind, RosterRuntime>>,
     turnTimeoutMs?: number,
   ) => {
-    const runner = options.runner
+    const runner: TurnRunner = options.runner
       ? options.runner(store, objects, pool, runtimes)
       : new LiveTurnRunner(
           store,
@@ -195,38 +265,53 @@ export async function startApp(options: {
           turnTimeoutMs === undefined ? {} : { timeoutMs: turnTimeoutMs },
         );
     const tracked: TurnRunner = {
-      run: async (request) => {
+      ...(runner.remoteRecovery
+        ? { remoteRecovery: runner.remoteRecovery }
+        : {}),
+      run: async (request, execution) => {
         busy.set(request.alias, { rootId: id });
         try {
-          return await runner.run(request);
+          return await runner.run(request, execution);
         } finally {
           busy.delete(request.alias);
         }
       },
       interrupt: (taskId) => runner.interrupt(taskId),
     };
-    return new Orchestrator(store, tracked, pool, {
-      stateRoot: join(options.home, 'runs'),
-      objects,
-      runtimeBindings: workflowRuntimeBindings(pool, runtimes),
-      ...(turnTimeoutMs === undefined ? {} : { turnTimeoutMs }),
-      onChange: (state) => {
-        const entry = active.get(id);
-        if (entry) entry.state = state;
-      },
-    });
+    return {
+      runner: tracked,
+      orchestrator: new Orchestrator(store, tracked, pool, {
+        stateRoot: join(options.home, 'runs'),
+        objects,
+        ...(daemon ? { now: daemon.clock.now } : {}),
+        runtimeBindings: workflowRuntimeBindings(pool, runtimes),
+        ...(turnTimeoutMs === undefined ? {} : { turnTimeoutMs }),
+        onChange: (state) => {
+          if (daemon) store.schedule.progressing(id);
+          const entry = active.get(id);
+          if (entry) entry.state = state;
+        },
+      }),
+    };
   };
   const start = async (input: z.infer<typeof startSchema>) => {
     const id =
       'r' +
       createHash('sha256').update(input.commandId).digest('hex').slice(0, 20);
-    // The same command ID is the same run: a double submit returns it.
-    try {
-      store.graphs.get(id);
-      return { id, created: false };
-    } catch {
-      /* new run */
-    }
+    return admit(input, id);
+  };
+  const admit = (
+    input: z.infer<typeof daemonStartSchema> | z.infer<typeof startSchema>,
+    id: string,
+  ) => {
+    // Existing standalone UI callers use the persisted graph identity.
+    if (!daemon)
+      try {
+        store.graphs.get(id);
+        return { id, created: false };
+      } catch {
+        /* new run */
+      }
     let repository: string;
     try {
       repository = realpathSync(resolve(input.repository));
@@ -240,7 +325,7 @@ export async function startApp(options: {
       windowsHide: true,
     });
     if (top.status !== 0) throw new HttpError(400, 'INVALID_REPOSITORY');
-    const pool = workers();
+    const pool = workers('runtimes' in input ? input.runtimes : undefined);
     if (!pool.length) throw new HttpError(409, 'NO_RUNTIME');
     const runtimes = availableRuntimes();
     // The promoted routing default, if this state directory recorded one.
@@ -252,26 +337,48 @@ export async function startApp(options: {
       throw new HttpError(409, 'ROUTING_DEFAULT_INVALID');
     }
     if (routing) applyRouting(pool, runtimes, routing.settings);
-    const orchestrator = controllerFor(id, pool, runtimes);
+    const { orchestrator, runner } = controllerFor(id, pool, runtimes);
+    const project = daemon ? lessonScope(repository) : 'app';
+    const spec = {
+      id,
+      projectId: project,
+      repository,
+      baseRevision: 'HEAD',
+      objective: input.objective,
+      acceptanceCriteria: input.criteria.length
+        ? input.criteria
+        : ['The objective is met'],
+      checks: Object.fromEntries(
+        input.checks.map((c, i) => ['check' + (i + 1), shellCheck(c)]),
+      ),
+      maxActive: input.maxActive,
+      review: input.review,
+    };
+    if (daemon) {
+      if (!store.schedule.control().intake)
+        throw new HttpError(409, 'INTAKE_PAUSED');
+      if (input.maxActive > daemon.slots)
+        throw new HttpError(409, 'WORKER_LIMIT');
+      orchestrator.admit(spec);
+      const job = queue(
+        id,
+        project,
+        'priority' in input ? input.priority : 0,
+        'dueAt' in input ? input.dueAt : undefined,
+        runner,
+      );
+      return { id, created: true, acceptedAt: job.acceptedAt };
+    }
     meta.set(id, { repository });
     active.set(id, { orchestrator, workers: pool, state: null });
-    void orchestrator
-      .run({
-        id,
-        projectId: 'app',
-        repository,
-        baseRevision: 'HEAD',
-        objective: input.objective,
-        acceptanceCriteria: input.criteria.length
-          ? input.criteria
-          : ['The objective is met'],
-        checks: Object.fromEntries(
-          input.checks.map((c, i) => ['check' + (i + 1), shellCheck(c)]),
-        ),
-        maxActive: input.maxActive,
-        review: input.review,
-      })
-      .finally(() => active.delete(id));
+    return runStandalone(id, orchestrator, spec);
+  };
+  const runStandalone = async (
+    id: string,
+    orchestrator: Orchestrator,
+    spec: Parameters<Orchestrator['run']>[0],
+  ) => {
+    void orchestrator.run(spec).finally(() => active.delete(id));
     // Wait until the graph exists so the client can open it immediately.
     for (let i = 0; i < 200; i++) {
       try {
@@ -283,19 +390,21 @@ export async function startApp(options: {
     }
     return { id, created: true };
   };
-  const resume = async (id: string) => {
-    if (active.has(id)) throw new HttpError(409, 'CONFLICT');
+  const bound = (id: string) => {
     const checkpoint = Orchestrator.checkpoint(store, id);
     const runtimes = availableRuntimes();
     const pool = checkpoint.workers;
     restoreWorkflowModels(runtimes, checkpoint.runtimeBindings);
-    const orchestrator = controllerFor(
-      id,
-      pool,
-      runtimes,
-      checkpoint.turnTimeoutMs,
-    );
-    active.set(id, { orchestrator, workers: pool, state: null });
+    return controllerFor(id, pool, runtimes, checkpoint.turnTimeoutMs);
+  };
+  const resume = async (id: string) => {
+    if (active.has(id)) throw new HttpError(409, 'CONFLICT');
+    const { orchestrator } = bound(id);
+    active.set(id, {
+      orchestrator,
+      workers: Orchestrator.checkpoint(store, id).workers,
+      state: null,
+    });
     try {
       const state = await orchestrator.resume(id);
       return { id, phase: state.phase, reason: state.reason ?? null };
@@ -303,13 +412,112 @@ export async function startApp(options: {
       active.delete(id);
     }
   };
+  const queue = (
+    id: string,
+    project: string,
+    priority: number,
+    dueAt: number | undefined,
+    runner: TurnRunner,
+  ) => {
+    const { spec, workers } = Orchestrator.checkpoint(store, id);
+    return store.schedule.add({
+      id,
+      project,
+      priority,
+      dueAt: dueAt ?? daemon!.clock.now(),
+      slots: spec.maxActive,
+      resources: [
+        ...new Set([
+          'project:' + project,
+          ...workers.map(({ alias }) => 'worker:' + alias),
+          ...workers.map(({ quotaGroupId }) => 'quota:' + quotaGroupId),
+          ...(runner.remoteRecovery
+            ? ['remote:' + runner.remoteRecovery.scope]
+            : []),
+        ]),
+      ],
+    });
+  };
+  const enqueueExisting = (id: string, retryAt?: number) => {
+    const checkpoint = Orchestrator.checkpoint(store, id);
+    const job = store.schedule.get(id);
+    if (checkpoint.progress.step === 'done')
+      return { id, phase: store.graphs.get<RootState>(id).state.phase };
+    if (!store.schedule.control().intake && !job)
+      throw new HttpError(409, 'INTAKE_PAUSED');
+    if (job) store.schedule.requeue(id, retryAt);
+    else
+      queue(
+        id,
+        lessonScope(checkpoint.spec.repository),
+        0,
+        retryAt,
+        bound(id).runner,
+      );
+    return { id, phase: 'queued' };
+  };
+  const schedulerCommand = <T>(
+    key: string,
+    input: unknown,
+    run: () => T,
+  ): T => {
+    let executed = false;
+    const result = store.daemonCommand(key, input, () => {
+      executed = true;
+      return run();
+    });
+    if (executed) scheduler!.wake();
+    return result;
+  };
+  if (daemon) {
+    scheduler = new DaemonScheduler(
+      store,
+      daemon.clock,
+      daemon.slots,
+      (id) => bound(id).orchestrator,
+      (id) => lessonScope(Orchestrator.checkpoint(store, id).spec.repository),
+      daemon.onError,
+    );
+    try {
+      scheduler.pulse();
+      await scheduler.recover();
+    } catch (error) {
+      clearInterval(heartbeat);
+      store.close();
+      throw error;
+    }
+  }
   const rootView = (id: string) => {
     const record = store.graphs.get<RootState & { repository?: string }>(id);
+    const checkpoint = store.workflows.read(id) as {
+      progress?: { step?: string };
+    } | null;
+    const resumable =
+      !active.has(id) &&
+      (!scheduler ||
+        store.schedule.get(id)?.status === 'blocked' ||
+        !store.schedule.get(id)) &&
+      !!checkpoint?.progress?.step &&
+      checkpoint.progress.step !== 'done';
+    const latest = new Map(
+      store.workflows.recoveries(id).map((entry) => [entry.slot, entry]),
+    );
+    const recovery = store.workflows.actions(id).flatMap((action) => {
+      const entry = latest.get(action.slot);
+      return action.status === 'dispatching' &&
+        entry?.decision === 'block' &&
+        entry.dispatchId === (action.dispatchId ?? null)
+        ? [entry]
+        : [];
+    });
     return {
       id,
       rowVersion: record.rowVersion,
       repository: meta.get(id)?.repository ?? record.state.repository ?? null,
       state: record.state,
+      ...(daemon ? { job: store.schedule.get(id) ?? null } : {}),
+      ...(resumable ? { resumable: true } : {}),
+      ...(recovery.length ? { recovery } : {}),
       events: store.graphs.events(id).slice(-300),
     };
   };
@@ -339,10 +547,13 @@ export async function startApp(options: {
     (() => {
       throw new HttpError(404, 'UNKNOWN_REPOSITORY');
     })();
-  const server = await startAppServer({
+  const listening = startAppServer({
+    ...(daemon ? { operatorToken: daemon.operatorToken } : {}),
     ...(options.port === undefined ? {} : { port: options.port }),
     assets: loadAssets(),
     toError: (error) => {
+      if (error instanceof RecoveryBlockedError)
+        return { status: 409, code: error.code, recovery: error.recovery };
       if (error instanceof z.ZodError)
         return { status: 400, code: 'INVALID_INPUT' };
       if (
@@ -364,6 +575,8 @@ export async function startApp(options: {
             'WORKFLOW_BINDINGS_CHANGED',
             'WORKFLOW_ACTION_INVALID',
             'UNRESOLVED_WORKFLOW_ACTION',
+            'STALE_FENCE',
+            'SECRET_IN_WORKFLOW_SPEC',
           ].includes(conflict)
         )
           return { status: 409, code: conflict };
@@ -389,6 +602,34 @@ export async function startApp(options: {
       },
     },
     routes: [
+      ...(scheduler
+        ? [
+            {
+              method: 'GET' as const,
+              path: /^\/api\/v1\/daemon$/,
+              handle: async () => scheduler!.status(),
+            },
+            {
+              method: 'POST' as const,
+              path: /^\/api\/v1\/daemon\/control$/,
+              handle: async ({ body }: { body: Record<string, unknown> }) => {
+                const input = lifecycleSchema.parse(body);
+                let shutdown = false;
+                const result = schedulerCommand(input.commandId, input, () => {
+                  if (input.action !== 'shutdown')
+                    return store.schedule.setControl(input.action);
+                  shutdown = true;
+                  return {
+                    stopping: true,
+                    generation: store.ownership.generation,
+                  };
+                });
+                if (shutdown) daemon!.shutdown();
+                return result;
+              },
+            },
+          ]
+        : []),
       {
         method: 'GET',
         path: /^\/api\/v1\/csrf$/,
@@ -413,6 +654,7 @@ export async function startApp(options: {
         method: 'GET',
         path: /^\/api\/v1\/overview$/,
         handle: async () => ({
+          ...(daemon ? { daemon: true } : {}),
           runtimes: discovered.map((d) => ({
             runtimeKind: d.runtimeKind,
             status: d.status,
@@ -482,17 +724,44 @@ export async function startApp(options: {
       {
         method: 'POST',
         path: /^\/api\/v1\/runtimes\/refresh$/,
-        handle: async () => (refreshRuntimes(), { ok: true }),
+        handle: async () => {
+          refreshRuntimes();
+          scheduler?.wake();
+          return { ok: true };
+        },
       },
       {
         method: 'POST',
         path: /^\/api\/v1\/roots$/,
-        handle: async ({ body }) => start(startSchema.parse(body)),
+        handle: async ({ body }) => {
+          if (!scheduler) return start(startSchema.parse(body));
+          const input = daemonStartSchema.parse(body);
+          const id =
+            'r' +
+            createHash('sha256')
+              .update(input.commandId)
+              .digest('hex')
+              .slice(0, 20);
+          return schedulerCommand(
+            input.commandId,
+            { action: 'start', ...input },
+            () => admit(input, id),
+          );
+        },
       },
       {
         method: 'POST',
         path: /^\/api\/v1\/roots\/([A-Za-z][A-Za-z0-9_-]{0,63})\/resume$/,
-        handle: async ({ match }) => resume(match[1]!),
+        handle: async ({ match, body }) => {
+          const id = match[1]!;
+          if (!scheduler) return resume(id);
+          const { commandId, retryAt } = daemonResumeSchema.parse(body);
+          return schedulerCommand(
+            commandId,
+            { action: 'resume', id, retryAt: retryAt ?? null },
+            () => enqueueExisting(id, retryAt),
+          );
+        },
       },
       {
         method: 'GET',
@@ -528,7 +797,21 @@ export async function startApp(options: {
       {
         method: 'POST',
         path: /^\/api\/v1\/roots\/([A-Za-z][A-Za-z0-9_-]{0,63})\/cancel$/,
-        handle: async ({ match }) => {
+        handle: async ({ match, body }) => {
+          if (scheduler) {
+            const id = match[1]!;
+            const { commandId } = daemonCommandSchema.parse(body);
+            const result = schedulerCommand(
+              commandId,
+              { action: 'cancel', id },
+              () => {
+                scheduler!.cancel(id);
+                return { cancelling: true };
+              },
+            );
+            scheduler.signalCancellation(id);
+            return result;
+          }
           active.get(match[1]!)?.orchestrator.cancel();
           return { cancelling: active.has(match[1]!) };
         },
@@ -537,42 +820,67 @@ export async function startApp(options: {
         method: 'POST',
         path: /^\/api\/v1\/roots\/([A-Za-z][A-Za-z0-9_-]{0,63})\/accept$/,
         handle: async ({ match, body }) => {
-          const { expectedVersion, head } = acceptSchema.parse(body);
-          const record = store.graphs.get<RootState>(match[1]!);
-          // The user accepts exactly what they reviewed: same version and head.
-          if (
-            record.rowVersion !== expectedVersion ||
-            record.state.phase !== 'ready' ||
-            record.state.integration?.head !== head
-          )
-            throw new HttpError(409, 'CONFLICT');
-          store.graphs.update(
-            match[1]!,
+          const id = match[1]!;
+          const accept = ({
             expectedVersion,
-            { ...record.state, phase: 'accepted' },
-            'graph.accepted',
-            { actorId: 'user', head },
+            head,
+          }: z.infer<typeof acceptSchema>) => {
+            const record = store.graphs.get<RootState>(id);
+            // The user accepts exactly what they reviewed: same version and head.
+            if (
+              record.rowVersion !== expectedVersion ||
+              record.state.phase !== 'ready' ||
+              record.state.integration?.head !== head
+            )
+              throw new HttpError(409, 'CONFLICT');
+            store.graphs.update(
+              id,
+              expectedVersion,
+              { ...record.state, phase: 'accepted' },
+              'graph.accepted',
+              { actorId: 'user', head },
+            );
+            return { branch: record.state.integration.branch, head };
+          };
+          if (!scheduler) return accept(acceptSchema.parse(body));
+          const { commandId, ...input } = acceptSchema
+            .extend(daemonCommandSchema.shape)
+            .parse(body);
+          return schedulerCommand(
+            commandId,
+            { action: 'accept', id, ...input },
+            () => accept(input),
           );
-          return { branch: record.state.integration.branch, head };
         },
       },
       {
         method: 'POST',
         path: /^\/api\/v1\/stop$/,
         handle: async () => {
+          if (scheduler) throw new HttpError(409, 'USE_DAEMON_CONTROL');
           for (const entry of active.values()) entry.orchestrator.cancel();
           return { stopping: active.size };
         },
       },
     ],
   });
+  const server: Awaited<ReturnType<typeof startAppServer>> =
+    await listening.catch((error: unknown) => {
+      clearInterval(heartbeat);
+      store.close();
+      throw error;
+    });
+  scheduler?.wake();
   return {
     origin: server.origin,
     bootstrapToken: server.bootstrapToken,
     store,
     close: async () => {
-      for (const entry of active.values()) entry.orchestrator.cancel();
-      await server.close();
+      if (scheduler) await Promise.all([scheduler.close(), server.close()]);
+      else {
+        for (const entry of active.values()) entry.orchestrator.cancel();
+        await server.close();
+      }
       clearInterval(heartbeat);
       store.close();
     },
