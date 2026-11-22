@@ -33,6 +33,11 @@ import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
 import { RecoveryBlockedError } from './workflow-recovery.ts';
 import { lessonsView } from './lessons-view.ts';
 import {
+  githubIntake,
+  githubIntakeConfig,
+  type GitHubIntakeConfig,
+} from './http/github-intake.ts';
+import {
   managerStartSchema,
   observeManagerRun,
   prepareManagerRun,
@@ -164,6 +169,7 @@ export interface AppOptions {
   managerVerifier?: ManagerVerifier;
   daemon?: {
     operatorToken: string;
+    githubIntake?: GitHubIntakeConfig;
     clock: DaemonClock;
     slots: number;
     shutdown: () => void;
@@ -173,6 +179,9 @@ export interface AppOptions {
 export async function startApp(options: AppOptions) {
   mkdirSync(options.home, { recursive: true });
   const daemon = options.daemon;
+  const intakeConfig = daemon?.githubIntake
+    ? githubIntakeConfig.parse(daemon.githubIntake)
+    : undefined;
   const store = new Store(join(options.home, 'state.sqlite'), {
     owner: daemon ? 'daemon_' + randomUUID() : 'xvant-app',
     ...(daemon
@@ -561,6 +570,9 @@ export async function startApp(options: AppOptions) {
     })();
   const listening = startAppServer({
     ...(daemon ? { operatorToken: daemon.operatorToken } : {}),
+    ...(intakeConfig
+      ? { githubIntake: githubIntake(intakeConfig, store.eventInbox) }
+      : {}),
     ...(options.port === undefined ? {} : { port: options.port }),
     assets: loadAssets(),
     toError: (error) => {
@@ -638,6 +650,22 @@ export async function startApp(options: AppOptions) {
                 });
                 if (shutdown) daemon!.shutdown();
                 return result;
+              },
+            },
+          ]
+        : []),
+      ...(intakeConfig
+        ? [
+            {
+              method: 'GET' as const,
+              path: /^\/api\/v1\/daemon\/github\/([1-9][0-9]{0,15})\/issues\/([1-9][0-9]{0,15})$/,
+              handle: async ({ match }: { match: RegExpExecArray }) => {
+                const current = store.eventInbox.current(
+                  Number(match[1]),
+                  Number(match[2]),
+                );
+                if (!current) throw new HttpError(404, 'NOT_FOUND');
+                return current;
               },
             },
           ]

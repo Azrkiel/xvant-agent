@@ -122,6 +122,7 @@ export async function daemonServe(home) {
   const slots = Number(process.env.XVANT_DAEMON_WORKERS ?? 3);
   if (!Number.isSafeInteger(slots) || slots < 1 || slots > 10)
     throw new Error('INVALID_DAEMON_WORKER_LIMIT');
+  const githubConfig = process.env.XVANT_GITHUB_WEBHOOK_CONFIG;
   app = await startApp({
     home,
     ...(config.discover
@@ -133,6 +134,9 @@ export async function daemonServe(home) {
       : {}),
     daemon: {
       operatorToken: token,
+      ...(githubConfig
+        ? { githubIntake: JSON.parse(readFileSync(githubConfig, 'utf8')) }
+        : {}),
       clock: new DaemonClock(),
       slots,
       shutdown: () => setImmediate(() => stop()),

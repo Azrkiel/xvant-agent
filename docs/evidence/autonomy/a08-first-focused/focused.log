@@ -1,0 +1,230 @@
+npm notice run xvant@0.1.0 test
+npm notice run vitest run tests/faults/daemon.test.ts apps/controller/src/app.test.ts apps/controller/src/project-contracts.test.ts apps/controller/src/workflow-checkpoint.test.ts apps/controller/src/http/server.test.ts packages/storage/src/artifacts.test.ts packages/storage/src/backup.test.ts packages/storage/src/providers.test.ts packages/storage/src/store.test.ts packages/storage/src/workflows.test.ts
+
+ RUN  v5.0.1 /workspace/work/qualification/a08-ec63cb0e21c3/source
+
+ ❯ apps/controller/src/project-contracts.test.ts (39 tests | 1 failed) 3958ms
+   ❯ project backlog (3)
+     × upgrades schema 9 and preserves backlog rows through a verified snapshot 73ms
+ ❯ packages/storage/src/providers.test.ts (59 tests | 2 failed) 9083ms
+   × restores provider records and reservations in a verified snapshot 57ms
+   × preserves live approval and uncertainty in snapshot restore 21ms
+ ❯ packages/storage/src/artifacts.test.ts (21 tests | 16 failed) 989ms
+   ❯ verified snapshots (4)
+     × restores a consistent database and verified artifacts to a new destination 171ms
+     × rejects corrupt or missing snapshot objects without leaving a restore target 24ms
+     × rejects corrupt databases and unsupported schemas even with updated manifest hashes 26ms
+   ❯ snapshot artifact references (3)
+     × rejects backup if a committed artifact reference has no object 32ms
+     × rejects restore when the manifest omits a referenced object 35ms
+     × preserves both referenced and retained unreferenced artifacts 43ms
+   × rejects snapshot databases with missing columns 27ms
+   × rejects snapshot databases with dangling foreign key 29ms
+   × rejects snapshot databases with missing outbox primary key 38ms
+   × rejects snapshot databases with missing outbox nullability 24ms
+   × rejects snapshot databases with wrong outbox foreign key 23ms
+   × rejects snapshot databases with missing backlog policy foreign key 36ms
+   × rejects snapshot databases with wrong command key order 45ms
+   × rejects snapshot databases with wrong outbox value type 35ms
+   × rejects snapshot databases with invalid hash 67ms
+   × rejects manifest traversal and duplicate objects, symlink sources, and existing restore targets 91ms
+ ❯ packages/storage/src/workflows.test.ts (4 tests | 1 failed) 147ms
+   × preserves staged patch evidence and audit decisions in a verified snapshot 32ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 20 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/controller/src/project-contracts.test.ts > project backlog > upgrades schema 9 and preserves backlog rows through a verified snapshot
+TypeError: Cannot read properties of undefined (reading 'map')
+ ❯ validateTable packages/storage/src/artifacts.ts:462:51
+    460|     match,
+    461|   }));
+    462|   const expectedForeignKeys = foreignKeys[table]!.map(
+       |                                                   ^
+    463|     ({ id = 0, seq = 0, from, table, to = 'id' }) => ({
+    464|       id,
+ ❯ validateDatabase packages/storage/src/artifacts.ts:531:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:619:43
+ ❯ apps/controller/src/project-contracts.test.ts:225:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/20]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > verified snapshots > restores a consistent database and verified artifacts to a new destination
+TypeError: Cannot read properties of undefined (reading 'map')
+ ❯ validateTable packages/storage/src/artifacts.ts:462:51
+    460|     match,
+    461|   }));
+    462|   const expectedForeignKeys = foreignKeys[table]!.map(
+       |                                                   ^
+    463|     ({ id = 0, seq = 0, from, table, to = 'id' }) => ({
+    464|       id,
+ ❯ validateDatabase packages/storage/src/artifacts.ts:531:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:619:43
+ ❯ packages/storage/src/artifacts.test.ts:77:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/20]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > verified snapshots > rejects corrupt or missing snapshot objects without leaving a restore target
+TypeError: Cannot read properties of undefined (reading 'map')
+ ❯ validateTable packages/storage/src/artifacts.ts:462:51
+    460|     match,
+    461|   }));
+    462|   const expectedForeignKeys = foreignKeys[table]!.map(
+       |                                                   ^
+    463|     ({ id = 0, seq = 0, from, table, to = 'id' }) => ({
+    464|       id,
+ ❯ validateDatabase packages/storage/src/artifacts.ts:531:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:619:43
+ ❯ packages/storage/src/artifacts.test.ts:99:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/20]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > verified snapshots > rejects corrupt databases and unsupported schemas even with updated manifest hashes
+TypeError: Cannot read properties of undefined (reading 'map')
+ ❯ validateTable packages/storage/src/artifacts.ts:462:51
+    460|     match,
+    461|   }));
+    462|   const expectedForeignKeys = foreignKeys[table]!.map(
+       |                                                   ^
+    463|     ({ id = 0, seq = 0, from, table, to = 'id' }) => ({
+    464|       id,
+ ❯ validateDatabase packages/storage/src/artifacts.ts:531:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:619:43
+ ❯ packages/storage/src/artifacts.test.ts:115:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/20]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > snapshot artifact references > rejects backup if a committed artifact reference has no object
+AssertionError: expected [Function] to throw error including 'ARTIFACT_MISSING' but got 'Cannot read properties of undefined (…'
+
+Expected: "ARTIFACT_MISSING"
+Received: "Cannot read properties of undefined (reading 'map')"
+
+ ❯ packages/storage/src/artifacts.test.ts:178:6
+    176|     await expect(
+    177|       backupSnapshot(store, artifacts, join(root, 'backup')),
+    178|     ).rejects.toThrow('ARTIFACT_MISSING');
+       |      ^
+    179|     expect(readdirSync(root)).not.toContain('backup');
+    180|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/20]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > snapshot artifact references > rejects restore when the manifest omits a referenced object
+TypeError: Cannot read properties of undefined (reading 'map')
+ ❯ validateTable packages/storage/src/artifacts.ts:462:51
+    460|     match,
+    461|   }));
+    462|   const expectedForeignKeys = foreignKeys[table]!.map(
+       |                                                   ^
+    463|     ({ id = 0, seq = 0, from, table, to = 'id' }) => ({
+    464|       id,
+ ❯ validateDatabase packages/storage/src/artifacts.ts:531:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:619:43
+ ❯ packages/storage/src/artifacts.test.ts:187:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/20]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > snapshot artifact references > preserves both referenced and retained unreferenced artifacts
+TypeError: Cannot read properties of undefined (reading 'map')
+ ❯ validateTable packages/storage/src/artifacts.ts:462:51
+    460|     match,
+    461|   }));
+    462|   const expectedForeignKeys = foreignKeys[table]!.map(
+       |                                                   ^
+    463|     ({ id = 0, seq = 0, from, table, to = 'id' }) => ({
+    464|       id,
+ ❯ validateDatabase packages/storage/src/artifacts.ts:531:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:619:43
+ ❯ packages/storage/src/artifacts.test.ts:205:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/20]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with missing columns
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with dangling foreign key
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with missing outbox primary key
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with missing outbox nullability
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with wrong outbox foreign key
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with missing backlog policy foreign key
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with wrong command key order
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with wrong outbox value type
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with invalid hash
+TypeError: Cannot read properties of undefined (reading 'map')
+ ❯ validateTable packages/storage/src/artifacts.ts:462:51
+    460|     match,
+    461|   }));
+    462|   const expectedForeignKeys = foreignKeys[table]!.map(
+       |                                                   ^
+    463|     ({ id = 0, seq = 0, from, table, to = 'id' }) => ({
+    464|       id,
+ ❯ validateDatabase packages/storage/src/artifacts.ts:531:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:619:43
+ ❯ packages/storage/src/artifacts.test.ts:286:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/20]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > rejects manifest traversal and duplicate objects, symlink sources, and existing restore targets
+TypeError: Cannot read properties of undefined (reading 'map')
+ ❯ validateTable packages/storage/src/artifacts.ts:462:51
+    460|     match,
+    461|   }));
+    462|   const expectedForeignKeys = foreignKeys[table]!.map(
+       |                                                   ^
+    463|     ({ id = 0, seq = 0, from, table, to = 'id' }) => ({
+    464|       id,
+ ❯ validateDatabase packages/storage/src/artifacts.ts:531:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:619:43
+ ❯ packages/storage/src/artifacts.test.ts:314:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/20]⎯
+
+ FAIL  packages/storage/src/providers.test.ts > restores provider records and reservations in a verified snapshot
+TypeError: Cannot read properties of undefined (reading 'map')
+ ❯ validateTable packages/storage/src/artifacts.ts:462:51
+    460|     match,
+    461|   }));
+    462|   const expectedForeignKeys = foreignKeys[table]!.map(
+       |                                                   ^
+    463|     ({ id = 0, seq = 0, from, table, to = 'id' }) => ({
+    464|       id,
+ ❯ validateDatabase packages/storage/src/artifacts.ts:531:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:619:43
+ ❯ packages/storage/src/providers.test.ts:405:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/20]⎯
+
+ FAIL  packages/storage/src/providers.test.ts > preserves live approval and uncertainty in snapshot restore
+TypeError: Cannot read properties of undefined (reading 'map')
+ ❯ validateTable packages/storage/src/artifacts.ts:462:51
+    460|     match,
+    461|   }));
+    462|   const expectedForeignKeys = foreignKeys[table]!.map(
+       |                                                   ^
+    463|     ({ id = 0, seq = 0, from, table, to = 'id' }) => ({
+    464|       id,
+ ❯ validateDatabase packages/storage/src/artifacts.ts:531:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:619:43
+ ❯ packages/storage/src/providers.test.ts:959:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/20]⎯
+
+ FAIL  packages/storage/src/workflows.test.ts > preserves staged patch evidence and audit decisions in a verified snapshot
+TypeError: Cannot read properties of undefined (reading 'map')
+ ❯ validateTable packages/storage/src/artifacts.ts:462:51
+    460|     match,
+    461|   }));
+    462|   const expectedForeignKeys = foreignKeys[table]!.map(
+       |                                                   ^
+    463|     ({ id = 0, seq = 0, from, table, to = 'id' }) => ({
+    464|       id,
+ ❯ validateDatabase packages/storage/src/artifacts.ts:531:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:619:43
+ ❯ packages/storage/src/workflows.test.ts:247:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/20]⎯
+
+
+ Test Files  4 failed | 6 passed (10)
+      Tests  20 failed | 169 passed (189)
+   Start at  01:57:39
+   Duration  59.85s (tests 95%, import 3%, transform 2%)
+

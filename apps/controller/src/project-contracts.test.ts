@@ -210,7 +210,7 @@ describe('project backlog', () => {
     const previous = new Database(join(root, 'state.sqlite'));
     try {
       previous.exec(
-        'DROP TABLE contract_manager_runs; DROP TABLE contract_backlogs; PRAGMA user_version=9;',
+        'DROP TABLE github_issue_deliveries; DROP TABLE contract_manager_runs; DROP TABLE contract_backlogs; PRAGMA user_version=9;',
       );
     } finally {
       previous.close();
