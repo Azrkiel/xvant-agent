@@ -831,6 +831,21 @@ describe('A04 daemon process fixtures', () => {
       null,
     ]);
     const task = (await api('contracts/tasks/ship-2')).data.record;
+    expect(git(repository, 'rev-parse', 'HEAD')).toBe(task.task.baseRevision);
+    git(
+      repository,
+      '-c',
+      'user.name=fixture',
+      '-c',
+      'user.email=fixture@example.test',
+      'commit',
+      '-qm',
+      'move target after verification',
+      '--allow-empty',
+    );
+    const movedTarget = git(repository, 'rev-parse', 'HEAD');
+    expect(movedTarget).not.toBe(task.task.baseRevision);
+    expect(decision.subject.baseRevision).toBe(task.task.baseRevision);
     await apply({
       kind: 'accept',
       commandId: 'accept-fixture',
@@ -844,7 +859,7 @@ describe('A04 daemon process fixtures', () => {
     });
     expect((await api(route)).data.runs[1].status).toBe('idle');
     await measureIdle(restarted.child.pid!, 'manager fixture');
-    expect(git(repository, 'rev-parse', 'HEAD')).toBe(task.task.baseRevision);
+    expect(git(repository, 'rev-parse', 'HEAD')).toBe(movedTarget);
     await cli('stop', '--id', 'manager-stop');
   }, 30_000);
 });
