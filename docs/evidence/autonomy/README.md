@@ -35,9 +35,7 @@ suites, with 94.23% line and 88.03% branch coverage.
 [Focused output](a04/focused.log) · [Gate receipt](a04/gate-receipt.json) ·
 [Immutable bundle](a04/gate-bundle.tar.gz) · [Checksums](a04/SHA256SUMS)
 
-The rerun matched the original A04 source inventory. Actual host reboot,
-physical suspend, hosted CI, Windows and live-provider qualification
-remain open. [A04 draft and original simulation evidence](https://github.com/Azrkiel/xvant-agent/pull/16)
+The rerun matched the original A04 source inventory. The merge record subsequently reported a physical reboot pass and an interrupted physical suspend. Both raw host receipts remain unavailable. Hosted CI, Windows and live-provider qualification remain open. [A04 PR and original simulation evidence](https://github.com/Azrkiel/xvant-agent/pull/16)
 
 A separate offline rehearsal ran the host procedure's queue, SQLite
 capture and endpoint-auth steps, replacing systemd operations and host
@@ -105,3 +103,33 @@ confirmed it had stopped afterward. [A06 criterion record](https://github.com/Az
 [Focused output](a06/focused.log) · [Namespace observations](a06/namespace.json) ·
 [Gate receipt](a06/gate-receipt.json) · [Immutable bundle](a06/gate-bundle.tar.gz) ·
 [Checksums](a06/SHA256SUMS)
+
+### A06 report and budget follow-up
+
+Tested `563223d230e97aca8fdda93a40dd44dfdafc4643` directly against
+`main` at `f20da7e4dbd4f4a776ca60ace39c72f3dd2c7593`. The runner
+and common setup above apply. The delegated cgroup v2 mount was
+unavailable for writing on this runner.
+
+```sh
+docker-init -s -- npm test -- \
+  apps/controller/src/{project-contracts,workflow-checkpoint}.test.ts \
+  packages/storage/src/{artifacts,backup,store,integration,memory,providers,workflows}.test.ts \
+  packages/supervisor/src/{index,interactive}.test.ts
+docker-init -s -- node tests/fixtures/linux-offline-worker.mjs
+```
+
+Typecheck, lint, 195 focused tests, and the real namespace fixture passed.
+The gate passed all 31 stages and 1,509 tests across 120 suites, with
+92.91% line and 86.83% branch coverage. The fixture accepted a bounded
+report with the original attempt and rejected a path field, truncation
+and another generation. It denied the two host listeners and cleaned up
+the detached worker. The ledger test retained a full unknown reservation
+after restart and refused a duplicate dispatch. No provider session,
+delegated-cgroup limit campaign, Windows or hosted run was performed.
+
+[Setup](a06-limits-budget/setup.log) · [Focused output](a06-limits-budget/focused.log)
+· [Namespace observations](a06-limits-budget/namespace.json)
+· [Gate receipt](a06-limits-budget/gate-receipt.json)
+· [Verified bundle](a06-limits-budget/gate-bundle.tar.gz)
+· [Checksums](a06-limits-budget/SHA256SUMS)
