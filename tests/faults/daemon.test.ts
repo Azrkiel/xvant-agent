@@ -253,6 +253,56 @@ describe('A04 daemon process fixtures', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
+  it('pins the lessons comparison setting in separate stores for identical Git input', async () => {
+    const enabledRepo = repo('lessons-enabled');
+    const disabledRepo = join(dir, 'lessons-disabled');
+    git(dir, 'clone', '-q', enabledRepo, disabledRepo);
+    expect(git(disabledRepo, 'rev-parse', 'HEAD')).toBe(
+      git(enabledRepo, 'rev-parse', 'HEAD'),
+    );
+    const observations = [];
+    for (const [cohort, path, flags] of [
+      ['enabled', enabledRepo, []],
+      ['disabled', disabledRepo, ['--no-lessons']],
+    ] as const) {
+      home = join(dir, 'state-' + cohort);
+      env.XVANT_HOME = home;
+      await ready(launch());
+      await cli('pause-dispatch', '--id', 'study-pause');
+      const result = await submit(
+        'study-task',
+        path,
+        'fixture',
+        'codex',
+        ...flags,
+      );
+      await cli('stop', '--id', 'study-stop');
+      const database = db();
+      try {
+        const { body } = database
+          .prepare('SELECT body FROM work_checkpoints WHERE graph_id=?')
+          .get(result.id) as { body: string };
+        observations.push(JSON.parse(body).spec);
+        expect(
+          database.prepare('SELECT COUNT(*) AS count FROM lesson_nodes').get(),
+        ).toEqual({ count: 0 });
+      } finally {
+        database.close();
+      }
+    }
+    expect(observations[0]).toMatchObject({
+      lessons: true,
+      lessonScope: expect.any(String),
+    });
+    expect(observations[1]).toMatchObject({
+      lessons: false,
+      lessonScope: null,
+    });
+    expect(observations[1].baseRevision).toBe(observations[0].baseRevision);
+    expect(observations[1].objective).toBe(observations[0].objective);
+    expect(calls()).toEqual([]);
+  }, 25_000);
+
   it('retains one durable acceptance and the pinned base after a daemon kill and client reconnect', async () => {
     const path = repo('original');
     const base = git(path, 'rev-parse', 'HEAD');
@@ -358,6 +408,7 @@ describe('A04 daemon process fixtures', () => {
   }, 25_000);
 
   it('races daemon starts and fences a late result while an unrelated project remains eligible', async () => {
+    env.XVANT_DAEMON_FIXTURE_STOP_AFTER_DISPATCH = '1';
     const path = repo('contended');
     const a = launch();
     const b = launch();
@@ -383,7 +434,11 @@ describe('A04 daemon process fixtures', () => {
       (seen) => seen.length === 1,
       dispatchMs,
     );
-    expect(old.child.kill('SIGSTOP')).toBe(true);
+    await until(
+      () => readFileSync('/proc/' + old.child.pid + '/status', 'utf8'),
+      (status) => /^State:\s+T\b/m.test(status),
+      dispatchMs,
+    );
     await delay(3_100);
     const next = launch();
     const newStatus = await ready(next);
@@ -791,6 +846,33 @@ describe('A04 daemon process fixtures', () => {
     );
     expect(forRoot(initial.data.rootId)).toHaveLength(4);
     await authorize(2);
+    const knowledge = 'contracts/projects/managed/knowledge';
+    const decisionText = 'A09 marker from a current project decision';
+    const saved = await api(knowledge, {
+      action: 'propose',
+      commandId: 'decision-for-manager',
+      id: 'manager-context',
+      expectedBacklog: 2,
+      revision: git(repository, 'rev-parse', 'HEAD'),
+      content: decisionText,
+      details: {
+        rationale: 'We observed the fixture needs separate files',
+        alternatives: [],
+        requirementIds: ['fixture'],
+      },
+    });
+    expect(saved.status).toBe(202);
+    expect(
+      (
+        await api(knowledge, {
+          action: 'accept',
+          commandId: 'accept-manager-decision',
+          id: 'manager-context',
+          expectedVersion: 0,
+        })
+      ).status,
+    ).toBe(202);
+
     await cli('pause-dispatch', '--id', 'manager-pause');
     const second = await api(route, input(2, 1));
     expect(second.status, JSON.stringify(second.data)).toBe(202);
@@ -815,6 +897,24 @@ describe('A04 daemon process fixtures', () => {
       ({ data }) => data.runs[1]?.status === 'awaiting_acceptance',
       stopMs,
     );
+    const journal = db();
+    try {
+      const prompts = (
+        journal
+          .prepare(
+            "SELECT json_extract(body,'$.input.prompt') AS prompt FROM work_actions WHERE graph_id=? AND slot LIKE 'node:%' ORDER BY rowid",
+          )
+          .all(second.data.rootId) as { prompt: string }[]
+      ).map(({ prompt }) => prompt);
+      expect(
+        prompts.filter((prompt) => prompt.includes(decisionText)).length,
+      ).toBeGreaterThan(0);
+      expect(
+        prompts.filter((prompt) => !prompt.includes(decisionText)).length,
+      ).toBeGreaterThan(0);
+    } finally {
+      journal.close();
+    }
     const decision = readyRun.data.runs[1].decision;
     expect(decision).toMatchObject({
       checks: 'passed',

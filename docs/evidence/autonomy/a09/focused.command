@@ -1,0 +1,1 @@
+docker-init -s -- npm test -- apps/controller/src/project-contracts.test.ts apps/controller/src/orchestrator.test.ts apps/controller/src/turn-runner.test.ts apps/controller/src/native-turn-runner.test.ts packages/storage/src/memory.test.ts packages/storage/src/lessons.test.ts packages/context/src/transfer.test.ts packages/memory/src/relevance.test.ts tests/faults/daemon.test.ts

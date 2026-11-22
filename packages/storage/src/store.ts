@@ -367,6 +367,14 @@ export class Store {
   daemonCommand<T>(key: string, input: unknown, run: () => T): T {
     return this.#command('daemon', 'schedule.command', key, input, run);
   }
+  projectKnowledgeCommand<T>(
+    projectId: string,
+    key: string,
+    input: unknown,
+    run: () => T,
+  ): T {
+    return this.#command(projectId, 'contract.knowledge', key, input, run);
+  }
   legacyResourceOccupied(resource: string): boolean {
     return (
       this.providers.occupied(resource) ||

@@ -32,6 +32,7 @@ import { HttpError, startAppServer, type Asset } from './http/app-server.ts';
 import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
 import { RecoveryBlockedError } from './workflow-recovery.ts';
 import { lessonsView } from './lessons-view.ts';
+import { ProjectKnowledge } from './project-knowledge.ts';
 import {
   managerStartSchema,
   observeManagerRun,
@@ -95,6 +96,7 @@ const startSchema = z.strictObject({
   review: z.boolean().default(true),
 });
 const daemonStartSchema = startSchema.extend({
+  lessons: z.literal(false).optional(),
   priority: z.number().int().min(-100).max(100).default(0),
   dueAt: z.number().int().nonnegative().optional(),
   runtimes: z
@@ -257,6 +259,7 @@ export async function startApp(options: AppOptions) {
         ]),
     );
 
+  const knowledge = new ProjectKnowledge(store);
   const controllerFor = (
     id: string,
     pool: WorkerSpec[],
@@ -294,6 +297,12 @@ export async function startApp(options: AppOptions) {
         ...(daemon ? { now: daemon.clock.now } : {}),
         runtimeBindings: workflowRuntimeBindings(pool, runtimes),
         ...(turnTimeoutMs === undefined ? {} : { turnTimeoutMs }),
+        ...(daemon
+          ? {
+              contextForTurn: (slot, revision) =>
+                knowledge.forManagerTurn(id, slot, revision),
+            }
+          : {}),
         onChange: (state) => {
           if (daemon) store.schedule.progressing(id);
           const entry = active.get(id);
@@ -361,6 +370,9 @@ export async function startApp(options: AppOptions) {
       ),
       maxActive: input.maxActive,
       review: input.review,
+      ...('lessons' in input && input.lessons === false
+        ? { lessons: false }
+        : {}),
     };
     if (daemon) {
       if (!store.schedule.control().intake)
@@ -665,6 +677,19 @@ export async function startApp(options: AppOptions) {
             match[1]!,
             match[2] === undefined ? undefined : Number(match[2]),
           ),
+      },
+      {
+        method: 'GET',
+        path: /^\/api\/v1\/contracts\/projects\/([A-Za-z][A-Za-z0-9_-]{0,63})\/knowledge$/,
+        handle: async ({ match, query }) =>
+          query.get('export') === 'true'
+            ? knowledge.export(match[1]!)
+            : knowledge.view(match[1]!),
+      },
+      {
+        method: 'POST',
+        path: /^\/api\/v1\/contracts\/projects\/([A-Za-z][A-Za-z0-9_-]{0,63})\/knowledge$/,
+        handle: async ({ match, body }) => knowledge.apply(match[1]!, body),
       },
       {
         method: 'GET',

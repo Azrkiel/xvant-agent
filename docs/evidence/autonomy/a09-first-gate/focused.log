@@ -1,0 +1,11 @@
+npm notice run xvant@0.1.0 test
+npm notice run vitest run apps/controller/src/project-contracts.test.ts apps/controller/src/orchestrator.test.ts apps/controller/src/turn-runner.test.ts apps/controller/src/native-turn-runner.test.ts packages/storage/src/memory.test.ts packages/storage/src/lessons.test.ts packages/context/src/transfer.test.ts packages/memory/src/relevance.test.ts tests/faults/daemon.test.ts
+
+ RUN  v5.0.1 /workspace/work/qualification/a09-1975b1bd2a42/source
+
+
+ Test Files  9 passed (9)
+      Tests  162 passed (162)
+   Start at  01:48:07
+   Duration  67.51s (tests 97%, import 2%, transform 1%)
+

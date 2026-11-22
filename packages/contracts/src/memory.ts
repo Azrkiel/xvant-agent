@@ -13,6 +13,25 @@ export const memoryStatusSchema = z.enum([
   'superseded',
 ]);
 export type MemoryStatus = z.infer<typeof memoryStatusSchema>;
+export const decisionDetailsSchema = z.strictObject({
+  rationale: z.string().trim().min(1).max(2000),
+  alternatives: z.array(z.string().trim().min(1).max(400)).max(8),
+  requirementIds: z.array(idSchema).min(1).max(32),
+});
+const decisionBinding = decisionDetailsSchema.extend({
+  projectVersion: z.number().int().positive(),
+  policyVersion: z.number().int().positive(),
+  backlogRevision: z.number().int().positive(),
+});
+const originalProvenance = z.strictObject({
+  source: z.enum(['user', 'controller', 'worker', 'import']),
+  actorId: idSchema,
+  revision: revisionSchema.optional(),
+});
+const importedFrom = originalProvenance.extend({
+  projectId: idSchema,
+  bundleHash: hashSchema,
+});
 export const memoryProposalSchema = z
   .strictObject({
     id: idSchema,
@@ -23,6 +42,8 @@ export const memoryProposalSchema = z
     /** `verified` is reserved for controller-derived records backed by trusted checks. */
     confidence: z.enum(['verified', 'reported', 'inferred']),
     supersedes: idSchema.optional(),
+    decision: decisionBinding.optional(),
+    importedDecisionDetails: decisionDetailsSchema.optional(),
     /** Files the record depends on, hashed at `provenance.revision`, for staleness checks. */
     anchors: z
       .array(z.strictObject({ path: relativePathSchema, hash: hashSchema }))
@@ -34,8 +55,21 @@ export const memoryProposalSchema = z
       taskId: idSchema.optional(),
       attemptId: idSchema.optional(),
       revision: revisionSchema.optional(),
+      importedFrom: importedFrom.optional(),
     }),
   })
+  .refine(
+    (value) =>
+      value.importedDecisionDetails === undefined ||
+      (value.kind === 'decision' && value.provenance.source === 'import'),
+  )
+  .refine(
+    (value) =>
+      value.decision === undefined ||
+      (value.kind === 'decision' &&
+        value.provenance.source === 'user' &&
+        value.provenance.revision !== undefined),
+  )
   .refine(
     (value) =>
       value.confidence !== 'verified' ||
@@ -62,6 +96,7 @@ export type MemoryRecord = z.infer<typeof memoryProposalSchema> & {
   decidedAt?: number;
   decidedBy?: string;
   supersededBy?: string;
+  forgottenAt?: number;
 };
 export const memorySearchSchema = z.strictObject({
   query: z.string().max(1000).optional(),
@@ -79,11 +114,10 @@ export const memoryBundleEntrySchema = z.strictObject({
   contentHash: hashSchema,
   confidence: memoryProposalSchema.shape.confidence,
   anchors: memoryProposalSchema.shape.anchors,
-  provenance: z.strictObject({
-    source: z.enum(['user', 'controller', 'worker', 'import']),
-    actorId: idSchema,
-    revision: revisionSchema.optional(),
+  provenance: originalProvenance.extend({
+    importedFrom: importedFrom.optional(),
   }),
+  decisionDetails: decisionDetailsSchema.optional(),
 });
 export type MemoryBundleEntry = z.infer<typeof memoryBundleEntrySchema>;
 export const memoryBundleSchema = z.strictObject({

@@ -1,0 +1,564 @@
+{
+  "gateId": "G10",
+  "status": "failed",
+  "generatedAt": "2026-11-22T06:49:15.010Z",
+  "sourceRevision": "1975b1bd2a4230ef839dab83c7f905f763e19370",
+  "branch": "",
+  "dirtyTreeHash": "4f44f867215a1d35a27ca76294abeb9cabb56457126883d87d5f4ec32e398992",
+  "sourceHashScope": "All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.",
+  "operatingSystem": "linux 6.18.57",
+  "executionHost": "0b79a7f16724",
+  "nodeVersion": "v24.21.0",
+  "npmVersion": "npm/12.0.2 node/v24.21.0 linux x64 workspaces/false",
+  "gitVersion": "git version 2.56.1",
+  "classification": "offline",
+  "qualificationScope": "offline-release",
+  "runtimeKind": "simulated",
+  "liveProvidersTested": [],
+  "checks": [
+    {
+      "id": "typecheck",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:49:15.059Z",
+      "finishedAt": "2026-11-22T06:49:25.680Z",
+      "exitCode": 0
+    },
+    {
+      "id": "lint",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "node_modules/eslint/bin/eslint.js",
+        "packages",
+        "apps",
+        "scripts",
+        "tests"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:49:25.681Z",
+      "finishedAt": "2026-11-22T06:49:31.857Z",
+      "exitCode": 0
+    },
+    {
+      "id": "format",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "."
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:49:31.858Z",
+      "finishedAt": "2026-11-22T06:49:39.838Z",
+      "exitCode": 0
+    },
+    {
+      "id": "tests",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--coverage",
+        "--reporter=default",
+        "--reporter=json",
+        "--outputFile=.artifacts/tests.json"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:49:39.841Z",
+      "finishedAt": "2026-11-22T06:54:25.405Z",
+      "exitCode": 1
+    },
+    {
+      "id": "runtime",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "apps/controller/src/durable-demo.ts"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:25.407Z",
+      "finishedAt": "2026-11-22T06:54:26.111Z",
+      "exitCode": 0
+    },
+    {
+      "id": "provider-fixtures",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/probe.mjs",
+        "--offline",
+        "--runtime",
+        "all"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:26.118Z",
+      "finishedAt": "2026-11-22T06:54:26.298Z",
+      "exitCode": 0
+    },
+    {
+      "id": "controller-roster",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/roster-fixture.mjs"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:26.299Z",
+      "finishedAt": "2026-11-22T06:54:28.439Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-http-permission",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/opencode-http-fixture.mjs",
+        "permission"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:28.440Z",
+      "finishedAt": "2026-11-22T06:54:29.056Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-http-interrupt",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/opencode-http-fixture.mjs",
+        "interrupt"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:29.057Z",
+      "finishedAt": "2026-11-22T06:54:29.509Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-http-no-auth",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/opencode-http-fixture.mjs",
+        "no-auth"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:29.509Z",
+      "finishedAt": "2026-11-22T06:54:30.037Z",
+      "exitCode": 0
+    },
+    {
+      "id": "codex-transport",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/codex-fixture.mjs",
+        "success"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:30.038Z",
+      "finishedAt": "2026-11-22T06:54:30.491Z",
+      "exitCode": 0
+    },
+    {
+      "id": "claude-native-stream",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/native-fixture.mjs",
+        "claude",
+        "permission"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:30.491Z",
+      "finishedAt": "2026-11-22T06:54:30.888Z",
+      "exitCode": 0
+    },
+    {
+      "id": "claude-native-controller",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "claude"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:30.888Z",
+      "finishedAt": "2026-11-22T06:54:31.510Z",
+      "exitCode": 0
+    },
+    {
+      "id": "claude-native-interrupt",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "claude",
+        "interrupt"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:31.510Z",
+      "finishedAt": "2026-11-22T06:54:32.102Z",
+      "exitCode": 0
+    },
+    {
+      "id": "claude-native-quota",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "claude",
+        "quota-error"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:32.102Z",
+      "finishedAt": "2026-11-22T06:54:32.671Z",
+      "exitCode": 0
+    },
+    {
+      "id": "claude-create-permission",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "claude",
+        "permission",
+        "create"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:32.671Z",
+      "finishedAt": "2026-11-22T06:54:33.561Z",
+      "exitCode": 0
+    },
+    {
+      "id": "claude-create-interrupt",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "claude",
+        "interrupt",
+        "create"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:33.563Z",
+      "finishedAt": "2026-11-22T06:54:34.806Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-native-stream",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/native-fixture.mjs",
+        "opencode",
+        "permission"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:34.806Z",
+      "finishedAt": "2026-11-22T06:54:35.216Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-native-controller",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "opencode"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:35.216Z",
+      "finishedAt": "2026-11-22T06:54:35.794Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-native-interrupt",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "opencode",
+        "interrupt"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:35.795Z",
+      "finishedAt": "2026-11-22T06:54:36.461Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-native-quota",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "opencode",
+        "quota-error"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:36.461Z",
+      "finishedAt": "2026-11-22T06:54:37.054Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-create-permission",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "opencode",
+        "permission",
+        "create"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:37.054Z",
+      "finishedAt": "2026-11-22T06:54:37.681Z",
+      "exitCode": 0
+    },
+    {
+      "id": "opencode-create-interrupt",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/native-controller-fixture.mjs",
+        "opencode",
+        "interrupt",
+        "create"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:37.683Z",
+      "finishedAt": "2026-11-22T06:54:38.281Z",
+      "exitCode": 0
+    },
+    {
+      "id": "handoff-fixture",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/handoff-fixture.mjs"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:38.287Z",
+      "finishedAt": "2026-11-22T06:54:38.889Z",
+      "exitCode": 0
+    },
+    {
+      "id": "tools-fixture",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/tools-fixture.mjs"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:38.889Z",
+      "finishedAt": "2026-11-22T06:54:39.446Z",
+      "exitCode": 0
+    },
+    {
+      "id": "compatibility-report",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/compatibility-report.mjs"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:39.446Z",
+      "finishedAt": "2026-11-22T06:54:39.685Z",
+      "exitCode": 0
+    },
+    {
+      "id": "browser-fixture",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/browser-fixture.mjs"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:54:39.686Z",
+      "finishedAt": "2026-11-22T06:55:01.114Z",
+      "exitCode": 0
+    },
+    {
+      "id": "orchestration-fixture",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/orchestration-fixture.mjs"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:55:01.115Z",
+      "finishedAt": "2026-11-22T06:55:31.898Z",
+      "exitCode": 0
+    },
+    {
+      "id": "native-loop-fixture",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/native-loop-fixture.mjs"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:55:31.898Z",
+      "finishedAt": "2026-11-22T06:55:34.771Z",
+      "exitCode": 0
+    },
+    {
+      "id": "benchmark-fixture",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/benchmark.mjs",
+        "--suite",
+        "v1",
+        "--repeats",
+        "1",
+        "--report",
+        ".artifacts/benchmark-fixture.json"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:55:34.772Z",
+      "finishedAt": "2026-11-22T06:55:41.396Z",
+      "exitCode": 0
+    },
+    {
+      "id": "release-audit",
+      "command": [
+        "/workspace/work/a00-tooling/node_modules/node/bin/node",
+        "scripts/audit.mjs",
+        "--report",
+        ".artifacts/audit.json"
+      ],
+      "workingDirectory": "/workspace/work/qualification/a09-1975b1bd2a42/source",
+      "startedAt": "2026-11-22T06:55:41.397Z",
+      "finishedAt": "2026-11-22T06:55:41.577Z",
+      "exitCode": 0
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".artifacts/typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".artifacts/lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".artifacts/format.log",
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    },
+    {
+      "path": ".artifacts/tests.log",
+      "sha256": "dd05a883e7174b4ccb317fdf1050d174a0172d0caae67a02c3d567c87bc62733"
+    },
+    {
+      "path": ".artifacts/runtime.log",
+      "sha256": "755e552194933b546cb44ad3fbc23b45b96842302b774b8e2fce07d49e89ad4c"
+    },
+    {
+      "path": ".artifacts/tests.json",
+      "sha256": "d6cab970d4744f165ed6ec38bfd63f182856dd5f82b84a6af2afd887dddd2b55"
+    },
+    {
+      "path": ".artifacts/provider-fixtures.log",
+      "sha256": "bed319a96216d716f6a5c0cf98f77fdd52f5ace2888544fa7bb0b514493c5030"
+    },
+    {
+      "path": ".artifacts/controller-roster.log",
+      "sha256": "6e66aeebf0f7a909ec769b79a070b32fdbd055e9dcb7665496d71a8532da18d2"
+    },
+    {
+      "path": ".artifacts/opencode-http-permission.log",
+      "sha256": "fc021bf766a3fd34a8193308680745846139d1282ecb824fc1938d8e230c503e"
+    },
+    {
+      "path": ".artifacts/opencode-http-interrupt.log",
+      "sha256": "de2eb35f7a1b57a8141b4171fda7543bda20aaa4a370f76ef2aa38bc1815ae48"
+    },
+    {
+      "path": ".artifacts/opencode-http-no-auth.log",
+      "sha256": "31bb25f0690ed48231c8096dcabc226321c5d4fbfc95385379b46c1a88d546ed"
+    },
+    {
+      "path": ".artifacts/codex-transport.log",
+      "sha256": "6c50e061191a1287a4dfc71f851681d36a4f794d7f19cd8516213cecbafb59dc"
+    },
+    {
+      "path": ".artifacts/claude-native-stream.log",
+      "sha256": "fd1d3bf77046466ae498086c2e84a08af9b0c114cd57f289db5ff7cf348ffcd9"
+    },
+    {
+      "path": ".artifacts/claude-native-controller.log",
+      "sha256": "328e4c78c0691e1b486dade21e94080e05d95e555e701d7cb589426df07de3ba"
+    },
+    {
+      "path": ".artifacts/claude-native-interrupt.log",
+      "sha256": "5e11ab33ecf29eb9465c0d9e18980c7781cae6fb00894b74c16b87f20a62afeb"
+    },
+    {
+      "path": ".artifacts/claude-native-quota.log",
+      "sha256": "8158e33ae4a1c85340df743eceff0c82ea7457e2ecd33fa77d1faa64a2797337"
+    },
+    {
+      "path": ".artifacts/claude-create-permission.log",
+      "sha256": "82545343fb6cebd25a8ca67ac971a023b81299198040ee94f5fee9cbe17a0730"
+    },
+    {
+      "path": ".artifacts/claude-create-interrupt.log",
+      "sha256": "209649cd68fac6e3709dd7ff2b8d3c1b487a291e6f06eabc91349f47594f21e0"
+    },
+    {
+      "path": ".artifacts/opencode-native-stream.log",
+      "sha256": "fa923d0a0b0c3c55d8c33ae8dbdd8863e07c1b468eb49a67e7d7ef37aa393c72"
+    },
+    {
+      "path": ".artifacts/opencode-native-controller.log",
+      "sha256": "0a29b143e9ad2487980a77725d49b5b63aa2b661b5ab491a1861d80ddcb0f19c"
+    },
+    {
+      "path": ".artifacts/opencode-native-interrupt.log",
+      "sha256": "cf6b2e962037476547e7074a8a52abf4dc1e41fca6d11027d35992732ba2165c"
+    },
+    {
+      "path": ".artifacts/opencode-native-quota.log",
+      "sha256": "c162b90727ce455714dd0c5f09cefb018554c8062d08664dd5380cb91fcb2f92"
+    },
+    {
+      "path": ".artifacts/opencode-create-permission.log",
+      "sha256": "a5058266dd3a001aaa77baaebca42fc2958832aff7f3175c35677c2a8d31976f"
+    },
+    {
+      "path": ".artifacts/opencode-create-interrupt.log",
+      "sha256": "a6b49d132558b44fb223f7c1180c0e38cee4cbb9e884e142394a15707de6ad6f"
+    },
+    {
+      "path": ".artifacts/handoff-fixture.log",
+      "sha256": "beedd9ce418d6911c4cc7f80a327241aa78ebf577c4c4ad9e6a9579f7d08d1bc"
+    },
+    {
+      "path": ".artifacts/tools-fixture.log",
+      "sha256": "39d7aac1903c0c9621057ea8d68c328a26ecc0efeea6973b8edc0d45ae63a4aa"
+    },
+    {
+      "path": ".artifacts/compatibility-report.log",
+      "sha256": "bd62f98f96601da16576b91557f2bb2811f46278c92b68400229b514994817c5"
+    },
+    {
+      "path": ".artifacts/browser-fixture.log",
+      "sha256": "e06d1745b2134b5525118344f6e506e92a66a806cbf527c9216acb76d3329e51"
+    },
+    {
+      "path": ".artifacts/orchestration-fixture.log",
+      "sha256": "ff6923485dce2fe39d02166143a4aa43587801ab12831dbe07185b918cb5f9ce"
+    },
+    {
+      "path": ".artifacts/native-loop-fixture.log",
+      "sha256": "0243e940ac9458ec154c31b8f5445d90edf47fc497e6d5befd0776130ab92411"
+    },
+    {
+      "path": ".artifacts/benchmark-fixture.log",
+      "sha256": "67c60564fdb28791fcf290628c5e44e982c07177d1b64505ad93582678afdbff"
+    },
+    {
+      "path": ".artifacts/benchmark-fixture.json",
+      "sha256": "d181c2bee1bef8f95da7db52a02d47d8c8668f8064dc741b36ba91b378273106"
+    },
+    {
+      "path": ".artifacts/release-audit.log",
+      "sha256": "c5fdb701bd4545d23ac93157d557e5e92a97c558d8c449ae4801fc018d1f513f"
+    },
+    {
+      "path": ".artifacts/audit.json",
+      "sha256": "c974ad07fd544de8ce4402118888a6d74c80949f92561a052e4b469bc6655076"
+    },
+    {
+      "path": ".artifacts/source-manifest.json",
+      "sha256": "97ff365c8fa88983c7d1a6eeb0ad4cc530d0a008cf806b21142006d2b0d51bdc"
+    }
+  ],
+  "limitations": [
+    "This report qualifies only its recorded host and platform; other CI jobs need their own reports.",
+    "Simulation fixtures do not qualify provider protocols, subscriptions, or real coding ability.",
+    "Process supervision is trusted-local only. No hostile-code, filesystem, network, or escaped-descendant containment is qualified.",
+    "Linux code and CI are configured but require their own observed run."
+  ],
+  "rollbackProcedure": "Keep the branch unmerged; no external service or data migration was changed.",
+  "lastKnownGoodVersion": null
+}

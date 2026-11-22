@@ -2,7 +2,10 @@ import { lstatSync } from 'node:fs';
 import { isAbsolute } from 'node:path';
 import { DomainError, idSchema } from '../../contracts/src/index.ts';
 import { revisionSchema } from '../../contracts/src/context.ts';
-import { memoryBundleSchema } from '../../contracts/src/memory.ts';
+import {
+  decisionDetailsSchema,
+  memoryBundleSchema,
+} from '../../contracts/src/memory.ts';
 import type {
   MemoryBundle,
   MemoryBundleEntry,
@@ -36,11 +39,21 @@ export function exportMemoryBundle(
   }[] = [];
   const entries: MemoryBundleEntry[] = [];
   for (const record of records) {
+    const decision = record.decision ?? record.importedDecisionDetails;
     if (record.projectId !== options.projectId)
       omitted.push({ id: record.id, reason: 'cross_project' });
     else if (record.status !== 'accepted')
       omitted.push({ id: record.id, reason: 'not_accepted' });
-    else if (containsSecret(record.content))
+    else if (
+      containsSecret(
+        JSON.stringify([
+          record.content,
+          record.anchors,
+          record.decision,
+          record.importedDecisionDetails,
+        ]),
+      )
+    )
       omitted.push({ id: record.id, reason: 'secret_content' });
     else
       entries.push({
@@ -51,9 +64,21 @@ export function exportMemoryBundle(
         contentHash: record.contentHash,
         confidence: record.confidence,
         ...(record.anchors ? { anchors: record.anchors } : {}),
+        ...(decision
+          ? {
+              decisionDetails: decisionDetailsSchema.parse({
+                rationale: decision.rationale,
+                alternatives: decision.alternatives,
+                requirementIds: decision.requirementIds,
+              }),
+            }
+          : {}),
         provenance: {
           source: record.provenance.source,
           actorId: record.provenance.actorId,
+          ...(record.provenance.importedFrom
+            ? { importedFrom: record.provenance.importedFrom }
+            : {}),
           ...(record.provenance.revision
             ? { revision: record.provenance.revision }
             : {}),
@@ -110,7 +135,11 @@ export function importMemoryBundle(
   const proposals: MemoryProposal[] = [];
   const skipped: { id: string; reason: 'secret_content' }[] = [];
   for (const entry of bundle.records) {
-    if (containsSecret(entry.content)) {
+    if (
+      containsSecret(
+        JSON.stringify([entry.content, entry.anchors, entry.decisionDetails]),
+      )
+    ) {
       skipped.push({ id: entry.id, reason: 'secret_content' });
       continue;
     }
@@ -124,9 +153,21 @@ export function importMemoryBundle(
       confidence:
         entry.confidence === 'verified' ? 'reported' : entry.confidence,
       ...(entry.anchors ? { anchors: entry.anchors } : {}),
+      ...(entry.kind === 'decision' && entry.decisionDetails
+        ? { importedDecisionDetails: entry.decisionDetails }
+        : {}),
       provenance: {
         source: 'import',
         actorId: options.actorId,
+        importedFrom: entry.provenance.importedFrom ?? {
+          source: entry.provenance.source,
+          actorId: entry.provenance.actorId,
+          ...(entry.provenance.revision
+            ? { revision: entry.provenance.revision }
+            : {}),
+          projectId: bundle.projectId,
+          bundleHash: bundle.bundleHash,
+        },
         ...(revision ? { revision } : {}),
       },
     });

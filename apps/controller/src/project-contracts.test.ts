@@ -31,6 +31,7 @@ import {
 } from '../../../packages/storage/src/artifacts.ts';
 import { SCHEMA_VERSION, Store } from '../../../packages/storage/src/store.ts';
 import { startApp } from './app.ts';
+import { ProjectKnowledge } from './project-knowledge.ts';
 import { Orchestrator, type RootState } from './orchestrator.ts';
 
 const cliPath = fileURLToPath(
@@ -240,6 +241,171 @@ describe('project backlog', () => {
     } finally {
       restored.close();
     }
+  });
+
+  it('recovers project decisions and excludes foreign, stale, and forgotten knowledge from task context', () => {
+    const { project, policy, task } = setup();
+    store.contracts.apply(saveBacklog(backlogPlan()));
+    const otherId = 'different';
+    setup({
+      project: { ...project, id: otherId },
+      policy: { ...policy, projectId: otherId },
+      task: { ...task, id: 'other-ship', projectId: otherId },
+    });
+    store.contracts.apply(
+      saveBacklog({ ...backlogPlan(), projectId: otherId }),
+    );
+    let knowledge = new ProjectKnowledge(store);
+    const anchors = [{ path: sourcePath, hash: 'd'.repeat(64) }];
+    const propose = {
+      action: 'propose',
+      id: 'keep',
+      commandId: 'knowledge-keep',
+      expectedBacklog: 1,
+      revision: base,
+      content: 'Reset fixture state before assertions',
+      details: {
+        rationale: 'Test ordering must remain independent',
+        alternatives: ['Use a separate process'],
+        requirementIds,
+      },
+      anchors,
+    };
+    const accept = {
+      action: 'accept',
+      id: 'keep',
+      commandId: 'knowledge-accept',
+      expectedVersion: 0,
+    };
+    expect(knowledge.apply(project.id, propose)).toMatchObject({
+      status: 'proposed',
+    });
+    expect(knowledge.forTask(task.id, anchors)).toEqual([]);
+    const accepted = knowledge.apply(project.id, accept);
+    expect(accepted).toMatchObject({ status: 'accepted', decidedBy: 'owner' });
+    expect(knowledge.forTask('other-ship', anchors)).toEqual([]);
+    expect(
+      knowledge.forTask(task.id, [{ path: sourcePath, hash: 'e'.repeat(64) }]),
+    ).toEqual([]);
+    expect(knowledge.forTask(task.id, anchors)).toMatchObject([
+      { content: propose.content, required: false },
+    ]);
+    const { bundle } = knowledge.export(project.id, 42);
+    expect(bundle.records[0]).toMatchObject({
+      decisionDetails: propose.details,
+    });
+    expect(
+      knowledge.apply(otherId, {
+        action: 'import',
+        commandId: 'import-other',
+        bundle,
+      }),
+    ).toMatchObject({
+      records: [
+        {
+          status: 'proposed',
+          importedDecisionDetails: propose.details,
+          provenance: {
+            source: 'import',
+            importedFrom: {
+              projectId: project.id,
+              bundleHash: bundle.bundleHash,
+              actorId: 'owner',
+            },
+          },
+        },
+      ],
+    });
+    expect(knowledge.forTask('other-ship', anchors)).toEqual([]);
+    expect(() => knowledge.apply(otherId, accept)).toThrow('CONFLICT');
+    store.close();
+    store = open();
+    knowledge = new ProjectKnowledge(store);
+    expect(knowledge.apply(project.id, accept)).toEqual(accepted);
+    expect(knowledge.view(project.id).records).toMatchObject([
+      { decision: propose.details },
+    ]);
+    expect(knowledge.forTask(task.id, anchors)).toHaveLength(1);
+    knowledge.apply(project.id, {
+      ...propose,
+      id: 'forget-me',
+      commandId: 'add-forgotten',
+    });
+    knowledge.apply(project.id, {
+      ...accept,
+      id: 'forget-me',
+      commandId: 'accept-forgotten',
+    });
+    knowledge.apply(project.id, {
+      action: 'forget',
+      id: 'forget-me',
+      commandId: 'withdraw',
+      expectedVersion: 1,
+    });
+    expect(knowledge.forTask(task.id, anchors)).toHaveLength(1);
+    store.contracts.apply({
+      kind: 'project',
+      commandId: 'amend-requirements',
+      expectedVersion: 1,
+      project: {
+        ...project,
+        version: 2,
+        requirements: [
+          { id: 'order', description: 'Require an independent process' },
+        ],
+      },
+    });
+    expect(knowledge.forTask(task.id, anchors)).toEqual([]);
+    expect(knowledge.export(project.id).bundle.records).toEqual([]);
+  });
+
+  it('bounds task retrieval on a retained corpus before returning the packet', () => {
+    const { project, task } = setup();
+    store.contracts.apply(saveBacklog(backlogPlan()));
+    store.workflows.atomic(() => {
+      for (let index = 0; index < 1000; index++) {
+        const id = 'corpus-' + String(index).padStart(4, '0');
+        store.memory.propose({
+          id,
+          projectId: project.id,
+          namespace: 'project-decisions',
+          kind: 'decision',
+          content:
+            'Retained design decision ' + id + ' ' + 'context '.repeat(200),
+          confidence: 'reported',
+          provenance: { source: 'user', actorId: 'owner', revision: base },
+          decision: {
+            rationale: 'Representative fixture corpus',
+            alternatives: [],
+            requirementIds,
+            projectVersion: 1,
+            policyVersion: 1,
+            backlogRevision: index >= 960 ? 1 : 2,
+          },
+        });
+        store.memory.decide(project.id, id, {
+          decision: 'accept',
+          actorId: 'owner',
+          expectedVersion: 0,
+        });
+      }
+    });
+    const knowledge = new ProjectKnowledge(store);
+    const start = performance.now();
+    const packet = knowledge.forTask(task.id, []);
+    const elapsedMs = performance.now() - start;
+    expect(elapsedMs).toBeLessThan(300);
+    expect(packet.length).toBeGreaterThan(0);
+    expect(packet.length).toBeLessThanOrEqual(32);
+    const packetBytes = Buffer.byteLength(JSON.stringify(packet));
+    expect(packetBytes).toBeLessThanOrEqual(32 * 1024);
+    expect(packet[0]?.content).toContain('corpus-0960');
+    console.info('A09 retrieval fixture', {
+      retained: 1000,
+      returned: packet.length,
+      packetBytes,
+      elapsedMs,
+    });
   });
 
   it('recovers immutable plans, rationale, notes and authorized ceilings after reopening the host', () => {

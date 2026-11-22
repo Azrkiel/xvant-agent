@@ -32,6 +32,7 @@ export const managerStartSchema = z.strictObject({
   commandId: idSchema,
   revision: backlogRevision,
   taskId: idSchema,
+  lessons: z.boolean().optional(),
   maxActive: z.number().int().min(1).max(10).default(1),
   maxRepairs: z.number().int().min(0).max(1).default(1),
   milestones: z
@@ -224,7 +225,14 @@ export function prepareManagerRun(
       maxRepairs: input.maxRepairs,
       maxReviewRepairs: 0,
       review: policy.review.required,
-      lessons: false,
+      lessons: input.lessons ?? false,
+      ...(input.lessons
+        ? {
+            lessonScope:
+              'contract-' +
+              createHash('sha256').update(projectId).digest('hex').slice(0, 32),
+          }
+        : {}),
     },
   };
 }
