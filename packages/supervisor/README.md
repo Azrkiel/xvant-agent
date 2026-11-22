@@ -26,6 +26,9 @@ Persistent reconnection and OS creation-time attestation are not implemented;
 controller restart must reconcile uncertain operations and must never kill a
 persisted PID or blindly resend a command.
 
+The separate [A06 offline Linux worker boundary](../../docs/a06-worker-boundary.md)
+provides an opt-in namespace launcher for qualification fixtures.
+
 Tests run actual local child processes, including an ordinary grandchild tree,
 forced deadline, abort, cancellation, forged identities, global stop, missing
 executable, and arbitrary-byte output. Windows was exercised locally; Linux

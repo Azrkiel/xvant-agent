@@ -65,6 +65,23 @@ describe('owned process supervision', () => {
       new WorkerSupervisor().start({ ...command(''), unsetEnv: ['BAD NAME'] }),
     ).toThrow('INVALID_INPUT');
   });
+  it('starts a clean child environment with only approved variables', async () => {
+    process.env.XVANT_TEST_SECRET = 'fixture';
+    try {
+      const result = await new WorkerSupervisor().start({
+        ...command('process.stdout.write(JSON.stringify(process.env))'),
+        inheritEnv: false,
+        env: { XVANT_FIXTURE: 'allowed' },
+      }).result;
+      expect(result.exitCode).toBe(0);
+      expect(JSON.parse(result.stdout)).toMatchObject({
+        XVANT_FIXTURE: 'allowed',
+      });
+      expect(JSON.parse(result.stdout)).not.toHaveProperty('XVANT_TEST_SECRET');
+    } finally {
+      delete process.env.XVANT_TEST_SECRET;
+    }
+  });
   it('hard deadline kills a worker that does not cooperate', async () => {
     const supervisor = new WorkerSupervisor();
     const run = supervisor.start({

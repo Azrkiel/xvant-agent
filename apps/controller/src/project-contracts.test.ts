@@ -1051,3 +1051,56 @@ it('migrates a pre-A01 SQLite database while preserving manual legacy acceptance
   ]);
   expect(() => store.contracts.getTask('legacy')).toThrow('NOT_FOUND');
 });
+
+it('accounts for parent and project limits and retains an unknown reservation across restart', () => {
+  const { task } = setup();
+  const child = { ...task, id: 'child', parentTaskId: task.id };
+  store.contracts.apply(createTask(child));
+  store.budgets.configure({
+    attempts: 10,
+    wallTimeMs: 100_000,
+    tokens: 10_000,
+    costMicros: 0,
+  });
+  const allocation = { wallTimeMs: 6_000, tokens: 500, costMicros: 0 };
+  expect(store.budgets.reserve('first', child.id, allocation)).toMatchObject({
+    taskId: child.id,
+    ancestors: [task.id],
+    status: 'reserved',
+    usage: null,
+  });
+  expect(store.budgets.settle('first', null)).toMatchObject({
+    status: 'unknown',
+    allocation,
+  });
+  store.close();
+  store = open();
+  expect(store.budgets.get('first')).toMatchObject({
+    status: 'unknown',
+    allocation,
+  });
+  expect(() => store.budgets.reserve('second', task.id, allocation)).toThrow(
+    'Insufficient wallTimeMs',
+  );
+  expect(store.budgets.reserve('first', child.id, allocation)).toMatchObject({
+    status: 'unknown',
+  });
+  expect(() =>
+    store.budgets.reserveForDispatch('first', child.id, allocation),
+  ).toThrow('prior reservation');
+  expect(() => store.budgets.reserve('first', task.id, allocation)).toThrow(
+    'bound to another dispatch',
+  );
+  expect(
+    store.budgets.settle('first', { ...allocation, wallTimeMs: 2_000 }),
+  ).toMatchObject({ status: 'settled' });
+  expect(store.budgets.reserve('second', task.id, allocation).status).toBe(
+    'reserved',
+  );
+  expect(() =>
+    store.budgets.reserve('third', child.id, {
+      ...allocation,
+      wallTimeMs: 1_000,
+    }),
+  ).toThrow('Attempt budget exhausted');
+});
