@@ -1,3 +1,4 @@
+import { createHmac, randomUUID } from 'node:crypto';
 import {
   execFile,
   execFileSync,
@@ -248,6 +249,111 @@ describe('A04 daemon process fixtures', () => {
     await delay(60);
     rmSync(dir, { recursive: true, force: true });
   });
+
+  it('commits signed GitHub deliveries before acknowledgment and preserves deduplication after restart', async () => {
+    const secret = 'fixture-only-secret-'.repeat(2);
+    const settings = join(dir, 'github.json');
+    writeFileSync(settings, JSON.stringify([{ repositoryId: 42, secret }]), {
+      mode: 0o600,
+    });
+    env.XVANT_GITHUB_WEBHOOK_CONFIG = settings;
+    await ready(launch());
+    function delivery(revision: string, title: string, repositoryId = 42) {
+      return JSON.stringify({
+        action: 'edited',
+        repository: { id: repositoryId },
+        issue: {
+          number: 7,
+          updated_at: revision,
+          state: 'open',
+          title,
+          body: 'Untrusted issue data',
+        },
+      });
+    }
+    async function send(
+      body: string,
+      id = randomUUID(),
+      repositoryId = 42,
+      valid = true,
+    ) {
+      const signature = createHmac('sha256', valid ? secret : 'wrong-key')
+        .update(body)
+        .digest('hex');
+      const response = await fetch(
+        endpoint().origin + '/hooks/github/' + repositoryId,
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-github-delivery': id,
+            'x-github-event': 'issues',
+            'x-hub-signature-256': 'sha256=' + signature,
+          },
+          body,
+          signal: AbortSignal.timeout(dispatchMs),
+        },
+      );
+      return { status: response.status, data: await response.json() };
+    }
+    const newer = delivery('2026-11-21T12:00:01Z', 'Newer issue');
+    const older = delivery('2026-11-21T12:00:00Z', 'Older issue');
+    expect((await send(newer, randomUUID(), 42, false)).status).toBe(401);
+    expect(
+      (
+        await send(
+          delivery('2026-11-21T12:00:01Z', 'Unknown', 43),
+          randomUUID(),
+          43,
+        )
+      ).status,
+    ).toBe(401);
+    expect(
+      (await send(delivery('2026-11-21T12:00:01Z', 'Unknown', 43))).status,
+    ).toBe(400);
+    expect((await send('x'.repeat(129 * 1024))).status).toBe(413);
+    const id = randomUUID();
+    // The sender deliberately discards the first acknowledgement, then retries.
+    expect(await send(newer, id)).toMatchObject({
+      status: 202,
+      data: { disposition: 'pending' },
+    });
+    await cli('stop', '--id', 'stop-intake');
+    await ready(launch());
+    expect((await send(newer, id)).data).toMatchObject({
+      disposition: 'pending',
+    });
+    expect((await send(older, id)).status).toBe(409);
+    expect((await send(older)).data.disposition).toBe('superseded');
+    expect((await send(newer)).data.disposition).toBe('duplicate_revision');
+    expect(
+      (
+        await send(
+          delivery('2026-11-21T12:00:01Z', 'Ambiguous same-second edit'),
+        )
+      ).data.disposition,
+    ).toBe('needs_refresh');
+    expect((await api('daemon/github/42/issues/7')).data).toEqual({
+      repositoryId: 42,
+      issueNumber: 7,
+      revision: Date.parse('2026-11-21T12:00:01Z'),
+      disposition: 'needs_refresh',
+    });
+    const database = db();
+    try {
+      const rows = database
+        .prepare('SELECT * FROM github_issue_deliveries ORDER BY rowid')
+        .all();
+      expect(rows).toHaveLength(4);
+      expect(JSON.stringify(rows)).not.toContain('Untrusted issue data');
+      expect(
+        database.prepare('SELECT COUNT(*) AS count FROM schedule_jobs').get(),
+      ).toEqual({ count: 0 });
+    } finally {
+      database.close();
+    }
+    expect(calls()).toEqual([]);
+  }, 25_000);
 
   it('retains one durable acceptance and the pinned base after a daemon kill and client reconnect', async () => {
     const path = repo('original');

@@ -153,7 +153,7 @@ export class ArtifactStore {
 }
 const manifestSchema = z.strictObject({
   version: z.literal(1),
-  schemaVersion: z.literal([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+  schemaVersion: z.literal([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]),
   database: z.strictObject({
     file: z.literal('state.sqlite'),
     sha256: hashSchema,
@@ -219,6 +219,16 @@ const tables: Record<string, string[]> = {
   contract_policies: ['project_id', 'version', 'body'],
   contract_tasks: ['id', 'project_id', 'body'],
   contract_attempts: ['id', 'task_id'],
+  github_issue_deliveries: [
+    'repository_id',
+    'delivery_id',
+    'issue_number',
+    'revision',
+    'fingerprint',
+    'body_hash',
+    'received_at',
+    'disposition',
+  ],
   contract_backlogs: [
     'project_id',
     'revision',
@@ -265,6 +275,7 @@ const primaryKeys: Record<string, string[]> = {
   contract_tasks: ['id'],
   contract_attempts: ['id'],
   contract_backlogs: ['project_id', 'revision'],
+  github_issue_deliveries: ['repository_id', 'delivery_id'],
   lesson_nodes: ['project_id', 'id'],
   lesson_edges: ['project_id', 'from_id', 'to_id', 'relation'],
 };
@@ -293,6 +304,10 @@ const integerColumns = new Set([
   'work_events.sequence',
   'contract_projects.version',
   'contract_policies.version',
+  'github_issue_deliveries.repository_id',
+  'github_issue_deliveries.issue_number',
+  'github_issue_deliveries.revision',
+  'github_issue_deliveries.received_at',
   'contract_backlogs.revision',
   'contract_backlogs.project_version',
   'contract_backlogs.policy_version',
@@ -495,6 +510,7 @@ function validateDatabase(path: string): {
       )
         continue;
       if (schemaVersion < 9 && table.startsWith('schedule_')) continue;
+      if (schemaVersion < 11 && table === 'github_issue_deliveries') continue;
       if (schemaVersion < 10 && table === 'contract_backlogs') continue;
       validateTable(
         db,

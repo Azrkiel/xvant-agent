@@ -1,3 +1,4 @@
+import { EventInbox, eventInboxMigration } from './event-inbox.ts';
 import { statSync } from 'node:fs';
 import Database from 'better-sqlite3';
 import { createHash, randomBytes } from 'node:crypto';
@@ -124,7 +125,7 @@ function canonical(value: unknown): string {
   return json(value);
 }
 /** The newest schema this code writes; a database beyond it is refused. */
-export const SCHEMA_VERSION = 10;
+export const SCHEMA_VERSION = 11;
 
 /** Observe one committed snapshot, including while another process owns the controller. */
 export function inspectWorkGraphs<T>(
@@ -158,6 +159,7 @@ export class Store {
   readonly graphs: WorkGraphs;
   readonly workflows: Workflows;
   readonly schedule: Schedule;
+  readonly eventInbox: EventInbox;
   readonly lessons: LessonGraph;
   readonly contracts: ProjectContracts;
   readonly #db: Database.Database;
@@ -196,6 +198,10 @@ export class Store {
       generation: () => this.#generation,
       now: () => this.#now(),
     });
+    this.eventInbox = new EventInbox(this.#db, {
+      transaction: (fn) => this.#transaction(fn),
+      now: this.#now,
+    });
     this.graphs = new WorkGraphs(this.#db, {
       transaction: (fn) => this.#transaction(fn),
     });
@@ -214,6 +220,7 @@ export class Store {
         { version: 8, sql: recoveryMigration },
         { version: 9, sql: scheduleMigration },
         { version: 10, sql: projectBacklogMigration },
+        { version: 11, sql: eventInboxMigration },
         ...(options.migrations ?? []),
       ];
       if (this.schemaVersion() > migrations.at(-1)!.version)

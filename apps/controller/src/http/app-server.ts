@@ -1,6 +1,10 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { createServer } from 'node:http';
-import type { IncomingMessage, ServerResponse } from 'node:http';
+import type {
+  IncomingHttpHeaders,
+  IncomingMessage,
+  ServerResponse,
+} from 'node:http';
 
 export class HttpError extends Error {
   readonly status: number;
@@ -54,10 +58,7 @@ function send(res: ServerResponse, status: number, data: unknown): void {
   });
   res.end(body);
 }
-async function readJson(
-  req: IncomingMessage,
-  limit: number,
-): Promise<Record<string, unknown>> {
+async function readBody(req: IncomingMessage, limit: number): Promise<Buffer> {
   if (req.headers['content-type']?.split(';')[0]?.trim() !== 'application/json')
     throw new HttpError(415, 'UNSUPPORTED_MEDIA_TYPE');
   if (Number(req.headers['content-length'] ?? 0) > limit)
@@ -73,9 +74,16 @@ async function readJson(
     req.on('end', resolve);
     req.on('error', reject);
   });
+  return Buffer.concat(chunks);
+}
+async function readJson(
+  req: IncomingMessage,
+  limit: number,
+): Promise<Record<string, unknown>> {
+  const body = await readBody(req, limit);
   let parsed: unknown;
   try {
-    parsed = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
+    parsed = JSON.parse(body.toString('utf8') || '{}');
   } catch {
     throw new HttpError(400, 'INVALID_JSON');
   }
@@ -100,6 +108,11 @@ export async function startAppServer(options: {
   port?: number;
   maxBodyBytes?: number;
   operatorToken?: string;
+  githubIntake?: (
+    repositoryId: number,
+    headers: IncomingHttpHeaders,
+    body: Buffer,
+  ) => unknown;
   toError?: (
     error: unknown,
   ) => { status: number; code: string; recovery?: unknown } | undefined;
@@ -125,6 +138,16 @@ export async function startAppServer(options: {
       const url = new URL(req.url ?? '/', origin);
       if (!req.url?.startsWith('/') || req.url.startsWith('//'))
         throw new HttpError(404, 'NOT_FOUND');
+      const github = /^\/hooks\/github\/([1-9][0-9]{0,15})$/.exec(url.pathname);
+      if (github && options.githubIntake && req.method === 'POST') {
+        const body = await readBody(req, 128 * 1024);
+        send(
+          res,
+          202,
+          options.githubIntake(Number(github[1]), req.headers, body),
+        );
+        return;
+      }
       const mutation = req.method !== 'GET' && req.method !== 'HEAD';
       if (
         (mutation || req.headers.origin !== undefined) &&
