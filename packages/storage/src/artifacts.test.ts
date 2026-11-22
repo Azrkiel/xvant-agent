@@ -109,6 +109,7 @@ describe('verified snapshots', () => {
     await restoreSnapshot(join(root, 'backup'), target);
     const restored = new Store(join(target, 'state.sqlite'), {
       owner: 'restored',
+      now: () => Date.now() + 60_000,
     });
     try {
       expect(restored.eventInbox.receive(event)).toEqual(receipt);
