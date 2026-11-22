@@ -21,6 +21,8 @@ export class DaemonScheduler {
   #timer: NodeJS.Timeout | undefined;
   #wakeAt: number | null = null;
   #passes = 0;
+  readonly #observeSettlement:
+    ((id: string, state: RootState) => void) | undefined;
   readonly #active = new Map<
     string,
     { controller: Orchestrator; pending: Promise<void> }
@@ -40,6 +42,7 @@ export class DaemonScheduler {
     controllerFor: (id: string) => Orchestrator,
     projectFor: (id: string) => string,
     onError: (error: unknown) => void,
+    observeSettlement?: (id: string, state: RootState) => void,
   ) {
     this.store = store;
     this.clock = clock;
@@ -47,6 +50,7 @@ export class DaemonScheduler {
     this.controllerFor = controllerFor;
     this.projectFor = projectFor;
     this.onError = onError;
+    this.#observeSettlement = observeSettlement;
   }
 
   async recover(): Promise<void> {
@@ -190,12 +194,15 @@ export class DaemonScheduler {
           : state.phase === 'cancelled'
             ? 'cancelled'
             : 'done';
-      this.store.schedule.settle(
-        job.id,
-        status,
-        state.reason ?? null,
-        job.claim!,
-      );
+      this.store.workflows.atomic(() => {
+        this.store.schedule.settle(
+          job.id,
+          status,
+          state.reason ?? null,
+          job.claim!,
+        );
+        if (status === 'done') this.#observeSettlement?.(job.id, state);
+      });
     };
     const pending = run()
       .catch(this.onError)

@@ -218,6 +218,13 @@ const tables: Record<string, string[]> = {
   contract_projects: ['project_id', 'version', 'body'],
   contract_policies: ['project_id', 'version', 'body'],
   contract_tasks: ['id', 'project_id', 'body'],
+  contract_manager_runs: [
+    'root_id',
+    'task_id',
+    'project_id',
+    'revision',
+    'body',
+  ],
   contract_attempts: ['id', 'task_id'],
   contract_backlogs: [
     'project_id',
@@ -263,6 +270,7 @@ const primaryKeys: Record<string, string[]> = {
   contract_projects: ['project_id', 'version'],
   contract_policies: ['project_id', 'version'],
   contract_tasks: ['id'],
+  contract_manager_runs: ['root_id'],
   contract_attempts: ['id'],
   contract_backlogs: ['project_id', 'revision'],
   lesson_nodes: ['project_id', 'id'],
@@ -294,6 +302,7 @@ const integerColumns = new Set([
   'contract_projects.version',
   'contract_policies.version',
   'contract_backlogs.revision',
+  'contract_manager_runs.revision',
   'contract_backlogs.project_version',
   'contract_backlogs.policy_version',
   'lesson_edges.count',
@@ -337,6 +346,12 @@ const foreignKeys: Record<
   contract_projects: [],
   contract_policies: [],
   contract_tasks: [],
+  contract_manager_runs: [
+    { from: 'project_id', table: 'contract_backlogs', to: 'project_id' },
+    { from: 'revision', table: 'contract_backlogs', to: 'revision', seq: 1 },
+    { from: 'task_id', table: 'contract_tasks', id: 1 },
+    { from: 'root_id', table: 'work_graphs', id: 2 },
+  ],
   contract_attempts: [{ from: 'task_id', table: 'contract_tasks' }],
   contract_backlogs: [
     { from: 'project_id', table: 'contract_policies', to: 'project_id' },
@@ -496,6 +511,7 @@ function validateDatabase(path: string): {
         continue;
       if (schemaVersion < 9 && table.startsWith('schedule_')) continue;
       if (schemaVersion < 10 && table === 'contract_backlogs') continue;
+      if (schemaVersion < 11 && table === 'contract_manager_runs') continue;
       validateTable(
         db,
         table,
