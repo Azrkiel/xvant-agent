@@ -1,0 +1,11 @@
+npm notice run xvant@0.1.0 test
+npm notice run vitest run packages/supervisor/src/index.test.ts packages/supervisor/src/interactive.test.ts
+
+ RUN  v5.0.1 /workspace/work/a06-final
+
+
+ Test Files  2 passed (2)
+      Tests  20 passed (20)
+   Start at  12:25:01
+   Duration  8.10s (tests 99%, transform 1%, import 1%)
+

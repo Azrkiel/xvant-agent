@@ -1,0 +1,118 @@
+{
+  "gateId": "G10",
+  "status": "failed",
+  "generatedAt": "2026-11-21T17:30:07.525Z",
+  "sourceRevision": "30c4d100b94dffb5e9bcc5164db5bc6e294ef832",
+  "branch": "",
+  "dirtyTreeHash": "ad9dfd2b9a17c2f718161d7941bb69fe0ab6008fafb1db2629096d7975af8cc8",
+  "sourceHashScope": "All Git-indexed and nonignored files except docs/evidence; includes uncommitted files.",
+  "operatingSystem": "linux 6.18.57",
+  "executionHost": "f51920d499da",
+  "nodeVersion": "v24.21.0",
+  "npmVersion": "npm/12.0.2 node/v24.21.0 linux x64 workspaces/false",
+  "gitVersion": "git version 2.56.1",
+  "classification": "offline",
+  "qualificationScope": "offline-release",
+  "runtimeKind": "simulated",
+  "liveProvidersTested": [],
+  "checks": [
+    {
+      "id": "typecheck",
+      "command": [
+        "/workspace/work/toolchain/node-v24.21.0-linux-x64/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "workingDirectory": "/workspace/work/a05-qualification",
+      "startedAt": "2026-11-21T17:30:07.552Z",
+      "finishedAt": "2026-11-21T17:30:13.377Z",
+      "exitCode": 0
+    },
+    {
+      "id": "lint",
+      "command": [
+        "/workspace/work/toolchain/node-v24.21.0-linux-x64/bin/node",
+        "node_modules/eslint/bin/eslint.js",
+        "packages",
+        "apps",
+        "scripts",
+        "tests"
+      ],
+      "workingDirectory": "/workspace/work/a05-qualification",
+      "startedAt": "2026-11-21T17:30:13.377Z",
+      "finishedAt": "2026-11-21T17:30:16.355Z",
+      "exitCode": 0
+    },
+    {
+      "id": "format",
+      "command": [
+        "/workspace/work/toolchain/node-v24.21.0-linux-x64/bin/node",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "."
+      ],
+      "workingDirectory": "/workspace/work/a05-qualification",
+      "startedAt": "2026-11-21T17:30:16.355Z",
+      "finishedAt": "2026-11-21T17:30:20.093Z",
+      "exitCode": 0
+    },
+    {
+      "id": "tests",
+      "command": [
+        "/workspace/work/toolchain/node-v24.21.0-linux-x64/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--coverage",
+        "--reporter=default",
+        "--reporter=json",
+        "--outputFile=.artifacts/tests.json"
+      ],
+      "workingDirectory": "/workspace/work/a05-qualification",
+      "startedAt": "2026-11-21T17:30:20.093Z",
+      "finishedAt": "2026-11-21T17:32:41.474Z",
+      "exitCode": 1
+    },
+    {
+      "id": "runtime",
+      "command": [
+        "/workspace/work/toolchain/node-v24.21.0-linux-x64/bin/node",
+        "apps/controller/src/durable-demo.ts"
+      ],
+      "workingDirectory": "/workspace/work/a05-qualification",
+      "startedAt": "2026-11-21T17:32:41.475Z",
+      "finishedAt": "2026-11-21T17:32:41.772Z",
+      "exitCode": 1
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".artifacts/typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".artifacts/lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".artifacts/format.log",
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    },
+    {
+      "path": ".artifacts/tests.log",
+      "sha256": "c61c96d096e3abf69b270bd7dfeaa5ad991a955352e94ecf39eba31e68d4f9e4"
+    },
+    {
+      "path": ".artifacts/runtime.log",
+      "sha256": "1877105582dbac1d1eb3888890c104cb1e3eadba69478fe6766e5185ef41b948"
+    }
+  ],
+  "limitations": [
+    "This report qualifies only its recorded host and platform; other CI jobs need their own reports.",
+    "Simulation fixtures do not qualify provider protocols, subscriptions, or real coding ability.",
+    "Process supervision is trusted-local only. No hostile-code, filesystem, network, or escaped-descendant containment is qualified.",
+    "Linux code and CI are configured but require their own observed run."
+  ],
+  "rollbackProcedure": "Keep the branch unmerged; no external service or data migration was changed.",
+  "lastKnownGoodVersion": null,
+  "failure": "Unexpected token 'i', \"file:///wor\"... is not valid JSON"
+}

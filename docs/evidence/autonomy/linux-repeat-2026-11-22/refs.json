@@ -1,0 +1,29 @@
+[
+    {
+        "baseRefName":  "main",
+        "baseRefOid":  "f20da7e4dbd4f4a776ca60ace39c72f3dd2c7593",
+        "headRefOid":  "e97d719fef88eeea19c49f8d67124105063d3de4",
+        "isDraft":  true,
+        "number":  18,
+        "state":  "OPEN",
+        "url":  "https://github.com/Azrkiel/xvant-agent/pull/18"
+    },
+    {
+        "baseRefName":  "main",
+        "baseRefOid":  "f20da7e4dbd4f4a776ca60ace39c72f3dd2c7593",
+        "headRefOid":  "563223d230e97aca8fdda93a40dd44dfdafc4643",
+        "isDraft":  true,
+        "number":  17,
+        "state":  "OPEN",
+        "url":  "https://github.com/Azrkiel/xvant-agent/pull/17"
+    },
+    {
+        "baseRefName":  "codex/autonomous-agent-plan",
+        "baseRefOid":  "493ce4686b413e1e1a4ab5297b8169a33c9b9360",
+        "headRefOid":  "4a917ca55986c39e48a31df100429c3877cbe553",
+        "isDraft":  true,
+        "number":  19,
+        "state":  "OPEN",
+        "url":  "https://github.com/Azrkiel/xvant-agent/pull/19"
+    }
+]

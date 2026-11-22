@@ -1,0 +1,27 @@
+npm notice run xvant@0.1.0 test
+npm notice run vitest run apps/controller/src/project-contracts.test.ts apps/controller/src/workflow-checkpoint.test.ts packages/storage/src/artifacts.test.ts packages/storage/src/backup.test.ts packages/storage/src/store.test.ts packages/storage/src/integration.test.ts packages/storage/src/memory.test.ts packages/storage/src/providers.test.ts packages/storage/src/workflows.test.ts packages/supervisor/src/index.test.ts packages/supervisor/src/interactive.test.ts
+
+ RUN  v5.0.1 <fixture-worktree>
+
+ ✓ apps/controller/src/project-contracts.test.ts (37 tests) 4307ms
+   ✓ A01 offline fixture reports on the flaky test and then ships only with separate authority 1796ms
+   ✓ migrates a pre-A01 SQLite database while preserving manual legacy acceptance 919ms
+ ✓ packages/storage/src/store.test.ts (23 tests) 1457ms
+   ✓ finds the latest event of a kind for a task beyond the first page 492ms
+ ✓ packages/storage/src/artifacts.test.ts (20 tests) 1373ms
+ ✓ packages/storage/src/backup.test.ts (14 tests) 1259ms
+ ✓ packages/storage/src/providers.test.ts (59 tests) 12920ms
+   ✓ bounds journal growth and poisons the connection at the limit 10167ms
+ ✓ packages/storage/src/memory.test.ts (12 tests) 618ms
+ ✓ packages/storage/src/workflows.test.ts (4 tests) 260ms
+ ✓ apps/controller/src/workflow-checkpoint.test.ts (2 tests) 322ms
+ ✓ packages/storage/src/integration.test.ts (4 tests) 452ms
+ ✓ packages/supervisor/src/interactive.test.ts (3 tests) 149ms
+ ✓ packages/supervisor/src/index.test.ts (17 tests) 8090ms
+   ✓ terminates the owned ordinary descendant tree on deadline 506ms
+   ✓ returns bounded needs_attention when an exited root leaves inherited pipes open 7160ms
+
+ Test Files  11 passed (11)
+      Tests  195 passed (195)
+   Start at  02:04:10
+   Duration  18.78s (tests 92%, import 4%, transform 4%)

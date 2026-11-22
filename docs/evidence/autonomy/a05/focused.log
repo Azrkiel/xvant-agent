@@ -1,0 +1,11 @@
+npm notice run xvant@0.1.0 test
+npm notice run vitest run apps/controller/src/project-contracts.test.ts apps/controller/src/workflow-checkpoint.test.ts apps/controller/src/native-verifier.test.ts packages/storage/src/artifacts.test.ts packages/storage/src/backup.test.ts packages/storage/src/lessons.test.ts packages/storage/src/memory.test.ts packages/storage/src/providers.test.ts packages/storage/src/store.test.ts packages/storage/src/workflows.test.ts tests/faults/daemon.test.ts
+
+ RUN  v5.0.1 /workspace/work/a05-final
+
+
+ Test Files  11 passed (11)
+      Tests  221 passed (221)
+   Start at  12:35:11
+   Duration  32.12s (tests 95%, import 2%, transform 2%)
+

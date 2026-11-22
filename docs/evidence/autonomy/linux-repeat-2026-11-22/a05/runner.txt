@@ -1,0 +1,20 @@
+Milestone a05
+Tested head e97d719fef88eeea19c49f8d67124105063d3de4
+PR base f20da7e4dbd4f4a776ca60ace39c72f3dd2c7593
+Git tree 8ef1ebeac51a058b8e77b2dc3e2dff19f175e336
+2026-11-22T06:55:55Z
+PRETTY_NAME="Ubuntu 26.04.1 LTS"
+Linux 6.18.33.2-microsoft-standard-WSL2 x86_64 GNU/Linux
+v24.21.0
+12.0.2
+git version 2.53.0
+OpenSSH_10.2p1 Ubuntu-2ubuntu3.8, OpenSSL 3.5.5 27 Jan 2026
+tini version 0.19.0
+bubblewrap 0.11.1
+Google Chrome for Testing 153.0.8010.12
+PID 1: systemd
+Cgroup filesystem: cgroup2fs
+Current cgroup: 0::/init.scope
+CPUs: 16
+MemTotal:        7978648 kB
+{ version: '3.53.4' }

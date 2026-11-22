@@ -1,0 +1,5 @@
+[2026-11-22T06:55:56Z] npm ci --ignore-scripts --no-audit --no-fund
+[2026-11-22T06:56:03Z] npm run typecheck
+[2026-11-22T06:56:12Z] npm run lint
+[2026-11-22T06:56:19Z] tini -s -- npm test -- apps/controller/src/project-contracts.test.ts apps/controller/src/workflow-checkpoint.test.ts apps/controller/src/workflow-resume.test.ts apps/controller/src/daemon-clock.test.ts apps/controller/src/native-verifier.test.ts apps/controller/src/orchestrator.test.ts apps/controller/src/routing-default.test.ts packages/storage/src/artifacts.test.ts packages/storage/src/backup.test.ts packages/storage/src/store.test.ts packages/storage/src/workflows.test.ts tests/faults/daemon.test.ts tests/faults/workflow-remote.test.ts
+[2026-11-22T06:57:41Z] tini -s -- npm run gate -- --phase 10 --offline

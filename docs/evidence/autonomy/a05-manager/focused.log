@@ -1,0 +1,10 @@
+npm notice run xvant@0.1.0 test
+npm notice run vitest run apps/controller/src/project-contracts.test.ts apps/controller/src/workflow-checkpoint.test.ts apps/controller/src/workflow-resume.test.ts apps/controller/src/daemon-clock.test.ts apps/controller/src/native-verifier.test.ts packages/storage/src/artifacts.test.ts packages/storage/src/backup.test.ts packages/storage/src/store.test.ts packages/storage/src/workflows.test.ts apps/controller/src/orchestrator.test.ts apps/controller/src/routing-default.test.ts tests/faults/daemon.test.ts tests/faults/workflow-remote.test.ts
+
+ RUN  v5.0.1 /workspace/work/gate-a05-final
+
+
+ Test Files  13 passed (13)
+      Tests  219 passed (219)
+   Start at  01:44:44
+   Duration  56.58s (tests 97%, import 2%, transform 1%)
