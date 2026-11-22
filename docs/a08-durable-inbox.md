@@ -2,7 +2,7 @@
 
 This draft implements signed issue receipt and deduplication on the A04
 daemon. It targets the A05 backlog draft so the inbox migration follows
-schema 10. A05 manager admission, A07 promotion, and A04 physical-suspend
+the manager schema 11. A05 manager admission, A07 promotion, and A04 physical-suspend
 qualification are still open. See the [A08 subplan](https://github.com/Azrkiel/xvant-agent/blob/493ce4686b413e1e1a4ab5297b8169a33c9b9360/docs/autonomy/08-events-and-integrations.md).
 
 ## Configuration and receipts
@@ -36,7 +36,7 @@ publication authority before the A03 effect path may submit a remote write.
 
 ## Upgrade and rollback
 
-Schema 11 adds `github_issue_deliveries` and its revision index. Verified
+Schema 12 adds `github_issue_deliveries` and its revision index. Verified
 snapshots include and validate this table. Disable intake by removing the
 configuration and restarting the daemon. Back up while stopped before
 upgrading. Restore the pre-upgrade backup to a separate state directory

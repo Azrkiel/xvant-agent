@@ -258,7 +258,7 @@ it.each([
   ],
   [
     'missing backlog policy foreign key',
-    `DROP TABLE contract_backlogs;
+    `DROP TABLE contract_manager_runs; DROP TABLE contract_backlogs;
      CREATE TABLE contract_backlogs(
        project_id TEXT NOT NULL, revision INTEGER NOT NULL,
        project_version INTEGER NOT NULL, policy_version INTEGER NOT NULL, body TEXT NOT NULL,

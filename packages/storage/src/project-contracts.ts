@@ -48,6 +48,26 @@ CREATE TABLE contract_backlogs(
 );
 `;
 
+export const projectManagerMigration = `
+CREATE TABLE contract_manager_runs(
+  root_id TEXT PRIMARY KEY REFERENCES work_graphs(id),
+  task_id TEXT NOT NULL REFERENCES contract_tasks(id),
+  project_id TEXT NOT NULL,
+  revision INTEGER NOT NULL,
+  body TEXT NOT NULL,
+  FOREIGN KEY(project_id,revision) REFERENCES contract_backlogs(project_id,revision)
+);
+`;
+
+export interface ManagerRun {
+  projectId: string;
+  revision: number;
+  taskId: string;
+  rootId: string;
+  attempts: number;
+  wallTimeMs: number;
+}
+
 const command = { commandId: idSchema };
 const version = z.number().int().nonnegative();
 export const projectCommandSchema = z.discriminatedUnion('kind', [
@@ -202,8 +222,94 @@ export class ProjectContracts {
     });
   }
 
+  managerRuns(projectId: string): ManagerRun[] {
+    const rows = this.#db
+      .prepare(
+        'SELECT body FROM contract_manager_runs WHERE project_id=? ORDER BY revision',
+      )
+      .all(parse(idSchema, projectId)) as { body: string }[];
+    return rows.map(({ body }) => JSON.parse(body) as ManagerRun);
+  }
+
+  managerRun(rootId: string): ManagerRun | null {
+    const row = this.#db
+      .prepare('SELECT body FROM contract_manager_runs WHERE root_id=?')
+      .get(parse(idSchema, rootId)) as { body: string } | undefined;
+    return row ? (JSON.parse(row.body) as ManagerRun) : null;
+  }
+
+  bindManagerRun(run: ManagerRun): void {
+    this.#host.command(
+      run.projectId,
+      'contract.manager.bind',
+      run.rootId,
+      run,
+      () => {
+        const previous = this.managerRuns(run.projectId);
+        const { budgetCeilings } = this.getBacklog(run.projectId);
+        if (
+          previous.some(
+            (item) =>
+              item.revision === run.revision || item.taskId === run.taskId,
+          )
+        )
+          fail(
+            'CONFLICT',
+            'The backlog revision or task already has a managed run',
+          );
+        if (
+          !budgetCeilings ||
+          previous.reduce(
+            (total, item) => total + item.attempts,
+            run.attempts,
+          ) > budgetCeilings.attempts ||
+          previous.reduce(
+            (total, item) => total + item.wallTimeMs,
+            run.wallTimeMs,
+          ) > budgetCeilings.wallTimeMs
+        )
+          fail(
+            'POLICY_DENIED',
+            'Project manager budget exhausted, including prior revisions',
+          );
+        this.#db
+          .prepare('INSERT INTO contract_manager_runs VALUES(?,?,?,?,?)')
+          .run(
+            run.rootId,
+            run.taskId,
+            run.projectId,
+            run.revision,
+            JSON.stringify(run),
+          );
+        return { rootId: run.rootId };
+      },
+    );
+  }
+
+  #assertManagerCanReplan(projectId: string): void {
+    if (
+      this.#db
+        .prepare(
+          `
+      SELECT 1 FROM contract_manager_runs m
+      JOIN schedule_jobs j ON m.root_id=j.id
+      WHERE m.project_id=? AND (j.status IN ('queued','running') OR EXISTS (
+        SELECT 1 FROM work_actions a
+        WHERE a.graph_id=m.root_id AND json_extract(a.body,'$.status')='dispatching'
+      )) LIMIT 1
+    `,
+        )
+        .get(projectId)
+    )
+      fail(
+        'CONFLICT',
+        'Resolve or cancel the current managed run before changing its authority',
+      );
+  }
+
   #saveBacklog(backlog: ProjectBacklog, expectedRevision: number) {
     const { projectId } = backlog;
+    this.#assertManagerCanReplan(projectId);
     const { project, policy } = this.getProject(projectId);
     if (
       (this.#backlog(projectId)?.revision ?? 0) !== expectedRevision ||
@@ -331,6 +437,7 @@ export class ProjectContracts {
               previous.ownerIntent.actorId !== project.ownerIntent.actorId
             )
               fail('POLICY_DENIED', 'Project owner identity is immutable');
+            this.#assertManagerCanReplan(project.id);
             validateProject(project);
             this.#db
               .prepare('INSERT INTO contract_projects VALUES(?,?,?)')
@@ -356,6 +463,7 @@ export class ProjectContracts {
               policy.version !== expectedVersion + 1
             )
               fail('CONFLICT', 'Policy version has changed');
+            this.#assertManagerCanReplan(policy.projectId);
             validateProjectPolicy(this.#project(policy.projectId), policy);
             this.#db
               .prepare('INSERT INTO contract_policies VALUES(?,?,?)')
