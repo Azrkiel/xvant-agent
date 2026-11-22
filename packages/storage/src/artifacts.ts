@@ -153,7 +153,7 @@ export class ArtifactStore {
 }
 const manifestSchema = z.strictObject({
   version: z.literal(1),
-  schemaVersion: z.literal([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+  schemaVersion: z.literal([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]),
   database: z.strictObject({
     file: z.literal('state.sqlite'),
     sha256: hashSchema,

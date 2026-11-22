@@ -216,7 +216,7 @@ describe('project backlog', () => {
       previous.close();
     }
     store = open();
-    expect(store.schemaVersion()).toBe(10);
+    expect(store.schemaVersion()).toBe(SCHEMA_VERSION);
     expect(store.contracts.getProject(project.id)).toEqual({ project, policy });
     const backlog = backlogPlan();
     store.contracts.apply(saveBacklog(backlog));
