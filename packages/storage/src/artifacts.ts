@@ -358,6 +358,7 @@ const foreignKeys: Record<
   schedule_jobs: [{ from: 'id', table: 'work_graphs' }],
   schedule_control: [],
   schedule_projects: [],
+  github_issue_deliveries: [],
   contract_projects: [],
   contract_policies: [],
   contract_tasks: [],

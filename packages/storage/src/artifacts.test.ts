@@ -94,6 +94,35 @@ describe('verified snapshots', () => {
       readFileSync(join(root, 'backup', 'manifest.json'), 'utf8'),
     ).toContain(hash);
   });
+  it('keeps a GitHub receipt and its replay identity in a verified snapshot', async () => {
+    const event = {
+      repositoryId: 42,
+      deliveryId: '2ef2c215-742f-4dc0-9574-97bd5dd09431',
+      issueNumber: 7,
+      revision: 1760000000000,
+      fingerprint: 'a'.repeat(64),
+      bodyHash: 'b'.repeat(64),
+    };
+    const receipt = store.eventInbox.receive(event);
+    await backupSnapshot(store, artifacts, join(root, 'backup'));
+    const target = join(root, 'restore');
+    await restoreSnapshot(join(root, 'backup'), target);
+    const restored = new Store(join(target, 'state.sqlite'), {
+      owner: 'restored',
+    });
+    try {
+      expect(restored.eventInbox.receive(event)).toEqual(receipt);
+      expect(
+        restored.eventInbox.current(event.repositoryId, event.issueNumber),
+      ).toMatchObject({
+        revision: event.revision,
+        disposition: 'pending',
+      });
+    } finally {
+      restored.close();
+    }
+  });
+
   it('rejects corrupt or missing snapshot objects without leaving a restore target', async () => {
     const hash = artifacts.put(Buffer.from('evidence'));
     await backupSnapshot(store, artifacts, join(root, 'backup'));
