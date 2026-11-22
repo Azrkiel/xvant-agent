@@ -42,6 +42,12 @@ import {
 } from '../apps/controller/src/turn-runner.ts';
 import { defaultWorkers, shellCheck } from '../apps/controller/src/app.ts';
 import {
+  daemonCli,
+  daemonEndpoint,
+  daemonRequest,
+  daemonSubmit,
+} from './xvant-daemon.mjs';
+import {
   activeRouting,
   applyRouting,
   applyTiers,
@@ -143,6 +149,32 @@ if (command === undefined || command === 'shell') {
   const { startShell } = await import('./xvant-shell.mjs');
   await startShell({ home });
   process.exit(0);
+} else if (command === 'daemon') {
+  try {
+    const result = await daemonCli(home, rest, value, values);
+    if (result !== undefined) console.log(JSON.stringify(result, null, 2));
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
+} else if (command === 'ui' && daemonEndpoint(home)) {
+  try {
+    const entry = daemonEndpoint(home);
+    const { bootstrapToken } = await daemonRequest(
+      entry,
+      'daemon/bootstrap',
+      {},
+    );
+    console.log(
+      'Open this once to sign in: ' +
+        entry.origin +
+        '/#bootstrap=' +
+        bootstrapToken,
+    );
+  } catch (error) {
+    console.error('Daemon UI unavailable: ' + error.message);
+    process.exitCode = 1;
+  }
 } else if (command === 'ui') {
   const { startApp } = await import('../apps/controller/src/app.ts');
   const app = await startApp({
@@ -183,6 +215,24 @@ if (command === undefined || command === 'shell') {
           ? ' (accepted: ' + acceptedVersions(found.runtimeKind) + ')'
           : ''),
     );
+} else if (
+  command === 'run' &&
+  (rest.includes('--daemon') || daemonEndpoint(home))
+) {
+  try {
+    const entry = daemonEndpoint(home);
+    if (!entry) throw new Error('DAEMON_NOT_RUNNING');
+    console.log(
+      JSON.stringify(
+        await daemonRequest(entry, 'roots', daemonSubmit(rest, value, values)),
+        null,
+        2,
+      ),
+    );
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
 } else if (command === 'run') {
   const repo = value('--repo');
   const objective = value('--objective');
@@ -388,6 +438,22 @@ if (command === undefined || command === 'shell') {
   if (state.phase === 'ready')
     console.log('Accept:  npm run xvant -- accept ' + id);
   process.exitCode = state.phase === 'ready' ? 0 : 1;
+} else if (
+  command === 'resume' &&
+  (rest.includes('--daemon') || daemonEndpoint(home))
+) {
+  try {
+    console.log(
+      JSON.stringify(
+        await daemonCli(home, ['resume', ...rest], value, values),
+        null,
+        2,
+      ),
+    );
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
 } else if (command === 'resume') {
   if (rest.length !== 1) {
     console.error('Usage: resume ID');
@@ -519,6 +585,19 @@ if (command === undefined || command === 'shell') {
     process.exitCode = 1;
   } finally {
     store.close();
+  }
+} else if (command === 'accept' && daemonEndpoint(home)) {
+  try {
+    console.log(
+      JSON.stringify(
+        await daemonCli(home, ['accept', ...rest], value, values),
+        null,
+        2,
+      ),
+    );
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
   }
 } else if (command === 'accept') {
   const { store } = open();
@@ -843,7 +922,7 @@ if (command === undefined || command === 'shell') {
   }
 } else {
   console.error(
-    'Commands: shell | ui | runtimes | run | resume ID | status [ID] | handoff ID | contracts | accept ID | merge ID [--repo PATH] | share | backup | restore | lessons',
+    'Commands: shell | ui | daemon | runtimes | run | resume ID | status [ID] | handoff ID | contracts | accept ID | merge ID [--repo PATH] | share | backup | restore | lessons',
   );
   process.exit(2);
 }

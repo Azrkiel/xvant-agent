@@ -368,7 +368,11 @@ function runDetail(root) {
                 try {
                   const result = await api('/roots/' + root.id + '/resume', {
                     method: 'POST',
-                    body: '{}',
+                    body: view.overview.daemon
+                      ? JSON.stringify({
+                          commandId: 'ui-' + crypto.randomUUID(),
+                        })
+                      : '{}',
                   });
                   announce(
                     'Run is now: ' + (LABELS[result.phase] ?? result.phase),
@@ -400,7 +404,9 @@ function runDetail(root) {
                   return;
                 await api('/roots/' + root.id + '/cancel', {
                   method: 'POST',
-                  body: '{}',
+                  body: view.overview.daemon
+                    ? JSON.stringify({ commandId: 'ui-' + crypto.randomUUID() })
+                    : '{}',
                 });
                 announce('Stopping the run.');
               },
@@ -433,6 +439,9 @@ function runDetail(root) {
                     method: 'POST',
                     body: JSON.stringify({
                       expectedVersion: root.rowVersion,
+                      ...(view.overview.daemon
+                        ? { commandId: 'ui-' + crypto.randomUUID() }
+                        : {}),
                       head,
                     }),
                   });
@@ -945,6 +954,25 @@ $('open-lessons').addEventListener('click', () =>
   openLessons().catch((error) => announce(explain(error))),
 );
 $('stop-all').addEventListener('click', async () => {
+  if (view.overview?.daemon) {
+    if (
+      await confirm(
+        'Drain the daemon?',
+        'Running work can finish. Intake and new dispatch pause until the daemon is continued.',
+        'Drain',
+      )
+    ) {
+      await api('/daemon/control', {
+        method: 'POST',
+        body: JSON.stringify({
+          commandId: 'ui-' + crypto.randomUUID(),
+          action: 'drain',
+        }),
+      });
+      announce('Daemon is draining.');
+    }
+    return;
+  }
   if (
     !(await confirm(
       'Stop all work?',
@@ -959,6 +987,7 @@ $('stop-all').addEventListener('click', async () => {
 try {
   await connect();
   await refreshOverview();
+  if (view.overview.daemon) $('stop-all').textContent = 'Drain daemon';
   if (view.overview.roots.length) await openRun(view.overview.roots[0].id);
   else showComposer();
   listen();

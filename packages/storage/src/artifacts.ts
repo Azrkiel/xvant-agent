@@ -162,6 +162,7 @@ const manifestSchema = z.strictObject({
     z.literal(6),
     z.literal(7),
     z.literal(8),
+    z.literal(9),
   ]),
   database: z.strictObject({
     file: z.literal('state.sqlite'),
@@ -199,6 +200,31 @@ const tables: Record<string, string[]> = {
   work_actions: ['graph_id', 'slot', 'body'],
   work_dispatches: ['id', 'graph_id', 'body'],
   work_recoveries: ['id', 'graph_id', 'body'],
+  schedule_jobs: [
+    'id',
+    'project',
+    'priority',
+    'dueAt',
+    'retryAt',
+    'acceptedAt',
+    'updatedAt',
+    'slots',
+    'resources',
+    'status',
+    'reason',
+    'generation',
+    'claim',
+    'cancelRequested',
+  ],
+  schedule_control: [
+    'id',
+    'intake',
+    'dispatch',
+    'draining',
+    'sequence',
+    'clock',
+  ],
+  schedule_projects: ['id', 'served'],
   contract_projects: ['project_id', 'version', 'body'],
   contract_policies: ['project_id', 'version', 'body'],
   contract_tasks: ['id', 'project_id', 'body'],
@@ -234,6 +260,9 @@ const primaryKeys: Record<string, string[]> = {
   work_actions: ['graph_id', 'slot'],
   work_dispatches: ['id'],
   work_recoveries: ['id'],
+  schedule_jobs: ['id'],
+  schedule_control: ['id'],
+  schedule_projects: ['id'],
   contract_projects: ['project_id', 'version'],
   contract_policies: ['project_id', 'version'],
   contract_tasks: ['id'],
@@ -245,6 +274,22 @@ const integerColumns = new Set([
   'events.sequence',
   'ownership.generation',
   'ownership.expires',
+  'ownership.uptimeExpiry',
+  'schedule_jobs.priority',
+  'schedule_jobs.dueAt',
+  'schedule_jobs.retryAt',
+  'schedule_jobs.acceptedAt',
+  'schedule_jobs.updatedAt',
+  'schedule_jobs.slots',
+  'schedule_jobs.generation',
+  'schedule_jobs.claim',
+  'schedule_jobs.cancelRequested',
+  'schedule_control.id',
+  'schedule_control.intake',
+  'schedule_control.dispatch',
+  'schedule_control.draining',
+  'schedule_control.sequence',
+  'schedule_projects.served',
   'artifacts.work_revision',
   'provider_entries.sequence',
   'work_events.sequence',
@@ -276,6 +321,9 @@ const foreignKeys: Record<string, { from: string; table: string }[]> = {
   work_actions: [{ from: 'graph_id', table: 'work_graphs' }],
   work_dispatches: [{ from: 'graph_id', table: 'work_graphs' }],
   work_recoveries: [{ from: 'graph_id', table: 'work_graphs' }],
+  schedule_jobs: [{ from: 'id', table: 'work_graphs' }],
+  schedule_control: [],
+  schedule_projects: [],
   contract_projects: [],
   contract_policies: [],
   contract_tasks: [],
@@ -283,6 +331,15 @@ const foreignKeys: Record<string, { from: string; table: string }[]> = {
   lesson_nodes: [],
   lesson_edges: [],
 };
+const nullableColumns = new Set([
+  'ownership.boot',
+  'ownership.uptimeExpiry',
+  'schedule_jobs.retryAt',
+  'schedule_jobs.reason',
+  'schedule_jobs.generation',
+  'schedule_jobs.claim',
+  'schedule_control.clock',
+]);
 interface ColumnMetadata {
   name: string;
   type: string;
@@ -313,9 +370,14 @@ function validateTable(
     name,
     type: integerColumns.has(`${table}.${name}`) ? 'INTEGER' : 'TEXT',
     // SQLite reports implicit single-column PKs as nullable in this v1 schema.
-    notnull: keys.length === 1 && keys[0] === name ? 0 : 1,
+    notnull:
+      (keys.length === 1 && keys[0] === name) ||
+      nullableColumns.has(`${table}.${name}`)
+        ? 0
+        : 1,
     pk: keys.indexOf(name) + 1,
-    dflt_value: null,
+    dflt_value:
+      table === 'schedule_jobs' && name === 'cancelRequested' ? '0' : null,
   }));
   const metadata = actual.map(({ name, type, notnull, pk, dflt_value }) => ({
     name,
@@ -357,7 +419,8 @@ function validateTable(
   if (
     table === 'events' ||
     table === 'provider_entries' ||
-    table === 'work_events'
+    table === 'work_events' ||
+    table === 'schedule_control'
       ? uniqueIndexes.length !== 0
       : uniqueIndexes.length !== 1 ||
         uniqueIndexes[0]?.origin !== 'pk' ||
@@ -373,7 +436,7 @@ function validateDatabase(path: string): {
   const db = new Database(path, { readonly: true, fileMustExist: true });
   try {
     const schemaVersion = db.pragma('user_version', { simple: true }) as number;
-    if (![1, 2, 3, 4, 5, 6, 7, 8].includes(schemaVersion))
+    if (![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(schemaVersion))
       fail('SCHEMA_UNSUPPORTED');
     if (
       db.pragma('integrity_check', { simple: true }) !== 'ok' ||
@@ -396,7 +459,14 @@ function validateDatabase(path: string): {
         ['work_checkpoints', 'work_actions'].includes(table)
       )
         continue;
-      validateTable(db, table, columns);
+      if (schemaVersion < 9 && table.startsWith('schedule_')) continue;
+      validateTable(
+        db,
+        table,
+        table === 'ownership' && schemaVersion >= 9
+          ? [...columns, 'boot', 'uptimeExpiry']
+          : columns,
+      );
     }
     if (schemaVersion >= 3) {
       const text = db

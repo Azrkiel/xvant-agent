@@ -329,8 +329,15 @@ export class Orchestrator {
   readonly #objects: ArtifactStore;
   readonly #supervisor = new WorkerSupervisor();
   readonly #onChange: (state: RootState, kind: string) => void;
+  readonly #now: () => number;
+  readonly #enforceClock: boolean;
   #cancelled = false;
-  readonly #running = new Map<string, string>();
+  #suspended = false;
+  readonly #running = new Map<string, number>();
+  readonly #checking = new Map<
+    string,
+    { deadlineAt: number; expire: () => void }
+  >();
   constructor(
     store: Store,
     runner: TurnRunner,
@@ -341,6 +348,7 @@ export class Orchestrator {
       turnTimeoutMs?: number;
       objects?: ArtifactStore;
       onChange?: (state: RootState, kind: string) => void;
+      now?: () => number;
     },
   ) {
     const aliases = new Set(workers.map((w) => w.alias.toLowerCase()));
@@ -355,10 +363,30 @@ export class Orchestrator {
       options.objects ??
       new ArtifactStore(join(dirname(this.#root), 'objects'));
     this.#onChange = options.onChange ?? (() => {});
+    this.#now = options.now ?? Date.now;
+    this.#enforceClock = options.now !== undefined;
   }
   cancel(): void {
     this.#cancelled = true;
+    this.#interrupt();
+  }
+
+  /** Stop this owner at durable boundaries. The next owner reconciles any effect. */
+  suspend(): void {
+    this.#suspended = true;
+    this.#interrupt();
+  }
+
+  #interrupt(): void {
     for (const taskId of this.#running.keys()) this.#runner.interrupt(taskId);
+    this.#supervisor.stopAll();
+  }
+  checkDeadlines(): void {
+    const now = this.#now();
+    for (const [taskId, deadlineAt] of this.#running)
+      if (now >= deadlineAt) this.#runner.interrupt(taskId);
+    for (const check of this.#checking.values())
+      if (now >= check.deadlineAt) check.expire();
   }
   async run(spec: RootSpec): Promise<RootState> {
     return this.#maintainLease(() => this.#start(spec));
@@ -366,92 +394,133 @@ export class Orchestrator {
 
   async resume(id: string): Promise<RootState> {
     return this.#maintainLease(async () => {
-      const graph = this.#store.graphs.get<RootState>(id);
-      const checkpoint = Orchestrator.checkpoint(this.#store, id);
-      const progress = rootProgressSchema.safeParse(graph.state);
-      if (
-        !progress.success ||
-        checkpoint.spec.id !== id ||
-        checkpoint.spec.projectId !== graph.projectId ||
-        checkpoint.spec.repository !== progress.data.repository ||
-        checkpoint.spec.objective !== progress.data.objective ||
-        JSON.stringify(checkpoint.spec.acceptanceCriteria) !==
-          JSON.stringify(progress.data.acceptanceCriteria)
-      )
-        throw new Error('CHECKPOINT_INVALID');
+      const { checkpoint, graph } = await this.reconcile(id, {
+        allowReplay: !this.#cancelled,
+      });
+      if (checkpoint.progress.step === 'done') return graph.state;
+      if (this.#cancelled) return Orchestrator.cancelPrepared(this.#store, id);
+      return this.#run(checkpoint, graph);
+    });
+  }
 
-      const step = checkpoint.progress.step;
-      if (step === 'done') {
-        if (
-          [
-            'ready',
-            'accepted',
-            'failed',
-            'needs_attention',
-            'cancelled',
-          ].includes(graph.state.phase)
-        )
-          return graph.state;
-        throw new Error('CHECKPOINT_INCOMPLETE');
-      }
+  /** Inspect interrupted effects without starting a new workflow action. */
+  async reconcile(
+    id: string,
+    { allowReplay = false, requireBindings = true } = {},
+  ) {
+    const graph = this.#store.graphs.get<RootState>(id);
+    const checkpoint = Orchestrator.checkpoint(this.#store, id);
+    const progress = rootProgressSchema.safeParse(graph.state);
+    if (
+      !progress.success ||
+      checkpoint.spec.id !== id ||
+      checkpoint.spec.projectId !== graph.projectId ||
+      checkpoint.spec.repository !== progress.data.repository ||
+      checkpoint.spec.objective !== progress.data.objective ||
+      JSON.stringify(checkpoint.spec.acceptanceCriteria) !==
+        JSON.stringify(progress.data.acceptanceCriteria)
+    )
+      throw new Error('CHECKPOINT_INVALID');
+
+    const step = checkpoint.progress.step;
+    if (step === 'done') {
       if (
-        ['ready', 'accepted', 'failed', 'cancelled'].includes(graph.state.phase)
+        [
+          'ready',
+          'accepted',
+          'failed',
+          'needs_attention',
+          'cancelled',
+        ].includes(graph.state.phase)
       )
-        throw new Error('CHECKPOINT_INCOMPLETE');
-      if (
-        checkpoint.stateRoot !== this.#root ||
+        return { checkpoint, graph };
+      throw new Error('CHECKPOINT_INCOMPLETE');
+    }
+    if (
+      ['ready', 'accepted', 'failed', 'cancelled'].includes(graph.state.phase)
+    )
+      throw new Error('CHECKPOINT_INCOMPLETE');
+    if (
+      requireBindings &&
+      (checkpoint.stateRoot !== this.#root ||
         JSON.stringify(checkpoint.workers) !==
           JSON.stringify(
             parseCheckpoint({ ...checkpoint, workers: this.#workers }).workers,
           ) ||
         JSON.stringify(Object.entries(checkpoint.runtimeBindings).sort()) !==
           JSON.stringify(Object.entries(this.#runtimeBindings).sort()) ||
-        checkpoint.turnTimeoutMs !== this.#turnTimeoutMs
-      )
-        throw new Error('WORKFLOW_BINDINGS_CHANGED');
-      const actions = this.#store.workflows.actions(id);
-      for (const action of actions) validateWorkflowAction(action);
+        checkpoint.turnTimeoutMs !== this.#turnTimeoutMs)
+    )
+      throw new Error('WORKFLOW_BINDINGS_CHANGED');
+    const actions = this.#store.workflows.actions(id);
+    for (const action of actions) validateWorkflowAction(action);
+    if (
+      (step !== 'initialize' && !graph.state.integration) ||
+      (step !== 'initialize' && step !== 'plan' && !graph.state.plan)
+    )
+      throw new Error('CHECKPOINT_INCOMPLETE');
+    if (graph.state.integration) {
+      const initialized = this.#store.workflows.action(id, 'initialize');
+      if (!initialized || initialized.status !== 'completed')
+        throw new Error('CHECKPOINT_INCOMPLETE');
+      const settled = integrationIdentitySchema.parse(initialized.result);
       if (
-        (step !== 'initialize' && !graph.state.integration) ||
-        (step !== 'initialize' && step !== 'plan' && !graph.state.plan)
+        graph.state.integration.baseCommit !== checkpoint.spec.baseRevision ||
+        graph.state.integration.path !== settled.path ||
+        graph.state.integration.branch !== settled.branch
+      )
+        throw new Error('CHECKPOINT_INVALID');
+    }
+    if (graph.state.plan) {
+      const nodes = validatePlan(graph.state.plan).plan.nodes;
+      if (
+        Object.keys(graph.state.nodes).length !== nodes.length ||
+        nodes.some(({ id }) => graph.state.nodes[id]?.node.id !== id)
       )
         throw new Error('CHECKPOINT_INCOMPLETE');
-      if (graph.state.integration) {
-        const initialized = this.#store.workflows.action(id, 'initialize');
-        if (!initialized || initialized.status !== 'completed')
-          throw new Error('CHECKPOINT_INCOMPLETE');
-        const settled = integrationIdentitySchema.parse(initialized.result);
-        if (
-          graph.state.integration.baseCommit !== checkpoint.spec.baseRevision ||
-          graph.state.integration.path !== settled.path ||
-          graph.state.integration.branch !== settled.branch
-        )
-          throw new Error('CHECKPOINT_INVALID');
-      }
-      if (graph.state.plan) {
-        const nodes = validatePlan(graph.state.plan).plan.nodes;
-        if (
-          Object.keys(graph.state.nodes).length !== nodes.length ||
-          nodes.some(({ id }) => graph.state.nodes[id]?.node.id !== id)
-        )
-          throw new Error('CHECKPOINT_INCOMPLETE');
-      }
-      const blocked: RecoveryDecision[] = [];
-      for (const action of actions) {
-        if (action.status !== 'dispatching') continue;
-        const recovery = await recoverWorkflowAction(
-          this.#store,
-          this.#objects,
-          checkpoint,
-          graph.state.integration,
-          action,
-          this.#runner.remoteRecovery,
-        );
-        this.#store.workflows.boundary('recovery.after_commit', action.slot);
-        if (recovery.decision === 'block') blocked.push(recovery);
-      }
-      if (blocked.length) throw new RecoveryBlockedError(blocked);
-      return this.#run(checkpoint, graph);
+    }
+    const blocked: RecoveryDecision[] = [];
+    for (const action of actions) {
+      if (action.status !== 'dispatching') continue;
+      const recovery = await recoverWorkflowAction(
+        this.#store,
+        this.#objects,
+        checkpoint,
+        graph.state.integration,
+        action,
+        this.#runner.remoteRecovery,
+        this.#now,
+        allowReplay,
+      );
+      this.#store.workflows.boundary('recovery.after_commit', action.slot);
+      if (recovery.decision === 'block') blocked.push(recovery);
+    }
+    if (blocked.length) throw new RecoveryBlockedError(blocked);
+    return { checkpoint, graph };
+  }
+
+  static cancelPrepared(store: Store, id: string): RootState {
+    return store.workflows.atomic(() => {
+      const graph = store.graphs.get<RootState>(id);
+      const checkpoint = Orchestrator.checkpoint(store, id);
+      if (checkpoint.progress.step === 'done') return graph.state;
+      if (
+        store.workflows
+          .actions(id)
+          .some(({ status }) => status === 'dispatching')
+      )
+        throw new Error('UNRESOLVED_WORKFLOW_ACTION');
+      checkpoint.progress.step = 'done';
+      const state: RootState = {
+        ...graph.state,
+        phase: 'cancelled',
+        reason: 'CANCELLED',
+      };
+      store.workflows.write(id, checkpoint);
+      store.graphs.update(id, graph.rowVersion, state, 'graph.cancelled', {
+        reason: state.reason,
+      });
+      return state;
     });
   }
 
@@ -475,38 +544,73 @@ export class Orchestrator {
     return parseCheckpoint(store.workflows.read(id));
   }
 
+  #prepare(input: RootSpec): WorkflowCheckpoint {
+    if (
+      containsSecret(
+        JSON.stringify([input, this.#workers, this.#runtimeBindings]),
+      )
+    )
+      throw new Error('SECRET_IN_WORKFLOW_SPEC');
+    const repository = realpathSync(input.repository);
+    return createCheckpoint({
+      spec: {
+        ...input,
+        nodeChecks: input.nodeChecks ?? [],
+        maxActive: input.maxActive ?? 3,
+        maxRepairs: input.maxRepairs ?? 2,
+        maxReviewRepairs: input.maxReviewRepairs ?? 1,
+        checkTimeoutMs: input.checkTimeoutMs ?? 600000,
+        review: input.review ?? true,
+        lessons: input.lessons ?? true,
+        repository,
+        baseRevision: resolveGitCommit(repository, input.baseRevision),
+        lessonScope:
+          input.lessons === false
+            ? null
+            : (input.lessonScope ?? scopeOf(repository, input.projectId)),
+      },
+      workers: this.#workers,
+      runtimeBindings: this.#runtimeBindings,
+      stateRoot: this.#root,
+      turnTimeoutMs: this.#turnTimeoutMs,
+    });
+  }
+
+  /** Journal a new run without starting Git or provider effects. */
+  admit(input: RootSpec): void {
+    const checkpoint = this.#prepare(input);
+    this.#createGraph(checkpoint, this.#initialState(checkpoint));
+  }
+
+  #initialState({ spec }: WorkflowCheckpoint): RootState {
+    return {
+      phase: 'planning',
+      repository: spec.repository,
+      objective: spec.objective,
+      acceptanceCriteria: spec.acceptanceCriteria,
+      plan: null,
+      nodes: {},
+      integration: null,
+      checks: [],
+      review: null,
+    };
+  }
+
+  #createGraph(checkpoint: WorkflowCheckpoint, state: RootState) {
+    const { spec } = checkpoint;
+    return this.#store.workflows.atomic(() => {
+      const graph = this.#store.graphs.create(spec.id, spec.projectId, state, {
+        objective: spec.objective,
+      });
+      this.#store.workflows.write(spec.id, checkpoint);
+      return graph;
+    });
+  }
+
   async #start(input: RootSpec): Promise<RootState> {
     let checkpoint: WorkflowCheckpoint;
     try {
-      if (
-        containsSecret(
-          JSON.stringify([input, this.#workers, this.#runtimeBindings]),
-        )
-      )
-        throw new Error('SECRET_IN_WORKFLOW_SPEC');
-      const repository = realpathSync(input.repository);
-      checkpoint = createCheckpoint({
-        spec: {
-          ...input,
-          nodeChecks: input.nodeChecks ?? [],
-          maxActive: input.maxActive ?? 3,
-          maxRepairs: input.maxRepairs ?? 2,
-          maxReviewRepairs: input.maxReviewRepairs ?? 1,
-          checkTimeoutMs: input.checkTimeoutMs ?? 600000,
-          review: input.review ?? true,
-          lessons: input.lessons ?? true,
-          repository,
-          baseRevision: resolveGitCommit(repository, input.baseRevision),
-          lessonScope:
-            input.lessons === false
-              ? null
-              : (input.lessonScope ?? scopeOf(repository, input.projectId)),
-        },
-        workers: this.#workers,
-        runtimeBindings: this.#runtimeBindings,
-        stateRoot: this.#root,
-        turnTimeoutMs: this.#turnTimeoutMs,
-      });
+      checkpoint = this.#prepare(input);
     } catch (error) {
       const reason = (error as Error).message;
       const state: RootState = {
@@ -551,17 +655,7 @@ export class Orchestrator {
     const progress = checkpoint.progress;
     const state: RootState = existing
       ? structuredClone(existing.state)
-      : {
-          phase: 'planning',
-          repository: spec.repository,
-          objective: spec.objective,
-          acceptanceCriteria: spec.acceptanceCriteria,
-          plan: null,
-          nodes: {},
-          integration: null,
-          checks: [],
-          review: null,
-        };
+      : this.#initialState(checkpoint);
     const lessons = new RunLessons(
       spec.lessons === false ? null : this.#store,
       spec.lessons === false
@@ -597,20 +691,7 @@ export class Orchestrator {
       taskId,
       alias,
     });
-    let record =
-      existing ??
-      this.#store.workflows.atomic(() => {
-        const created = this.#store.graphs.create(
-          spec.id,
-          spec.projectId,
-          state,
-          {
-            objective: spec.objective,
-          },
-        );
-        this.#store.workflows.write(spec.id, checkpoint);
-        return created;
-      });
+    let record = existing ?? this.#createGraph(checkpoint, state);
     const save = (kind: string, payload: unknown = {}, notify = true) => {
       progress.lessonSnapshot = lessons.snapshot();
       progress.hintedNodes = [...hintedNodes];
@@ -637,6 +718,8 @@ export class Orchestrator {
       event = 'action.prepared',
       payload: unknown = { slot, kind },
     ) => {
+      if (this.#suspended) throw new Error('CONTROLLER_SUSPENDED');
+      if (this.#cancelled) throw new Error('CANCELLED');
       const existing = workflows.action(spec.id, slot);
       if (existing) {
         if (existing.kind !== kind) throw new Error('WORKFLOW_ACTION_INVALID');
@@ -690,6 +773,7 @@ export class Orchestrator {
       result: unknown,
       capture = false,
     ) => {
+      if (this.#suspended) throw new Error('CONTROLLER_SUSPENDED');
       workflows.boundary('result.before_commit', action.slot);
       if (capture) {
         workflows.observe(spec.id, action, result);
@@ -840,7 +924,7 @@ export class Orchestrator {
                 baseCommit: state.integration!.head,
                 branch: 'xvant-work/' + spec.id + '/' + taskId,
               },
-              deadlineAt: Date.now() + checkpoint.turnTimeoutMs,
+              deadlineAt: this.#now() + checkpoint.turnTimeoutMs,
               checks: Object.keys(checks).length ? checks : noop,
               writablePaths,
               lessonScope: spec.lessonScope,
@@ -858,9 +942,9 @@ export class Orchestrator {
           const { claimed, dispatch } = claim(action);
           let outcome: TurnOutcome;
           busy.add(input.alias);
-          this.#running.set(taskId, input.alias);
+          this.#running.set(taskId, input.deadlineAt);
           try {
-            if (Date.now() >= input.deadlineAt)
+            if (this.#now() >= input.deadlineAt)
               outcome = {
                 status: 'failed',
                 finalText: '',
@@ -905,6 +989,21 @@ export class Orchestrator {
           } finally {
             busy.delete(input.alias);
             this.#running.delete(taskId);
+          }
+          if (this.#suspended) throw new Error('CONTROLLER_SUSPENDED');
+          if (
+            this.#enforceClock &&
+            !this.#cancelled &&
+            outcome.status !== 'unknown' &&
+            this.#now() >= input.deadlineAt
+          ) {
+            outcome = {
+              status: 'failed',
+              finalText: '',
+              patch: null,
+              files: [],
+              failure: 'TIMEOUT',
+            };
           }
           if (dispatch.adapter && outcome.status === 'unknown') {
             const recovery = workflows.reconcile(
@@ -1342,7 +1441,7 @@ export class Orchestrator {
             cwd: integration.path,
             head: state.integration!.head,
             check,
-            deadlineAt: Date.now() + spec.checkTimeoutMs,
+            deadlineAt: this.#now() + spec.checkTimeoutMs,
           }));
           const input = checkIntentSchema.parse(action.input);
           if (
@@ -1835,7 +1934,17 @@ export class Orchestrator {
       await Promise.allSettled(inflight.values());
       state.phase = this.#cancelled ? 'cancelled' : 'needs_attention';
       state.reason = (error as Error).message;
-      if (this.#cancelled) progress.step = 'done';
+      if (this.#suspended) throw error;
+      // A cancelled effect with an unknown outcome still needs reconciliation.
+      if (this.#cancelled) {
+        if (
+          workflows
+            .actions(spec.id)
+            .some(({ status }) => status === 'dispatching')
+        ) {
+          state.phase = 'needs_attention';
+        } else progress.step = 'done';
+      }
       try {
         save('graph.' + state.phase, { reason: state.reason });
       } catch {
@@ -1851,14 +1960,14 @@ export class Orchestrator {
     onProcess: TurnExecution['onProcess'],
   ) {
     const { id, cwd, check } = input;
-    const timeoutMs = input.deadlineAt - Date.now();
+    const timeoutMs = input.deadlineAt - this.#now();
     if (timeoutMs <= 0)
       return {
         id,
         status: 'failed' as const,
         output: 'Check deadline expired',
       };
-    const result = await this.#supervisor.start({
+    const child = this.#supervisor.start({
       executable: check.executable,
       args: check.args,
       ...(check.windowsVerbatimArguments === undefined
@@ -1872,9 +1981,22 @@ export class Orchestrator {
       timeoutMs,
       maxOutputBytes: 1048576,
       userApprovedTrustedLocal: true,
-    }).result;
+    });
+    this.#checking.set(attemptId, {
+      deadlineAt: input.deadlineAt,
+      expire: () => this.#supervisor.cancel(child.identity),
+    });
+    const result = await child.result.finally(() =>
+      this.#checking.delete(attemptId),
+    );
     if (result.reason === 'needs_attention')
       throw new Error('UNRESOLVED_WORKFLOW_ACTION: ' + id);
+    if (this.#enforceClock && this.#now() >= input.deadlineAt)
+      return {
+        id,
+        status: 'failed' as const,
+        output: 'Check deadline expired',
+      };
     return {
       id,
       status:

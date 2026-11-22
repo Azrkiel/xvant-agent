@@ -14,6 +14,7 @@ import {
 import { dirname, join, relative, resolve } from 'node:path';
 import { z } from 'zod';
 import { SCHEMA_VERSION, Store } from './store.ts';
+import { leaseActive, type HostLease } from './host-clock.ts';
 
 // Backup and restore of a state directory: state.sqlite, objects/ and the
 // routing default under routing/. The runs/ directory holds git worktrees
@@ -136,7 +137,7 @@ export function backupState(options: {
     // database does not look owned, and leave it as one file without a WAL.
     const copy = new Database(target);
     try {
-      copy.prepare('UPDATE ownership SET expires=0').run();
+      copy.prepare('UPDATE ownership SET expires=0,uptimeExpiry=0').run();
       copy.pragma('journal_mode=DELETE');
       const verdict = copy.pragma('integrity_check', { simple: true });
       if (verdict !== 'ok')
@@ -254,9 +255,9 @@ function leaseHeld(database: string, now: number): boolean {
   const db = new Database(database, { readonly: true, fileMustExist: true });
   try {
     const row = db
-      .prepare("SELECT expires FROM ownership WHERE resource='controller'")
-      .get() as { expires: number } | undefined;
-    return !!row && row.expires > now;
+      .prepare("SELECT * FROM ownership WHERE resource='controller'")
+      .get() as HostLease | undefined;
+    return !!row && leaseActive(row, () => now);
   } catch (error) {
     // No ownership table: never opened by a Store, so nobody owns it.
     if (/no such table/.test((error as Error).message)) return false;
@@ -321,7 +322,14 @@ export function restoreState(options: {
     // A backup from elsewhere could carry a live lease and lock everyone out.
     const copy = new Database(join(staging, DATABASE));
     try {
-      copy.prepare('UPDATE ownership SET expires=0').run();
+      const version = Number(copy.pragma('user_version', { simple: true }));
+      copy
+        .prepare(
+          version >= 9
+            ? 'UPDATE ownership SET expires=0,uptimeExpiry=0'
+            : 'UPDATE ownership SET expires=0',
+        )
+        .run();
     } catch (error) {
       if (!/no such table/.test((error as Error).message)) throw error;
     } finally {

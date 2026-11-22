@@ -33,6 +33,8 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock('node:fs', () => ({
+  // The virtual home has no daemon endpoint.
+  lstatSync: () => undefined,
   mkdirSync: mocks.mkdirSync,
   readFileSync: mocks.readFileSync,
   realpathSync: mocks.realpathSync,

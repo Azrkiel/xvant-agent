@@ -198,6 +198,10 @@ export function phaseSuites(phase: string): Record<string, number> {
               'apps/controller/src/workflow-resume.test.ts': 20,
               'packages/storage/src/workflows.test.ts': 4,
               'tests/faults/workflow-remote.test.ts': 5,
+              'apps/controller/src/daemon-clock.test.ts': 2,
+              ...(process.platform === 'linux'
+                ? { 'tests/faults/daemon.test.ts': 4 }
+                : {}),
             }
           : {}),
       };

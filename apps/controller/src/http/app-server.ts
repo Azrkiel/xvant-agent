@@ -99,6 +99,7 @@ export async function startAppServer(options: {
   assets: Record<string, Asset>;
   port?: number;
   maxBodyBytes?: number;
+  operatorToken?: string;
   toError?: (
     error: unknown,
   ) => { status: number; code: string; recovery?: unknown } | undefined;
@@ -114,6 +115,7 @@ export async function startAppServer(options: {
   const session = token();
   const csrfToken = token();
   let bootstrapUsed = false;
+  const issued = new Map<string, number>();
   let origin = '';
   const streams = new Set<() => void>();
   const handle = async (req: IncomingMessage, res: ServerResponse) => {
@@ -143,10 +145,32 @@ export async function startAppServer(options: {
         res.end(asset.body);
         return;
       }
+      const operator =
+        options.operatorToken !== undefined &&
+        equal(req.headers.authorization, 'Bearer ' + options.operatorToken);
+      if (
+        operator &&
+        req.method === 'POST' &&
+        url.pathname === '/api/v1/daemon/bootstrap'
+      ) {
+        const now = performance.now();
+        for (const [capability, expiry] of issued)
+          if (expiry <= now) issued.delete(capability);
+        if (issued.size >= 32) issued.delete(issued.keys().next().value!);
+        const capability = token();
+        issued.set(capability, now + 60_000);
+        send(res, 200, { bootstrapToken: capability });
+        return;
+      }
       if (req.method === 'POST' && url.pathname === '/api/v1/session') {
+        const capability =
+          req.headers.authorization?.replace(/^Bearer /, '') ?? '';
+        const expiry = issued.get(capability);
+        issued.delete(capability);
         if (
-          bootstrapUsed ||
-          !equal(req.headers.authorization, 'Bearer ' + bootstrapToken)
+          !(expiry !== undefined && expiry > performance.now()) &&
+          (bootstrapUsed ||
+            !equal(req.headers.authorization, 'Bearer ' + bootstrapToken))
         )
           throw new HttpError(401, 'UNAUTHORIZED');
         bootstrapUsed = true;
@@ -162,13 +186,15 @@ export async function startAppServer(options: {
         .map((part) => part.trim())
         .filter((part) => part.startsWith('xvant_session='));
       if (
-        !bootstrapUsed ||
-        cookies.length !== 1 ||
-        !equal(cookies[0]?.slice('xvant_session='.length), session)
+        !operator &&
+        (!bootstrapUsed ||
+          cookies.length !== 1 ||
+          !equal(cookies[0]?.slice('xvant_session='.length), session))
       )
         throw new HttpError(401, 'UNAUTHORIZED');
       if (
         mutation &&
+        !operator &&
         !equal(
           typeof req.headers['x-csrf-token'] === 'string'
             ? req.headers['x-csrf-token']

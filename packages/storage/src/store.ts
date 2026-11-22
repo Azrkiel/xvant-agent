@@ -36,6 +36,8 @@ import {
 } from '../../contracts/src/native-evidence.ts';
 import { nativeAcceptanceTask } from '../../core/src/native-acceptance.ts';
 import { verifiedWorkspaceObjects } from './workspace.ts';
+import { Schedule, scheduleMigration, type ClockSample } from './schedule.ts';
+import { leaseActive, type HostLease, type HostTime } from './host-clock.ts';
 
 export class StorageError extends Error {
   readonly code: string;
@@ -86,6 +88,8 @@ interface Options {
   owner: string;
   now?: () => number;
   leaseMs?: number;
+  leaseClock?: () => HostTime;
+  recordClock?: () => ClockSample;
   /** Reconcile abandoned runs when starting a run-capable controller. */
   recoverWorkGraphs?: boolean;
   fault?: (point: string) => void;
@@ -119,7 +123,7 @@ function canonical(value: unknown): string {
   return json(value);
 }
 /** The newest schema this code writes; a database beyond it is refused. */
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 
 /** Observe one committed snapshot, including while another process owns the controller. */
 export function inspectWorkGraphs<T>(
@@ -152,12 +156,15 @@ export class Store {
   readonly memory: MemoryRecords;
   readonly graphs: WorkGraphs;
   readonly workflows: Workflows;
+  readonly schedule: Schedule;
   readonly lessons: LessonGraph;
   readonly contracts: ProjectContracts;
   readonly #db: Database.Database;
   readonly #owner: string;
   readonly #now: () => number;
   readonly #ttl: number;
+  readonly #leaseClock: (() => HostTime) | undefined;
+  readonly #recordClock: (() => ClockSample) | undefined;
   readonly #fault: (point: string) => void;
   #generation = 0;
   #closed = false;
@@ -165,6 +172,8 @@ export class Store {
     this.#owner = parse(idSchema, options.owner);
     this.#now = options.now ?? Date.now;
     this.#ttl = options.leaseMs ?? 30000;
+    this.#leaseClock = options.leaseClock;
+    this.#recordClock = options.recordClock;
     this.#fault = options.fault ?? (() => {});
     if (!Number.isSafeInteger(this.#ttl) || this.#ttl < 100)
       throw new StorageError('INVALID_INPUT');
@@ -180,6 +189,11 @@ export class Store {
       owner: this.#owner,
       now: this.#now,
       fault: this.#fault,
+    });
+    this.schedule = new Schedule(this.#db, {
+      transaction: (fn) => this.#transaction(fn),
+      generation: () => this.#generation,
+      now: () => this.#now(),
     });
     this.graphs = new WorkGraphs(this.#db, {
       transaction: (fn) => this.#transaction(fn),
@@ -197,6 +211,7 @@ export class Store {
         { version: 6, sql: projectContractsMigration },
         { version: 7, sql: workflowMigration },
         { version: 8, sql: recoveryMigration },
+        { version: 9, sql: scheduleMigration },
         ...(options.migrations ?? []),
       ];
       if (this.schemaVersion() > migrations.at(-1)!.version)
@@ -212,10 +227,15 @@ export class Store {
             ? (this.#db
                 .prepare("SELECT * FROM ownership WHERE resource='controller'")
                 .get() as
-                | { owner: string; generation: number; expires: number }
+                | {
+                    generation: number;
+                    expires: number;
+                    boot?: string | null;
+                    uptimeExpiry?: number | null;
+                  }
                 | undefined)
             : undefined;
-          if (old && old.expires > this.#now())
+          if (old && leaseActive(old, this.#now, this.#leaseClock))
             throw new StorageError('LEASE_BUSY');
           for (const item of migrations)
             if (item.version > this.schemaVersion()) {
@@ -225,11 +245,22 @@ export class Store {
               this.#db.pragma('user_version=' + item.version);
             }
           this.#generation = (old?.generation ?? 0) + 1;
+          const clock = this.#leaseClock?.();
           this.#db
             .prepare(
-              "INSERT INTO ownership VALUES('controller',?,?,?) ON CONFLICT(resource) DO UPDATE SET owner=excluded.owner,generation=excluded.generation,expires=excluded.expires",
+              `
+            INSERT INTO ownership(resource,owner,generation,expires,boot,uptimeExpiry) VALUES('controller',?,?,?,?,?)
+            ON CONFLICT(resource) DO UPDATE SET owner=excluded.owner,generation=excluded.generation,
+            expires=excluded.expires,boot=excluded.boot,uptimeExpiry=excluded.uptimeExpiry
+          `,
             )
-            .run(this.#owner, this.#generation, this.#now() + this.#ttl);
+            .run(
+              this.#owner,
+              this.#generation,
+              this.#now() + this.#ttl,
+              clock?.boot ?? null,
+              clock ? clock.uptime + this.#ttl : null,
+            );
           if (old && options.recoverWorkGraphs)
             this.graphs.reconcileInterrupted();
         })
@@ -287,42 +318,50 @@ export class Store {
   #owned(): void {
     const row = this.#db
       .prepare(
-        "SELECT owner,generation,expires FROM ownership WHERE resource='controller'",
+        "SELECT owner,generation,expires,boot,uptimeExpiry FROM ownership WHERE resource='controller'",
       )
-      .get() as { owner: string; generation: number; expires: number };
+      .get() as HostLease & { owner: string; generation: number };
     if (row.owner !== this.#owner || row.generation !== this.#generation)
       throw new StorageError('STALE_FENCE');
-    // Expired but not taken over: this process stalled past its lease and is
-    // still the only writer, since a takeover would have changed the
-    // generation. It resumes instead of failing every later write.
-    if (
-      row.expires <= this.#now() &&
+    if (!leaseActive(row, this.#now, this.#leaseClock)) {
+      const clock = this.#leaseClock?.();
       this.#db
         .prepare(
-          "UPDATE ownership SET expires=? WHERE resource='controller' AND owner=? AND generation=?",
+          "UPDATE ownership SET expires=?, uptimeExpiry=? WHERE resource='controller'",
         )
-        .run(this.#now() + this.#ttl, this.#owner, this.#generation).changes !==
-        1
-    )
-      throw new StorageError('STALE_FENCE');
+        .run(this.#now() + this.#ttl, clock ? clock.uptime + this.#ttl : null);
+    }
   }
   #transaction<T>(fn: () => T): T {
+    const recordClock = this.#db.inTransaction ? undefined : this.#recordClock;
     return this.#db
       .transaction(() => {
         this.#owned();
-        return fn();
+        const result = fn();
+        if (recordClock) this.schedule.saveClock(recordClock());
+        return result;
       })
       .immediate();
   }
   get heartbeatIntervalMs(): number {
     return Math.max(25, Math.floor(this.#ttl / 3));
   }
-  heartbeat(): void {
+  get ownership() {
+    return { owner: this.#owner, generation: this.#generation };
+  }
+  heartbeat(sample?: ClockSample): void {
     this.#transaction(() => {
+      const clock = this.#leaseClock?.();
       this.#db
-        .prepare("UPDATE ownership SET expires=? WHERE resource='controller'")
-        .run(this.#now() + this.#ttl);
+        .prepare(
+          "UPDATE ownership SET expires=?, uptimeExpiry=? WHERE resource='controller'",
+        )
+        .run(this.#now() + this.#ttl, clock ? clock.uptime + this.#ttl : null);
+      if (sample) this.schedule.saveClock(sample);
     });
+  }
+  daemonCommand<T>(key: string, input: unknown, run: () => T): T {
+    return this.#command('daemon', 'schedule.command', key, input, run);
   }
   legacyResourceOccupied(resource: string): boolean {
     return (
@@ -336,7 +375,7 @@ export class Store {
     if (this.#closed) return;
     this.#db
       .prepare(
-        "UPDATE ownership SET expires=0 WHERE resource='controller' AND owner=? AND generation=?",
+        "UPDATE ownership SET expires=0,uptimeExpiry=0 WHERE resource='controller' AND owner=? AND generation=?",
       )
       .run(this.#owner, this.#generation);
     this.#db.close();
