@@ -464,6 +464,7 @@ describe('A04 daemon process fixtures', () => {
   }, 25_000);
 
   it('races daemon starts and fences a late result while an unrelated project remains eligible', async () => {
+    env.XVANT_DAEMON_FIXTURE_STOP_AFTER_DISPATCH = '1';
     const path = repo('contended');
     const a = launch();
     const b = launch();
@@ -489,7 +490,11 @@ describe('A04 daemon process fixtures', () => {
       (seen) => seen.length === 1,
       dispatchMs,
     );
-    expect(old.child.kill('SIGSTOP')).toBe(true);
+    await until(
+      () => readFileSync('/proc/' + old.child.pid + '/status', 'utf8'),
+      (status) => /^State:\s+T\b/m.test(status),
+      dispatchMs,
+    );
     await delay(3_100);
     const next = launch();
     const newStatus = await ready(next);

@@ -163,6 +163,14 @@ export default {
         }) + '\n',
       );
       if (!held) writeFileSync(join(folder, 'release-' + request.taskId), '');
+      if (
+        held &&
+        process.env.XVANT_DAEMON_FIXTURE_STOP_AFTER_DISPATCH === '1'
+      ) {
+        // The runner starts inside workflows.effect(). Wait until that
+        // synchronous dispatch transaction returns before suspending its owner.
+        setImmediate(() => process.kill(process.pid, 'SIGSTOP'));
+      }
       const result = await child.result.finally(() =>
         handles.delete(request.taskId),
       );
