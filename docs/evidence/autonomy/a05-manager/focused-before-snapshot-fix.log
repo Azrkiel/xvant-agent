@@ -1,0 +1,217 @@
+npm notice run xvant@0.1.0 test
+npm notice run vitest run apps/controller/src/project-contracts.test.ts apps/controller/src/workflow-checkpoint.test.ts apps/controller/src/workflow-resume.test.ts apps/controller/src/daemon-clock.test.ts apps/controller/src/native-verifier.test.ts packages/storage/src/artifacts.test.ts packages/storage/src/backup.test.ts packages/storage/src/store.test.ts packages/storage/src/workflows.test.ts apps/controller/src/orchestrator.test.ts apps/controller/src/routing-default.test.ts tests/faults/daemon.test.ts tests/faults/workflow-remote.test.ts
+
+ RUN  v5.0.1 /workspace/work/gate-a05
+
+ ❯ apps/controller/src/project-contracts.test.ts (39 tests | 1 failed) 2414ms
+   ❯ project backlog (3)
+     × upgrades schema 9 and preserves backlog rows through a verified snapshot 59ms
+ ❯ packages/storage/src/artifacts.test.ts (21 tests | 16 failed) 503ms
+   ❯ verified snapshots (4)
+     × restores a consistent database and verified artifacts to a new destination 37ms
+     × rejects corrupt or missing snapshot objects without leaving a restore target 23ms
+     × rejects corrupt databases and unsupported schemas even with updated manifest hashes 12ms
+   ❯ snapshot artifact references (3)
+     × rejects backup if a committed artifact reference has no object 19ms
+     × rejects restore when the manifest omits a referenced object 25ms
+     × preserves both referenced and retained unreferenced artifacts 17ms
+   × rejects snapshot databases with missing columns 24ms
+   × rejects snapshot databases with dangling foreign key 51ms
+   × rejects snapshot databases with missing outbox primary key 15ms
+   × rejects snapshot databases with missing outbox nullability 13ms
+   × rejects snapshot databases with wrong outbox foreign key 24ms
+   × rejects snapshot databases with missing backlog policy foreign key 20ms
+   × rejects snapshot databases with wrong command key order 27ms
+   × rejects snapshot databases with wrong outbox value type 18ms
+   × rejects snapshot databases with invalid hash 14ms
+   × rejects manifest traversal and duplicate objects, symlink sources, and existing restore targets 18ms
+ ❯ packages/storage/src/workflows.test.ts (4 tests | 1 failed) 100ms
+   × preserves staged patch evidence and audit decisions in a verified snapshot 19ms
+ ❯ apps/controller/src/native-verifier.test.ts (23 tests | 1 failed) 1382ms
+   × restores verified receipts together with every referenced artifact 63ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 19 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/controller/src/native-verifier.test.ts > restores verified receipts together with every referenced artifact
+Error: SCHEMA_UNSUPPORTED
+ ❯ fail packages/storage/src/artifacts.ts:37:9
+     35|   createHash('sha256').update(bytes).digest('hex');
+     36| function fail(code: string): never {
+     37|   throw new Error(code);
+       |         ^
+     38| }
+     39| /** Reject links in every existing component, including junctions on W…
+ ❯ validateDatabase packages/storage/src/artifacts.ts:490:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:603:43
+ ❯ apps/controller/src/native-verifier.test.ts:292:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/19]⎯
+
+ FAIL  apps/controller/src/project-contracts.test.ts > project backlog > upgrades schema 9 and preserves backlog rows through a verified snapshot
+AssertionError: expected 11 to be 10 // Object.is equality
+
+- Expected
++ Received
+
+- 10
++ 11
+
+ ❯ apps/controller/src/project-contracts.test.ts:219:35
+    217|     }
+    218|     store = open();
+    219|     expect(store.schemaVersion()).toBe(10);
+       |                                   ^
+    220|     expect(store.contracts.getProject(project.id)).toEqual({ project, …
+    221|     const backlog = backlogPlan();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/19]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > verified snapshots > restores a consistent database and verified artifacts to a new destination
+Error: SCHEMA_UNSUPPORTED
+ ❯ fail packages/storage/src/artifacts.ts:37:9
+     35|   createHash('sha256').update(bytes).digest('hex');
+     36| function fail(code: string): never {
+     37|   throw new Error(code);
+       |         ^
+     38| }
+     39| /** Reject links in every existing component, including junctions on W…
+ ❯ validateDatabase packages/storage/src/artifacts.ts:490:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:603:43
+ ❯ packages/storage/src/artifacts.test.ts:77:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/19]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > verified snapshots > rejects corrupt or missing snapshot objects without leaving a restore target
+Error: SCHEMA_UNSUPPORTED
+ ❯ fail packages/storage/src/artifacts.ts:37:9
+     35|   createHash('sha256').update(bytes).digest('hex');
+     36| function fail(code: string): never {
+     37|   throw new Error(code);
+       |         ^
+     38| }
+     39| /** Reject links in every existing component, including junctions on W…
+ ❯ validateDatabase packages/storage/src/artifacts.ts:490:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:603:43
+ ❯ packages/storage/src/artifacts.test.ts:99:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/19]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > verified snapshots > rejects corrupt databases and unsupported schemas even with updated manifest hashes
+Error: SCHEMA_UNSUPPORTED
+ ❯ fail packages/storage/src/artifacts.ts:37:9
+     35|   createHash('sha256').update(bytes).digest('hex');
+     36| function fail(code: string): never {
+     37|   throw new Error(code);
+       |         ^
+     38| }
+     39| /** Reject links in every existing component, including junctions on W…
+ ❯ validateDatabase packages/storage/src/artifacts.ts:490:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:603:43
+ ❯ packages/storage/src/artifacts.test.ts:115:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/19]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > snapshot artifact references > rejects backup if a committed artifact reference has no object
+AssertionError: expected [Function] to throw error including 'ARTIFACT_MISSING' but got 'SCHEMA_UNSUPPORTED'
+
+Expected: "ARTIFACT_MISSING"
+Received: "SCHEMA_UNSUPPORTED"
+
+ ❯ packages/storage/src/artifacts.test.ts:178:6
+    176|     await expect(
+    177|       backupSnapshot(store, artifacts, join(root, 'backup')),
+    178|     ).rejects.toThrow('ARTIFACT_MISSING');
+       |      ^
+    179|     expect(readdirSync(root)).not.toContain('backup');
+    180|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/19]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > snapshot artifact references > rejects restore when the manifest omits a referenced object
+Error: SCHEMA_UNSUPPORTED
+ ❯ fail packages/storage/src/artifacts.ts:37:9
+     35|   createHash('sha256').update(bytes).digest('hex');
+     36| function fail(code: string): never {
+     37|   throw new Error(code);
+       |         ^
+     38| }
+     39| /** Reject links in every existing component, including junctions on W…
+ ❯ validateDatabase packages/storage/src/artifacts.ts:490:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:603:43
+ ❯ packages/storage/src/artifacts.test.ts:187:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/19]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > snapshot artifact references > preserves both referenced and retained unreferenced artifacts
+Error: SCHEMA_UNSUPPORTED
+ ❯ fail packages/storage/src/artifacts.ts:37:9
+     35|   createHash('sha256').update(bytes).digest('hex');
+     36| function fail(code: string): never {
+     37|   throw new Error(code);
+       |         ^
+     38| }
+     39| /** Reject links in every existing component, including junctions on W…
+ ❯ validateDatabase packages/storage/src/artifacts.ts:490:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:603:43
+ ❯ packages/storage/src/artifacts.test.ts:205:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/19]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with missing columns
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with dangling foreign key
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with missing outbox primary key
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with missing outbox nullability
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with wrong outbox foreign key
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with missing backlog policy foreign key
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with wrong command key order
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with wrong outbox value type
+ FAIL  packages/storage/src/artifacts.test.ts > rejects snapshot databases with invalid hash
+Error: SCHEMA_UNSUPPORTED
+ ❯ fail packages/storage/src/artifacts.ts:37:9
+     35|   createHash('sha256').update(bytes).digest('hex');
+     36| function fail(code: string): never {
+     37|   throw new Error(code);
+       |         ^
+     38| }
+     39| /** Reject links in every existing component, including junctions on W…
+ ❯ validateDatabase packages/storage/src/artifacts.ts:490:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:603:43
+ ❯ packages/storage/src/artifacts.test.ts:286:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/19]⎯
+
+ FAIL  packages/storage/src/artifacts.test.ts > rejects manifest traversal and duplicate objects, symlink sources, and existing restore targets
+Error: SCHEMA_UNSUPPORTED
+ ❯ fail packages/storage/src/artifacts.ts:37:9
+     35|   createHash('sha256').update(bytes).digest('hex');
+     36| function fail(code: string): never {
+     37|   throw new Error(code);
+       |         ^
+     38| }
+     39| /** Reject links in every existing component, including junctions on W…
+ ❯ validateDatabase packages/storage/src/artifacts.ts:490:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:603:43
+ ❯ packages/storage/src/artifacts.test.ts:314:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/19]⎯
+
+ FAIL  packages/storage/src/workflows.test.ts > preserves staged patch evidence and audit decisions in a verified snapshot
+Error: SCHEMA_UNSUPPORTED
+ ❯ fail packages/storage/src/artifacts.ts:37:9
+     35|   createHash('sha256').update(bytes).digest('hex');
+     36| function fail(code: string): never {
+     37|   throw new Error(code);
+       |         ^
+     38| }
+     39| /** Reject links in every existing component, including junctions on W…
+ ❯ validateDatabase packages/storage/src/artifacts.ts:490:7
+ ❯ backupSnapshot packages/storage/src/artifacts.ts:603:43
+ ❯ packages/storage/src/workflows.test.ts:247:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/19]⎯
+
+
+ Test Files  4 failed | 9 passed (13)
+      Tests  19 failed | 200 passed (219)
+   Start at  01:43:06
+   Duration  54.82s (tests 97%, import 2%, transform 1%)

@@ -133,3 +133,45 @@ delegated-cgroup limit campaign, Windows or hosted run was performed.
 · [Gate receipt](a06-limits-budget/gate-receipt.json)
 · [Verified bundle](a06-limits-budget/gate-bundle.tar.gz)
 · [Checksums](a06-limits-budget/SHA256SUMS)
+
+### A05 manager follow-up
+
+Tested `e97d719fef88eeea19c49f8d67124105063d3de4` directly against
+`main` at `f20da7e4dbd4f4a776ca60ace39c72f3dd2c7593`. The common
+runner and isolated setup above apply.
+
+```sh
+docker-init -s -- npm test -- \
+  apps/controller/src/{project-contracts,workflow-checkpoint,workflow-resume,daemon-clock,native-verifier}.test.ts \
+  packages/storage/src/{artifacts,backup,store,workflows}.test.ts \
+  apps/controller/src/orchestrator.test.ts apps/controller/src/routing-default.test.ts \
+  tests/faults/{daemon,workflow-remote}.test.ts
+```
+
+Typecheck, lint and all 219 focused tests across 13 suites passed. The
+first focused run at `df2ebecf1508b3346c2150c930eeab2b84e038ca`
+exposed a schema 11 snapshot validation gap. The new store version was
+absent from the snapshot schema allowlist, and the rollback fixture expected
+the previous current version. The corrected revision retained all snapshot
+checks. [First focused run](a05-manager/focused-before-snapshot-fix.log)
+
+The manager fixture used three dependent milestones and one parallel
+opportunity. It retained the backlog, task budget and queue acknowledgment
+through a real controller restart. It rejected a path excluded by A01,
+exhausted a check budget, recorded an owner-authorized replan, replaced a
+killed worker, repaired a failing check, and recorded independent review.
+After acceptance, the three-second idle sample observed 30 ms CPU,
+133,268 KiB RSS, no additional scheduler pass, and zero extra worker calls.
+The target moved before exact-candidate manual acceptance and stayed at
+the moved head. Separately, the A03 loopback fixture retained the unresolved
+effect reservation across controller replacement with one submission.
+No autonomous promotion, hosted, Windows or live-provider qualification
+was performed.
+
+The isolated gate passed all 31 stages and 1,513 tests across 120 suites,
+with 94.03% line and 87.93% branch coverage.
+
+[Setup](a05-manager/setup.log) · [Focused output](a05-manager/focused.log)
+· [Gate receipt](a05-manager/gate-receipt.json)
+· [Verified bundle](a05-manager/gate-bundle.tar.gz)
+· [Checksums](a05-manager/SHA256SUMS)

@@ -76,6 +76,37 @@ physical suspend exercise only with an approved wake path and preserve its
 same-boot observations. The missing host receipts allow fixture development
 on the merged A04 queue. [A04 merge record](https://github.com/Azrkiel/xvant-agent/commit/f20da7e4dbd4f4a776ca60ace39c72f3dd2c7593)
 
+## A05 criterion handoff
+
+Retargeted draft [#18](https://github.com/Azrkiel/xvant-agent/pull/18)
+against main at `f20da7e4dbd4f4a776ca60ace39c72f3dd2c7593`.
+The tested manager revision is `e97d719fef88eeea19c49f8d67124105063d3de4`.
+The implementation runs one deterministic root per owner-approved backlog
+revision through A01 admission, the A04 queue and the A03 journal.
+Schema 11 adds the manager-to-backlog, task and root links. Restore a
+verified pre-upgrade backup to a separate directory for rollback. Retain
+the upgraded store and worktrees.
+
+| Criterion | Status         | Observation                                                                                                                                                                                                                              |
+| --------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A05-C1    | Partial        | The fixture finished a three-milestone dependency chain and an independent step on a different worker. The candidate had requirement-linked checks and independent review and reached A01 manual acceptance. A07 promotion remains open. |
+| A05-C2    | Passed offline | A real controller kill after the revised queue acknowledgment preserved the project, historical decision, task allocation and pending work. An idempotent replay returned the original acknowledgment.                                   |
+| A05-C3    | Partial        | An exhausted check produced an actionable block. The owner authorized a new revision with one repair. The excluded path was refused and old work became superseded. Model-originated replan proposals remain open.                       |
+| A05-C4    | Partial        | The fixed host DAG and conservative cumulative allocation bound all fixture turns and checks across revisions. The offline route does not grant child spawning. Live resource accounting remains an A06 dependency.                      |
+| A05-C5    | Passed offline | The first run stopped at its repair limit. The revised run replaced a killed fixture worker once and repaired the failing combined check with one bounded fix.                                                                           |
+| A05-C6    | Passed offline | Exact candidate acceptance reached idle for a three-second sample with no extra dispatch pass or worker call.                                                                                                                            |
+| A05-C7    | Partial        | The fixture exercised explicit assignments and independent review. Existing routing and daemon tests covered tier and quota rules. A live account block was not exercised.                                                               |
+
+The target moved after candidate verification. Manual A01 acceptance
+remained bound to the original candidate and did not move the target ref.
+This is a manager fixture. A07 target-drift invalidation and serialized
+promotion were not exercised. A separate A03 loopback exercise applied an
+opaque effect, dropped the response, and verified that the reservation
+stayed held across controller replacement with one submission.
+
+[Commands, runner and evidence](../evidence/autonomy/README.md#a05-manager-follow-up)
+· [API, migration and rollback](https://github.com/Azrkiel/xvant-agent/blob/e97d719fef88eeea19c49f8d67124105063d3de4/docs/a05-project-backlog.md)
+
 ## A06 criterion handoff
 
 Independent draft [#17](https://github.com/Azrkiel/xvant-agent/pull/17)
