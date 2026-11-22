@@ -14,7 +14,7 @@
 //   npm run xvant -- status [ID]
 //   npm run xvant -- resume ID
 //   npm run xvant -- handoff ID
-//   npm run xvant -- contracts apply --file PATH | contracts project ID | contracts task ID
+//   npm run xvant -- contracts apply --file PATH | contracts project ID | contracts task ID | contracts backlog ID [REVISION]
 //   npm run xvant -- accept ID
 //   npm run xvant -- merge ID [--repo PATH]
 //   npm run xvant -- share --repo PATH --branch NAME [--remote origin]
@@ -562,21 +562,49 @@ if (command === undefined || command === 'shell') {
     process.exitCode = 1;
   }
 } else if (command === 'contracts') {
-  const { store } = open();
+  let store;
   try {
-    const [action, id] = rest;
+    const [action, id, revision] = rest;
+    const input =
+      action === 'apply' && value('--file')
+        ? JSON.parse(readFileSync(value('--file'), 'utf8'))
+        : undefined;
+    let backlogPath;
+    if (action === 'backlog') {
+      if (
+        !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(id ?? '') ||
+        (revision !== undefined &&
+          (!/^[1-9]\d*$/.test(revision) ||
+            !Number.isSafeInteger(Number(revision))))
+      )
+        throw new Error('Usage: contracts backlog ID [REVISION]');
+      backlogPath =
+        'contracts/projects/' +
+        id +
+        '/backlog' +
+        (revision ? '/' + revision : '');
+    }
+    const entry =
+      backlogPath || input?.kind === 'backlog' ? daemonEndpoint(home) : null;
     let result;
-    if (action === 'apply' && value('--file'))
-      result = store.contracts.apply(
-        JSON.parse(readFileSync(value('--file'), 'utf8')),
-      );
-    else if (action === 'project' && id)
-      result = store.contracts.getProject(id);
-    else if (action === 'task' && id) result = store.contracts.getTask(id);
-    else
-      throw new Error(
-        'Usage: contracts apply --file PATH | contracts project ID | contracts task ID',
-      );
+    if (entry)
+      result = await daemonRequest(entry, backlogPath ?? 'contracts', input);
+    else {
+      ({ store } = open());
+      if (input !== undefined) result = store.contracts.apply(input);
+      else if (backlogPath)
+        result = store.contracts.getBacklog(
+          id,
+          revision ? Number(revision) : undefined,
+        );
+      else if (action === 'project' && id)
+        result = store.contracts.getProject(id);
+      else if (action === 'task' && id) result = store.contracts.getTask(id);
+      else
+        throw new Error(
+          'Usage: contracts apply --file PATH | contracts project ID | contracts task ID | contracts backlog ID [REVISION]',
+        );
+    }
     console.log(JSON.stringify(result, null, 2));
     if (action === 'apply' && result.acceptance?.accepted === false)
       process.exitCode = 1;
@@ -584,7 +612,7 @@ if (command === undefined || command === 'shell') {
     console.error(error.message);
     process.exitCode = 1;
   } finally {
-    store.close();
+    store?.close();
   }
 } else if (command === 'accept' && daemonEndpoint(home)) {
   try {

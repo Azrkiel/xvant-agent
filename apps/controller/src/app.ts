@@ -32,6 +32,12 @@ import { HttpError, startAppServer, type Asset } from './http/app-server.ts';
 import { lessonScope } from '../../../packages/storage/src/lesson-scope.ts';
 import { RecoveryBlockedError } from './workflow-recovery.ts';
 import { lessonsView } from './lessons-view.ts';
+import {
+  managerStartSchema,
+  observeManagerRun,
+  prepareManagerRun,
+  type ManagerVerifier,
+} from './project-manager.ts';
 import { DaemonScheduler } from './daemon-scheduler.ts';
 import type { DaemonClock } from './daemon-clock.ts';
 
@@ -154,6 +160,8 @@ export interface AppOptions {
     workers: WorkerSpec[],
     runtimes: Partial<Record<ProviderKind, RosterRuntime>>,
   ) => TurnRunner;
+  /** Host-registered offline verifier, available only with an injected runner. */
+  managerVerifier?: ManagerVerifier;
   daemon?: {
     operatorToken: string;
     clock: DaemonClock;
@@ -477,6 +485,10 @@ export async function startApp(options: AppOptions) {
       (id) => bound(id).orchestrator,
       (id) => lessonScope(Orchestrator.checkpoint(store, id).spec.repository),
       daemon.onError,
+      (id, state) => {
+        const run = store.contracts.managerRun(id);
+        if (run) observeManagerRun(store, run, state);
+      },
     );
     try {
       scheduler.pulse();
@@ -644,6 +656,98 @@ export async function startApp(options: AppOptions) {
         method: 'GET',
         path: /^\/api\/v1\/contracts\/projects\/([A-Za-z][A-Za-z0-9_-]{0,63})$/,
         handle: async ({ match }) => store.contracts.getProject(match[1]!),
+      },
+      {
+        method: 'GET',
+        path: /^\/api\/v1\/contracts\/projects\/([A-Za-z][A-Za-z0-9_-]{0,63})\/backlog(?:\/([1-9]\d{0,15}))?$/,
+        handle: async ({ match }) =>
+          store.contracts.getBacklog(
+            match[1]!,
+            match[2] === undefined ? undefined : Number(match[2]),
+          ),
+      },
+      {
+        method: 'GET',
+        path: /^\/api\/v1\/contracts\/projects\/([A-Za-z][A-Za-z0-9_-]{0,63})\/manager$/,
+        handle: async ({ match }) => {
+          const projectId = match[1]!;
+          const snapshot = store.contracts.getBacklog(projectId);
+          const runs = store.contracts.managerRuns(projectId).map((run) => {
+            const job = store.schedule.get(run.rootId);
+            const { record, decision } = store.contracts.getTask(run.taskId);
+            const current =
+              snapshot.status === 'current' &&
+              run.revision === snapshot.backlog?.revision;
+            let status: string = job?.status ?? 'blocked';
+            if (!current) status = 'superseded';
+            else if (job?.status === 'done') {
+              const accepted =
+                record.acceptance?.accepted && decision.readyForHumanReview;
+              status =
+                accepted && record.acceptance?.request.mode.kind === 'exception'
+                  ? 'accepted_exception'
+                  : accepted &&
+                      decision.checks === 'passed' &&
+                      decision.review !== 'blocked'
+                    ? 'idle'
+                    : decision.readyForHumanReview
+                      ? 'awaiting_acceptance'
+                      : 'blocked';
+            }
+            return {
+              ...run,
+              status,
+              job,
+              decision,
+              acceptance: record.acceptance,
+            };
+          });
+          return { ...snapshot, runs };
+        },
+      },
+      {
+        method: 'POST',
+        path: /^\/api\/v1\/contracts\/projects\/([A-Za-z][A-Za-z0-9_-]{0,63})\/manager$/,
+        handle: async ({ match, body }) => {
+          if (!daemon || !scheduler || !options.runner)
+            throw new HttpError(409, 'MANAGER_OFFLINE_RUNNER_REQUIRED');
+          const projectId = match[1]!;
+          const input = managerStartSchema.parse(body);
+          return schedulerCommand(
+            input.commandId,
+            { action: 'manage', projectId, ...input },
+            () => {
+              if (!store.schedule.control().intake)
+                throw new HttpError(409, 'INTAKE_PAUSED');
+              if (input.maxActive > daemon.slots)
+                throw new HttpError(409, 'WORKER_LIMIT');
+              const { spec, run, pool, turnTimeoutMs } = prepareManagerRun(
+                store,
+                projectId,
+                input,
+                options.managerVerifier,
+                workers(),
+              );
+              const { orchestrator, runner } = controllerFor(
+                run.rootId,
+                pool,
+                availableRuntimes(),
+                turnTimeoutMs,
+              );
+              orchestrator.admit(spec);
+              store.contracts.bindManagerRun(run);
+              const { backlog } = store.contracts.getBacklog(projectId);
+              const job = queue(
+                run.rootId,
+                lessonScope(spec.repository),
+                Math.max(...backlog!.milestones.map((item) => item.priority)),
+                undefined,
+                runner,
+              );
+              return { ...run, acceptedAt: job.acceptedAt };
+            },
+          );
+        },
       },
       {
         method: 'GET',
@@ -825,6 +929,8 @@ export async function startApp(options: AppOptions) {
             expectedVersion,
             head,
           }: z.infer<typeof acceptSchema>) => {
+            if (store.contracts.managerRun(id))
+              throw new HttpError(409, 'USE_CONTRACT_ACCEPTANCE');
             const record = store.graphs.get<RootState>(id);
             // The user accepts exactly what they reviewed: same version and head.
             if (

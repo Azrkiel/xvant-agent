@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import Database from 'better-sqlite3';
 import { ArtifactStore, backupSnapshot, restoreSnapshot } from './artifacts.ts';
-import { Store } from './store.ts';
+import { SCHEMA_VERSION, Store } from './store.ts';
 
 it('atomically records progress and intent, fences claims, and deduplicates exact results', () => {
   const root = mkdtempSync(join(tmpdir(), 'xvant-workflows-'));
@@ -182,14 +182,14 @@ it('upgrades schema 7 dispatches without inventing receipts or releasing reserva
     const db = new Database(path);
     try {
       db.exec(
-        "DROP TABLE schedule_jobs; DROP TABLE schedule_control; DROP TABLE schedule_projects; ALTER TABLE ownership DROP COLUMN boot; ALTER TABLE ownership DROP COLUMN uptimeExpiry; DROP TABLE work_recoveries; DROP TABLE work_dispatches; UPDATE work_actions SET body=json_remove(body,'$.operationId'); PRAGMA user_version=7;",
+        "DROP TABLE contract_manager_runs; DROP TABLE contract_backlogs; DROP TABLE schedule_jobs; DROP TABLE schedule_control; DROP TABLE schedule_projects; ALTER TABLE ownership DROP COLUMN boot; ALTER TABLE ownership DROP COLUMN uptimeExpiry; DROP TABLE work_recoveries; DROP TABLE work_dispatches; UPDATE work_actions SET body=json_remove(body,'$.operationId'); PRAGMA user_version=7;",
       );
     } finally {
       db.close();
     }
     store = new Store(path, { owner: 'replacement' });
     const { workflows } = store;
-    expect(store.schemaVersion()).toBe(9);
+    expect(store.schemaVersion()).toBe(SCHEMA_VERSION);
     expect(workflows.actions('root')).toEqual([dispatch]);
     expect(workflows.dispatch('root', dispatch)).toBeNull();
     expect(workflows.occupied('worker:worker')).toBe(true);

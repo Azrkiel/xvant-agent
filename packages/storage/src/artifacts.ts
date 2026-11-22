@@ -153,17 +153,7 @@ export class ArtifactStore {
 }
 const manifestSchema = z.strictObject({
   version: z.literal(1),
-  schemaVersion: z.union([
-    z.literal(1),
-    z.literal(2),
-    z.literal(3),
-    z.literal(4),
-    z.literal(5),
-    z.literal(6),
-    z.literal(7),
-    z.literal(8),
-    z.literal(9),
-  ]),
+  schemaVersion: z.literal([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]),
   database: z.strictObject({
     file: z.literal('state.sqlite'),
     sha256: hashSchema,
@@ -228,7 +218,21 @@ const tables: Record<string, string[]> = {
   contract_projects: ['project_id', 'version', 'body'],
   contract_policies: ['project_id', 'version', 'body'],
   contract_tasks: ['id', 'project_id', 'body'],
+  contract_manager_runs: [
+    'root_id',
+    'task_id',
+    'project_id',
+    'revision',
+    'body',
+  ],
   contract_attempts: ['id', 'task_id'],
+  contract_backlogs: [
+    'project_id',
+    'revision',
+    'project_version',
+    'policy_version',
+    'body',
+  ],
   lesson_nodes: ['project_id', 'id', 'kind', 'body'],
   lesson_edges: [
     'project_id',
@@ -266,7 +270,9 @@ const primaryKeys: Record<string, string[]> = {
   contract_projects: ['project_id', 'version'],
   contract_policies: ['project_id', 'version'],
   contract_tasks: ['id'],
+  contract_manager_runs: ['root_id'],
   contract_attempts: ['id'],
+  contract_backlogs: ['project_id', 'revision'],
   lesson_nodes: ['project_id', 'id'],
   lesson_edges: ['project_id', 'from_id', 'to_id', 'relation'],
 };
@@ -295,11 +301,24 @@ const integerColumns = new Set([
   'work_events.sequence',
   'contract_projects.version',
   'contract_policies.version',
+  'contract_backlogs.revision',
+  'contract_manager_runs.revision',
+  'contract_backlogs.project_version',
+  'contract_backlogs.policy_version',
   'lesson_edges.count',
   'lesson_edges.first_at',
   'lesson_edges.last_at',
 ]);
-const foreignKeys: Record<string, { from: string; table: string }[]> = {
+const foreignKeys: Record<
+  string,
+  {
+    from: string;
+    table: string;
+    to?: string;
+    id?: number;
+    seq?: number;
+  }[]
+> = {
   tasks: [],
   commands: [],
   ownership: [],
@@ -327,7 +346,30 @@ const foreignKeys: Record<string, { from: string; table: string }[]> = {
   contract_projects: [],
   contract_policies: [],
   contract_tasks: [],
+  contract_manager_runs: [
+    { from: 'project_id', table: 'contract_backlogs', to: 'project_id' },
+    { from: 'revision', table: 'contract_backlogs', to: 'revision', seq: 1 },
+    { from: 'task_id', table: 'contract_tasks', id: 1 },
+    { from: 'root_id', table: 'work_graphs', id: 2 },
+  ],
   contract_attempts: [{ from: 'task_id', table: 'contract_tasks' }],
+  contract_backlogs: [
+    { from: 'project_id', table: 'contract_policies', to: 'project_id' },
+    {
+      from: 'policy_version',
+      table: 'contract_policies',
+      to: 'version',
+      seq: 1,
+    },
+    { from: 'project_id', table: 'contract_projects', to: 'project_id', id: 1 },
+    {
+      from: 'project_version',
+      table: 'contract_projects',
+      to: 'version',
+      id: 1,
+      seq: 1,
+    },
+  ],
   lesson_nodes: [],
   lesson_edges: [],
 };
@@ -348,6 +390,8 @@ interface ColumnMetadata {
   dflt_value: unknown;
 }
 interface ForeignKeyMetadata {
+  id: number;
+  seq: number;
   from: string;
   to: string;
   table: string;
@@ -390,7 +434,9 @@ function validateTable(
     fail('SCHEMA_UNSUPPORTED');
   const actualForeignKeys = (
     db.pragma(`foreign_key_list(${table})`) as ForeignKeyMetadata[]
-  ).map(({ from, table, to, on_update, on_delete, match }) => ({
+  ).map(({ id, seq, from, table, to, on_update, on_delete, match }) => ({
+    id,
+    seq,
     from,
     table,
     to,
@@ -398,14 +444,18 @@ function validateTable(
     on_delete,
     match,
   }));
-  const expectedForeignKeys = foreignKeys[table]!.map(({ from, table }) => ({
-    from,
-    table,
-    to: 'id',
-    on_update: 'NO ACTION',
-    on_delete: 'NO ACTION',
-    match: 'NONE',
-  }));
+  const expectedForeignKeys = foreignKeys[table]!.map(
+    ({ id = 0, seq = 0, from, table, to = 'id' }) => ({
+      id,
+      seq,
+      from,
+      table,
+      to,
+      on_update: 'NO ACTION',
+      on_delete: 'NO ACTION',
+      match: 'NONE',
+    }),
+  );
   if (JSON.stringify(actualForeignKeys) !== JSON.stringify(expectedForeignKeys))
     fail('SCHEMA_UNSUPPORTED');
   // Every current conflict target is a PK. Validate its backing unique index,
@@ -436,7 +486,7 @@ function validateDatabase(path: string): {
   const db = new Database(path, { readonly: true, fileMustExist: true });
   try {
     const schemaVersion = db.pragma('user_version', { simple: true }) as number;
-    if (![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(schemaVersion))
+    if (!manifestSchema.shape.schemaVersion.safeParse(schemaVersion).success)
       fail('SCHEMA_UNSUPPORTED');
     if (
       db.pragma('integrity_check', { simple: true }) !== 'ok' ||
@@ -460,6 +510,8 @@ function validateDatabase(path: string): {
       )
         continue;
       if (schemaVersion < 9 && table.startsWith('schedule_')) continue;
+      if (schemaVersion < 10 && table === 'contract_backlogs') continue;
+      if (schemaVersion < 11 && table === 'contract_manager_runs') continue;
       validateTable(
         db,
         table,

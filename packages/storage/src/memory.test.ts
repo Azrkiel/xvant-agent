@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import Database from 'better-sqlite3';
-import { Store } from './store.ts';
+import { SCHEMA_VERSION, Store } from './store.ts';
 import { ArtifactStore, backupSnapshot, restoreSnapshot } from './artifacts.ts';
 import type { MemoryProposal } from '../../contracts/src/memory.ts';
 
@@ -95,7 +95,7 @@ describe('memory records', () => {
       decidedBy: 'owner',
       rowVersion: 1,
     });
-    expect(store.schemaVersion()).toBe(9);
+    expect(store.schemaVersion()).toBe(SCHEMA_VERSION);
   });
   it('treats an identical re-proposal as idempotent and a changed one as a conflict', () => {
     const first = store.memory.propose(proposal('m1', 'Fact'));

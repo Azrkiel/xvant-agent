@@ -28,6 +28,8 @@ import {
 import { LessonGraph, lessonMigration } from './lessons.ts';
 import {
   ProjectContracts,
+  projectBacklogMigration,
+  projectManagerMigration,
   projectContractsMigration,
 } from './project-contracts.ts';
 import {
@@ -123,7 +125,7 @@ function canonical(value: unknown): string {
   return json(value);
 }
 /** The newest schema this code writes; a database beyond it is refused. */
-export const SCHEMA_VERSION = 9;
+export const SCHEMA_VERSION = 11;
 
 /** Observe one committed snapshot, including while another process owns the controller. */
 export function inspectWorkGraphs<T>(
@@ -212,6 +214,8 @@ export class Store {
         { version: 7, sql: workflowMigration },
         { version: 8, sql: recoveryMigration },
         { version: 9, sql: scheduleMigration },
+        { version: 10, sql: projectBacklogMigration },
+        { version: 11, sql: projectManagerMigration },
         ...(options.migrations ?? []),
       ];
       if (this.schemaVersion() > migrations.at(-1)!.version)

@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { expect, it } from 'vitest';
 import Database from 'better-sqlite3';
-import { Store } from '../../../packages/storage/src/store.ts';
+import { SCHEMA_VERSION, Store } from '../../../packages/storage/src/store.ts';
 import { Orchestrator, type TurnRunner } from './orchestrator.ts';
 
 it('round-trips the resolved executable spec and worker bindings in the graph transaction', async () => {
@@ -158,7 +158,7 @@ it('migrates schema 6 without treating a legacy node as a redispatchable action'
   try {
     const old = new Database(path);
     old.exec(
-      'DROP TABLE schedule_jobs; DROP TABLE schedule_control; DROP TABLE schedule_projects; ALTER TABLE ownership DROP COLUMN boot; ALTER TABLE ownership DROP COLUMN uptimeExpiry; DROP TABLE work_recoveries; DROP TABLE work_dispatches; DROP TABLE work_actions; DROP TABLE work_checkpoints; PRAGMA user_version=6;',
+      'DROP TABLE contract_manager_runs; DROP TABLE contract_backlogs; DROP TABLE schedule_jobs; DROP TABLE schedule_control; DROP TABLE schedule_projects; ALTER TABLE ownership DROP COLUMN boot; ALTER TABLE ownership DROP COLUMN uptimeExpiry; DROP TABLE work_recoveries; DROP TABLE work_dispatches; DROP TABLE work_actions; DROP TABLE work_checkpoints; PRAGMA user_version=6;',
     );
     old.close();
 
@@ -167,7 +167,7 @@ it('migrates schema 6 without treating a legacy node as a redispatchable action'
       recoverWorkGraphs: true,
     });
     try {
-      expect(upgraded.schemaVersion()).toBe(9);
+      expect(upgraded.schemaVersion()).toBe(SCHEMA_VERSION);
       expect(upgraded.graphs.get('legacy').state).toMatchObject({
         phase: 'needs_attention',
         nodes: {

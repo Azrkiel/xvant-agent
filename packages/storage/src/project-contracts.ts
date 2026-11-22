@@ -2,6 +2,12 @@ import type Database from 'better-sqlite3';
 import { z } from 'zod';
 import { DomainError, idSchema, parse } from '../../contracts/src/index.ts';
 import {
+  backlogRevision,
+  projectBacklogSchema,
+  type ProjectBacklog,
+} from '../../contracts/src/project-backlog.ts';
+import { validateGraph } from '../../core/src/graph.ts';
+import {
   acceptContractSchema,
   completionObservationSchema,
   projectContractSchema,
@@ -29,6 +35,39 @@ CREATE TABLE contract_tasks(id TEXT PRIMARY KEY, project_id TEXT NOT NULL, body 
 CREATE TABLE contract_attempts(id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES contract_tasks(id));
 `;
 
+export const projectBacklogMigration = `
+CREATE TABLE contract_backlogs(
+  project_id TEXT NOT NULL,
+  revision INTEGER NOT NULL,
+  project_version INTEGER NOT NULL,
+  policy_version INTEGER NOT NULL,
+  body TEXT NOT NULL,
+  PRIMARY KEY(project_id,revision),
+  FOREIGN KEY(project_id,project_version) REFERENCES contract_projects(project_id,version),
+  FOREIGN KEY(project_id,policy_version) REFERENCES contract_policies(project_id,version)
+);
+`;
+
+export const projectManagerMigration = `
+CREATE TABLE contract_manager_runs(
+  root_id TEXT PRIMARY KEY REFERENCES work_graphs(id),
+  task_id TEXT NOT NULL REFERENCES contract_tasks(id),
+  project_id TEXT NOT NULL,
+  revision INTEGER NOT NULL,
+  body TEXT NOT NULL,
+  FOREIGN KEY(project_id,revision) REFERENCES contract_backlogs(project_id,revision)
+);
+`;
+
+export interface ManagerRun {
+  projectId: string;
+  revision: number;
+  taskId: string;
+  rootId: string;
+  attempts: number;
+  wallTimeMs: number;
+}
+
 const command = { commandId: idSchema };
 const version = z.number().int().nonnegative();
 export const projectCommandSchema = z.discriminatedUnion('kind', [
@@ -48,6 +87,12 @@ export const projectCommandSchema = z.discriminatedUnion('kind', [
     ...command,
     kind: z.literal('task'),
     task: projectTaskSchema,
+  }),
+  z.strictObject({
+    ...command,
+    kind: z.literal('backlog'),
+    expectedRevision: version,
+    backlog: projectBacklogSchema,
   }),
   z.strictObject({
     ...command,
@@ -124,6 +169,200 @@ export class ProjectContracts {
     }));
   }
 
+  #backlog(id: string, revision?: number): ProjectBacklog | null {
+    const row = (
+      revision === undefined
+        ? this.#db
+            .prepare(
+              'SELECT body FROM contract_backlogs WHERE project_id=? ORDER BY revision DESC LIMIT 1',
+            )
+            .get(id)
+        : this.#db
+            .prepare(
+              'SELECT body FROM contract_backlogs WHERE project_id=? AND revision=?',
+            )
+            .get(id, parse(backlogRevision, revision))
+    ) as { body: string } | undefined;
+    return row ? projectBacklogSchema.parse(JSON.parse(row.body)) : null;
+  }
+
+  getBacklog(id: string, revision?: number) {
+    return this.#host.snapshot(() => {
+      const { project, policy } = this.getProject(id);
+      const latest = this.#backlog(id);
+      const backlog =
+        revision === undefined || revision === latest?.revision
+          ? latest
+          : this.#backlog(id, revision);
+      if (revision !== undefined && !backlog)
+        fail('NOT_FOUND', 'Backlog revision not found');
+      let status = 'unplanned';
+      if (backlog) {
+        if (backlog.revision !== latest?.revision) status = 'superseded';
+        else if (
+          backlog.projectVersion !== project.version ||
+          backlog.policyVersion !== policy?.version
+        )
+          status = 'stale';
+        else status = 'current';
+      }
+      return {
+        projectId: project.id,
+        projectVersion: project.version,
+        ownerIntent: project.ownerIntent,
+        requirements: project.requirements,
+        policyVersion: policy?.version ?? null,
+        budgetCeilings:
+          policy?.projectVersion === project.version
+            ? policy.authority.budget
+            : null,
+        backlog,
+        status,
+      };
+    });
+  }
+
+  managerRuns(projectId: string): ManagerRun[] {
+    const rows = this.#db
+      .prepare(
+        'SELECT body FROM contract_manager_runs WHERE project_id=? ORDER BY revision',
+      )
+      .all(parse(idSchema, projectId)) as { body: string }[];
+    return rows.map(({ body }) => JSON.parse(body) as ManagerRun);
+  }
+
+  managerRun(rootId: string): ManagerRun | null {
+    const row = this.#db
+      .prepare('SELECT body FROM contract_manager_runs WHERE root_id=?')
+      .get(parse(idSchema, rootId)) as { body: string } | undefined;
+    return row ? (JSON.parse(row.body) as ManagerRun) : null;
+  }
+
+  bindManagerRun(run: ManagerRun): void {
+    this.#host.command(
+      run.projectId,
+      'contract.manager.bind',
+      run.rootId,
+      run,
+      () => {
+        const previous = this.managerRuns(run.projectId);
+        const { budgetCeilings } = this.getBacklog(run.projectId);
+        if (
+          previous.some(
+            (item) =>
+              item.revision === run.revision || item.taskId === run.taskId,
+          )
+        )
+          fail(
+            'CONFLICT',
+            'The backlog revision or task already has a managed run',
+          );
+        if (
+          !budgetCeilings ||
+          previous.reduce(
+            (total, item) => total + item.attempts,
+            run.attempts,
+          ) > budgetCeilings.attempts ||
+          previous.reduce(
+            (total, item) => total + item.wallTimeMs,
+            run.wallTimeMs,
+          ) > budgetCeilings.wallTimeMs
+        )
+          fail(
+            'POLICY_DENIED',
+            'Project manager budget exhausted, including prior revisions',
+          );
+        this.#db
+          .prepare('INSERT INTO contract_manager_runs VALUES(?,?,?,?,?)')
+          .run(
+            run.rootId,
+            run.taskId,
+            run.projectId,
+            run.revision,
+            JSON.stringify(run),
+          );
+        return { rootId: run.rootId };
+      },
+    );
+  }
+
+  #assertManagerCanReplan(projectId: string): void {
+    if (
+      this.#db
+        .prepare(
+          `
+      SELECT 1 FROM contract_manager_runs m
+      JOIN schedule_jobs j ON m.root_id=j.id
+      WHERE m.project_id=? AND (j.status IN ('queued','running') OR EXISTS (
+        SELECT 1 FROM work_actions a
+        WHERE a.graph_id=m.root_id AND json_extract(a.body,'$.status')='dispatching'
+      )) LIMIT 1
+    `,
+        )
+        .get(projectId)
+    )
+      fail(
+        'CONFLICT',
+        'Resolve or cancel the current managed run before changing its authority',
+      );
+  }
+
+  #saveBacklog(backlog: ProjectBacklog, expectedRevision: number) {
+    const { projectId } = backlog;
+    this.#assertManagerCanReplan(projectId);
+    const { project, policy } = this.getProject(projectId);
+    if (
+      (this.#backlog(projectId)?.revision ?? 0) !== expectedRevision ||
+      backlog.revision !== expectedRevision + 1
+    )
+      fail('CONFLICT', 'Backlog revision has changed');
+    if (
+      !policy ||
+      policy.projectVersion !== project.version ||
+      backlog.projectVersion !== project.version ||
+      backlog.policyVersion !== policy.version
+    )
+      fail(
+        'POLICY_DENIED',
+        'Backlog requires current project and policy versions',
+      );
+    const order = validateGraph(
+      backlog.milestones.map(({ id, dependsOn }) => ({ id, dependsOn })),
+    );
+    const requirements = new Set(project.requirements.map(({ id }) => id));
+    for (const { requirementIds } of backlog.milestones) {
+      if (
+        new Set(requirementIds).size !== requirementIds.length ||
+        requirementIds.some((id) => !requirements.has(id))
+      )
+        fail(
+          'POLICY_DENIED',
+          'Milestone requires distinct authorized requirement IDs',
+        );
+    }
+    if (
+      new Set(backlog.notes.map(({ id }) => id)).size !==
+        backlog.notes.length ||
+      backlog.notes.some(
+        ({ milestoneId }) => milestoneId && !order.includes(milestoneId),
+      )
+    )
+      fail(
+        'CONFLICT',
+        'Backlog notes require distinct IDs and known milestones',
+      );
+    this.#db
+      .prepare('INSERT INTO contract_backlogs VALUES(?,?,?,?,?)')
+      .run(
+        projectId,
+        backlog.revision,
+        backlog.projectVersion,
+        backlog.policyVersion,
+        JSON.stringify(backlog),
+      );
+    return backlog;
+  }
+
   #task(id: string): ContractTaskRecord {
     const row = this.#db
       .prepare('SELECT body FROM contract_tasks WHERE id=?')
@@ -168,6 +407,14 @@ export class ProjectContracts {
   apply(value: unknown) {
     const input = projectCommandSchema.parse(value);
     switch (input.kind) {
+      case 'backlog':
+        return this.#host.command(
+          input.backlog.projectId,
+          'contract.backlog',
+          input.commandId,
+          input,
+          () => this.#saveBacklog(input.backlog, input.expectedRevision),
+        );
       case 'project': {
         const { project, expectedVersion, commandId } = input;
         return this.#host.command(
@@ -190,6 +437,7 @@ export class ProjectContracts {
               previous.ownerIntent.actorId !== project.ownerIntent.actorId
             )
               fail('POLICY_DENIED', 'Project owner identity is immutable');
+            this.#assertManagerCanReplan(project.id);
             validateProject(project);
             this.#db
               .prepare('INSERT INTO contract_projects VALUES(?,?,?)')
@@ -215,6 +463,7 @@ export class ProjectContracts {
               policy.version !== expectedVersion + 1
             )
               fail('CONFLICT', 'Policy version has changed');
+            this.#assertManagerCanReplan(policy.projectId);
             validateProjectPolicy(this.#project(policy.projectId), policy);
             this.#db
               .prepare('INSERT INTO contract_policies VALUES(?,?,?)')

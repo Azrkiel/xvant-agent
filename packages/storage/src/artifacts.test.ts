@@ -257,6 +257,17 @@ it.each([
     'SCHEMA_UNSUPPORTED',
   ],
   [
+    'missing backlog policy foreign key',
+    `DROP TABLE contract_manager_runs; DROP TABLE contract_backlogs;
+     CREATE TABLE contract_backlogs(
+       project_id TEXT NOT NULL, revision INTEGER NOT NULL,
+       project_version INTEGER NOT NULL, policy_version INTEGER NOT NULL, body TEXT NOT NULL,
+       PRIMARY KEY(project_id,revision),
+       FOREIGN KEY(project_id,project_version) REFERENCES contract_projects(project_id,version)
+     );`,
+    'SCHEMA_UNSUPPORTED',
+  ],
+  [
     'wrong command key order',
     'DROP TABLE commands; CREATE TABLE commands(project_id TEXT NOT NULL, kind TEXT NOT NULL, key TEXT NOT NULL, hash TEXT NOT NULL, result TEXT NOT NULL, PRIMARY KEY(kind,project_id,key))',
     'SCHEMA_UNSUPPORTED',

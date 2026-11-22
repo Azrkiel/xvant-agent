@@ -20,6 +20,9 @@ import { setTimeout as delay } from 'node:timers/promises';
 import Database from 'better-sqlite3';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { verifierHash } from '../../apps/controller/src/workflow-checkpoint.ts';
+import { managerVerifier } from '../fixtures/daemon-runner.ts';
+
 const exec = promisify(execFile);
 const script = fileURLToPath(
   new URL('../../scripts/xvant.mjs', import.meta.url),
@@ -41,6 +44,7 @@ type Call = {
   alias: string;
   operationId: string;
   attemptId: string;
+  path?: string | null;
 };
 
 const endpoint = (): Endpoint =>
@@ -533,4 +537,329 @@ describe('A04 daemon process fixtures', () => {
       stopped: true,
     });
   }, 25_000);
+
+  it('stores an owner backlog through the daemon without submitting work', async () => {
+    const repository = repo('backlog');
+    const first = launch();
+    await ready(first);
+    const project = {
+      schemaVersion: 1,
+      id: 'backlog',
+      version: 1,
+      ownerIntent: {
+        actorId: 'owner',
+        objective: 'Prepare an offline fixture',
+      },
+      requirements: [{ id: 'fixture', description: 'Confirm the fixture' }],
+      exclusions: [],
+      scope: { repository, paths: ['.'], excludedPaths: [] },
+    };
+    const policy = {
+      schemaVersion: 1,
+      projectId: project.id,
+      projectVersion: project.version,
+      version: 1,
+      ownerId: 'owner',
+      authority: {
+        scope: project.scope,
+        actions: ['read', 'report'],
+        providers: ['codex'],
+        budget: { attempts: 1, wallTimeMs: 1000, tokens: 0, costMicros: 0 },
+        delivery: { localCandidate: false, createPr: false, merge: false },
+      },
+      verifier: { id: 'fixture', configHash: 'a'.repeat(64), checks: [] },
+      review: { required: false },
+      automaticAcceptance: false,
+      escalation: { onBlock: 'stop', allowManualException: false },
+    };
+    expect(
+      (
+        await api('contracts', {
+          kind: 'project',
+          commandId: 'owner-project',
+          expectedVersion: 0,
+          project,
+        })
+      ).status,
+    ).toBe(202);
+    expect(
+      (
+        await api('contracts', {
+          kind: 'policy',
+          commandId: 'owner-policy',
+          expectedVersion: 0,
+          policy,
+        })
+      ).status,
+    ).toBe(202);
+    const backlog = {
+      schemaVersion: 1,
+      projectId: project.id,
+      projectVersion: project.version,
+      policyVersion: policy.version,
+      revision: 1,
+      reason: 'Record the requested fixture',
+      milestones: [
+        {
+          id: 'confirm',
+          title: 'Confirm fixture',
+          reason: 'Observe it first',
+          priority: 0,
+          dependsOn: [],
+          requirementIds: ['fixture'],
+        },
+      ],
+      notes: [],
+    };
+    const path = join(dir, 'backlog.json');
+    writeFileSync(
+      path,
+      JSON.stringify({
+        kind: 'backlog',
+        commandId: 'owner-backlog',
+        expectedRevision: 0,
+        backlog,
+      }),
+    );
+    const applied = await exec(
+      process.execPath,
+      [script, 'contracts', 'apply', '--file', path],
+      { env, timeout: stopMs },
+    );
+    expect(JSON.parse(applied.stdout)).toEqual(backlog);
+    await cli('stop', '--id', 'stop-backlog');
+    expect(await first.exit).toBe(0);
+    const next = launch();
+    const scheduler = await ready(next);
+    expect(scheduler.jobs).toEqual([]);
+    const inspected = await exec(
+      process.execPath,
+      [script, 'contracts', 'backlog', project.id],
+      { env, timeout: stopMs },
+    );
+    expect(JSON.parse(inspected.stdout)).toMatchObject({
+      status: 'current',
+      backlog,
+    });
+    expect(calls()).toEqual([]);
+    await cli('stop', '--id', 'stop-backlog-next');
+  }, 25_000);
+  it('manages a milestone DAG with a versioned replan, bounded repair and restart', async () => {
+    const repository = repo('manager');
+    const first = launch();
+    await ready(first);
+    const project = {
+      schemaVersion: 1,
+      id: 'managed',
+      version: 1,
+      ownerIntent: {
+        actorId: 'owner',
+        objective: 'Build and verify the fixture',
+      },
+      requirements: [
+        { id: 'fixture', description: 'Deliver the checked repair' },
+      ],
+      exclusions: [],
+      scope: { repository, paths: ['work'], excludedPaths: ['work/private'] },
+    };
+    const authority = {
+      scope: project.scope,
+      actions: ['read', 'edit', 'verify'],
+      providers: ['codex', 'claude'],
+      budget: { attempts: 24, wallTimeMs: 200_000, tokens: 0, costMicros: 0 },
+      delivery: { localCandidate: true, createPr: false, merge: false },
+    };
+    const policy = {
+      schemaVersion: 1,
+      projectId: project.id,
+      projectVersion: 1,
+      version: 1,
+      ownerId: 'owner',
+      authority,
+      verifier: {
+        id: 'fixture',
+        configHash: verifierHash({ ...managerVerifier, nodeChecks: [] }),
+        checks: [{ id: 'fixture', requirementIds: ['fixture'] }],
+      },
+      review: { required: true, reviewers: ['claude-2'] },
+      automaticAcceptance: false,
+      escalation: { onBlock: 'owner', allowManualException: false },
+    };
+    const milestones = [
+      { id: 'first', dependsOn: [], priority: 10 },
+      { id: 'second', dependsOn: ['first'], priority: 8 },
+      { id: 'third', dependsOn: ['second', 'parallel'], priority: 7 },
+      { id: 'parallel', dependsOn: [], priority: 0 },
+    ].map((item) => ({
+      ...item,
+      title: item.id,
+      reason: 'Advance the fixture',
+      requirementIds: ['fixture'],
+    }));
+    const apply = async (input: object) => {
+      const reply = await api('contracts', input);
+      expect(reply.status, JSON.stringify(reply.data)).toBe(202);
+      return reply.data;
+    };
+    await apply({
+      kind: 'project',
+      commandId: 'project',
+      expectedVersion: 0,
+      project,
+    });
+    await apply({
+      kind: 'policy',
+      commandId: 'policy',
+      expectedVersion: 0,
+      policy,
+    });
+    const authorize = async (revision: number) => {
+      await apply({
+        kind: 'backlog',
+        commandId: 'backlog-' + revision,
+        expectedRevision: revision - 1,
+        backlog: {
+          schemaVersion: 1,
+          projectId: project.id,
+          projectVersion: 1,
+          policyVersion: 1,
+          revision,
+          reason:
+            revision === 1
+              ? 'Record initial milestones'
+              : 'Authorize one repair after the failed check',
+          milestones,
+          notes:
+            revision === 1
+              ? []
+              : [
+                  {
+                    kind: 'decision',
+                    id: 'replan',
+                    summary: 'Allow one bounded repair',
+                  },
+                ],
+        },
+      });
+      await apply({
+        kind: 'task',
+        commandId: 'task-' + revision,
+        task: {
+          schemaVersion: 1,
+          id: 'ship-' + revision,
+          projectId: project.id,
+          projectVersion: 1,
+          policyVersion: 1,
+          type: 'ship',
+          baseRevision: git(repository, 'rev-parse', 'HEAD'),
+          ownerIntent: project.ownerIntent,
+          managerBrief: {
+            actorId: 'manager',
+            description: 'Use the pinned steps',
+          },
+          requirementIds: ['fixture'],
+          authority: {
+            ...authority,
+            budget: { ...authority.budget, attempts: 12, wallTimeMs: 80_000 },
+          },
+        },
+      });
+    };
+    const route = 'contracts/projects/managed/manager';
+    const input = (revision: number, maxRepairs: number) => ({
+      commandId: 'manager-' + revision,
+      revision,
+      taskId: 'ship-' + revision,
+      maxActive: 2,
+      maxRepairs,
+      milestones: milestones.map(({ id }) => ({
+        id,
+        paths: ['work/' + id + '.txt'],
+        assignee: id === 'parallel' ? '@claude-1' : '@codex-1',
+      })),
+    });
+    await authorize(1);
+    const denied = input(1, 0);
+    denied.milestones[0]!.paths = ['work/private/forbidden.txt'];
+    expect((await api(route, denied)).status).toBe(409);
+    const initial = await api(route, input(1, 0));
+    expect(initial.status, JSON.stringify(initial.data)).toBe(202);
+    await until(
+      () => api(route),
+      ({ data }) => data.runs[0]?.status === 'blocked',
+      stopMs,
+    );
+    expect(forRoot(initial.data.rootId)).toHaveLength(4);
+    await authorize(2);
+    await cli('pause-dispatch', '--id', 'manager-pause');
+    const second = await api(route, input(2, 1));
+    expect(second.status, JSON.stringify(second.data)).toBe(202);
+    expect((await api(route, input(2, 1))).data).toEqual(second.data);
+    first.child.kill('SIGKILL');
+    await first.exit;
+    await delay(3_100);
+    const restarted = launch();
+    await ready(restarted);
+    expect(
+      (await api(route)).data.runs.map((run: { status: string }) => run.status),
+    ).toEqual(['superseded', 'queued']);
+    expect(forRoot(second.data.rootId)).toHaveLength(0);
+    writeFileSync(join(dir, 'manager-kill-enabled'), '');
+    await cli('continue', '--id', 'manager-continue');
+    const workerIdentity = join(dir, 'manager-worker.json');
+    await until(() => existsSync(workerIdentity), Boolean, stopMs);
+    const { pid } = JSON.parse(readFileSync(workerIdentity, 'utf8'));
+    process.kill(pid, 'SIGKILL');
+    const readyRun = await until(
+      () => api(route),
+      ({ data }) => data.runs[1]?.status === 'awaiting_acceptance',
+      stopMs,
+    );
+    const decision = readyRun.data.runs[1].decision;
+    expect(decision).toMatchObject({
+      checks: 'passed',
+      review: 'approved',
+      subject: { requirementIds: ['fixture'] },
+    });
+    expect(forRoot(second.data.rootId).map(({ path }) => path)).toEqual([
+      'work/first.txt',
+      'work/parallel.txt',
+      'work/second.txt',
+      'work/second.txt',
+      'work/third.txt',
+      'work/fix.txt',
+      null,
+    ]);
+    const task = (await api('contracts/tasks/ship-2')).data.record;
+    expect(git(repository, 'rev-parse', 'HEAD')).toBe(task.task.baseRevision);
+    git(
+      repository,
+      '-c',
+      'user.name=fixture',
+      '-c',
+      'user.email=fixture@example.test',
+      'commit',
+      '-qm',
+      'move target after verification',
+      '--allow-empty',
+    );
+    const movedTarget = git(repository, 'rev-parse', 'HEAD');
+    expect(movedTarget).not.toBe(task.task.baseRevision);
+    expect(decision.subject.baseRevision).toBe(task.task.baseRevision);
+    await apply({
+      kind: 'accept',
+      commandId: 'accept-fixture',
+      taskId: 'ship-2',
+      acceptance: {
+        expectedVersion: task.rowVersion,
+        attemptId: decision.subject.attemptId,
+        revision: decision.subject.revision,
+        mode: { kind: 'manual', actorId: 'owner' },
+      },
+    });
+    expect((await api(route)).data.runs[1].status).toBe('idle');
+    await measureIdle(restarted.child.pid!, 'manager fixture');
+    expect(git(repository, 'rev-parse', 'HEAD')).toBe(movedTarget);
+    await cli('stop', '--id', 'manager-stop');
+  }, 30_000);
 });

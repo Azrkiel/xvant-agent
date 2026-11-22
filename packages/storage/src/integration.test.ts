@@ -16,7 +16,7 @@ import { join } from 'node:path';
 import { ArtifactStore } from './artifacts.ts';
 import { captureGitWorkspace, createWorktree } from './git-workspace.ts';
 import { IntegrationBranch } from './integration.ts';
-import { Store } from './store.ts';
+import { SCHEMA_VERSION, Store } from './store.ts';
 
 let root: string, repo: string, objects: ArtifactStore;
 const git = (cwd: string, ...args: string[]) =>
@@ -109,7 +109,7 @@ it('treats an empty patch as a no-op and reopens after a restart', () => {
 it('persists work graphs with optimistic versions and an event history', () => {
   const store = new Store(join(root, 'state.sqlite'), { owner: 'test' });
   try {
-    expect(store.schemaVersion()).toBe(9);
+    expect(store.schemaVersion()).toBe(SCHEMA_VERSION);
     const created = store.graphs.create(
       'root',
       'p',
