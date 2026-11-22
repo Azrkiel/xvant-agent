@@ -281,6 +281,9 @@ export async function daemonCli(home, rest, value, values) {
     const commandId = value('--id');
     if (!commandId)
       throw new Error('Use --id KEY to identify this command across retries.');
+    const observedVersion = value('--observed-version');
+    const observation =
+      observedVersion === undefined ? {} : { observedVersion };
     if (action === 'resume' || action === 'cancel' || action === 'accept') {
       if (!/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(id ?? ''))
         throw new Error('A run ID is required.');
@@ -291,7 +294,7 @@ export async function daemonCli(home, rest, value, values) {
               expectedVersion: Number(value('--expected-version')),
               head: value('--head'),
             }
-          : {}),
+          : observation),
         ...(action === 'resume' && value('--retry-at')
           ? { retryAt: Date.parse(value('--retry-at')) }
           : {}),
@@ -301,6 +304,7 @@ export async function daemonCli(home, rest, value, values) {
       const reply = await daemonRequest(entry, 'daemon/control', {
         action: 'shutdown',
         commandId,
+        ...observation,
       });
       if (reply.generation !== entry.generation)
         return { ...reply, stopped: false };
@@ -315,7 +319,11 @@ export async function daemonCli(home, rest, value, values) {
       }
       throw new Error('DAEMON_SHUTDOWN_TIMEOUT');
     }
-    return daemonRequest(entry, 'daemon/control', { commandId, action });
+    return daemonRequest(entry, 'daemon/control', {
+      commandId,
+      action,
+      ...observation,
+    });
   }
   throw new Error(
     'Commands: daemon start | status [RUN] | submit | resume RUN | cancel RUN | accept RUN | pause-intake | pause-dispatch | drain | continue | stop',

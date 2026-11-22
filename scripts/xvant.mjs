@@ -673,6 +673,20 @@ if (command === undefined || command === 'shell') {
   } finally {
     store.close();
   }
+} else if (command === 'backup' && rest[0] === 'verify') {
+  const { verifyBackup, describeBackup } =
+    await import('../packages/storage/src/backup.ts');
+  const from = value('--from');
+  if (!from) {
+    console.error('Usage: backup verify --from DIR');
+    process.exit(2);
+  }
+  try {
+    console.log(describeBackup(verifyBackup(from)));
+  } catch (error) {
+    console.error('Backup verification failed: ' + error.message);
+    process.exitCode = 1;
+  }
 } else if (command === 'backup') {
   // state.sqlite (a consistent snapshot) and objects/; never runs/.
   const { backupState, describeBackup } =

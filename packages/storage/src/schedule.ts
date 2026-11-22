@@ -112,7 +112,9 @@ export class Schedule {
           ? 1
           : 0;
       this.#db
-        .prepare('UPDATE schedule_control SET intake=?, dispatch=?, draining=?')
+        .prepare(
+          'UPDATE schedule_control SET intake=?, dispatch=?, draining=?, sequence=sequence+1',
+        )
         .run(intake, dispatch, draining);
       return this.control();
     });

@@ -2,6 +2,7 @@ import {
   execFile,
   execFileSync,
   spawn,
+  spawnSync,
   type ChildProcess,
 } from 'node:child_process';
 import {
@@ -248,6 +249,158 @@ describe('A04 daemon process fixtures', () => {
     await delay(60);
     rmSync(dir, { recursive: true, force: true });
   });
+
+  it('replays controls by key and rejects stale daemon and root observations', async () => {
+    await ready(launch());
+    const observedVersion = (await cli('status')).observedVersion;
+    const pause = {
+      commandId: 'observe-pause',
+      action: 'pause-dispatch',
+      observedVersion,
+    };
+    const accepted = await api('daemon/control', pause);
+    expect(accepted).toMatchObject({ status: 202, data: { dispatch: 0 } });
+    expect(await api('daemon/control', pause)).toEqual(accepted);
+    expect(
+      (
+        await api('daemon/control', {
+          commandId: 'stale-continue',
+          action: 'continue',
+          observedVersion,
+        })
+      ).status,
+    ).toBe(409);
+    const work = await submit(
+      'operator-control',
+      repo('operator'),
+      'hold-root',
+    );
+    const before = await cli('status', work.id);
+    expect(before).toMatchObject({
+      job: { status: 'queued' },
+      operations: { nextStep: 'initialize', turns: 0, workerSlots: 1 },
+    });
+    const version = before.operations.observedVersion;
+    expect(
+      await cli(
+        'cancel',
+        work.id,
+        '--id',
+        'observed-cancel',
+        '--observed-version',
+        version,
+      ),
+    ).toEqual({ cancelling: true });
+    expect(
+      await cli(
+        'cancel',
+        work.id,
+        '--id',
+        'observed-cancel',
+        '--observed-version',
+        version,
+      ),
+    ).toEqual({ cancelling: true });
+    expect(
+      (
+        await api('roots/' + work.id + '/cancel', {
+          commandId: 'stale-cancel',
+          observedVersion: version,
+        })
+      ).status,
+    ).toBe(409);
+    expect((await cli('status', work.id)).job.status).toBe('cancelled');
+    expect(calls()).toEqual([]);
+  });
+
+  it('retains an unresolved dispatch and its reservation in a restored daemon state', async () => {
+    await ready(launch());
+    const work = await submit(
+      'restore-held',
+      repo('restore-target'),
+      'hold-root',
+    );
+    const [running] = await until(
+      () => forRoot(work.id),
+      (seen) => seen.length === 1,
+      dispatchMs,
+    );
+    await cli('stop', '--id', 'stop-for-backup');
+    const journal = () => {
+      const database = db();
+      try {
+        return database
+          .prepare('SELECT body FROM work_dispatches WHERE graph_id=?')
+          .all(work.id);
+      } finally {
+        database.close();
+      }
+    };
+    const dispatches = journal();
+    expect(dispatches.length).toBeGreaterThan(0);
+    const storage = new URL(
+      '../../packages/storage/src/store.ts',
+      import.meta.url,
+    ).href;
+    const interrupted = spawnSync(
+      process.execPath,
+      [
+        '--input-type=module',
+        '-e',
+        `
+      import { Store, SCHEMA_VERSION } from ${JSON.stringify(storage)};
+      new Store(process.argv[1], {
+        owner: 'upgrade-fixture',
+        migrations: [{ version: SCHEMA_VERSION + 1, sql: 'CREATE TABLE upgrade_probe(marker TEXT)' }],
+        fault(point) {
+          if (point === 'migration.before_commit') process.kill(process.pid, 'SIGKILL');
+        },
+      });
+    `,
+        join(home, 'state.sqlite'),
+      ],
+      { env, timeout: stopMs },
+    );
+    expect(interrupted.signal).toBe('SIGKILL');
+    const original = db();
+    try {
+      expect(
+        original
+          .prepare("SELECT name FROM sqlite_schema WHERE name='upgrade_probe'")
+          .get(),
+      ).toBeUndefined();
+      expect(original.pragma('integrity_check', { simple: true })).toBe('ok');
+    } finally {
+      original.close();
+    }
+    expect(journal()).toEqual(dispatches);
+    const backup = join(dir, 'backup');
+    await exec(process.execPath, [script, 'backup', '--out', backup], {
+      env,
+      timeout: stopMs,
+    });
+    const verification = await exec(
+      process.execPath,
+      [script, 'backup', 'verify', '--from', backup],
+      { env, timeout: stopMs },
+    );
+    expect(verification.stdout).toContain('schema');
+    home = join(dir, 'restored');
+    env.XVANT_HOME = home;
+    await exec(process.execPath, [script, 'restore', '--from', backup], {
+      env,
+      timeout: stopMs,
+    });
+    expect(journal()).toEqual(dispatches);
+    const service = await ready(launch());
+    expect(service.workerSlots.unresolved).toBe(1);
+    const blocked = await cli('status', work.id);
+    expect(blocked.job.status).toBe('blocked');
+    expect(blocked.recovery).toMatchObject([
+      { decision: 'block', attemptId: running!.attemptId },
+    ]);
+    expect(forRoot(work.id)).toHaveLength(1);
+  }, 25_000);
 
   it('retains one durable acceptance and the pinned base after a daemon kill and client reconnect', async () => {
     const path = repo('original');

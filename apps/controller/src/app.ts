@@ -98,10 +98,15 @@ const daemonStartSchema = startSchema.extend({
     .optional(),
 });
 const daemonCommandSchema = z.strictObject({ commandId: idSchema });
-const daemonResumeSchema = daemonCommandSchema.extend({
+const observedVersion = z
+  .string()
+  .regex(/^[a-f0-9]{64}$/)
+  .optional();
+const observedCommandSchema = daemonCommandSchema.extend({ observedVersion });
+const daemonResumeSchema = observedCommandSchema.extend({
   retryAt: z.number().int().nonnegative().optional(),
 });
-const lifecycleSchema = daemonCommandSchema.extend({
+const lifecycleSchema = observedCommandSchema.extend({
   action: z.enum([
     'pause-intake',
     'pause-dispatch',
@@ -487,16 +492,35 @@ export async function startApp(options: AppOptions) {
       throw error;
     }
   }
+  const observed = (...state: unknown[]) =>
+    createHash('sha256')
+      .update(JSON.stringify([store.ownership.generation, ...state]))
+      .digest('hex');
+  const controlVersion = () => observed(store.schedule.control());
+  const rootVersion = (id: string) =>
+    observed(store.graphs.get(id).rowVersion, store.schedule.get(id) ?? null);
+  const requireObservation = (
+    expected: string | undefined,
+    current: string,
+  ) => {
+    if (expected !== undefined && expected !== current)
+      throw new HttpError(409, 'CONFLICT');
+  };
   const rootView = (id: string) => {
     const record = store.graphs.get<RootState & { repository?: string }>(id);
     const checkpoint = store.workflows.read(id) as {
-      progress?: { step?: string };
+      progress?: {
+        step?: string;
+        turnCount?: number;
+        checkRound?: number;
+        reviewRound?: number;
+      };
+      spec?: { baseRevision?: string; maxActive?: number };
     } | null;
+    const job = store.schedule.get(id) ?? null;
     const resumable =
       !active.has(id) &&
-      (!scheduler ||
-        store.schedule.get(id)?.status === 'blocked' ||
-        !store.schedule.get(id)) &&
+      (!scheduler || job?.status === 'blocked' || !job) &&
       !!checkpoint?.progress?.step &&
       checkpoint.progress.step !== 'done';
     const latest = new Map(
@@ -515,7 +539,23 @@ export async function startApp(options: AppOptions) {
       rowVersion: record.rowVersion,
       repository: meta.get(id)?.repository ?? record.state.repository ?? null,
       state: record.state,
-      ...(daemon ? { job: store.schedule.get(id) ?? null } : {}),
+      ...(daemon
+        ? {
+            job,
+            operations: {
+              observedVersion: rootVersion(id),
+              baseRevision: checkpoint?.spec?.baseRevision ?? null,
+              nextStep: checkpoint?.progress?.step ?? null,
+              progressAgeMs: job
+                ? Math.max(0, daemon.clock.now() - job.updatedAt)
+                : null,
+              turns: checkpoint?.progress?.turnCount ?? null,
+              checkRounds: checkpoint?.progress?.checkRound ?? null,
+              reviewRounds: checkpoint?.progress?.reviewRound ?? null,
+              workerSlots: checkpoint?.spec?.maxActive ?? null,
+            },
+          }
+        : {}),
       ...(resumable ? { resumable: true } : {}),
       ...(recovery.length ? { recovery } : {}),
       events: store.graphs.events(id).slice(-300),
@@ -607,7 +647,10 @@ export async function startApp(options: AppOptions) {
             {
               method: 'GET' as const,
               path: /^\/api\/v1\/daemon$/,
-              handle: async () => scheduler!.status(),
+              handle: async () => ({
+                ...scheduler!.status(),
+                observedVersion: controlVersion(),
+              }),
             },
             {
               method: 'POST' as const,
@@ -616,6 +659,7 @@ export async function startApp(options: AppOptions) {
                 const input = lifecycleSchema.parse(body);
                 let shutdown = false;
                 const result = schedulerCommand(input.commandId, input, () => {
+                  requireObservation(input.observedVersion, controlVersion());
                   if (input.action !== 'shutdown')
                     return store.schedule.setControl(input.action);
                   shutdown = true;
@@ -755,11 +799,21 @@ export async function startApp(options: AppOptions) {
         handle: async ({ match, body }) => {
           const id = match[1]!;
           if (!scheduler) return resume(id);
-          const { commandId, retryAt } = daemonResumeSchema.parse(body);
+          const { commandId, retryAt, observedVersion } =
+            daemonResumeSchema.parse(body);
           return schedulerCommand(
             commandId,
-            { action: 'resume', id, retryAt: retryAt ?? null },
-            () => enqueueExisting(id, retryAt),
+            {
+              action: 'resume',
+              id,
+              retryAt: retryAt ?? null,
+              ...(observedVersion && { observedVersion }),
+            },
+            () => {
+              if (observedVersion !== undefined)
+                requireObservation(observedVersion, rootVersion(id));
+              return enqueueExisting(id, retryAt);
+            },
           );
         },
       },
@@ -800,11 +854,18 @@ export async function startApp(options: AppOptions) {
         handle: async ({ match, body }) => {
           if (scheduler) {
             const id = match[1]!;
-            const { commandId } = daemonCommandSchema.parse(body);
+            const { commandId, observedVersion } =
+              observedCommandSchema.parse(body);
             const result = schedulerCommand(
               commandId,
-              { action: 'cancel', id },
+              {
+                action: 'cancel',
+                id,
+                ...(observedVersion && { observedVersion }),
+              },
               () => {
+                if (observedVersion !== undefined)
+                  requireObservation(observedVersion, rootVersion(id));
                 scheduler!.cancel(id);
                 return { cancelling: true };
               },

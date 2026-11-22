@@ -214,6 +214,37 @@ describe('backup and restore', () => {
   });
 });
 
+it('refuses backups and restores that omit an object referenced by SQLite', () => {
+  const store = new Store(join(home(), 'state.sqlite'), {
+    owner: 'object-test',
+  });
+  const hash = store.recordArtifact(
+    'one',
+    new ArtifactStore(join(home(), 'objects')),
+    Buffer.from('referenced'),
+  );
+  store.close();
+  const { directory, manifest } = backupOf();
+  const path = 'objects/' + hash;
+  rmSync(join(directory, path));
+  writeFileSync(
+    join(directory, 'manifest.json'),
+    JSON.stringify({
+      ...manifest,
+      files: manifest.files.filter((file) => file.path !== path),
+    }),
+  );
+  const target = join(root, 'new-state');
+  expect(
+    capture(() => restoreState({ from: directory, home: target })).code,
+  ).toBe('REFERENCED_OBJECT_MISSING');
+  expect(existsSync(target)).toBe(false);
+  rmSync(join(home(), path));
+  expect(capture(() => backupOf(join(root, 'incomplete'))).code).toBe(
+    'REFERENCED_OBJECT_MISSING',
+  );
+});
+
 describe('upgrade rollback', () => {
   const UPGRADE = [
     { version: SCHEMA_VERSION + 1, sql: 'CREATE TABLE upgraded(x INTEGER)' },

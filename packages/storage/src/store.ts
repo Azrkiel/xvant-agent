@@ -237,6 +237,7 @@ export class Store {
             : undefined;
           if (old && leaseActive(old, this.#now, this.#leaseClock))
             throw new StorageError('LEASE_BUSY');
+          const previousSchema = this.schemaVersion();
           for (const item of migrations)
             if (item.version > this.schemaVersion()) {
               if (item.version !== this.schemaVersion() + 1)
@@ -244,6 +245,8 @@ export class Store {
               this.#db.exec(item.sql);
               this.#db.pragma('user_version=' + item.version);
             }
+          if (this.schemaVersion() !== previousSchema)
+            this.#fault('migration.before_commit');
           this.#generation = (old?.generation ?? 0) + 1;
           const clock = this.#leaseClock?.();
           this.#db

@@ -63,6 +63,19 @@ async function api(path, options = {}) {
   }
   return data;
 }
+async function daemonCommand(path, fields) {
+  const request = {
+    method: 'POST',
+    body: JSON.stringify({ commandId: 'ui-' + crypto.randomUUID(), ...fields }),
+  };
+  try {
+    return await api(path, request);
+  } catch (error) {
+    if (error.status !== undefined) throw error;
+    // A lost response may follow a committed command. Replay the same key.
+    return api(path, request);
+  }
+}
 async function connect() {
   const match = /bootstrap=([a-f0-9]{64})/.exec(location.hash);
   if (match) {
@@ -314,6 +327,61 @@ async function confirm(title, body, ok) {
     ),
   );
 }
+function runOperations(root) {
+  const { operations, job } = root;
+  if (!operations) return null;
+  const step =
+    operations.nextStep === 'done'
+      ? 'Complete'
+      : (operations.nextStep ?? 'Unavailable');
+  const next = root.recovery?.length
+    ? 'Resolve the outstanding effect, then resume'
+    : job?.cancelRequested && job.status !== 'cancelled'
+      ? 'Cancellation requested'
+      : job?.reason && ['queued', 'blocked'].includes(job.status)
+        ? 'Waiting (' + job.reason + ')'
+        : step;
+  return h(
+    'dl',
+    { class: 'hint', 'aria-label': 'Durable progress' },
+    h('dt', {}, 'Queue state'),
+    h('dd', {}, job?.status ?? 'Outside the queue'),
+    h('dt', {}, 'Next action'),
+    h('dd', {}, next),
+    h('dt', {}, 'Last progress'),
+    h(
+      'dd',
+      {},
+      operations.progressAgeMs === null
+        ? 'Unavailable'
+        : Math.floor(operations.progressAgeMs / 1000) + ' seconds ago',
+    ),
+    operations.workerSlots === null
+      ? null
+      : [h('dt', {}, 'Worker slots'), h('dd', {}, operations.workerSlots)],
+    operations.turns === null
+      ? null
+      : [
+          h('dt', {}, 'Recorded turns and repair rounds'),
+          h(
+            'dd',
+            {},
+            operations.turns +
+              ' turns, ' +
+              operations.checkRounds +
+              ' check rounds, ' +
+              operations.reviewRounds +
+              ' review rounds',
+          ),
+        ],
+    operations.baseRevision
+      ? [
+          h('dt', {}, 'Pinned base'),
+          h('dd', {}, h('code', {}, operations.baseRevision)),
+        ]
+      : null,
+  );
+}
 function runDetail(root) {
   const s = root.state;
   const nodes = Object.values(s.nodes ?? {});
@@ -325,6 +393,7 @@ function runDetail(root) {
     { 'aria-labelledby': 'run-title' },
     h('h2', { class: 'title', id: 'run-title', tabindex: '-1' }, s.objective),
     h('p', {}, badge(s.phase), ' ', s.reason ? h('span', {}, s.reason) : ''),
+    runOperations(root),
     root.recovery?.length
       ? h(
           'ul',
@@ -366,14 +435,12 @@ function runDetail(root) {
               onclick: async (event) => {
                 event.currentTarget.disabled = true;
                 try {
-                  const result = await api('/roots/' + root.id + '/resume', {
-                    method: 'POST',
-                    body: view.overview.daemon
-                      ? JSON.stringify({
-                          commandId: 'ui-' + crypto.randomUUID(),
-                        })
-                      : '{}',
-                  });
+                  const path = '/roots/' + root.id + '/resume';
+                  const result = root.operations
+                    ? await daemonCommand(path, {
+                        observedVersion: root.operations.observedVersion,
+                      })
+                    : await api(path, { method: 'POST', body: '{}' });
                   announce(
                     'Run is now: ' + (LABELS[result.phase] ?? result.phase),
                   );
@@ -387,7 +454,12 @@ function runDetail(root) {
             'Resume run',
           )
         : null,
-      active && !root.resumable
+      (
+        root.job
+          ? ['queued', 'running', 'blocked'].includes(root.job.status) &&
+            !root.job.cancelRequested
+          : active && !root.resumable
+      )
         ? h(
             'button',
             {
@@ -402,13 +474,19 @@ function runDetail(root) {
                   ))
                 )
                   return;
-                await api('/roots/' + root.id + '/cancel', {
-                  method: 'POST',
-                  body: view.overview.daemon
-                    ? JSON.stringify({ commandId: 'ui-' + crypto.randomUUID() })
-                    : '{}',
-                });
-                announce('Stopping the run.');
+                try {
+                  const path = '/roots/' + root.id + '/cancel';
+                  if (root.operations)
+                    await daemonCommand(path, {
+                      observedVersion: root.operations.observedVersion,
+                    });
+                  else await api(path, { method: 'POST', body: '{}' });
+                  announce('Stopping the run.');
+                } catch (error) {
+                  announce(explain(error));
+                } finally {
+                  if (view.root === root.id) await openRun(root.id);
+                }
               },
             },
             'Stop run',
@@ -955,21 +1033,54 @@ $('open-lessons').addEventListener('click', () =>
 );
 $('stop-all').addEventListener('click', async () => {
   if (view.overview?.daemon) {
-    if (
-      await confirm(
-        'Drain the daemon?',
-        'Running work can finish. Intake and new dispatch pause until the daemon is continued.',
-        'Drain',
-      )
-    ) {
-      await api('/daemon/control', {
-        method: 'POST',
-        body: JSON.stringify({
-          commandId: 'ui-' + crypto.randomUUID(),
-          action: 'drain',
+    const panel = $('daemon-controls');
+    try {
+      const status = await api('/daemon');
+      $('daemon-status').textContent =
+        'Intake ' +
+        (status.control.intake ? 'open' : 'paused') +
+        ' · Dispatch ' +
+        (status.control.dispatch ? 'running' : 'paused') +
+        (status.control.draining
+          ? status.drained
+            ? ' · Drained'
+            : ' · Draining'
+          : '') +
+        ' · ' +
+        status.workerSlots.unresolved +
+        ' unresolved worker reservations';
+      const actions = $('daemon-actions');
+      actions.replaceChildren(
+        ...[
+          ['pause-intake', 'Pause intake'],
+          ['pause-dispatch', 'Pause dispatch'],
+          ['drain', 'Drain'],
+          ['continue', 'Continue'],
+        ].map(([action, label]) =>
+          h(
+            'button',
+            { type: 'button', onclick: () => panel.close(action) },
+            label,
+          ),
+        ),
+      );
+      panel.returnValue = '';
+      panel.showModal();
+      const action = await new Promise((resolve) =>
+        panel.addEventListener('close', () => resolve(panel.returnValue), {
+          once: true,
         }),
-      });
-      announce('Daemon is draining.');
+      );
+      if (action && action !== 'close') {
+        await daemonCommand('/daemon/control', {
+          action,
+          observedVersion: status.observedVersion,
+        });
+        announce('Daemon control saved.');
+        if (view.root) await openRun(view.root, false);
+      }
+    } catch (error) {
+      announce(explain(error));
     }
     return;
   }
@@ -987,7 +1098,7 @@ $('stop-all').addEventListener('click', async () => {
 try {
   await connect();
   await refreshOverview();
-  if (view.overview.daemon) $('stop-all').textContent = 'Drain daemon';
+  if (view.overview.daemon) $('stop-all').textContent = 'Daemon controls';
   if (view.overview.roots.length) await openRun(view.overview.roots[0].id);
   else showComposer();
   listen();

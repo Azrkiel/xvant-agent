@@ -35,6 +35,15 @@
       role="status"
       aria-live="polite"
     ></div>
+    <dialog id="daemon-controls" aria-labelledby="daemon-controls-title">
+      <form method="dialog">
+        <h2 id="daemon-controls-title">Daemon controls</h2>
+        <p id="daemon-status"></p>
+        <p>Drain pauses intake and dispatch while current runs finish.</p>
+        <div class="actions" id="daemon-actions"></div>
+        <button value="close">Close</button>
+      </form>
+    </dialog>
     <dialog id="confirm">
       <form method="dialog">
         <h2 id="confirm-title"></h2>

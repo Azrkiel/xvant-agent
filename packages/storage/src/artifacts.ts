@@ -428,6 +428,33 @@ function validateTable(
   )
     fail('SCHEMA_UNSUPPORTED');
 }
+/** Object references that must survive any state transfer, including uncertain dispatches. */
+export function referencedArtifacts(
+  db: Database.Database,
+  schemaVersion: number,
+): string[] {
+  const references = db
+    .prepare('SELECT DISTINCT hash FROM artifacts')
+    .all() as Array<{ hash: unknown }>;
+  if (schemaVersion >= 7) {
+    const patches = db
+      .prepare(
+        "SELECT DISTINCT json_extract(body, '$.result.patchHash') AS hash FROM work_actions WHERE json_extract(body, '$.kind')='turn' AND json_type(body, '$.result.patchHash')='text'",
+      )
+      .all() as Array<{ hash: unknown }>;
+    references.push(...patches);
+  }
+  if (schemaVersion >= 8) {
+    references.push(
+      ...(db
+        .prepare(
+          "SELECT DISTINCT json_extract(body, '$.observation.patchHash') AS hash FROM work_dispatches WHERE json_type(body, '$.observation.patchHash')='text'",
+        )
+        .all() as Array<{ hash: unknown }>),
+    );
+  }
+  return references.map(({ hash }) => hashSchema.parse(hash));
+}
 function validateDatabase(path: string): {
   references: string[];
   schemaVersion: number;
@@ -482,28 +509,8 @@ function validateDatabase(path: string): {
       if (text?.sql !== 'CREATE VIRTUAL TABLE lesson_text USING fts5(text)')
         fail('SCHEMA_UNSUPPORTED');
     }
-    const references = db
-      .prepare('SELECT DISTINCT hash FROM artifacts')
-      .all() as Array<{ hash: unknown }>;
-    if (schemaVersion >= 7) {
-      const patches = db
-        .prepare(
-          "SELECT DISTINCT json_extract(body, '$.result.patchHash') AS hash FROM work_actions WHERE json_extract(body, '$.kind')='turn' AND json_type(body, '$.result.patchHash')='text'",
-        )
-        .all() as Array<{ hash: unknown }>;
-      references.push(...patches);
-    }
-    if (schemaVersion >= 8) {
-      references.push(
-        ...(db
-          .prepare(
-            "SELECT DISTINCT json_extract(body, '$.observation.patchHash') AS hash FROM work_dispatches WHERE json_type(body, '$.observation.patchHash')='text'",
-          )
-          .all() as Array<{ hash: unknown }>),
-      );
-    }
     return {
-      references: references.map(({ hash }) => hashSchema.parse(hash)),
+      references: referencedArtifacts(db, schemaVersion),
       schemaVersion,
     };
   } finally {
