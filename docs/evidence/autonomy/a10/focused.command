@@ -1,0 +1,1 @@
+docker-init -s -- npm test -- tests/faults/daemon.test.ts tests/e2e/ui.test.ts packages/storage/src/backup.test.ts packages/storage/src/artifacts.test.ts packages/storage/src/store.test.ts apps/controller/src/app.test.ts apps/controller/src/daemon-clock.test.ts 

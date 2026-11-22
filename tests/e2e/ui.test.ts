@@ -22,6 +22,7 @@ import { chromium, type Browser, type Page } from 'playwright-core';
 import { LIVE_ROUTES } from '../../packages/contracts/src/live.ts';
 import type { ProviderKind } from '../../packages/contracts/src/providers.ts';
 import { startApp } from '../../apps/controller/src/app.ts';
+import { DaemonClock } from '../../apps/controller/src/daemon-clock.ts';
 import { findBrowser } from '../../scripts/browser-path.ts';
 import { lessonScope } from '../../packages/storage/src/lesson-scope.ts';
 
@@ -265,4 +266,79 @@ it('opens the lessons view for a repository, shows markup as text and forgets wi
   expect(app.store.lessons.get(scope, challenge.id).forgotten).toMatchObject({
     reason: 'not relevant',
   });
+});
+
+it('shows daemon progress and applies the reviewed controls in Chromium', async () => {
+  await app.close();
+  const operatorToken = 'browser-fixture-operator';
+  app = await startApp({
+    home: join(root, 'daemon'),
+    discover: (kind) => ({
+      runtimeKind: kind,
+      status: 'qualified',
+      executable: process.execPath,
+      version: LIVE_ROUTES[kind].runtimeVersion,
+      expectedVersion: LIVE_ROUTES[kind].runtimeVersion,
+      candidates: 1,
+      prefixArgs: FAKES[kind],
+    }),
+    runner: () => ({
+      run: async () => {
+        throw new Error('Paused fixture dispatched work');
+      },
+      interrupt: () => false,
+    }),
+    daemon: {
+      operatorToken,
+      slots: 3,
+      clock: new DaemonClock(),
+      onError: (error) => {
+        throw error;
+      },
+      shutdown: () => {},
+    },
+  });
+  async function operator(path: string, data: unknown) {
+    const response = await fetch(app.origin + '/api/v1/' + path, {
+      method: 'POST',
+      headers: {
+        origin: app.origin,
+        authorization: 'Bearer ' + operatorToken,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    expect(response.status).toBe(202);
+    return response.json();
+  }
+  await operator('daemon/control', {
+    commandId: 'pause-for-browser',
+    action: 'pause-dispatch',
+  });
+  const run = await operator('roots', {
+    commandId: 'browser-operation',
+    repository: repo,
+    objective,
+  });
+  await page.goto(app.origin + '/#bootstrap=' + app.bootstrapToken);
+  await expect
+    .poll(() => page.getByLabel('Durable progress').textContent())
+    .toContain('queued');
+  await page.getByRole('button', { name: 'Daemon controls' }).click();
+  expect(
+    await page.getByRole('dialog', { name: 'Daemon controls' }).textContent(),
+  ).toContain('Dispatch paused');
+  await page.getByRole('button', { name: 'Drain', exact: true }).click();
+  await expect.poll(() => status().textContent()).toBe('Daemon control saved.');
+  await page.getByRole('button', { name: 'Daemon controls' }).click();
+  expect(
+    await page.getByRole('dialog', { name: 'Daemon controls' }).textContent(),
+  ).toContain('Drained');
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await page.getByRole('button', { name: 'Stop run', exact: true }).click();
+  await page.locator('#confirm-ok').click();
+  await expect
+    .poll(() => page.getByLabel('Durable progress').textContent())
+    .toContain('cancelled');
+  expect(app.store.schedule.get(run.id)?.status).toBe('cancelled');
 });

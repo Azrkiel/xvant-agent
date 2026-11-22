@@ -14,6 +14,7 @@ import {
 import { dirname, join, relative, resolve } from 'node:path';
 import { z } from 'zod';
 import { SCHEMA_VERSION, Store } from './store.ts';
+import { referencedArtifacts } from './artifacts.ts';
 import { leaseActive, type HostLease } from './host-clock.ts';
 
 // Backup and restore of a state directory: state.sqlite, objects/ and the
@@ -85,6 +86,24 @@ function checkIntegrity(path: string): string {
   const db = new Database(path, { readonly: true });
   try {
     return db.pragma('integrity_check', { simple: true }) as string;
+  } finally {
+    db.close();
+  }
+}
+
+function checkReferences(
+  database: string,
+  schemaVersion: number,
+  files: BackupManifest['files'],
+): void {
+  const db = new Database(database, { readonly: true, fileMustExist: true });
+  try {
+    if (db.pragma('user_version', { simple: true }) !== schemaVersion)
+      throw new BackupError('MANIFEST_INVALID', 'schema version mismatch');
+    const paths = new Set(files.map(({ path }) => path));
+    for (const hash of referencedArtifacts(db, schemaVersion))
+      if (!paths.has('objects/' + hash))
+        throw new BackupError('REFERENCED_OBJECT_MISSING', hash);
   } finally {
     db.close();
   }
@@ -187,6 +206,7 @@ export function backupState(options: {
       write(join(staging, 'routing', ...name.split('/')), bytes);
       record('routing/' + name, bytes);
     }
+    checkReferences(target, schemaVersion, files);
     const manifest: BackupManifest = {
       formatVersion: BACKUP_FORMAT,
       createdAt: now().toISOString(),
@@ -242,9 +262,20 @@ export function verifyBackup(from: string): BackupManifest {
     if (!lstatSync(path).isFile())
       throw new BackupError('UNSAFE_FILE', file.path);
     const bytes = readFileSync(path);
-    if (bytes.length !== file.size || sha256(bytes) !== file.sha256)
+    if (
+      bytes.length !== file.size ||
+      sha256(bytes) !== file.sha256 ||
+      (file.path.startsWith('objects/') &&
+        file.path !== 'objects/' + file.sha256)
+    )
       throw new BackupError('FILE_CORRUPT', file.path);
   }
+  if (manifest.schemaVersion <= SCHEMA_VERSION)
+    checkReferences(
+      join(directory, DATABASE),
+      manifest.schemaVersion,
+      manifest.files,
+    );
   return manifest;
 }
 
@@ -319,6 +350,11 @@ export function restoreState(options: {
     }
     const staged = checkIntegrity(join(staging, DATABASE));
     if (staged !== 'ok') throw new BackupError('INTEGRITY_FAILED', staged);
+    checkReferences(
+      join(staging, DATABASE),
+      manifest.schemaVersion,
+      manifest.files,
+    );
     // A backup from elsewhere could carry a live lease and lock everyone out.
     const copy = new Database(join(staging, DATABASE));
     try {

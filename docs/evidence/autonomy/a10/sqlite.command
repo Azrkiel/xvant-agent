@@ -1,0 +1,1 @@
+node --input-type=module -e import\ Database\ from\ \"better-sqlite3\"\;\ const\ db\ =\ new\ Database\(\":memory:\"\)\;\ console.log\(db.prepare\(\"SELECT\ sqlite_version\(\)\ AS\ version\"\).get\(\).version\)\;\ db.close\(\) 
