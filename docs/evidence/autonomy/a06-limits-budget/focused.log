@@ -1,0 +1,10 @@
+npm notice run xvant@0.1.0 test
+npm notice run vitest run apps/controller/src/project-contracts.test.ts apps/controller/src/workflow-checkpoint.test.ts packages/storage/src/artifacts.test.ts packages/storage/src/backup.test.ts packages/storage/src/store.test.ts packages/storage/src/integration.test.ts packages/storage/src/memory.test.ts packages/storage/src/providers.test.ts packages/storage/src/workflows.test.ts packages/supervisor/src/index.test.ts packages/supervisor/src/interactive.test.ts
+
+ RUN  v5.0.1 /workspace/work/gate-a06
+
+
+ Test Files  11 passed (11)
+      Tests  195 passed (195)
+   Start at  01:38:07
+   Duration  12.72s (tests 89%, import 6%, transform 5%)
