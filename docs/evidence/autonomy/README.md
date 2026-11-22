@@ -175,3 +175,11 @@ with 94.03% line and 87.93% branch coverage.
 · [Gate receipt](a05-manager/gate-receipt.json)
 · [Verified bundle](a05-manager/gate-bundle.tar.gz)
 · [Checksums](a05-manager/SHA256SUMS)
+
+### A05 and A06 Linux repeat
+
+The independent WSL2 runs reproduced 31 passing offline stages for each
+draft at the pinned heads. The A06 namespace fixture passed on an unchanged
+retry after a procfs exit race. The repeat record includes exact commands,
+runner versions, checksums and criterion status.
+[Repeat qualification](linux-repeat-2026-11-22/README.md)

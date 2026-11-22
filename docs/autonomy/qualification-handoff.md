@@ -76,6 +76,16 @@ physical suspend exercise only with an approved wake path and preserve its
 same-boot observations. The missing host receipts allow fixture development
 on the merged A04 queue. [A04 merge record](https://github.com/Azrkiel/xvant-agent/commit/f20da7e4dbd4f4a776ca60ace39c72f3dd2c7593)
 
+## Independent Linux repeat
+
+Linux WSL2 reproduced the A05 manager and A06 worker-boundary offline
+evidence on the tested heads and common base listed below. A05 passed 219
+focused tests and 1,513 gate tests. A06 passed 195 focused tests and 1,509
+gate tests. Each gate passed all 31 stages. The A06 namespace fixture hit
+a procfs exit race, then passed unchanged on retry. The delegated cgroup
+and live provider work remain blocked.
+[Repeat evidence](../evidence/autonomy/linux-repeat-2026-11-22/README.md)
+
 ## A05 criterion handoff
 
 Retargeted draft [#18](https://github.com/Azrkiel/xvant-agent/pull/18)

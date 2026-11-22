@@ -1,0 +1,6 @@
+[2026-11-22T07:03:50Z] npm ci --ignore-scripts --no-audit --no-fund
+[2026-11-22T07:03:55Z] npm run typecheck
+[2026-11-22T07:04:04Z] npm run lint
+[2026-11-22T07:04:10Z] tini -s -- npm test -- apps/controller/src/project-contracts.test.ts apps/controller/src/workflow-checkpoint.test.ts packages/storage/src/artifacts.test.ts packages/storage/src/backup.test.ts packages/storage/src/store.test.ts packages/storage/src/integration.test.ts packages/storage/src/memory.test.ts packages/storage/src/providers.test.ts packages/storage/src/workflows.test.ts packages/supervisor/src/index.test.ts packages/supervisor/src/interactive.test.ts
+[2026-11-22T07:04:29Z] tini -s -- node tests/fixtures/linux-offline-worker.mjs
+[2026-11-22T07:04:31Z] tini -s -- npm run gate -- --phase 10 --offline

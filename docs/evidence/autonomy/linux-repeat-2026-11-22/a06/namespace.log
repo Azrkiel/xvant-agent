@@ -1,0 +1,16 @@
+node:fs:483
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ESRCH: no such process, read
+    at readFileSync (node:fs:483:20)
+    at file://<fixture-worktree>/tests/fixtures/linux-offline-worker.mjs:138:11
+    at Array.some (<anonymous>)
+    at hasDescendant (file://<fixture-worktree>/tests/fixtures/linux-offline-worker.mjs:133:6)
+    at file://<fixture-worktree>/tests/fixtures/linux-offline-worker.mjs:297:10 {
+  errno: -3,
+  code: 'ESRCH',
+  syscall: 'read'
+}
+
+Node.js v24.21.0

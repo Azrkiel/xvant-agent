@@ -1,0 +1,146 @@
+{
+    "gateId":  "G10",
+    "status":  "passed",
+    "classification":  "offline",
+    "sourceRevision":  "563223d230e97aca8fdda93a40dd44dfdafc4643",
+    "sourceInventoryHash":  "1bb8613c92af457a1f67a8bf946dee1d8616a5574f17f974e352194a28f9eab7",
+    "gateExit":  0,
+    "focusedExit":  0,
+    "namespaceExit":  1,
+    "tests":  {
+                  "passed":  1509,
+                  "total":  1509,
+                  "failed":  0,
+                  "pending":  0,
+                  "passedFiles":  120,
+                  "lineCoveragePct":  92.91,
+                  "branchCoveragePct":  86.83
+              },
+    "stages":  [
+                   {
+                       "id":  "typecheck",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "lint",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "format",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "tests",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "runtime",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "provider-fixtures",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "controller-roster",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "opencode-http-permission",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "opencode-http-interrupt",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "opencode-http-no-auth",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "codex-transport",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "claude-native-stream",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "claude-native-controller",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "claude-native-interrupt",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "claude-native-quota",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "claude-create-permission",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "claude-create-interrupt",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "opencode-native-stream",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "opencode-native-controller",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "opencode-native-interrupt",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "opencode-native-quota",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "opencode-create-permission",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "opencode-create-interrupt",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "handoff-fixture",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "tools-fixture",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "compatibility-report",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "browser-fixture",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "orchestration-fixture",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "native-loop-fixture",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "benchmark-fixture",
+                       "exitCode":  0
+                   },
+                   {
+                       "id":  "release-audit",
+                       "exitCode":  0
+                   }
+               ],
+    "namespaceRetryExit":  0
+}

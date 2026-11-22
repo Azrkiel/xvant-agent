@@ -1,0 +1,118 @@
+npm notice run xvant@0.1.0 test
+npm notice run vitest run apps/controller/src/project-contracts.test.ts apps/controller/src/workflow-checkpoint.test.ts apps/controller/src/workflow-resume.test.ts apps/controller/src/daemon-clock.test.ts apps/controller/src/native-verifier.test.ts apps/controller/src/orchestrator.test.ts apps/controller/src/routing-default.test.ts packages/storage/src/artifacts.test.ts packages/storage/src/backup.test.ts packages/storage/src/store.test.ts packages/storage/src/workflows.test.ts tests/faults/daemon.test.ts tests/faults/workflow-remote.test.ts
+
+ RUN  v5.0.1 <fixture-worktree>
+
+ ✓ apps/controller/src/project-contracts.test.ts (39 tests) 4761ms
+   ✓ A01 offline fixture reports on the flaky test and then ships only with separate authority 1982ms
+   ✓ migrates a pre-A01 SQLite database while preserving manual legacy acceptance 792ms
+stdout | tests/faults/daemon.test.ts > A04 daemon process fixtures > retains one durable acceptance and the pinned base after a daemon kill and client reconnect
+A04 idle sample { cpuMs: 0, rssKb: 133840, intervalMs: 3000, extraTurns: 0 }
+
+stdout | tests/faults/daemon.test.ts > A04 daemon process fixtures > races daemon starts and fences a late result while an unrelated project remains eligible
+A04 blocked sample { cpuMs: 10, rssKb: 132664, intervalMs: 3000, extraTurns: 0 }
+
+ ✓ apps/controller/src/orchestrator.test.ts (53 tests) 42549ms
+   ✓ plans, runs parallel nodes, integrates, verifies and reviews independently 1162ms
+   ✓ repairs a failed node once and stops a repeated identical failure 587ms
+   ✓ passes check output to the repair and treats changing output as the same failure 463ms
+   ✓ never retries an unknown outcome 348ms
+   ✓ reruns a node that conflicts on the new integration head 614ms
+   ✓ re-plans once after an invalid plan and fixes a failing combined check 828ms
+   ✓ configured combined review: prefers the healthy planner over an ind… 618ms
+   ✓ configured combined review: falls back to Claude when the planner a… 646ms
+   ✓ configured combined review: keeps independent-runtime review withou… 708ms
+   ✓ repairs once after a rejecting review, then verifies and reviews again 880ms
+   ✓ hands over a review that still rejects after its one repair 824ms
+   ✓ starts no repair for an approval, a rejection without findings, or a limit of zero 1800ms
+   ✓ keeps the store lease while a check outlasts it 6537ms
+   ✓ lesson graph (14)
+     ✓ learns a fix in one run and shows it to the repair of the same failure in the next 725ms
+     ✓ learns from a combined-check fix and a review fix 2110ms
+     ✓ judges a node repair that fails and never counts the first attempt 392ms
+     ✓ does not judge a node repair that is unknown, cancelled, a runtime failure or an operator stop 1545ms
+     ✓ judges combined-check fixes and review fixes that do not work 1423ms
+     ✓ does not judge a combined-check fix whose turn did not finish 1421ms
+     ✓ does not judge a review fix whose turn did not finish 919ms
+     ✓ does not judge a review fix when the next review gives no verdict 929ms
+     ✓ marks a repair verified once the combined checks pass on the result 583ms
+     ✓ leaves a repair unverified when the combined checks fail 1033ms
+     ✓ keeps lessons with their repository, shared by its worktrees 1260ms
+     ✓ uses an explicit lessonScope over the derived one 436ms
+     ✓ records and shows nothing when lessons are off 755ms
+   ✓ does not repair on a review that gave no verdict or did not finish 872ms
+   ✓ does not trust an approval from a failed review turn 476ms
+   ✓ does not trust an approval from a unknown review turn 437ms
+   ✓ does not trust an approval from a cancelled review turn 467ms
+   ✓ does not trust an approval from a verification_failed review turn 582ms
+   ✓ names the cause when a node stops on an unknown outcome 414ms
+   ✓ stops for operator attention on AUTH_REQUIRED from api 463ms
+   ✓ stops for operator attention on QUOTA_BLOCKED from api 357ms
+   ✓ stops for operator attention on MODEL_UNAVAILABLE from api 325ms
+   ✓ stops for operator attention on AUTH_REQUIRED from plan 342ms
+   ✓ stops for operator attention on QUOTA_BLOCKED from plan 321ms
+   ✓ stops for operator attention on MODEL_UNAVAILABLE from plan 358ms
+   ✓ stops for operator attention on AUTH_REQUIRED from fix 637ms
+   ✓ stops for operator attention on QUOTA_BLOCKED from fix 649ms
+   ✓ stops for operator attention on MODEL_UNAVAILABLE from fix 654ms
+   ✓ stops for operator attention on AUTH_REQUIRED from review 661ms
+   ✓ stops for operator attention on QUOTA_BLOCKED from review 707ms
+   ✓ stops for operator attention on MODEL_UNAVAILABLE from review 539ms
+   ✓ stops for operator attention on AUTH_REQUIRED from review-fix 590ms
+   ✓ stops for operator attention on QUOTA_BLOCKED from review-fix 601ms
+   ✓ stops for operator attention on MODEL_UNAVAILABLE from review-fix 489ms
+   ✓ ends cancelled when cancelled during a review repair, and quotes findings as data 556ms
+   ✓ a worker that fixed failing checks does not count as an independent reviewer 699ms
+   ✓ routes a light node to the light worker and escalates it after a failure 390ms
+stdout | tests/faults/daemon.test.ts > A04 daemon process fixtures > manages a milestone DAG with a versioned replan, bounded repair and restart
+A04 manager fixture sample { cpuMs: 10, rssKb: 135368, intervalMs: 3000, extraTurns: 0 }
+
+ ✓ tests/faults/daemon.test.ts (6 tests) 58983ms
+   ✓ A04 daemon process fixtures (6)
+     ✓ retains one durable acceptance and the pinned base after a daemon kill and client reconnect 15043ms
+     ✓ races daemon starts and fences a late result while an unrelated project remains eligible 10602ms
+     ✓ distinguishes intake, dispatch, drain, cancellation and shutdown for busy and due projects 8168ms
+     ✓ stops an active daemon on SIGTERM and preserves uncertainty through restart and cancellation 7729ms
+     ✓ stores an owner backlog through the daemon without submitting work 4511ms
+     ✓ manages a milestone DAG with a versioned replan, bounded repair and restart 12927ms
+ ✓ packages/storage/src/store.test.ts (23 tests) 1828ms
+   ✓ finds the latest event of a kind for a task beyond the first page 578ms
+ ✓ packages/storage/src/artifacts.test.ts (21 tests) 1975ms
+ ✓ apps/controller/src/native-verifier.test.ts (23 tests) 2833ms
+   ✓ does not publish late evidence after ownership changes during a check 397ms
+ ✓ packages/storage/src/backup.test.ts (14 tests) 1469ms
+ ✓ packages/storage/src/workflows.test.ts (4 tests) 347ms
+ ✓ tests/faults/workflow-remote.test.ts (5 tests) 3521ms
+   ✓ reconciles a lost effect response according to the lookup adapter capability 464ms
+   ✓ reconciles a lost effect response according to the replay adapter capability 353ms
+   ✓ reconciles a lost effect response according to the timeout adapter capability 2239ms
+ ✓ apps/controller/src/routing-default.test.ts (7 tests) 18ms
+ ✓ apps/controller/src/workflow-checkpoint.test.ts (2 tests) 494ms
+   ✓ round-trips the resolved executable spec and worker bindings in the graph transaction 422ms
+ ✓ apps/controller/src/daemon-clock.test.ts (2 tests) 182ms
+ ✓ apps/controller/src/workflow-resume.test.ts (20 tests) 37599ms
+   ✓ resumes the same graph after real crashes in planning, node integration, checks, and review 6844ms
+   ✓ leaves plan:0 unresolved when a process dies after dispatch and before receipt 1361ms
+   ✓ leaves node:first:0 unresolved when a process dies after dispatch and before receipt 1594ms
+   ✓ leaves check:0:0:verify unresolved when a process dies after dispatch and before receipt 1570ms
+   ✓ leaves review:0 unresolved when a process dies after dispatch and before receipt 1441ms
+   ✓ rejects an incomplete executable checkpoint without defaulting its budgets or dispatching 843ms
+   ✓ reports a changed integration checkout and preserves its contents 959ms
+   ✓ recovers the committed Git effect once, even when killed again before the cursor advances 3131ms
+   ✓ classifies a real crash at dispatch.after_claim:plan:0 and resumes with the original intent 2079ms
+   ✓ classifies a real crash at result.before_commit:initialize and resumes with the original intent 2458ms
+   ✓ classifies a real crash at result.after_observation:plan:0 and resumes with the original intent 2117ms
+   ✓ classifies a real crash at result.after_observation:check:0:0:verify and resumes with the original intent 2132ms
+   ✓ blocks a crash after the authorization marker when there is no effect receipt 1570ms
+   ✓ blocks Git reconciliation with missing patch and keeps user files and refs 1231ms
+   ✓ blocks Git reconciliation with dirty worktree and keeps user files and refs 1189ms
+   ✓ blocks Git reconciliation with unexpected head and keeps user files and refs 1159ms
+   ✓ blocks Git reconciliation with wrong committed tree and keeps user files and refs 1171ms
+   ✓ fences a late worker result and retains the reservation for hold-worker 1356ms
+   ✓ fences a late worker result and retains the reservation for hold-unidentified-worker 1733ms
+   ✓ fences a late worker result and retains the reservation for reuse-pid 1656ms
+
+ Test Files  13 passed (13)
+      Tests  219 passed (219)
+   Start at  01:56:19
+   Duration  81.74s (tests 97%, import 2%, transform 1%)

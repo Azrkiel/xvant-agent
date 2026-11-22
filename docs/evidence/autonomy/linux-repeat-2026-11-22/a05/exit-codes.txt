@@ -1,0 +1,5 @@
+setup 0
+typecheck 0
+lint 0
+focused 0
+gate 0
