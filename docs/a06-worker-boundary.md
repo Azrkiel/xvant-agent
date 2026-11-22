@@ -81,3 +81,41 @@ a host with delegated resource limits, and validated artifact export. Extend
 the boundary tests to cover the profile's network policy and whole-environment
 CPU, memory, process and disk limits. Work package 3 needs a transactional
 budget ledger with uncertainty carried through restart and child allocation.
+
+## Resource reservation and report export
+
+The offline launcher can require a dedicated delegated cgroup v2 directory.
+The launcher enters a newly allocated child before Bubblewrap or its worker
+starts. Set the CPU quota per 100 ms, memory limit with swap disabled,
+process count and combined scratch capacity. The cgroup caps CPU, memory
+and processes across descendants. The private workspace and temporary
+directory each receive half the configured scratch capacity. Completion
+requires a kernel observation of an empty cgroup after cleanup. Keep the
+group for investigation if cleanup cannot establish that it is empty.
+
+`runBudgetedLinuxReport` is a host-only entry point for an A01 scout. It
+requires this delegated boundary and acquires a durable allocation before
+launch, using the action ID as the original attempt identity. A previous
+reservation refuses another dispatch. A complete successful launch can
+export one bounded JSON text report through stdout. Export validates the
+process identity, frame schema and size, rejects credential-shaped text, and
+stores the bytes by SHA-256 in the existing object store. The receipt binds
+the hash to the action, worker, input and profile. Staging and report truth
+remain the responsibility of the host caller and independent verification.
+
+Schema 10 adds global limits and dispatch reservations. The ledger checks
+current A01 versions, the project and every task ancestor in one fenced
+SQLite transaction. Each allocation consumes one cumulative attempt. Usage
+that is absent or unknown is charged at the full reservation until trusted
+settlement. Measured overruns are charged in full. The offline report path
+uses no live credentials or paid tokens, so the ledger provides no guarantee
+about live financial caps. Capture a verified pre-upgrade backup and retain
+the new store, object directory and cgroup evidence for reconciliation. To
+roll back, restore the backup to a separate directory for the older binary.
+
+The current runner exercises Bubblewrap and offline export. Whole-environment
+CPU, memory, process and disk qualification still requires delegated cgroups
+on an approved Linux runner. Codex, Claude and OpenCode profiles all refuse
+launch in this draft. The missing live dependencies are a qualified profile,
+approved test credentials and an approved network path. This draft leaves
+A06 and dependent A07 incomplete.

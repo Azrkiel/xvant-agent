@@ -36,8 +36,7 @@ export interface ProcessRequest {
   /** Inherited variables to remove, e.g. API keys that would change billing. */
   unsetEnv?: readonly string[];
   /**
-   * Streamed stdout. With 
-etainStdout: false the bytes go only to the
+   * Streamed stdout. With retainStdout: false the bytes go only to the
    * callback, so long-running sessions are not bounded by maxOutputBytes.
    */
   interactive?: { onStdout: (bytes: Buffer) => void; retainStdout?: boolean };

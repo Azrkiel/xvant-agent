@@ -18,6 +18,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { WorkerSupervisor } from '../../packages/supervisor/src/index.ts';
+import { validateWorkerReport } from '../../packages/supervisor/src/worker-artifact.ts';
 import { startLinuxOfflineWorker } from '../../packages/supervisor/src/linux-offline-worker.ts';
 
 assert.equal(process.platform, 'linux');
@@ -104,6 +105,24 @@ function rejectedRequests() {
         stagedInput: runtimeRoot,
       }),
     /INVALID_INPUT/,
+  );
+  assert.throws(
+    () => startLinuxOfflineWorker(supervisor, { ...request, profile: 'codex' }),
+    /no qualified isolated profile/,
+  );
+  assert.throws(
+    () =>
+      startLinuxOfflineWorker(supervisor, {
+        ...request,
+        limits: {
+          delegatedCgroup: runtimeRoot,
+          cpuQuotaMicros: 20000,
+          memoryBytes: 64 * 1024 * 1024,
+          processes: 32,
+          scratchBytes: 1024 * 1024,
+        },
+      }),
+    /delegated cgroup v2/,
   );
   assert.equal(supervisor.activeCount, 0);
 }
@@ -196,6 +215,57 @@ try {
   assert.equal(readFileSync(join(stagedInput, 'granted'), 'utf8'), marker);
   assert.equal(connections, 0);
 
+  const reportRun = launch(
+    `console.log(JSON.stringify({ version: 1, report: 'fixture report' }))`,
+  );
+  const reportResult = await reportRun.result;
+  const binding = {
+    actionId: 'fixture-report',
+    inputHash: 'a'.repeat(64),
+    profileHash: 'b'.repeat(64),
+  };
+  const report = validateWorkerReport(
+    reportResult,
+    reportRun.identity,
+    binding,
+  );
+  assert.equal(report.bytes.toString(), 'fixture report');
+  assert.equal(report.receipt.actionId, binding.actionId);
+  assert.throws(
+    () =>
+      validateWorkerReport(
+        {
+          ...reportResult,
+          stdout: JSON.stringify({
+            version: 1,
+            report: 'ok',
+            path: '../outside',
+          }),
+        },
+        reportRun.identity,
+        binding,
+      ),
+    /INVALID_WORKER_ARTIFACT/,
+  );
+  assert.throws(
+    () =>
+      validateWorkerReport(
+        { ...reportResult, outputTruncated: true },
+        reportRun.identity,
+        binding,
+      ),
+    /INVALID_WORKER_ARTIFACT/,
+  );
+  assert.throws(
+    () =>
+      validateWorkerReport(
+        reportResult,
+        { ...reportRun.identity, generation: 2 },
+        binding,
+      ),
+    /INVALID_WORKER_ARTIFACT/,
+  );
+
   const identifier = randomUUID();
   const descendantMarker = 'xvant-descendant-' + identifier;
   const running = launch(
@@ -232,6 +302,7 @@ try {
       ...observations,
       connections,
       detachedDescendantStopped: true,
+      boundArtifactValidated: true,
     }),
   );
 } finally {

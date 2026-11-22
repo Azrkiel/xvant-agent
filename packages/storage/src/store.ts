@@ -36,6 +36,7 @@ import {
 } from '../../contracts/src/native-evidence.ts';
 import { nativeAcceptanceTask } from '../../core/src/native-acceptance.ts';
 import { verifiedWorkspaceObjects } from './workspace.ts';
+import { Budgets, budgetMigration } from './budgets.ts';
 import { Schedule, scheduleMigration, type ClockSample } from './schedule.ts';
 import { leaseActive, type HostLease, type HostTime } from './host-clock.ts';
 
@@ -123,7 +124,7 @@ function canonical(value: unknown): string {
   return json(value);
 }
 /** The newest schema this code writes; a database beyond it is refused. */
-export const SCHEMA_VERSION = 9;
+export const SCHEMA_VERSION = 10;
 
 /** Observe one committed snapshot, including while another process owns the controller. */
 export function inspectWorkGraphs<T>(
@@ -157,6 +158,7 @@ export class Store {
   readonly graphs: WorkGraphs;
   readonly workflows: Workflows;
   readonly schedule: Schedule;
+  readonly budgets: Budgets;
   readonly lessons: LessonGraph;
   readonly contracts: ProjectContracts;
   readonly #db: Database.Database;
@@ -212,6 +214,7 @@ export class Store {
         { version: 7, sql: workflowMigration },
         { version: 8, sql: recoveryMigration },
         { version: 9, sql: scheduleMigration },
+        { version: 10, sql: budgetMigration },
         ...(options.migrations ?? []),
       ];
       if (this.schemaVersion() > migrations.at(-1)!.version)
@@ -274,6 +277,9 @@ export class Store {
         this.#command(project, kind, key, input, fn),
       snapshot: (fn) => this.#db.transaction(fn)(),
     });
+    this.budgets = new Budgets(this.#db, this.contracts, (fn) =>
+      this.#transaction(fn),
+    );
     this.lessons = new LessonGraph(this.#db, {
       transaction: (fn) => this.#transaction(fn),
       now: () => this.#now(),

@@ -1,12 +1,16 @@
 import { lstatSync, realpathSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative } from 'node:path';
+import {
+  createLinuxWorkerCgroup,
+  type LinuxWorkerLimits,
+} from './linux-worker-limits.ts';
 import { WorkerSupervisor, type ProcessRequest } from './index.ts';
 
 const launcher = '/usr/bin/bwrap';
 const mountPoints = ['input', 'workspace', 'proc', 'dev', 'tmp'];
 const scratchBytes = String(32 * 1024 * 1024);
 
-interface LinuxOfflineRequest extends Pick<
+export interface LinuxOfflineRequest extends Pick<
   ProcessRequest,
   | 'args'
   | 'workerId'
@@ -23,6 +27,10 @@ interface LinuxOfflineRequest extends Pick<
   /** Executable basename in the trusted runtime image's /usr/bin. */
   program: string;
   operatorApproved: boolean;
+  /** Optional delegated cgroup enforcement for the offline profile. */
+  limits?: LinuxWorkerLimits;
+  /** Provider profiles require a qualified launcher and are currently unavailable. */
+  profile?: 'offline' | 'codex' | 'claude' | 'opencode';
 }
 
 function directory(path: string): string {
@@ -46,6 +54,11 @@ export function startLinuxOfflineWorker(
   if (process.platform !== 'linux')
     throw new Error(
       'CAPABILITY_UNSUPPORTED: Linux offline worker requires Linux',
+    );
+  if (request.profile !== undefined && request.profile !== 'offline')
+    throw new Error(
+      'CAPABILITY_UNSUPPORTED: no qualified isolated profile for ' +
+        request.profile,
     );
   const executable = statSync(launcher, { throwIfNoEntry: false });
   if (!executable?.isFile() || executable.uid !== 0 || executable.mode & 0o6022)
@@ -74,10 +87,15 @@ export function startLinuxOfflineWorker(
       throw new Error('INVALID_INPUT: runtime needs a directory at /' + point);
   }
 
-  return supervisor.start({
-    executable: launcher,
+  const cgroup = request.limits
+    ? createLinuxWorkerCgroup(request.limits)
+    : undefined;
+  const size = cgroup?.scratchPerMount ?? scratchBytes;
+  const options: ProcessRequest = {
+    executable: cgroup ? '/bin/sh' : launcher,
     cwd: '/',
     args: [
+      ...(cgroup ? [...cgroup.launch, launcher] : []),
       '--unshare-all',
       '--unshare-user',
       '--unshare-cgroup',
@@ -107,11 +125,11 @@ export function startLinuxOfflineWorker(
       stagedInput,
       '/input',
       '--size',
-      scratchBytes,
+      size,
       '--tmpfs',
       '/workspace',
       '--size',
-      scratchBytes,
+      size,
       '--tmpfs',
       '/tmp',
       '--proc',
@@ -120,6 +138,7 @@ export function startLinuxOfflineWorker(
       '/proc',
       '--dev',
       '/dev',
+      ...(cgroup ? ['--remount-ro', '/dev'] : []),
       '--chdir',
       '/workspace',
       '--',
@@ -135,5 +154,17 @@ export function startLinuxOfflineWorker(
     maxOutputBytes: request.maxOutputBytes,
     ...(request.signal ? { signal: request.signal } : {}),
     userApprovedTrustedLocal: true,
-  });
+  };
+  if (!cgroup) return supervisor.start(options);
+  // Preserve the exact supervisor identity while withholding completion until
+  // the kernel reports the scope empty.
+  let handle: ReturnType<WorkerSupervisor['start']>;
+  try {
+    handle = supervisor.start(options);
+  } catch (error) {
+    // No child can have started on a synchronous validation error.
+    void cgroup.dispose().catch(() => {});
+    throw error;
+  }
+  return { ...handle, result: handle.result.finally(() => cgroup.dispose()) };
 }

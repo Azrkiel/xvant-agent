@@ -163,6 +163,7 @@ const manifestSchema = z.strictObject({
     z.literal(7),
     z.literal(8),
     z.literal(9),
+    z.literal(10),
   ]),
   database: z.strictObject({
     file: z.literal('state.sqlite'),
@@ -225,6 +226,8 @@ const tables: Record<string, string[]> = {
     'clock',
   ],
   schedule_projects: ['id', 'served'],
+  budget_limits: ['id', 'body'],
+  budget_reservations: ['id', 'task_id', 'body'],
   contract_projects: ['project_id', 'version', 'body'],
   contract_policies: ['project_id', 'version', 'body'],
   contract_tasks: ['id', 'project_id', 'body'],
@@ -263,6 +266,8 @@ const primaryKeys: Record<string, string[]> = {
   schedule_jobs: ['id'],
   schedule_control: ['id'],
   schedule_projects: ['id'],
+  budget_limits: ['id'],
+  budget_reservations: ['id'],
   contract_projects: ['project_id', 'version'],
   contract_policies: ['project_id', 'version'],
   contract_tasks: ['id'],
@@ -324,6 +329,8 @@ const foreignKeys: Record<string, { from: string; table: string }[]> = {
   schedule_jobs: [{ from: 'id', table: 'work_graphs' }],
   schedule_control: [],
   schedule_projects: [],
+  budget_limits: [],
+  budget_reservations: [{ from: 'task_id', table: 'contract_tasks' }],
   contract_projects: [],
   contract_policies: [],
   contract_tasks: [],
@@ -436,7 +443,7 @@ function validateDatabase(path: string): {
   const db = new Database(path, { readonly: true, fileMustExist: true });
   try {
     const schemaVersion = db.pragma('user_version', { simple: true }) as number;
-    if (![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(schemaVersion))
+    if (!manifestSchema.shape.schemaVersion.safeParse(schemaVersion).success)
       fail('SCHEMA_UNSUPPORTED');
     if (
       db.pragma('integrity_check', { simple: true }) !== 'ok' ||
@@ -460,6 +467,7 @@ function validateDatabase(path: string): {
       )
         continue;
       if (schemaVersion < 9 && table.startsWith('schedule_')) continue;
+      if (schemaVersion < 10 && table.startsWith('budget_')) continue;
       validateTable(
         db,
         table,
