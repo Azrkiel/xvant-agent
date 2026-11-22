@@ -185,7 +185,8 @@ export function daemonSubmit(rest, value, values) {
   ]);
   for (let index = 0; index < rest.length; index++) {
     const arg = rest[index];
-    if (arg === '--no-review' || arg === '--daemon') continue;
+    if (arg === '--no-review' || arg === '--no-lessons' || arg === '--daemon')
+      continue;
     if (!supported.has(arg) || index + 1 === rest.length)
       throw new Error('Unsupported daemon submit argument: ' + arg);
     index++;
@@ -197,6 +198,7 @@ export function daemonSubmit(rest, value, values) {
     criteria: values('--criterion'),
     checks: values('--check'),
     review: !rest.includes('--no-review'),
+    ...(rest.includes('--no-lessons') ? { lessons: false } : {}),
     ...(value('--max-active') !== undefined
       ? { maxActive: Number(value('--max-active')) }
       : {}),

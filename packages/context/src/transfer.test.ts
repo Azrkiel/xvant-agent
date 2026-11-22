@@ -109,6 +109,12 @@ describe('memory bundles', () => {
           source: 'import',
           actorId: 'owner',
           revision: 'b'.repeat(40),
+          importedFrom: {
+            source: 'controller',
+            actorId: 'xvant',
+            projectId: 'project',
+            bundleHash: bundle.bundleHash,
+          },
         },
       },
       {
@@ -122,6 +128,13 @@ describe('memory bundles', () => {
           source: 'import',
           actorId: 'owner',
           revision: 'b'.repeat(40),
+          importedFrom: {
+            source: 'user',
+            actorId: 'owner',
+            revision: 'a'.repeat(40),
+            projectId: 'project',
+            bundleHash: bundle.bundleHash,
+          },
         },
       },
     ]);
@@ -143,6 +156,13 @@ describe('memory bundles', () => {
       source: 'import',
       actorId: 'owner',
       revision: 'a'.repeat(40),
+      importedFrom: {
+        source: 'user',
+        actorId: 'owner',
+        revision: 'a'.repeat(40),
+        projectId: 'project',
+        bundleHash: bundle.bundleHash,
+      },
     });
   });
   it('rejects tampered bundles and skips secrets smuggled into a resealed one', () => {

@@ -181,6 +181,20 @@ export class MemoryRecords {
       return decided;
     });
   }
+  forget(projectId: string, id: string, expectedVersion: number): MemoryRecord {
+    return this.host.transaction(() => {
+      const record = this.get(projectId, id);
+      if (record.rowVersion !== expectedVersion) fail('CONFLICT');
+      const forgotten: MemoryRecord = {
+        ...record,
+        status: 'rejected',
+        forgottenAt: this.host.now(),
+        rowVersion: record.rowVersion + 1,
+      };
+      this.save(forgotten);
+      return forgotten;
+    });
+  }
   /** Records of one project only. Defaults to accepted records; namespaces match by segment prefix. */
   search(projectId: string, filter: MemorySearch = {}): MemoryRecord[] {
     const parsed = memorySearchSchema.safeParse(filter);
@@ -230,8 +244,51 @@ export class MemoryRecords {
       (row) => JSON.parse(row.body) as MemoryRecord,
     );
   }
+  /** Select bindings before applying the candidate limit so stale rows cannot crowd out current decisions. */
+  projectDecisions(input: {
+    projectId: string;
+    projectVersion: number;
+    policyVersion: number;
+    backlogRevision: number;
+    revision?: string;
+    requirementIds?: readonly string[];
+  }): MemoryRecord[] {
+    const { projectId, projectVersion, policyVersion, backlogRevision } = input;
+    const rows = this.db
+      .prepare(
+        `
+      SELECT body FROM memory_records
+      WHERE project_id=? AND status='accepted' AND namespace='project-decisions'
+        AND json_extract(body, '$.decision.projectVersion')=?
+        AND json_extract(body, '$.decision.policyVersion')=?
+        AND json_extract(body, '$.decision.backlogRevision')=?
+        AND (? IS NULL OR json_extract(body, '$.provenance.revision')=?)
+        AND (? IS NULL OR EXISTS (
+          SELECT 1 FROM json_each(body, '$.decision.requirementIds') AS requirement
+          JOIN json_each(?) requested ON requested.value=requirement.value
+        ))
+      ORDER BY id LIMIT 32
+    `,
+      )
+      .all(
+        projectId,
+        projectVersion,
+        policyVersion,
+        backlogRevision,
+        input.revision ?? null,
+        input.revision ?? null,
+        input.requirementIds ? 1 : null,
+        JSON.stringify(input.requirementIds ?? []),
+      ) as { body: string }[];
+    return rows.map(({ body }) => JSON.parse(body) as MemoryRecord);
+  }
   /** Project access derives from the task record, never from the caller. */
   searchForTask(taskId: string, filter: MemorySearch = {}): MemoryRecord[] {
-    return this.search(this.host.task(taskId).projectId, filter);
+    return this.search(this.host.task(taskId).projectId, filter).filter(
+      (record) =>
+        record.forgottenAt === undefined &&
+        record.decision === undefined &&
+        record.importedDecisionDetails === undefined,
+    );
   }
 }

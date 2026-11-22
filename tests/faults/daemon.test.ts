@@ -249,6 +249,56 @@ describe('A04 daemon process fixtures', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
+  it('pins the lessons comparison setting in separate stores for identical Git input', async () => {
+    const enabledRepo = repo('lessons-enabled');
+    const disabledRepo = join(dir, 'lessons-disabled');
+    git(dir, 'clone', '-q', enabledRepo, disabledRepo);
+    expect(git(disabledRepo, 'rev-parse', 'HEAD')).toBe(
+      git(enabledRepo, 'rev-parse', 'HEAD'),
+    );
+    const observations = [];
+    for (const [cohort, path, flags] of [
+      ['enabled', enabledRepo, []],
+      ['disabled', disabledRepo, ['--no-lessons']],
+    ] as const) {
+      home = join(dir, 'state-' + cohort);
+      env.XVANT_HOME = home;
+      await ready(launch());
+      await cli('pause-dispatch', '--id', 'study-pause');
+      const result = await submit(
+        'study-task',
+        path,
+        'fixture',
+        'codex',
+        ...flags,
+      );
+      await cli('stop', '--id', 'study-stop');
+      const database = db();
+      try {
+        const { body } = database
+          .prepare('SELECT body FROM work_checkpoints WHERE graph_id=?')
+          .get(result.id) as { body: string };
+        observations.push(JSON.parse(body).spec);
+        expect(
+          database.prepare('SELECT COUNT(*) AS count FROM lesson_nodes').get(),
+        ).toEqual({ count: 0 });
+      } finally {
+        database.close();
+      }
+    }
+    expect(observations[0]).toMatchObject({
+      lessons: true,
+      lessonScope: expect.any(String),
+    });
+    expect(observations[1]).toMatchObject({
+      lessons: false,
+      lessonScope: null,
+    });
+    expect(observations[1].baseRevision).toBe(observations[0].baseRevision);
+    expect(observations[1].objective).toBe(observations[0].objective);
+    expect(calls()).toEqual([]);
+  }, 25_000);
+
   it('retains one durable acceptance and the pinned base after a daemon kill and client reconnect', async () => {
     const path = repo('original');
     const base = git(path, 'rev-parse', 'HEAD');
