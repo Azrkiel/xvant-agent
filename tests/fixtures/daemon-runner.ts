@@ -1,4 +1,11 @@
-import { appendFileSync, writeFileSync } from 'node:fs';
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import type { AppOptions } from '../../apps/controller/src/app.ts';
 import { WorkerSupervisor } from '../../packages/supervisor/src/index.ts';
@@ -17,7 +24,20 @@ const task = {
   writablePaths: ['test.txt'],
 };
 
+export const managerVerifier = {
+  checks: {
+    fixture: {
+      executable: process.execPath,
+      args: [
+        '-e',
+        "if (require('node:fs').readFileSync('work/fix.txt', 'utf8') !== 'fixed') process.exit(1)",
+      ],
+    },
+  },
+  checkTimeoutMs: 5000,
+};
 export default {
+  managerVerifier,
   discover: (kind) => ({
     runtimeKind: kind,
     status: 'qualified',
@@ -28,6 +48,83 @@ export default {
   }),
   runner: () => ({
     run: async (request, execution) => {
+      if (request.taskId.startsWith('manager_')) {
+        const cwd = request.workspace.path;
+        const fix =
+          request.taskId.includes('-check-repair-') ||
+          request.prompt.startsWith('The combined work');
+        const review = request.prompt.startsWith('Review this change');
+        const path = review
+          ? null
+          : fix
+            ? 'work/fix.txt'
+            : request.writablePaths?.[0];
+        appendFileSync(
+          join(folder, 'calls'),
+          JSON.stringify({
+            taskId: request.taskId,
+            alias: request.alias,
+            operationId: execution?.operationId,
+            attemptId: execution?.attemptId,
+            path,
+          }) + '\n',
+        );
+        const killMarker = join(folder, 'manager-kill-enabled');
+        if (path === 'work/second.txt' && existsSync(killMarker)) {
+          unlinkSync(killMarker);
+          const child = supervisor.start({
+            executable: process.execPath,
+            args: ['-e', 'setInterval(() => {}, 1000)'],
+            cwd,
+            workerId: request.alias,
+            attemptId: request.taskId,
+            generation: 1,
+            timeoutMs: 12_000,
+            maxOutputBytes: 2048,
+            userApprovedTrustedLocal: true,
+            onProcess: (identity) => {
+              execution?.onProcess(identity);
+              writeFileSync(
+                join(folder, 'manager-worker.json'),
+                JSON.stringify(identity),
+              );
+            },
+          });
+          const ended = await child.result;
+          return {
+            status:
+              ended.reason === 'exited' && ended.exitCode === null
+                ? 'failed'
+                : 'unknown',
+            finalText: '',
+            files: [],
+            patch: null,
+            failure: 'FIXTURE_WORKER_DIED',
+          };
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        if (!path)
+          return {
+            status: review ? 'accepted' : 'failed',
+            finalText: '{"approve":true,"findings":[]}',
+            files: [],
+            patch: null,
+          };
+        mkdirSync(join(cwd, 'work'), { recursive: true });
+        writeFileSync(join(cwd, path), fix ? 'fixed' : 'fixture');
+        execFileSync('git', ['add', '--', path], { cwd });
+        const patch = execFileSync(
+          'git',
+          ['diff', '--cached', '--binary', 'HEAD', '--', path],
+          { cwd },
+        );
+        return {
+          status: 'accepted',
+          finalText: 'fixture result',
+          files: [path],
+          patch,
+        };
+      }
       const planning = request.taskId.includes('-plan-');
       const held = planning && request.prompt.includes('hold-root');
       const child = supervisor.start({
@@ -88,4 +185,4 @@ export default {
       return handle ? supervisor.cancel(handle) : false;
     },
   }),
-} satisfies Pick<AppOptions, 'discover' | 'runner'>;
+} satisfies Pick<AppOptions, 'discover' | 'runner' | 'managerVerifier'>;

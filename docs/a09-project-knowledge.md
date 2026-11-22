@@ -1,8 +1,8 @@
 # A09 project knowledge and lessons comparison
 
 This draft builds on the persisted owner backlog in A05 draft #18 and A01
-task contracts. The manager cycle and its task-packet dispatch integration
-remain open. See the [A09 subplan](https://github.com/Azrkiel/xvant-agent/blob/493ce4686b413e1e1a4ab5297b8169a33c9b9360/docs/autonomy/09-memory-and-learning.md).
+task contracts. It also adds sourced decisions to eligible node turns on
+the offline A05 manager route. See the [A09 subplan](https://github.com/Azrkiel/xvant-agent/blob/493ce4686b413e1e1a4ab5297b8169a33c9b9360/docs/autonomy/09-memory-and-learning.md).
 
 ## Record and inspect decisions
 
@@ -41,15 +41,19 @@ Changed or missing file anchors exclude the record. Any new project,
 policy or backlog revision conservatively requires rebinding. The search
 selects up to 32 candidates and returns up to 32 KiB of serialized optional
 context. The reference exercise uses 1,000 retained decisions and a
-300 ms local retrieval bound. Legacy worker memory search cannot read
-these structured decisions through its legacy route.
+300 ms local retrieval bound. The offline A05 manager resolves the milestone's requirement IDs and
+adds eligible decisions to its journaled worker prompt at the exact pinned
+base. The manager hook supplies no file hashes, so it excludes anchored
+decisions. The host selector supports anchors when trusted hashes are
+available. Existing external memory search provides no structured project
+decision lookup.
 
 GET with `?export=true` seals up to 32 current accepted decisions per
 project. Import with `action` set to `import`, a `commandId`, and the
 exported `bundle`. The import retains source actor, project, revision and
 bundle hash and creates proposals. To adopt one, review the source and
 record a new owner proposal against local requirements and revision.
-Credential-shaped decision content is withheld. Schema 10 and existing
+Credential-shaped decision content is withheld. Schema 11 and existing
 manual runs are unchanged. Older readers ignore the new local decision
 fields, and older bundle readers require bundles without the optional
 extended decision and provenance fields.
@@ -62,7 +66,10 @@ parallelism, repair bounds and review settings. Pair each task across two
 independent repository copies and two fresh state roots. Keep the
 assignment fixed. Use the normal submit path in the enabled arm and add
 `--no-lessons` in the disabled arm. Each arm uses its own daemon. The
-switch is persisted in the checkpoint and reused on resume.
+switch is persisted in the checkpoint and reused on resume. For the
+offline manager route use matched POST bodies with `lessons: true` or
+`lessons: false`. When enabled, the manager lesson graph uses its contract
+project identity instead of repository identity.
 
 Start both stores empty for the unseeded trial. If using seeded training,
 freeze its inputs and store hash in advance. Keep the scorecard blinded
@@ -71,5 +78,5 @@ failures, repair rounds, hinted and unhinted outcomes, wall time, usage,
 and operator interventions for every run. Preserve failures and include
 all preassigned tasks. The checked-in fixture verifies independent
 stores, equivalent Git input and durable mode settings. The A11 campaign
-still needs task execution through the manager, pinned live profiles, and
-repeated paired runs.
+still needs paired manager execution with pinned live profiles and
+repeated runs.

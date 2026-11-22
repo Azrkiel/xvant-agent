@@ -125,7 +125,11 @@ export async function daemonServe(home) {
   app = await startApp({
     home,
     ...(config.discover
-      ? { discover: config.discover, runner: config.runner }
+      ? {
+          discover: config.discover,
+          runner: config.runner,
+          managerVerifier: config.managerVerifier,
+        }
       : {}),
     daemon: {
       operatorToken: token,

@@ -1,6 +1,6 @@
 # A05 durable project backlog
 
-This draft implements work package 1 from the
+This draft implements the durable backlog and an offline manager cycle from the
 [A05 subplan](https://github.com/Azrkiel/xvant-agent/blob/493ce4686b413e1e1a4ab5297b8169a33c9b9360/docs/autonomy/05-project-manager.md).
 An owner can persist a series of immutable backlog revisions and read the
 latest record or any prior revision. The new records are available through
@@ -74,10 +74,39 @@ with the service stopped. Roll back by restoring it to a separate state
 directory for the older binary. Keep the upgraded store and original
 worktrees available for reconciliation.
 
-The backlog describes proposed work. Saving a plan creates no root, dispatch,
-provider turn, resource reservation or acceptance decision. The next work
-package needs the qualified A04 service. It can read `Store.contracts.getBacklog`
-for current durable planning facts. Admission and dispatch must use A01
-authority and the durable A04 queue. A03 must reconcile interrupted effects
-before work is repeated. Work packages 2 and 3 still need the manager cycle,
-durable task/evidence links, bounded repair and the unattended demonstration.
+Saving the backlog alone creates no root, dispatch, provider turn, resource
+reservation or acceptance decision.
+
+## Offline manager cycle
+
+A host with an injected offline runner and a registered verifier can use
+authenticated `POST /api/v1/contracts/projects/ID/manager`. Submit the
+current backlog revision, an unused A01 ship-task ID, a stable command ID,
+and the milestone IDs and permitted write paths. Each milestone can name an
+explicit worker or tier. `maxActive` defaults to one and `maxRepairs` to one.
+The verifier must match the check IDs, requirement coverage and exact
+configuration digest in the current policy.
+
+The daemon builds one deterministic root graph for the revision. Milestones
+keep their requirement IDs in the backlog and their dependency and routing
+facts in the root. The A04 queue and A03 effect journal own its execution.
+Disjoint steps may run together when the assigned workers and slots permit.
+The host reserves the run's worst-case worker turns and check time against
+its task grant and the cumulative project grant. A restart reuses the
+checkpoint, queue entry and reservations. An owner can record a revised
+backlog after failed work or terminal cancellation. The old run remains
+inspectable and its allocation still counts. A queued, running, or
+unreconciled run prevents changes to its active authorization.
+
+Read the same manager URL with GET to inspect historical runs, routing
+through their root IDs and the current A01 evidence decision. The fixture
+can register a local candidate for ordinary A01 acceptance. Accepted
+exceptions remain separately visible. With accepted check and review
+evidence, the project becomes idle. Candidate promotion and unattended live
+workers depend on A06 and A07. This implementation plans one root per
+owner-approved revision. Model-generated replans and a separate scout route
+through the manager remain open.
+
+Schema 11 adds the manager-to-backlog, task, and root links. Take a verified
+pre-upgrade backup. To roll back, restore it to a separate state directory
+for the older binary and retain the upgraded data and worktrees.

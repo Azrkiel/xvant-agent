@@ -167,7 +167,11 @@ export class ProjectKnowledge {
   }
 
   /** Caller supplies trusted file hashes for the task's pinned checkout. */
-  forTask(taskId: string, files: readonly FileHash[]) {
+  forTask(
+    taskId: string,
+    files: readonly FileHash[],
+    milestoneRequirements?: readonly string[],
+  ) {
     const {
       record: { task },
       decision,
@@ -181,7 +185,9 @@ export class ProjectKnowledge {
       policyVersion: task.policyVersion,
       backlogRevision: current.revision,
       revision: task.baseRevision,
-      requirementIds: task.requirementIds,
+      requirementIds: milestoneRequirements
+        ? task.requirementIds.filter((id) => milestoneRequirements.includes(id))
+        : task.requirementIds,
     });
     const { items } = memoryContextItems(
       assessMemory(records, files),
@@ -194,5 +200,23 @@ export class ProjectKnowledge {
       remaining -= bytes;
       return true;
     });
+  }
+
+  /** Manager turns get only knowledge bound to the exact pinned base and milestone. */
+  forManagerTurn(rootId: string, slot: string, revision: string) {
+    const node = /^node:([^:]+):[0-9]+$/.exec(slot);
+    if (!node) return [];
+    const run = this.#store.contracts.managerRun(rootId);
+    if (!run) return [];
+    const current = this.#current(run.projectId);
+    if (!current || current.revision !== run.revision) return [];
+    const milestone = current.milestones.find(({ id }) => id === node[1]);
+    const {
+      record: { task },
+    } = this.#store.contracts.getTask(run.taskId);
+    if (!milestone || task.baseRevision !== revision) return [];
+    // No file evidence is collected by this scheduler hook. Anchored records
+    // are only eligible through a host caller that supplies those file hashes.
+    return this.forTask(task.id, [], milestone.requirementIds);
   }
 }
