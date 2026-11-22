@@ -1,0 +1,11 @@
+npm notice run xvant@0.1.0 test
+npm notice run vitest run tests/faults/daemon.test.ts tests/e2e/ui.test.ts packages/storage/src/backup.test.ts packages/storage/src/artifacts.test.ts packages/storage/src/store.test.ts apps/controller/src/app.test.ts apps/controller/src/daemon-clock.test.ts
+
+ RUN  v5.0.1 /workspace/work/qualification/a10-c46008c25a04/source
+
+
+ Test Files  7 passed (7)
+      Tests  80 passed (80)
+   Start at  01:40:11
+   Duration  54.73s (tests 96%, import 2%, transform 2%)
+
